@@ -5,8 +5,8 @@ import { PageHeader } from "@/components/squad/PageHeader";
 import { EmptyState } from "@/components/squad/EmptyState";
 import { LoadingState } from "@/components/squad/LoadingState";
 import { StatusBadge, type StatusVariant } from "@/components/squad/StatusBadge";
+import { SearchInput, FilterChips } from "@/components/squad/SearchInput";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -71,6 +71,13 @@ function PlantelPage() {
     return <EmptyState title="Sin equipo activo" message="Selecciona un equipo desde el encabezado." />;
   }
 
+  const availOptions = [
+    { value: "all", label: "Todos" },
+    { value: "apto", label: "Apto" },
+    { value: "en_duda", label: "En duda" },
+    { value: "lesionado", label: "Lesionado" },
+  ];
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -78,31 +85,33 @@ function PlantelPage() {
         subtitle={activeTeam.name}
         action={
           canEdit ? (
-            <Button onClick={() => setDialogOpen(true)} className="glow-primary">
+            <Button onClick={() => setDialogOpen(true)} className="glow-primary rounded-full">
               <Plus className="mr-2 h-4 w-4" /> Agregar jugador
             </Button>
           ) : null
         }
       />
 
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-        <Input placeholder="Buscar jugador…" value={search} onChange={(e) => setSearch(e.target.value)} />
-        <Select value={posFilter} onValueChange={setPosFilter}>
-          <SelectTrigger><SelectValue placeholder="Posición" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas las posiciones</SelectItem>
-            {positions.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Select value={availFilter} onValueChange={setAvailFilter}>
-          <SelectTrigger><SelectValue placeholder="Disponibilidad" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Toda disponibilidad</SelectItem>
-            <SelectItem value="apto">Apto</SelectItem>
-            <SelectItem value="lesionado">Lesionado</SelectItem>
-            <SelectItem value="en_duda">En duda</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="glass flex flex-col gap-3 p-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <div className="flex-1">
+            <SearchInput
+              placeholder="Buscar jugador…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <Select value={posFilter} onValueChange={setPosFilter}>
+            <SelectTrigger className="input-search h-10 w-full border-none px-4 sm:w-48">
+              <SelectValue placeholder="Posición" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas las posiciones</SelectItem>
+              {positions.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <FilterChips value={availFilter} onChange={setAvailFilter} options={availOptions} />
       </div>
 
       {isLoading ? (
@@ -111,7 +120,20 @@ function PlantelPage() {
         <EmptyState
           icon={Users}
           title={players?.length ? "Sin resultados" : "Plantel vacío"}
-          message={players?.length ? "Ajusta los filtros para ver más jugadores." : canEdit ? "Agrega el primer jugador del equipo." : "Aún no hay jugadores registrados."}
+          message={
+            players?.length
+              ? "Ajusta los filtros para ver más jugadores."
+              : canEdit
+                ? "Agrega el primer jugador del equipo para empezar."
+                : "Aún no hay jugadores registrados."
+          }
+          action={
+            !players?.length && canEdit ? (
+              <Button onClick={() => setDialogOpen(true)} className="glow-primary rounded-full">
+                <Plus className="mr-2 h-4 w-4" /> Agregar jugador
+              </Button>
+            ) : undefined
+          }
         />
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -125,11 +147,12 @@ function PlantelPage() {
                 key={p.id}
                 onClick={() => navigate({ to: "/m/plantel/$playerId", params: { playerId: p.id } })}
                 className={cn(
-                  "glass animate-card-in flex items-center gap-3 p-4 text-left transition-all hover:border-white/15 hover:bg-white/[0.06] active:scale-[0.99]",
+                  "glass card-hover animate-card-in flex items-center gap-3 p-4 text-left",
+                  "hover:-translate-y-0.5 hover:[background:linear-gradient(hsl(0_0%_100%/0.055),hsl(0_0%_100%/0.055))_padding-box,linear-gradient(180deg,hsl(150_100%_50%/0.45),hsl(150_100%_50%/0.06))_border-box]",
                 )}
-                style={{ animationDelay: `${i * 25}ms` }}
+                style={{ animationDelay: `${i * 30}ms` }}
               >
-                <Avatar className="h-12 w-12 shrink-0">
+                <Avatar className="h-12 w-12 shrink-0 ring-1 ring-white/10">
                   <AvatarImage src={p.profile?.avatar_url ?? undefined} />
                   <AvatarFallback>{(p.profile?.full_name ?? "?").slice(0, 1).toUpperCase()}</AvatarFallback>
                 </Avatar>
