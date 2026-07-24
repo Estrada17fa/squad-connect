@@ -9,6 +9,7 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -29,42 +30,72 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-ring-offset-background: var(--background);
+
+  --color-status-pending: var(--status-pending);
+  --color-status-pending-foreground: var(--status-pending-foreground);
+  --color-status-approved: var(--status-approved);
+  --color-status-approved-foreground: var(--status-approved-foreground);
+  --color-status-rejected: var(--status-rejected);
+  --color-status-rejected-foreground: var(--status-rejected-foreground);
+  --color-status-info: var(--status-info);
+  --color-status-info-foreground: var(--status-info-foreground);
+
+  --font-display: "Quicksand", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
 }
 
 /*
- * Squad — dark theme, neon-green primary.
- * Primary: hsl(150, 100%, 50%) (matches the Squad logo).
+ * Squad — dark theme, neon-green brand.
+ * Brand green reserved for logo, primary actions, and active nav.
+ * Status colors are distinct from brand.
  */
 :root {
-  --radius: 0.625rem;
+  --radius: 0.875rem;
 
   --background: hsl(0 0% 4%);
   --foreground: hsl(0 0% 98%);
 
-  --card: hsl(0 0% 7%);
+  --card: hsl(0 0% 8% / 0.6);
   --card-foreground: hsl(0 0% 98%);
 
-  --popover: hsl(0 0% 7%);
+  --popover: hsl(0 0% 8%);
   --popover-foreground: hsl(0 0% 98%);
 
   --primary: hsl(150 100% 50%);
   --primary-foreground: hsl(0 0% 5%);
 
   --secondary: hsl(0 0% 12%);
-  --secondary-foreground: hsl(0 0% 98%);
+  --secondary-foreground: hsl(0 0% 92%);
 
   --muted: hsl(0 0% 12%);
   --muted-foreground: hsl(0 0% 65%);
 
   --accent: hsl(150 100% 50% / 0.12);
-  --accent-foreground: hsl(150 100% 60%);
+  --accent-foreground: hsl(150 100% 65%);
 
   --destructive: hsl(0 84% 60%);
   --destructive-foreground: hsl(0 0% 98%);
 
-  --border: hsl(0 0% 15%);
+  --border: hsl(0 0% 100% / 0.08);
   --input: hsl(0 0% 12%);
   --ring: hsl(150 100% 50%);
+
+  /* Status tokens — separate from brand green */
+  --status-pending: hsl(38 95% 55% / 0.15);
+  --status-pending-foreground: hsl(38 95% 65%);
+  --status-approved: hsl(200 90% 55% / 0.15);
+  --status-approved-foreground: hsl(200 90% 70%);
+  --status-rejected: hsl(0 84% 60% / 0.15);
+  --status-rejected-foreground: hsl(0 84% 70%);
+  --status-info: hsl(220 15% 60% / 0.15);
+  --status-info-foreground: hsl(220 15% 75%);
+
+  /* Glass surface — single canonical variant */
+  --glass-bg: hsl(0 0% 100% / 0.04);
+  --glass-border: hsl(0 0% 100% / 0.08);
+  --glass-blur: 18px;
+
+  --glow-primary: 0 0 24px hsl(150 100% 50% / 0.35), 0 0 6px hsl(150 100% 50% / 0.5);
 }
 
 @layer base {
@@ -77,5 +108,45 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     color-scheme: dark;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
   }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+}
+
+@utility glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  border-radius: var(--radius-lg);
+}
+
+@utility glow-primary {
+  box-shadow: var(--glow-primary);
+}
+
+@utility font-display {
+  font-family: var(--font-display);
+}
+
+@keyframes squad-card-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@utility animate-card-in {
+  animation: squad-card-in 0.35s ease-out both;
+}
+
+@keyframes squad-fab-menu-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@utility animate-fab-menu {
+  animation: squad-fab-menu-in 0.2s ease-out both;
 }
