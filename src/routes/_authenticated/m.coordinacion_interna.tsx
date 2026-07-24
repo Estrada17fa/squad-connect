@@ -134,6 +134,12 @@ function CoordinacionPage() {
             clubId={clubId}
             userId={user.id}
             task={editingTask}
+            onSaved={({ isEdit, assigneeIds }) => {
+              if (!isEdit && filter === "mias" && !assigneeIds.includes(user.id)) {
+                setFilter("todas");
+                toast.info("Mostrando todas las tareas para que veas la que acabas de crear");
+              }
+            }}
           />
           <MeetingFormDialog
             open={meetingDialog}
