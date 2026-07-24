@@ -3,7 +3,7 @@ import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-route
 import { ChevronDown, LogOut, MoreHorizontal } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccess, hasAccess, type TeamOption } from "@/hooks/useAccess";
-import { HOME_MODULE, MODULES, MODULE_MAP, type ModuleKey } from "@/lib/modules";
+import { HOME_MODULE, MODULES, MODULE_MAP, moduleFromPath, type ModuleKey } from "@/lib/modules";
 import { LoadingState } from "./LoadingState";
 import { FAB } from "./FAB";
 import { cn } from "@/lib/utils";
@@ -101,6 +101,7 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
           activeTeam={activeTeam}
           setActiveTeamId={setActiveTeamId}
           userName={data.profile?.full_name ?? user.email ?? ""}
+          isSuperAdmin={data.isSuperAdmin}
           onSignOut={signOut}
         />
         <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6">
@@ -119,6 +120,7 @@ function Header({
   activeTeam,
   setActiveTeamId,
   userName,
+  isSuperAdmin,
   onSignOut,
 }: {
   clubName: string | null;
@@ -126,8 +128,16 @@ function Header({
   activeTeam: TeamOption | null;
   setActiveTeamId: (id: string | null) => void;
   userName: string;
+  isSuperAdmin: boolean;
   onSignOut: () => void;
 }) {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const activeModule = moduleFromPath(pathname);
+  const activeScope = activeModule ? MODULE_MAP[activeModule].scope : null;
+  // Ocultar selector cuando estamos en un módulo estrictamente de club.
+  const showTeamSelector = activeScope !== "club" && teams.length > 1;
+  const showClubName = activeScope === "club" || teams.length <= 1;
+
   return (
     <header className="sticky top-0 z-30 border-b border-border/60 bg-background/70 backdrop-blur-xl">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
@@ -135,14 +145,21 @@ function Header({
           <img src={squadLogo.url} alt="Squad" className="h-8 w-auto" />
         </Link>
         <div className="flex items-center gap-2">
-          {teams.length > 1 ? (
+          {showTeamSelector ? (
             <DropdownMenu>
               <DropdownMenuTrigger className="glass inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm text-foreground hover:bg-white/[0.06]">
-                <span className="max-w-[120px] truncate">{activeTeam?.name ?? "Equipo"}</span>
+                <span className="flex flex-col items-start leading-tight">
+                  <span className="max-w-[140px] truncate">{activeTeam?.name ?? "Equipo"}</span>
+                  {activeTeam?.roleName ? (
+                    <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                      {activeTeam.roleName}
+                    </span>
+                  ) : null}
+                </span>
                 <ChevronDown className="h-4 w-4 text-muted-foreground" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>Cambiar equipo</DropdownMenuLabel>
+                <DropdownMenuLabel>Cambiar contexto</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {teams.map((t) => (
                   <DropdownMenuItem
@@ -157,7 +174,7 @@ function Header({
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
-          ) : clubName ? (
+          ) : showClubName && clubName ? (
             <span className="hidden text-sm text-muted-foreground sm:inline">{clubName}</span>
           ) : null}
           <DropdownMenu>
@@ -167,6 +184,14 @@ function Header({
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel className="truncate">{userName || "Cuenta"}</DropdownMenuLabel>
               <DropdownMenuSeparator />
+              {isSuperAdmin ? (
+                <>
+                  <DropdownMenuItem asChild>
+                    <Link to="/admin/clubs">Administrar clubes</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
+              ) : null}
               <DropdownMenuItem onSelect={onSignOut}>
                 <LogOut className="mr-2 h-4 w-4" />
                 Cerrar sesión

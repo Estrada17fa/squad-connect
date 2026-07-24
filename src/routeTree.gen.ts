@@ -12,11 +12,13 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as AuthenticatedMasRouteImport } from './routes/_authenticated/mas'
 import { Route as AuthenticatedMPlantelRouteImport } from './routes/_authenticated/m.plantel'
 import { Route as AuthenticatedMCoordinacion_internaRouteImport } from './routes/_authenticated/m.coordinacion_interna'
 import { Route as AuthenticatedMCalendarioRouteImport } from './routes/_authenticated/m.calendario'
 import { Route as AuthenticatedMModuleRouteImport } from './routes/_authenticated/m.$module'
+import { Route as AuthenticatedAdminClubsRouteImport } from './routes/_authenticated/admin.clubs'
 import { Route as AuthenticatedMPlantelPlayerIdRouteImport } from './routes/_authenticated/m.plantel.$playerId'
 
 const AuthRoute = AuthRouteImport.update({
@@ -32,6 +34,11 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const InviteTokenRoute = InviteTokenRouteImport.update({
+  id: '/invite/$token',
+  path: '/invite/$token',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedMasRoute = AuthenticatedMasRouteImport.update({
   id: '/mas',
@@ -60,6 +67,11 @@ const AuthenticatedMModuleRoute = AuthenticatedMModuleRouteImport.update({
   path: '/m/$module',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminClubsRoute = AuthenticatedAdminClubsRouteImport.update({
+  id: '/admin/clubs',
+  path: '/admin/clubs',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedMPlantelPlayerIdRoute =
   AuthenticatedMPlantelPlayerIdRouteImport.update({
     id: '/$playerId',
@@ -71,6 +83,8 @@ export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/auth': typeof AuthRoute
   '/mas': typeof AuthenticatedMasRoute
+  '/invite/$token': typeof InviteTokenRoute
+  '/admin/clubs': typeof AuthenticatedAdminClubsRoute
   '/m/$module': typeof AuthenticatedMModuleRoute
   '/m/calendario': typeof AuthenticatedMCalendarioRoute
   '/m/coordinacion_interna': typeof AuthenticatedMCoordinacion_internaRoute
@@ -80,7 +94,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/mas': typeof AuthenticatedMasRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/': typeof AuthenticatedIndexRoute
+  '/admin/clubs': typeof AuthenticatedAdminClubsRoute
   '/m/$module': typeof AuthenticatedMModuleRoute
   '/m/calendario': typeof AuthenticatedMCalendarioRoute
   '/m/coordinacion_interna': typeof AuthenticatedMCoordinacion_internaRoute
@@ -92,7 +108,9 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/mas': typeof AuthenticatedMasRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/admin/clubs': typeof AuthenticatedAdminClubsRoute
   '/_authenticated/m/$module': typeof AuthenticatedMModuleRoute
   '/_authenticated/m/calendario': typeof AuthenticatedMCalendarioRoute
   '/_authenticated/m/coordinacion_interna': typeof AuthenticatedMCoordinacion_internaRoute
@@ -105,6 +123,8 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/mas'
+    | '/invite/$token'
+    | '/admin/clubs'
     | '/m/$module'
     | '/m/calendario'
     | '/m/coordinacion_interna'
@@ -114,7 +134,9 @@ export interface FileRouteTypes {
   to:
     | '/auth'
     | '/mas'
+    | '/invite/$token'
     | '/'
+    | '/admin/clubs'
     | '/m/$module'
     | '/m/calendario'
     | '/m/coordinacion_interna'
@@ -125,7 +147,9 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/mas'
+    | '/invite/$token'
     | '/_authenticated/'
+    | '/_authenticated/admin/clubs'
     | '/_authenticated/m/$module'
     | '/_authenticated/m/calendario'
     | '/_authenticated/m/coordinacion_interna'
@@ -136,6 +160,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  InviteTokenRoute: typeof InviteTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -160,6 +185,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/invite/$token': {
+      id: '/invite/$token'
+      path: '/invite/$token'
+      fullPath: '/invite/$token'
+      preLoaderRoute: typeof InviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/mas': {
       id: '/_authenticated/mas'
@@ -196,6 +228,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMModuleRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/clubs': {
+      id: '/_authenticated/admin/clubs'
+      path: '/admin/clubs'
+      fullPath: '/admin/clubs'
+      preLoaderRoute: typeof AuthenticatedAdminClubsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/m/plantel/$playerId': {
       id: '/_authenticated/m/plantel/$playerId'
       path: '/$playerId'
@@ -222,6 +261,7 @@ const AuthenticatedMPlantelRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedMasRoute: typeof AuthenticatedMasRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedAdminClubsRoute: typeof AuthenticatedAdminClubsRoute
   AuthenticatedMModuleRoute: typeof AuthenticatedMModuleRoute
   AuthenticatedMCalendarioRoute: typeof AuthenticatedMCalendarioRoute
   AuthenticatedMCoordinacion_internaRoute: typeof AuthenticatedMCoordinacion_internaRoute
@@ -231,6 +271,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMasRoute: AuthenticatedMasRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedAdminClubsRoute: AuthenticatedAdminClubsRoute,
   AuthenticatedMModuleRoute: AuthenticatedMModuleRoute,
   AuthenticatedMCalendarioRoute: AuthenticatedMCalendarioRoute,
   AuthenticatedMCoordinacion_internaRoute:
@@ -244,6 +285,7 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  InviteTokenRoute: InviteTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

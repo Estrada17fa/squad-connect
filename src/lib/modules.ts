@@ -37,30 +37,39 @@ export type ModuleKey =
   | "nutricion"
   | "uniformes";
 
+/**
+ * Ámbito de datos del módulo:
+ * - "team": estricto por categoría (usa el equipo activo del header).
+ * - "club": nivel club (ignora el selector de equipo).
+ * - "mixed": combina datos del club y del equipo activo.
+ */
+export type ModuleScope = "team" | "club" | "mixed";
+
 export interface ModuleDef {
   key: ModuleKey;
   label: string;
   icon: LucideIcon;
   description: string;
+  scope: ModuleScope;
 }
 
 export const MODULES: ModuleDef[] = [
-  { key: "calendario", label: "Calendario", icon: Calendar, description: "Partidos, entrenamientos y eventos" },
-  { key: "plantel", label: "Plantel", icon: Users, description: "Jugadores y cuerpo técnico" },
-  { key: "viajes", label: "Viajes", icon: Plane, description: "Logística de traslados y hospedajes" },
-  { key: "inventario", label: "Inventario", icon: Package, description: "Material deportivo y equipamiento" },
-  { key: "coordinacion_interna", label: "Coordinación", icon: MessagesSquare, description: "Comunicación interna del staff" },
-  { key: "solicitudes", label: "Solicitudes", icon: ClipboardList, description: "Aprobaciones y peticiones" },
-  { key: "documentos", label: "Documentos", icon: FileText, description: "Contratos y archivos del club" },
-  { key: "usuarios", label: "Usuarios", icon: UserCog, description: "Miembros, roles y permisos" },
-  { key: "comunicados", label: "Comunicados", icon: Megaphone, description: "Avisos oficiales del club" },
-  { key: "multimedia", label: "Multimedia", icon: ImageIcon, description: "Fotos y videos" },
-  { key: "torneo", label: "Torneo", icon: Trophy, description: "Competencias y clasificaciones" },
-  { key: "tacticas", label: "Tácticas", icon: LayoutGrid, description: "Formaciones y jugadas" },
-  { key: "salud", label: "Salud", icon: HeartPulse, description: "Parte médico y lesiones" },
-  { key: "desarrollo", label: "Desarrollo", icon: TrendingUp, description: "Evaluaciones y progresos" },
-  { key: "nutricion", label: "Nutrición", icon: Apple, description: "Planes alimenticios" },
-  { key: "uniformes", label: "Uniformes", icon: Shirt, description: "Kits y asignaciones" },
+  { key: "calendario", label: "Calendario", icon: Calendar, description: "Partidos, entrenamientos y eventos", scope: "mixed" },
+  { key: "plantel", label: "Plantel", icon: Users, description: "Jugadores y cuerpo técnico", scope: "team" },
+  { key: "viajes", label: "Viajes", icon: Plane, description: "Logística de traslados y hospedajes", scope: "mixed" },
+  { key: "inventario", label: "Inventario", icon: Package, description: "Material deportivo y equipamiento", scope: "mixed" },
+  { key: "coordinacion_interna", label: "Coordinación", icon: MessagesSquare, description: "Comunicación interna del staff", scope: "club" },
+  { key: "solicitudes", label: "Solicitudes", icon: ClipboardList, description: "Aprobaciones y peticiones", scope: "club" },
+  { key: "documentos", label: "Documentos", icon: FileText, description: "Contratos y archivos del club", scope: "club" },
+  { key: "usuarios", label: "Usuarios", icon: UserCog, description: "Miembros, roles y permisos", scope: "club" },
+  { key: "comunicados", label: "Comunicados", icon: Megaphone, description: "Avisos oficiales del club", scope: "club" },
+  { key: "multimedia", label: "Multimedia", icon: ImageIcon, description: "Fotos y videos", scope: "team" },
+  { key: "torneo", label: "Torneo", icon: Trophy, description: "Competencias y clasificaciones", scope: "club" },
+  { key: "tacticas", label: "Tácticas", icon: LayoutGrid, description: "Formaciones y jugadas", scope: "team" },
+  { key: "salud", label: "Salud", icon: HeartPulse, description: "Parte médico y lesiones", scope: "team" },
+  { key: "desarrollo", label: "Desarrollo", icon: TrendingUp, description: "Evaluaciones y progresos", scope: "team" },
+  { key: "nutricion", label: "Nutrición", icon: Apple, description: "Planes alimenticios", scope: "team" },
+  { key: "uniformes", label: "Uniformes", icon: Shirt, description: "Kits y asignaciones", scope: "team" },
 ];
 
 export const MODULE_MAP: Record<ModuleKey, ModuleDef> = Object.fromEntries(
@@ -72,3 +81,10 @@ export const HOME_MODULE: { key: "home"; label: string; icon: LucideIcon } = {
   label: "Inicio",
   icon: Home,
 };
+
+/** Devuelve la clave del módulo activo a partir del pathname (o null). */
+export function moduleFromPath(pathname: string): ModuleKey | null {
+  const m = pathname.match(/^\/m\/([a-z_]+)/);
+  if (!m) return null;
+  return (MODULE_MAP[m[1] as ModuleKey] ? (m[1] as ModuleKey) : null);
+}
