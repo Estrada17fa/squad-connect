@@ -50,7 +50,7 @@ export function useTasks(clubId: string | null | undefined) {
       const { data, error } = await supabase
         .from("tasks")
         .select(
-          "id, club_id, title, description, due_at, priority, status, created_by, completed_at, created_at, task_assignees(user_id, profile:profiles(id, full_name, email, avatar_url))",
+          "id, club_id, title, description, due_at, priority, status, created_by, completed_at, created_at, task_assignees(user_id, profile:profiles!task_assignees_user_id_profiles_fkey(id, full_name, email, avatar_url))",
         )
         .eq("club_id", clubId!)
         .order("due_at", { ascending: true, nullsFirst: false })
@@ -91,7 +91,7 @@ export function useMeetings(clubId: string | null | undefined) {
       const { data, error } = await supabase
         .from("meetings")
         .select(
-          "id, club_id, title, starts_at, ends_at, location, agenda, notes, created_by, created_at, meeting_attendees(user_id, attendance_status, profile:profiles(id, full_name, email, avatar_url))",
+          "id, club_id, title, starts_at, ends_at, location, agenda, notes, created_by, created_at, meeting_attendees(user_id, attendance_status, profile:profiles!meeting_attendees_user_id_profiles_fkey(id, full_name, email, avatar_url))",
         )
         .eq("club_id", clubId!)
         .order("starts_at", { ascending: true });

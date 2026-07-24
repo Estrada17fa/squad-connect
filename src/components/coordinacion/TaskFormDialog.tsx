@@ -20,6 +20,7 @@ interface Props {
   clubId: string;
   userId: string;
   task?: TaskRow | null;
+  onSaved?: (info: { isEdit: boolean; assigneeIds: string[] }) => void;
 }
 
 const PRIORITIES: { key: TaskPriority; label: string }[] = [
@@ -28,7 +29,7 @@ const PRIORITIES: { key: TaskPriority; label: string }[] = [
   { key: "alta", label: "Alta" },
 ];
 
-export function TaskFormDialog({ open, onOpenChange, clubId, userId, task }: Props) {
+export function TaskFormDialog({ open, onOpenChange, clubId, userId, task, onSaved }: Props) {
   const isEdit = !!task;
   const qc = useQueryClient();
   const staffQ = useClubStaff(clubId);
@@ -46,9 +47,10 @@ export function TaskFormDialog({ open, onOpenChange, clubId, userId, task }: Pro
     setDescription(task?.description ?? "");
     setDueAt(task?.due_at ? toLocalInputValue(task.due_at) : "");
     setPriority(task?.priority ?? "media");
-    setAssignees(new Set((task?.assignees ?? []).map((a) => a.id)));
+    // For new tasks, auto-assign the creator by default
+    setAssignees(new Set(task ? (task.assignees ?? []).map((a) => a.id) : [userId]));
     setSearch("");
-  }, [open, task]);
+  }, [open, task, userId]);
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -99,6 +101,7 @@ export function TaskFormDialog({ open, onOpenChange, clubId, userId, task }: Pro
     onSuccess: () => {
       toast.success(isEdit ? "Tarea actualizada" : "Tarea creada");
       qc.invalidateQueries({ queryKey: ["coord-tasks", clubId] });
+      onSaved?.({ isEdit, assigneeIds: [...assignees] });
       onOpenChange(false);
     },
     onError: (e: any) => toast.error(e.message ?? "No se pudo guardar"),
