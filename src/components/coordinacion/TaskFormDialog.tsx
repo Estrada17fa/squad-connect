@@ -20,6 +20,7 @@ interface Props {
   clubId: string;
   userId: string;
   task?: TaskRow | null;
+  onSaved?: (info: { isEdit: boolean; assigneeIds: string[] }) => void;
 }
 
 const PRIORITIES: { key: TaskPriority; label: string }[] = [
