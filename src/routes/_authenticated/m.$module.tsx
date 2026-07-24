@@ -23,7 +23,7 @@ export const Route = createFileRoute("/_authenticated/m/$module")({
 
 function ModulePage() {
   const { module } = Route.useParams();
-  useNavigate();
+  const navigate = useNavigate();
   const { accessibleModules } = useApp();
   const def = MODULE_MAP[module as ModuleKey];
 

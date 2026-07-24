@@ -135,23 +135,17 @@ function Header({
         <div className="flex items-center gap-2">
           {teams.length > 1 ? (
             <DropdownMenu>
-              <DropdownMenuTrigger className="glass inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm text-foreground transition-colors hover:bg-white/[0.06]">
+              <DropdownMenuTrigger className="glass inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm text-foreground hover:bg-white/[0.06]">
                 <span className="max-w-[120px] truncate">{activeTeam?.name ?? "Equipo"}</span>
                 <ChevronDown className="h-4 w-4 text-muted-foreground" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="w-60 rounded-2xl border-white/10 bg-background/85 p-1.5 backdrop-blur-xl"
-              >
-                <DropdownMenuLabel className="px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Cambiar equipo
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator className="bg-white/5" />
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Cambiar equipo</DropdownMenuLabel>
+                <DropdownMenuSeparator />
                 {teams.map((t) => (
                   <DropdownMenuItem
                     key={(t.id ?? "club") + t.roleId}
                     onSelect={() => setActiveTeamId(t.id)}
-                    className="rounded-xl focus:bg-white/[0.06]"
                   >
                     <div className="flex flex-col">
                       <span className="text-sm">{t.name}</span>
@@ -165,16 +159,13 @@ function Header({
             <span className="hidden text-sm text-muted-foreground sm:inline">{clubName}</span>
           ) : null}
           <DropdownMenu>
-            <DropdownMenuTrigger className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-sm font-medium text-foreground ring-1 ring-white/10 transition-colors hover:bg-white/10">
+            <DropdownMenuTrigger className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-sm font-medium text-foreground hover:bg-white/10">
               {(userName || "?").slice(0, 1).toUpperCase()}
             </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="w-56 rounded-2xl border-white/10 bg-background/85 p-1.5 backdrop-blur-xl"
-            >
-              <DropdownMenuLabel className="truncate px-2 text-sm">{userName || "Cuenta"}</DropdownMenuLabel>
-              <DropdownMenuSeparator className="bg-white/5" />
-              <DropdownMenuItem onSelect={onSignOut} className="rounded-xl focus:bg-white/[0.06]">
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel className="truncate">{userName || "Cuenta"}</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={onSignOut}>
                 <LogOut className="mr-2 h-4 w-4" />
                 Cerrar sesión
               </DropdownMenuItem>
@@ -185,7 +176,6 @@ function Header({
     </header>
   );
 }
-
 
 function BottomNav({ accessibleModules }: { accessibleModules: ModuleKey[] }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
