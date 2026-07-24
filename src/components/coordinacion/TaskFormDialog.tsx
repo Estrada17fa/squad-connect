@@ -101,6 +101,7 @@ export function TaskFormDialog({ open, onOpenChange, clubId, userId, task, onSav
     onSuccess: () => {
       toast.success(isEdit ? "Tarea actualizada" : "Tarea creada");
       qc.invalidateQueries({ queryKey: ["coord-tasks", clubId] });
+      onSaved?.({ isEdit, assigneeIds: [...assignees] });
       onOpenChange(false);
     },
     onError: (e: any) => toast.error(e.message ?? "No se pudo guardar"),
