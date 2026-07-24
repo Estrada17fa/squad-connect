@@ -20,11 +20,13 @@ import {
 interface AppCtx {
   user: { id: string };
   accessibleModules: ModuleKey[];
+  permissions: Record<string, "none" | "read" | "editor" | "approver">;
   activeTeam: TeamOption | null;
   setActiveTeamId: (id: string | null) => void;
   clubName: string | null;
   isSuperAdmin: boolean;
 }
+
 
 const AppContext = React.createContext<AppCtx | null>(null);
 
