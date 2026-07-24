@@ -50,7 +50,7 @@ export function useTasks(clubId: string | null | undefined) {
       const { data, error } = await supabase
         .from("tasks")
         .select(
-          "id, club_id, title, description, due_at, priority, status, created_by, completed_at, created_at, task_assignees(user_id, profile:profiles(id, full_name, email, avatar_url))",
+          "id, club_id, title, description, due_at, priority, status, created_by, completed_at, created_at, task_assignees(user_id, profile:profiles!task_assignees_user_id_profiles_fkey(id, full_name, email, avatar_url))",
         )
         .eq("club_id", clubId!)
         .order("due_at", { ascending: true, nullsFirst: false })
