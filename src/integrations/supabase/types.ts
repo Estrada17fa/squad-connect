@@ -94,6 +94,67 @@ export type Database = {
           },
         ]
       }
+      club_invitations: {
+        Row: {
+          accepted_at: string | null
+          club_id: string
+          created_at: string
+          created_by: string | null
+          email: string
+          expires_at: string
+          id: string
+          role_id: string | null
+          team_id: string | null
+          token: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          club_id: string
+          created_at?: string
+          created_by?: string | null
+          email: string
+          expires_at?: string
+          id?: string
+          role_id?: string | null
+          team_id?: string | null
+          token?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          club_id?: string
+          created_at?: string
+          created_by?: string | null
+          email?: string
+          expires_at?: string
+          id?: string
+          role_id?: string | null
+          team_id?: string | null
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_invitations_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "club_invitations_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "club_invitations_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clubs: {
         Row: {
           created_at: string
@@ -600,7 +661,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_invitation_by_token: {
+        Args: { _token: string }
+        Returns: {
+          accepted_at: string
+          club_id: string
+          club_name: string
+          email: string
+          expires_at: string
+          id: string
+          role_name: string
+          team_name: string
+        }[]
+      }
       get_user_club_id: { Args: { _user_id: string }; Returns: string }
+      has_club_access: {
+        Args: { _club_id: string; _user_id: string }
+        Returns: boolean
+      }
       has_module_access: {
         Args: { _module_key: string; _user_id: string }
         Returns: boolean
@@ -614,6 +692,10 @@ export type Database = {
         Returns: boolean
       }
       has_team_access: {
+        Args: { _team_id: string; _user_id: string }
+        Returns: boolean
+      }
+      has_team_scope: {
         Args: { _team_id: string; _user_id: string }
         Returns: boolean
       }
