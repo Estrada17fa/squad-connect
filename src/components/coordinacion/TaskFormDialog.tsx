@@ -47,9 +47,10 @@ export function TaskFormDialog({ open, onOpenChange, clubId, userId, task, onSav
     setDescription(task?.description ?? "");
     setDueAt(task?.due_at ? toLocalInputValue(task.due_at) : "");
     setPriority(task?.priority ?? "media");
-    setAssignees(new Set((task?.assignees ?? []).map((a) => a.id)));
+    // For new tasks, auto-assign the creator by default
+    setAssignees(new Set(task ? (task.assignees ?? []).map((a) => a.id) : [userId]));
     setSearch("");
-  }, [open, task]);
+  }, [open, task, userId]);
 
   const mutation = useMutation({
     mutationFn: async () => {
