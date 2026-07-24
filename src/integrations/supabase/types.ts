@@ -14,6 +14,76 @@ export type Database = {
   }
   public: {
     Tables: {
+      calendar_events: {
+        Row: {
+          club_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          details: Json | null
+          ends_at: string | null
+          event_type: Database["public"]["Enums"]["event_type"]
+          id: string
+          location: string | null
+          starts_at: string
+          team_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          club_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          details?: Json | null
+          ends_at?: string | null
+          event_type: Database["public"]["Enums"]["event_type"]
+          id?: string
+          location?: string | null
+          starts_at: string
+          team_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          club_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          details?: Json | null
+          ends_at?: string | null
+          event_type?: Database["public"]["Enums"]["event_type"]
+          id?: string
+          location?: string | null
+          starts_at?: string
+          team_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_events_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_events_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_events_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clubs: {
         Row: {
           created_at: string
@@ -43,6 +113,102 @@ export type Database = {
           secondary_color?: string | null
         }
         Relationships: []
+      }
+      event_attendees: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_attendees_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "calendar_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_attendees_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      player_profiles: {
+        Row: {
+          availability_status: Database["public"]["Enums"]["availability_status"]
+          birthdate: string | null
+          created_at: string
+          height_cm: number | null
+          id: string
+          jersey_number: number | null
+          notes: string | null
+          position: string | null
+          team_id: string
+          updated_at: string
+          user_id: string
+          weight_kg: number | null
+        }
+        Insert: {
+          availability_status?: Database["public"]["Enums"]["availability_status"]
+          birthdate?: string | null
+          created_at?: string
+          height_cm?: number | null
+          id?: string
+          jersey_number?: number | null
+          notes?: string | null
+          position?: string | null
+          team_id: string
+          updated_at?: string
+          user_id: string
+          weight_kg?: number | null
+        }
+        Update: {
+          availability_status?: Database["public"]["Enums"]["availability_status"]
+          birthdate?: string | null
+          created_at?: string
+          height_cm?: number | null
+          id?: string
+          jersey_number?: number | null
+          notes?: string | null
+          position?: string | null
+          team_id?: string
+          updated_at?: string
+          user_id?: string
+          weight_kg?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_profiles_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "player_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -250,6 +416,10 @@ export type Database = {
     }
     Functions: {
       get_user_club_id: { Args: { _user_id: string }; Returns: string }
+      has_module_editor: {
+        Args: { _module_key: string; _team_id: string; _user_id: string }
+        Returns: boolean
+      }
       has_team_access: {
         Args: { _team_id: string; _user_id: string }
         Returns: boolean
@@ -258,6 +428,13 @@ export type Database = {
     }
     Enums: {
       access_level: "none" | "read" | "editor" | "approver"
+      availability_status: "apto" | "lesionado" | "en_duda"
+      event_type:
+        | "partido"
+        | "entrenamiento"
+        | "viaje"
+        | "junta"
+        | "evento_especial"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -386,6 +563,14 @@ export const Constants = {
   public: {
     Enums: {
       access_level: ["none", "read", "editor", "approver"],
+      availability_status: ["apto", "lesionado", "en_duda"],
+      event_type: [
+        "partido",
+        "entrenamiento",
+        "viaje",
+        "junta",
+        "evento_especial",
+      ],
     },
   },
 } as const
