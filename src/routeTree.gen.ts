@@ -13,7 +13,10 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedMasRouteImport } from './routes/_authenticated/mas'
+import { Route as AuthenticatedMPlantelRouteImport } from './routes/_authenticated/m.plantel'
+import { Route as AuthenticatedMCalendarioRouteImport } from './routes/_authenticated/m.calendario'
 import { Route as AuthenticatedMModuleRouteImport } from './routes/_authenticated/m.$module'
+import { Route as AuthenticatedMPlantelPlayerIdRouteImport } from './routes/_authenticated/m.plantel.$playerId'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -34,23 +37,46 @@ const AuthenticatedMasRoute = AuthenticatedMasRouteImport.update({
   path: '/mas',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMPlantelRoute = AuthenticatedMPlantelRouteImport.update({
+  id: '/m/plantel',
+  path: '/m/plantel',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMCalendarioRoute =
+  AuthenticatedMCalendarioRouteImport.update({
+    id: '/m/calendario',
+    path: '/m/calendario',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMModuleRoute = AuthenticatedMModuleRouteImport.update({
   id: '/m/$module',
   path: '/m/$module',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMPlantelPlayerIdRoute =
+  AuthenticatedMPlantelPlayerIdRouteImport.update({
+    id: '/$playerId',
+    path: '/$playerId',
+    getParentRoute: () => AuthenticatedMPlantelRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/auth': typeof AuthRoute
   '/mas': typeof AuthenticatedMasRoute
   '/m/$module': typeof AuthenticatedMModuleRoute
+  '/m/calendario': typeof AuthenticatedMCalendarioRoute
+  '/m/plantel': typeof AuthenticatedMPlantelRouteWithChildren
+  '/m/plantel/$playerId': typeof AuthenticatedMPlantelPlayerIdRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/mas': typeof AuthenticatedMasRoute
   '/': typeof AuthenticatedIndexRoute
   '/m/$module': typeof AuthenticatedMModuleRoute
+  '/m/calendario': typeof AuthenticatedMCalendarioRoute
+  '/m/plantel': typeof AuthenticatedMPlantelRouteWithChildren
+  '/m/plantel/$playerId': typeof AuthenticatedMPlantelPlayerIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -59,12 +85,29 @@ export interface FileRoutesById {
   '/_authenticated/mas': typeof AuthenticatedMasRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/m/$module': typeof AuthenticatedMModuleRoute
+  '/_authenticated/m/calendario': typeof AuthenticatedMCalendarioRoute
+  '/_authenticated/m/plantel': typeof AuthenticatedMPlantelRouteWithChildren
+  '/_authenticated/m/plantel/$playerId': typeof AuthenticatedMPlantelPlayerIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/mas' | '/m/$module'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/mas'
+    | '/m/$module'
+    | '/m/calendario'
+    | '/m/plantel'
+    | '/m/plantel/$playerId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/auth' | '/mas' | '/' | '/m/$module'
+  to:
+    | '/auth'
+    | '/mas'
+    | '/'
+    | '/m/$module'
+    | '/m/calendario'
+    | '/m/plantel'
+    | '/m/plantel/$playerId'
   id:
     | '__root__'
     | '/_authenticated'
@@ -72,6 +115,9 @@ export interface FileRouteTypes {
     | '/_authenticated/mas'
     | '/_authenticated/'
     | '/_authenticated/m/$module'
+    | '/_authenticated/m/calendario'
+    | '/_authenticated/m/plantel'
+    | '/_authenticated/m/plantel/$playerId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -109,6 +155,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMasRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/m/plantel': {
+      id: '/_authenticated/m/plantel'
+      path: '/m/plantel'
+      fullPath: '/m/plantel'
+      preLoaderRoute: typeof AuthenticatedMPlantelRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/m/calendario': {
+      id: '/_authenticated/m/calendario'
+      path: '/m/calendario'
+      fullPath: '/m/calendario'
+      preLoaderRoute: typeof AuthenticatedMCalendarioRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/m/$module': {
       id: '/_authenticated/m/$module'
       path: '/m/$module'
@@ -116,19 +176,43 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMModuleRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/m/plantel/$playerId': {
+      id: '/_authenticated/m/plantel/$playerId'
+      path: '/$playerId'
+      fullPath: '/m/plantel/$playerId'
+      preLoaderRoute: typeof AuthenticatedMPlantelPlayerIdRouteImport
+      parentRoute: typeof AuthenticatedMPlantelRoute
+    }
   }
 }
+
+interface AuthenticatedMPlantelRouteChildren {
+  AuthenticatedMPlantelPlayerIdRoute: typeof AuthenticatedMPlantelPlayerIdRoute
+}
+
+const AuthenticatedMPlantelRouteChildren: AuthenticatedMPlantelRouteChildren = {
+  AuthenticatedMPlantelPlayerIdRoute: AuthenticatedMPlantelPlayerIdRoute,
+}
+
+const AuthenticatedMPlantelRouteWithChildren =
+  AuthenticatedMPlantelRoute._addFileChildren(
+    AuthenticatedMPlantelRouteChildren,
+  )
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedMasRoute: typeof AuthenticatedMasRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedMModuleRoute: typeof AuthenticatedMModuleRoute
+  AuthenticatedMCalendarioRoute: typeof AuthenticatedMCalendarioRoute
+  AuthenticatedMPlantelRoute: typeof AuthenticatedMPlantelRouteWithChildren
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMasRoute: AuthenticatedMasRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedMModuleRoute: AuthenticatedMModuleRoute,
+  AuthenticatedMCalendarioRoute: AuthenticatedMCalendarioRoute,
+  AuthenticatedMPlantelRoute: AuthenticatedMPlantelRouteWithChildren,
 }
 
 const AuthenticatedRouteRouteWithChildren =

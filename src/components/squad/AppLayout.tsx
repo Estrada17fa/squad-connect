@@ -20,11 +20,13 @@ import {
 interface AppCtx {
   user: { id: string };
   accessibleModules: ModuleKey[];
+  permissions: Record<string, "none" | "read" | "editor" | "approver">;
   activeTeam: TeamOption | null;
   setActiveTeamId: (id: string | null) => void;
   clubName: string | null;
   isSuperAdmin: boolean;
 }
+
 
 const AppContext = React.createContext<AppCtx | null>(null);
 
@@ -80,6 +82,8 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
   const ctx: AppCtx = {
     user: { id: user.id },
     accessibleModules,
+    permissions: data.permissions,
+
     activeTeam,
     setActiveTeamId,
     clubName: data.clubName,

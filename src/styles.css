@@ -96,7 +96,15 @@
   --glass-blur: 18px;
 
   --glow-primary: 0 0 24px hsl(150 100% 50% / 0.35), 0 0 6px hsl(150 100% 50% / 0.5);
+
+  /* Event-type accents — distinct from brand green and status colors. */
+  --event-partido: hsl(280 90% 65%);
+  --event-entrenamiento: hsl(200 90% 60%);
+  --event-viaje: hsl(30 95% 60%);
+  --event-junta: hsl(220 15% 70%);
+  --event-especial: hsl(330 85% 65%);
 }
+
 
 @layer base {
   * {
