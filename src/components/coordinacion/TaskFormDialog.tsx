@@ -29,7 +29,7 @@ const PRIORITIES: { key: TaskPriority; label: string }[] = [
   { key: "alta", label: "Alta" },
 ];
 
-export function TaskFormDialog({ open, onOpenChange, clubId, userId, task }: Props) {
+export function TaskFormDialog({ open, onOpenChange, clubId, userId, task, onSaved }: Props) {
   const isEdit = !!task;
   const qc = useQueryClient();
   const staffQ = useClubStaff(clubId);
