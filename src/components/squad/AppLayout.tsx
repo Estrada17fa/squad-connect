@@ -89,6 +89,7 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
     setActiveTeamId,
     clubName: data.clubName,
     isSuperAdmin: data.isSuperAdmin,
+    profile: data.profile,
   };
 
   return (
