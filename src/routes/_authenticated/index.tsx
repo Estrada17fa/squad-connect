@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Calendar, Users } from "lucide-react";
+import { Calendar, Users, MessagesSquare } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { StandardCard } from "@/components/squad/StandardCard";
 import { EmptyState } from "@/components/squad/EmptyState";
@@ -24,7 +24,8 @@ export const Route = createFileRoute("/_authenticated/")({
 
 function Home() {
   const navigate = useNavigate();
-  const { accessibleModules, clubName, activeTeam } = useApp();
+  const { accessibleModules, clubName, activeTeam, user, profile } = useApp();
+  const clubId = profile?.club_id ?? null;
 
   const nextEventQ = useQuery({
     queryKey: ["home-next-event", activeTeam?.id ?? "none"],
@@ -58,9 +59,39 @@ function Home() {
     },
   });
 
-  const others = accessibleModules.filter((k) => k !== "calendario" && k !== "plantel");
+  const coordQ = useQuery({
+    queryKey: ["home-coord", user.id, clubId ?? "none"],
+    enabled: !!clubId && accessibleModules.includes("coordinacion_interna"),
+    queryFn: async () => {
+      const [tasksRes, meetingsRes] = await Promise.all([
+        supabase
+          .from("task_assignees")
+          .select("task:tasks!inner(id, status, club_id)")
+          .eq("user_id", user.id),
+        supabase
+          .from("meeting_attendees")
+          .select("meeting:meetings!inner(id, title, starts_at, location, club_id)")
+          .eq("user_id", user.id)
+          .neq("attendance_status", "rechazado"),
+      ]);
+      const pending = (tasksRes.data ?? []).filter(
+        (r: any) => r.task && r.task.club_id === clubId && r.task.status !== "completada",
+      ).length;
+      const nowIso = new Date().toISOString();
+      const nextMeeting = (meetingsRes.data ?? [])
+        .map((r: any) => r.meeting)
+        .filter((m: any) => m && m.club_id === clubId && m.starts_at >= nowIso)
+        .sort((a: any, b: any) => a.starts_at.localeCompare(b.starts_at))[0];
+      return { pending, nextMeeting };
+    },
+  });
+
+  const others = accessibleModules.filter(
+    (k) => k !== "calendario" && k !== "plantel" && k !== "coordinacion_interna",
+  );
   const hasCal = accessibleModules.includes("calendario");
   const hasPlantel = accessibleModules.includes("plantel");
+  const hasCoord = accessibleModules.includes("coordinacion_interna");
 
   return (
     <div className="space-y-6">
@@ -76,7 +107,7 @@ function Home() {
         />
       ) : (
         <>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {hasCal ? (
               <div className="animate-card-in">
                 <StandardCard
@@ -112,6 +143,31 @@ function Home() {
                   }
                 >
                   Revisa disponibilidad y datos del roster.
+                </StandardCard>
+              </div>
+            ) : null}
+            {hasCoord ? (
+              <div className="animate-card-in" style={{ animationDelay: "80ms" }}>
+                <StandardCard
+                  interactive
+                  onClick={() => navigate({ to: "/m/$module", params: { module: "coordinacion_interna" } })}
+                  icon={MessagesSquare}
+                  title="Coordinación"
+                  subtitle={
+                    coordQ.data
+                      ? `${coordQ.data.pending} tarea${coordQ.data.pending === 1 ? "" : "s"} pendiente${coordQ.data.pending === 1 ? "" : "s"}`
+                      : "Cargando…"
+                  }
+                >
+                  {coordQ.data?.nextMeeting ? (
+                    <span>
+                      Próxima junta:{" "}
+                      <span className="text-foreground">{coordQ.data.nextMeeting.title}</span>
+                      <span className="text-muted-foreground"> · {formatDateTime(coordQ.data.nextMeeting.starts_at)}</span>
+                    </span>
+                  ) : (
+                    "Sin juntas próximas."
+                  )}
                 </StandardCard>
               </div>
             ) : null}

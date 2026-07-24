@@ -24,10 +24,12 @@ export function useCalendarEvents(teamId: string | null | undefined) {
     queryKey: ["calendar-events", teamId ?? "none"],
     enabled: !!teamId,
     queryFn: async (): Promise<CalendarEventRow[]> => {
+      // Team events + club-wide events (team_id NULL) the user can see via RLS
+      // (meetings sync into calendar_events with team_id NULL + event_attendees).
       const { data, error } = await supabase
         .from("calendar_events")
         .select("*")
-        .eq("team_id", teamId!)
+        .or(`team_id.eq.${teamId},team_id.is.null`)
         .order("starts_at", { ascending: true });
       if (error) throw error;
       return (data ?? []) as CalendarEventRow[];

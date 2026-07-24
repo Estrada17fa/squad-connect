@@ -25,6 +25,7 @@ interface AppCtx {
   setActiveTeamId: (id: string | null) => void;
   clubName: string | null;
   isSuperAdmin: boolean;
+  profile: { full_name: string | null; email: string | null; club_id: string | null } | null;
 }
 
 
@@ -88,6 +89,7 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
     setActiveTeamId,
     clubName: data.clubName,
     isSuperAdmin: data.isSuperAdmin,
+    profile: data.profile,
   };
 
   return (

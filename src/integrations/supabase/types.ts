@@ -25,8 +25,9 @@ export type Database = {
           event_type: Database["public"]["Enums"]["event_type"]
           id: string
           location: string | null
+          meeting_id: string | null
           starts_at: string
-          team_id: string
+          team_id: string | null
           title: string
           updated_at: string
         }
@@ -40,8 +41,9 @@ export type Database = {
           event_type: Database["public"]["Enums"]["event_type"]
           id?: string
           location?: string | null
+          meeting_id?: string | null
           starts_at: string
-          team_id: string
+          team_id?: string | null
           title: string
           updated_at?: string
         }
@@ -55,8 +57,9 @@ export type Database = {
           event_type?: Database["public"]["Enums"]["event_type"]
           id?: string
           location?: string | null
+          meeting_id?: string | null
           starts_at?: string
-          team_id?: string
+          team_id?: string | null
           title?: string
           updated_at?: string
         }
@@ -73,6 +76,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_events_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
             referencedColumns: ["id"]
           },
           {
@@ -146,6 +156,88 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meeting_attendees: {
+        Row: {
+          attendance_status: Database["public"]["Enums"]["attendance_status"]
+          created_at: string
+          id: string
+          meeting_id: string
+          user_id: string
+        }
+        Insert: {
+          attendance_status?: Database["public"]["Enums"]["attendance_status"]
+          created_at?: string
+          id?: string
+          meeting_id: string
+          user_id: string
+        }
+        Update: {
+          attendance_status?: Database["public"]["Enums"]["attendance_status"]
+          created_at?: string
+          id?: string
+          meeting_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_attendees_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meetings: {
+        Row: {
+          agenda: string | null
+          club_id: string
+          created_at: string
+          created_by: string | null
+          ends_at: string | null
+          id: string
+          location: string | null
+          notes: string | null
+          starts_at: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          agenda?: string | null
+          club_id: string
+          created_at?: string
+          created_by?: string | null
+          ends_at?: string | null
+          id?: string
+          location?: string | null
+          notes?: string | null
+          starts_at: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          agenda?: string | null
+          club_id?: string
+          created_at?: string
+          created_by?: string | null
+          ends_at?: string | null
+          id?: string
+          location?: string | null
+          notes?: string | null
+          starts_at?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meetings_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
             referencedColumns: ["id"]
           },
         ]
@@ -332,6 +424,85 @@ export type Database = {
           },
         ]
       }
+      task_assignees: {
+        Row: {
+          created_at: string
+          id: string
+          task_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          task_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          task_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_assignees_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tasks: {
+        Row: {
+          club_id: string
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          due_at: string | null
+          id: string
+          priority: Database["public"]["Enums"]["task_priority"]
+          status: Database["public"]["Enums"]["task_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          club_id: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_at?: string | null
+          id?: string
+          priority?: Database["public"]["Enums"]["task_priority"]
+          status?: Database["public"]["Enums"]["task_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          club_id?: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_at?: string | null
+          id?: string
+          priority?: Database["public"]["Enums"]["task_priority"]
+          status?: Database["public"]["Enums"]["task_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       team_memberships: {
         Row: {
           created_at: string
@@ -416,8 +587,16 @@ export type Database = {
     }
     Functions: {
       get_user_club_id: { Args: { _user_id: string }; Returns: string }
+      has_module_access: {
+        Args: { _module_key: string; _user_id: string }
+        Returns: boolean
+      }
       has_module_editor: {
         Args: { _module_key: string; _team_id: string; _user_id: string }
+        Returns: boolean
+      }
+      has_module_editor_any: {
+        Args: { _module_key: string; _user_id: string }
         Returns: boolean
       }
       has_team_access: {
@@ -428,6 +607,7 @@ export type Database = {
     }
     Enums: {
       access_level: "none" | "read" | "editor" | "approver"
+      attendance_status: "invitado" | "confirmado" | "rechazado"
       availability_status: "apto" | "lesionado" | "en_duda"
       event_type:
         | "partido"
@@ -435,6 +615,8 @@ export type Database = {
         | "viaje"
         | "junta"
         | "evento_especial"
+      task_priority: "baja" | "media" | "alta"
+      task_status: "pendiente" | "en_progreso" | "completada"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -563,6 +745,7 @@ export const Constants = {
   public: {
     Enums: {
       access_level: ["none", "read", "editor", "approver"],
+      attendance_status: ["invitado", "confirmado", "rechazado"],
       availability_status: ["apto", "lesionado", "en_duda"],
       event_type: [
         "partido",
@@ -571,6 +754,8 @@ export const Constants = {
         "junta",
         "evento_especial",
       ],
+      task_priority: ["baja", "media", "alta"],
+      task_status: ["pendiente", "en_progreso", "completada"],
     },
   },
 } as const

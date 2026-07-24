@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedMasRouteImport } from './routes/_authenticated/mas'
 import { Route as AuthenticatedMPlantelRouteImport } from './routes/_authenticated/m.plantel'
+import { Route as AuthenticatedMCoordinacion_internaRouteImport } from './routes/_authenticated/m.coordinacion_interna'
 import { Route as AuthenticatedMCalendarioRouteImport } from './routes/_authenticated/m.calendario'
 import { Route as AuthenticatedMModuleRouteImport } from './routes/_authenticated/m.$module'
 import { Route as AuthenticatedMPlantelPlayerIdRouteImport } from './routes/_authenticated/m.plantel.$playerId'
@@ -42,6 +43,12 @@ const AuthenticatedMPlantelRoute = AuthenticatedMPlantelRouteImport.update({
   path: '/m/plantel',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMCoordinacion_internaRoute =
+  AuthenticatedMCoordinacion_internaRouteImport.update({
+    id: '/m/coordinacion_interna',
+    path: '/m/coordinacion_interna',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMCalendarioRoute =
   AuthenticatedMCalendarioRouteImport.update({
     id: '/m/calendario',
@@ -66,6 +73,7 @@ export interface FileRoutesByFullPath {
   '/mas': typeof AuthenticatedMasRoute
   '/m/$module': typeof AuthenticatedMModuleRoute
   '/m/calendario': typeof AuthenticatedMCalendarioRoute
+  '/m/coordinacion_interna': typeof AuthenticatedMCoordinacion_internaRoute
   '/m/plantel': typeof AuthenticatedMPlantelRouteWithChildren
   '/m/plantel/$playerId': typeof AuthenticatedMPlantelPlayerIdRoute
 }
@@ -75,6 +83,7 @@ export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
   '/m/$module': typeof AuthenticatedMModuleRoute
   '/m/calendario': typeof AuthenticatedMCalendarioRoute
+  '/m/coordinacion_interna': typeof AuthenticatedMCoordinacion_internaRoute
   '/m/plantel': typeof AuthenticatedMPlantelRouteWithChildren
   '/m/plantel/$playerId': typeof AuthenticatedMPlantelPlayerIdRoute
 }
@@ -86,6 +95,7 @@ export interface FileRoutesById {
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/m/$module': typeof AuthenticatedMModuleRoute
   '/_authenticated/m/calendario': typeof AuthenticatedMCalendarioRoute
+  '/_authenticated/m/coordinacion_interna': typeof AuthenticatedMCoordinacion_internaRoute
   '/_authenticated/m/plantel': typeof AuthenticatedMPlantelRouteWithChildren
   '/_authenticated/m/plantel/$playerId': typeof AuthenticatedMPlantelPlayerIdRoute
 }
@@ -97,6 +107,7 @@ export interface FileRouteTypes {
     | '/mas'
     | '/m/$module'
     | '/m/calendario'
+    | '/m/coordinacion_interna'
     | '/m/plantel'
     | '/m/plantel/$playerId'
   fileRoutesByTo: FileRoutesByTo
@@ -106,6 +117,7 @@ export interface FileRouteTypes {
     | '/'
     | '/m/$module'
     | '/m/calendario'
+    | '/m/coordinacion_interna'
     | '/m/plantel'
     | '/m/plantel/$playerId'
   id:
@@ -116,6 +128,7 @@ export interface FileRouteTypes {
     | '/_authenticated/'
     | '/_authenticated/m/$module'
     | '/_authenticated/m/calendario'
+    | '/_authenticated/m/coordinacion_interna'
     | '/_authenticated/m/plantel'
     | '/_authenticated/m/plantel/$playerId'
   fileRoutesById: FileRoutesById
@@ -162,6 +175,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMPlantelRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/m/coordinacion_interna': {
+      id: '/_authenticated/m/coordinacion_interna'
+      path: '/m/coordinacion_interna'
+      fullPath: '/m/coordinacion_interna'
+      preLoaderRoute: typeof AuthenticatedMCoordinacion_internaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/m/calendario': {
       id: '/_authenticated/m/calendario'
       path: '/m/calendario'
@@ -204,6 +224,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedMModuleRoute: typeof AuthenticatedMModuleRoute
   AuthenticatedMCalendarioRoute: typeof AuthenticatedMCalendarioRoute
+  AuthenticatedMCoordinacion_internaRoute: typeof AuthenticatedMCoordinacion_internaRoute
   AuthenticatedMPlantelRoute: typeof AuthenticatedMPlantelRouteWithChildren
 }
 
@@ -212,6 +233,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedMModuleRoute: AuthenticatedMModuleRoute,
   AuthenticatedMCalendarioRoute: AuthenticatedMCalendarioRoute,
+  AuthenticatedMCoordinacion_internaRoute:
+    AuthenticatedMCoordinacion_internaRoute,
   AuthenticatedMPlantelRoute: AuthenticatedMPlantelRouteWithChildren,
 }
 
