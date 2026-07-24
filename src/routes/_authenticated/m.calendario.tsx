@@ -100,11 +100,12 @@ function CalendarPage() {
         subtitle={activeTeam.name}
         action={
           canEdit ? (
-            <Button onClick={() => openCreate()} className="glow-primary">
+            <Button onClick={() => openCreate()} className="glow-primary rounded-full">
               <Plus className="mr-2 h-4 w-4" /> Nuevo evento
             </Button>
           ) : null
         }
+
       />
 
       <Tabs defaultValue="agenda" className="w-full">

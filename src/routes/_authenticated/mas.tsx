@@ -27,11 +27,24 @@ function MorePage() {
               <button
                 key={key}
                 onClick={() => navigate({ to: "/m/$module", params: { module: key } })}
-                className="glass animate-card-in flex flex-col items-center gap-2 p-4 text-center transition-colors hover:bg-white/[0.06]"
+                className="glass card-hover animate-card-in relative flex flex-col items-center gap-2 overflow-hidden p-4 text-center hover:-translate-y-0.5 hover:[background:linear-gradient(hsl(0_0%_100%/0.055),hsl(0_0%_100%/0.055))_padding-box,linear-gradient(180deg,hsl(150_100%_50%/0.45),hsl(150_100%_50%/0.06))_border-box]"
                 style={{ animationDelay: `${i * 30}ms` }}
               >
-                <Icon className="h-6 w-6 text-foreground" />
-                <span className="font-display text-xs font-medium text-foreground">{m.label}</span>
+                <span
+                  className="pointer-events-none absolute inset-x-4 top-0 h-px opacity-60"
+                  style={{ background: `linear-gradient(90deg,transparent,${m.accent},transparent)` }}
+                />
+                <div
+                  className="flex h-11 w-11 items-center justify-center rounded-2xl"
+                  style={{
+                    background: `color-mix(in oklab, ${m.accent} 14%, transparent)`,
+                    color: m.accent,
+                    boxShadow: `inset 0 0 0 1px color-mix(in oklab, ${m.accent} 22%, transparent)`,
+                  }}
+                >
+                  <Icon className="h-5 w-5" />
+                </div>
+                <span className="font-display text-xs font-semibold text-foreground">{m.label}</span>
               </button>
             );
           })}
