@@ -193,22 +193,28 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
       <div>
         {selected ? (
           <div className="glass p-4 space-y-5">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <h3 className="font-display text-lg font-semibold">
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+              <div className="min-w-0">
+                <h3 className="truncate font-display text-lg font-semibold">
                   {selected.full_name ?? selected.email}
                 </h3>
-                <p className="text-xs text-muted-foreground">{selected.email}</p>
+                <p className="truncate text-xs text-muted-foreground">{selected.email}</p>
               </div>
               {canEdit ? (
                 <Button size="sm" variant="secondary" onClick={() => setAddOpen(true)}>
-                  <Plus className="mr-2 h-4 w-4" /> Añadir membresía
+                  <Plus className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Añadir membresía</span>
                 </Button>
               ) : null}
             </div>
 
             <div className="space-y-2">
-              <h4 className="text-xs uppercase tracking-wide text-muted-foreground">Membresías</h4>
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h4 className="text-xs uppercase tracking-wide text-muted-foreground">Membresías</h4>
+                <p className="text-[11px] text-muted-foreground">
+                  Cada membresía = un equipo + un rol. "Alcance club" solo para roles con permiso.
+                </p>
+              </div>
               {membershipsQ.isLoading ? (
                 <LoadingState />
               ) : (membershipsQ.data ?? []).length === 0 ? (
