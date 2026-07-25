@@ -72,9 +72,10 @@ function UsuariosPage() {
     <div className="space-y-6">
       <PageHeader title="Usuarios" subtitle="Miembros del club, roles y permisos" />
       <Tabs defaultValue="roles" className="space-y-4">
-        <TabsList className="glass">
-          <TabsTrigger value="roles">Roles y permisos</TabsTrigger>
-          <TabsTrigger value="miembros">Miembros</TabsTrigger>
+        <TabsList className="glass w-full sm:w-auto">
+          <TabsTrigger value="roles" className="flex-1 sm:flex-none">Roles</TabsTrigger>
+          <TabsTrigger value="miembros" className="flex-1 sm:flex-none">Miembros</TabsTrigger>
+          <TabsTrigger value="categorias" className="flex-1 sm:flex-none">Categorías</TabsTrigger>
         </TabsList>
         <TabsContent value="roles">
           <RolesTab clubId={profile?.club_id ?? null} canEdit={canEdit} />
@@ -86,7 +87,13 @@ function UsuariosPage() {
             <EmptyState title="Sin club" message="Tu perfil aún no está asociado a un club." />
           )}
         </TabsContent>
-
+        <TabsContent value="categorias">
+          {profile?.club_id ? (
+            <CategoriesTab clubId={profile.club_id} canEdit={canEdit} />
+          ) : (
+            <EmptyState title="Sin club" message="Tu perfil aún no está asociado a un club." />
+          )}
+        </TabsContent>
       </Tabs>
     </div>
   );
