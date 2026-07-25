@@ -169,18 +169,18 @@ function CategoryFormDialog({
     if (!name.trim()) return;
     setSaving(true);
     try {
-      const cat = category.trim() ? category.trim() : undefined;
+      const cat = category.trim();
       if (row) {
         const { error } = await supabase
           .from("teams")
-          .update({ name: name.trim(), category: cat })
+          .update({ name: name.trim(), ...(cat ? { category: cat } : { category: null as any }) })
           .eq("id", row.id);
         if (error) throw error;
         toast.success("Categoría actualizada");
       } else {
-        const { error } = await supabase
-          .from("teams")
-          .insert({ club_id: clubId, name: name.trim(), category: cat });
+        const payload: any = { club_id: clubId, name: name.trim() };
+        if (cat) payload.category = cat;
+        const { error } = await supabase.from("teams").insert(payload);
         if (error) throw error;
         toast.success("Categoría creada");
       }
