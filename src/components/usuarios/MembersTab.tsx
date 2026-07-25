@@ -245,6 +245,7 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
                         </div>
                         <p className="truncate text-xs text-muted-foreground">
                           {m.role?.name ?? "—"}
+                          {m.job_title ? ` · ${m.job_title}` : ""}
                         </p>
                       </div>
                       {canEdit ? (
