@@ -68,7 +68,7 @@ export function CreateMemberDialog({
   const [shoe, setShoe] = React.useState("");
   const [jersey, setJersey] = React.useState("");
   const [position, setPosition] = React.useState("");
-  const [memberships, setMemberships] = React.useState<Draft[]>([{ role_id: "", team_id: "" }]);
+  const [memberships, setMemberships] = React.useState<Draft[]>([{ role_id: "", team_id: "", job_title: "" }]);
   const [saving, setSaving] = React.useState(false);
 
   React.useEffect(() => {
@@ -85,7 +85,7 @@ export function CreateMemberDialog({
       setShoe("");
       setJersey("");
       setPosition("");
-      setMemberships([{ role_id: "", team_id: "" }]);
+      setMemberships([{ role_id: "", team_id: "", job_title: "" }]);
       setSaving(false);
     }
   }, [open]);
@@ -255,7 +255,7 @@ export function CreateMemberDialog({
                 type="button"
                 size="sm"
                 variant="ghost"
-                onClick={() => setMemberships((l) => [...l, { role_id: "", team_id: "" }])}
+                onClick={() => setMemberships((l) => [...l, { role_id: "", team_id: "", job_title: "" }])}
               >
                 <Plus className="mr-1 h-4 w-4" /> Añadir
               </Button>
