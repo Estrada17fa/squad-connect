@@ -126,25 +126,21 @@ export const createClubMember = createServerFn({ method: "POST" })
     const newUserId = created.user.id;
 
     // 6. Update profile (trigger already created the row)
-    const profileUpdate: Record<string, unknown> = {
+    const norm = <T,>(v: T | null | undefined): T | null =>
+      v === undefined || v === null || (typeof v === "string" && v.trim() === "") ? null : v;
+    const profileUpdate = {
       club_id: clubId,
       full_name: data.full_name,
       email: data.email,
+      birthdate: norm(data.birthdate),
+      nationality: norm(data.nationality),
+      phone: norm(data.phone),
+      shirt_size: norm(data.shirt_size),
+      pants_size: norm(data.pants_size),
+      shoe_size: norm(data.shoe_size),
+      jersey_number: norm(data.jersey_number),
+      position: norm(data.position),
     };
-    const optional: Array<keyof CreateClubMemberInput> = [
-      "birthdate",
-      "nationality",
-      "phone",
-      "shirt_size",
-      "pants_size",
-      "shoe_size",
-      "jersey_number",
-      "position",
-    ];
-    for (const k of optional) {
-      const v = (data as any)[k];
-      if (v !== undefined && v !== null && v !== "") profileUpdate[k] = v;
-    }
     const { error: profErr } = await supabaseAdmin
       .from("profiles")
       .update(profileUpdate)
