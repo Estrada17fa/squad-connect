@@ -444,6 +444,17 @@ function AddMembershipDialog({
               </p>
             ) : null}
           </div>
+          <div className="space-y-2">
+            <Label>Puesto (opcional)</Label>
+            <Input
+              value={jobTitle}
+              onChange={(e) => setJobTitle(e.target.value)}
+              placeholder="Ej. Utilero, Kinesiólogo, Portero"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Solo informativo. No cambia los permisos.
+            </p>
+          </div>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
