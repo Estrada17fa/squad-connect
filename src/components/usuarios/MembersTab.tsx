@@ -46,6 +46,7 @@ interface RoleRow {
   id: string;
   name: string;
   is_system_default: boolean;
+  allows_club_wide: boolean;
 }
 interface TeamRow {
   id: string;
