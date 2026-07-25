@@ -374,14 +374,19 @@ export type Database = {
         Row: {
           avatar_url: string | null
           birthdate: string | null
+          birthplace: string | null
           club_id: string | null
           created_at: string
           email: string | null
+          first_name: string | null
           full_name: string | null
           id: string
           jersey_number: number | null
+          maternal_last_name: string | null
+          name_completed: boolean
           nationality: string | null
           pants_size: string | null
+          paternal_last_name: string | null
           phone: string | null
           position: string | null
           shirt_size: string | null
@@ -390,14 +395,19 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           birthdate?: string | null
+          birthplace?: string | null
           club_id?: string | null
           created_at?: string
           email?: string | null
+          first_name?: string | null
           full_name?: string | null
           id: string
           jersey_number?: number | null
+          maternal_last_name?: string | null
+          name_completed?: boolean
           nationality?: string | null
           pants_size?: string | null
+          paternal_last_name?: string | null
           phone?: string | null
           position?: string | null
           shirt_size?: string | null
@@ -406,14 +416,19 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           birthdate?: string | null
+          birthplace?: string | null
           club_id?: string | null
           created_at?: string
           email?: string | null
+          first_name?: string | null
           full_name?: string | null
           id?: string
           jersey_number?: number | null
+          maternal_last_name?: string | null
+          name_completed?: boolean
           nationality?: string | null
           pants_size?: string | null
+          paternal_last_name?: string | null
           phone?: string | null
           position?: string | null
           shirt_size?: string | null
