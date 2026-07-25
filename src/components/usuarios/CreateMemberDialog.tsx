@@ -35,6 +35,7 @@ interface TeamOpt {
 interface Draft {
   role_id: string;
   team_id: string; // "" | "__club__" | uuid
+  job_title: string;
 }
 
 export function CreateMemberDialog({
