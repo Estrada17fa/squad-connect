@@ -165,6 +165,11 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
       <div className="space-y-3">
+        {canEdit ? (
+          <Button className="w-full" variant="secondary" onClick={() => setCreateOpen(true)}>
+            <UserPlus className="mr-2 h-4 w-4" /> Crear miembro
+          </Button>
+        ) : null}
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
