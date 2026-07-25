@@ -94,7 +94,7 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
     queryFn: async (): Promise<ProfileRow[]> => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, full_name, email, avatar_url")
+        .select("id, full_name, first_name, paternal_last_name, maternal_last_name, name_completed, email, avatar_url")
         .eq("club_id", clubId)
         .order("full_name");
       if (error) throw error;
@@ -196,7 +196,7 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
           {filtered.map((m) => (
             <StandardCard
               key={m.id}
-              title={m.full_name ?? m.email ?? "Sin nombre"}
+              title={displayName(m)}
               subtitle={m.email ?? undefined}
               icon={UserIcon}
               interactive
@@ -215,9 +215,14 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
           <div className="glass p-4 space-y-5">
             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
               <div className="min-w-0">
-                <h3 className="truncate font-display text-lg font-semibold">
-                  {selected.full_name ?? selected.email}
-                </h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="truncate font-display text-lg font-semibold">
+                    {displayName(selected)}
+                  </h3>
+                  {selected.name_completed === false ? (
+                    <StatusBadge variant="warning">Completar nombre</StatusBadge>
+                  ) : null}
+                </div>
                 <p className="truncate text-xs text-muted-foreground">{selected.email}</p>
               </div>
               {canEdit ? (
