@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, ShieldCheck, Trash2, Pencil } from "lucide-react";
 import { MembersTab } from "@/components/usuarios/MembersTab";
+import { CategoriesTab } from "@/components/usuarios/CategoriesTab";
 
 import { toast } from "sonner";
 import { PageHeader } from "@/components/squad/PageHeader";
