@@ -46,6 +46,7 @@ interface RoleRow {
   id: string;
   name: string;
   is_system_default: boolean;
+  allows_club_wide: boolean;
 }
 interface TeamRow {
   id: string;
@@ -91,7 +92,7 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
     queryFn: async (): Promise<RoleRow[]> => {
       const { data, error } = await supabase
         .from("roles")
-        .select("id, name, is_system_default")
+        .select("id, name, is_system_default, allows_club_wide")
         .eq("club_id", clubId)
         .order("name");
       if (error) throw error;
@@ -192,22 +193,28 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
       <div>
         {selected ? (
           <div className="glass p-4 space-y-5">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <h3 className="font-display text-lg font-semibold">
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+              <div className="min-w-0">
+                <h3 className="truncate font-display text-lg font-semibold">
                   {selected.full_name ?? selected.email}
                 </h3>
-                <p className="text-xs text-muted-foreground">{selected.email}</p>
+                <p className="truncate text-xs text-muted-foreground">{selected.email}</p>
               </div>
               {canEdit ? (
                 <Button size="sm" variant="secondary" onClick={() => setAddOpen(true)}>
-                  <Plus className="mr-2 h-4 w-4" /> Añadir membresía
+                  <Plus className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Añadir membresía</span>
                 </Button>
               ) : null}
             </div>
 
             <div className="space-y-2">
-              <h4 className="text-xs uppercase tracking-wide text-muted-foreground">Membresías</h4>
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h4 className="text-xs uppercase tracking-wide text-muted-foreground">Membresías</h4>
+                <p className="text-[11px] text-muted-foreground">
+                  Cada membresía = un equipo + un rol. "Alcance club" solo para roles con permiso.
+                </p>
+              </div>
               {membershipsQ.isLoading ? (
                 <LoadingState />
               ) : (membershipsQ.data ?? []).length === 0 ? (
@@ -217,21 +224,28 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
                   {(membershipsQ.data ?? []).map((m) => (
                     <div
                       key={m.id}
-                      className="glass flex flex-wrap items-center gap-3 rounded-lg p-3"
+                      className="glass rounded-lg p-3 space-y-3 sm:flex sm:flex-wrap sm:items-center sm:gap-3 sm:space-y-0"
                     >
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium">
-                          {m.team?.name ?? "Todo el club"}
+                      <div className="min-w-0 sm:flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="truncate text-sm font-medium">
+                            {m.team?.name ?? "Todo el club"}
+                          </p>
+                          {!m.team_id ? (
+                            <StatusBadge variant="info">Alcance club</StatusBadge>
+                          ) : null}
+                        </div>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {m.role?.name ?? "—"}
                         </p>
-                        <p className="text-xs text-muted-foreground">{m.role?.name ?? "—"}</p>
                       </div>
                       {canEdit ? (
-                        <>
+                        <div className="flex items-center gap-2">
                           <Select
                             value={m.role_id}
                             onValueChange={(v) => handleChangeRole(m, v)}
                           >
-                            <SelectTrigger className="w-[160px]">
+                            <SelectTrigger className="flex-1 sm:w-[160px] sm:flex-none">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -243,8 +257,9 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
                             </SelectContent>
                           </Select>
                           <Button
-                            size="sm"
+                            size="icon"
                             variant="ghost"
+                            title="Personalizar permisos"
                             onClick={() =>
                               setOverrideCtx({
                                 userId: selected.id,
@@ -254,12 +269,17 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
                               })
                             }
                           >
-                            <Sliders className="mr-2 h-4 w-4" /> Personalizar
+                            <Sliders className="h-4 w-4" />
                           </Button>
-                          <Button size="icon" variant="ghost" onClick={() => handleRemoveMembership(m)}>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            title="Eliminar membresía"
+                            onClick={() => handleRemoveMembership(m)}
+                          >
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
-                        </>
+                        </div>
                       ) : (
                         <StatusBadge variant="info">{m.role?.name ?? ""}</StatusBadge>
                       )}
@@ -315,19 +335,27 @@ function AddMembershipDialog({
   roles: RoleRow[];
   onAdded: () => void;
 }) {
-  const [teamId, setTeamId] = React.useState<string>("__club__");
   const [roleId, setRoleId] = React.useState<string>("");
+  const [teamId, setTeamId] = React.useState<string>("");
   const [saving, setSaving] = React.useState(false);
+
+  const selectedRole = roles.find((r) => r.id === roleId) ?? null;
+  const clubWideAllowed = !!selectedRole?.allows_club_wide;
 
   React.useEffect(() => {
     if (!open) {
-      setTeamId("__club__");
       setRoleId("");
+      setTeamId("");
     }
   }, [open]);
 
+  // If role changes and current selection is club-wide but not allowed, reset team.
+  React.useEffect(() => {
+    if (teamId === "__club__" && !clubWideAllowed) setTeamId("");
+  }, [clubWideAllowed, teamId]);
+
   async function handleAdd() {
-    if (!roleId) return;
+    if (!roleId || !teamId) return;
     setSaving(true);
     try {
       const { error } = await supabase.from("team_memberships").insert({
@@ -351,25 +379,11 @@ function AddMembershipDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Añadir membresía</DialogTitle>
-          <DialogDescription>Asigna a este usuario a un equipo (o al club entero) con un rol.</DialogDescription>
+          <DialogDescription>
+            Elige primero el rol, luego el equipo/categoría. "Todo el club" solo aparece si el rol tiene alcance de club.
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
-          <div className="space-y-2">
-            <Label>Equipo</Label>
-            <Select value={teamId} onValueChange={setTeamId}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__club__">Todo el club</SelectItem>
-                {teams.map((t) => (
-                  <SelectItem key={t.id} value={t.id}>
-                    {t.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
           <div className="space-y-2">
             <Label>Rol</Label>
             <Select value={roleId} onValueChange={setRoleId}>
@@ -380,17 +394,41 @@ function AddMembershipDialog({
                 {roles.map((r) => (
                   <SelectItem key={r.id} value={r.id}>
                     {r.name}
+                    {r.allows_club_wide ? " · alcance club" : ""}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Equipo / categoría</Label>
+            <Select value={teamId} onValueChange={setTeamId} disabled={!roleId}>
+              <SelectTrigger>
+                <SelectValue placeholder={roleId ? "Selecciona categoría" : "Elige un rol primero"} />
+              </SelectTrigger>
+              <SelectContent>
+                {clubWideAllowed ? (
+                  <SelectItem value="__club__">Todo el club</SelectItem>
+                ) : null}
+                {teams.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>
+                    {t.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {roleId && !clubWideAllowed ? (
+              <p className="text-[11px] text-muted-foreground">
+                Este rol no admite alcance de club. Elige una categoría específica.
+              </p>
+            ) : null}
           </div>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
-          <Button onClick={handleAdd} disabled={!roleId || saving}>
+          <Button onClick={handleAdd} disabled={!roleId || !teamId || saving}>
             {saving ? "Añadiendo..." : "Añadir"}
           </Button>
         </DialogFooter>
@@ -507,40 +545,45 @@ function OverridesDialog({
               const overrideLvl: AccessLevel | undefined = overrideMap[m.key];
               const effective: AccessLevel = overrideLvl ?? roleLvl;
               return (
-                <div key={m.key} className="flex items-center gap-3 py-2.5">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/5">
+                <div
+                  key={m.key}
+                  className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 py-2.5 sm:grid-cols-[auto_minmax(0,1fr)_auto_auto]"
+                >
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/5">
                     <Icon className="h-4 w-4" />
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium truncate">{m.label}</p>
-                    <p className="text-xs text-muted-foreground truncate">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">{m.label}</p>
+                    <p className="truncate text-xs text-muted-foreground">
                       Rol: {LEVELS.find((l) => l.value === roleLvl)?.label}
                       {overrideLvl ? " · Personalizado" : ""}
                     </p>
                   </div>
-                  <Select
-                    value={effective}
-                    onValueChange={(v) => setOverride(m.key as ModuleKey, v as AccessLevel)}
-                    disabled={!canEdit}
-                  >
-                    <SelectTrigger className={cn("w-[140px]", overrideLvl && "border-primary/60")}>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {LEVELS.map((l) => (
-                        <SelectItem key={l.value} value={l.value}>
-                          {l.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {canEdit && overrideLvl ? (
-                    <Button size="sm" variant="ghost" onClick={() => resetOverride(m.key)}>
-                      Restablecer
-                    </Button>
-                  ) : (
-                    <div className="w-[90px]" />
-                  )}
+                  <div className="col-span-2 flex items-center gap-2 sm:col-span-1">
+                    <Select
+                      value={effective}
+                      onValueChange={(v) => setOverride(m.key as ModuleKey, v as AccessLevel)}
+                      disabled={!canEdit}
+                    >
+                      <SelectTrigger
+                        className={cn("flex-1 sm:w-[140px] sm:flex-none", overrideLvl && "border-primary/60")}
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {LEVELS.map((l) => (
+                          <SelectItem key={l.value} value={l.value}>
+                            {l.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {canEdit && overrideLvl ? (
+                      <Button size="sm" variant="ghost" onClick={() => resetOverride(m.key)}>
+                        Restablecer
+                      </Button>
+                    ) : null}
+                  </div>
                 </div>
               );
             })}
