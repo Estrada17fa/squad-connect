@@ -382,6 +382,7 @@ function AddMembershipDialog({
         user_id: userId,
         team_id: teamId === "__club__" ? null : teamId,
         role_id: roleId,
+        job_title: jobTitle.trim() || null,
       });
       if (error) throw error;
       toast.success("Membresía añadida");
