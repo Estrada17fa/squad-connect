@@ -545,40 +545,45 @@ function OverridesDialog({
               const overrideLvl: AccessLevel | undefined = overrideMap[m.key];
               const effective: AccessLevel = overrideLvl ?? roleLvl;
               return (
-                <div key={m.key} className="flex items-center gap-3 py-2.5">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/5">
+                <div
+                  key={m.key}
+                  className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 py-2.5 sm:grid-cols-[auto_minmax(0,1fr)_auto_auto]"
+                >
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/5">
                     <Icon className="h-4 w-4" />
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium truncate">{m.label}</p>
-                    <p className="text-xs text-muted-foreground truncate">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">{m.label}</p>
+                    <p className="truncate text-xs text-muted-foreground">
                       Rol: {LEVELS.find((l) => l.value === roleLvl)?.label}
                       {overrideLvl ? " · Personalizado" : ""}
                     </p>
                   </div>
-                  <Select
-                    value={effective}
-                    onValueChange={(v) => setOverride(m.key as ModuleKey, v as AccessLevel)}
-                    disabled={!canEdit}
-                  >
-                    <SelectTrigger className={cn("w-[140px]", overrideLvl && "border-primary/60")}>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {LEVELS.map((l) => (
-                        <SelectItem key={l.value} value={l.value}>
-                          {l.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {canEdit && overrideLvl ? (
-                    <Button size="sm" variant="ghost" onClick={() => resetOverride(m.key)}>
-                      Restablecer
-                    </Button>
-                  ) : (
-                    <div className="w-[90px]" />
-                  )}
+                  <div className="col-span-2 flex items-center gap-2 sm:col-span-1">
+                    <Select
+                      value={effective}
+                      onValueChange={(v) => setOverride(m.key as ModuleKey, v as AccessLevel)}
+                      disabled={!canEdit}
+                    >
+                      <SelectTrigger
+                        className={cn("flex-1 sm:w-[140px] sm:flex-none", overrideLvl && "border-primary/60")}
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {LEVELS.map((l) => (
+                          <SelectItem key={l.value} value={l.value}>
+                            {l.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {canEdit && overrideLvl ? (
+                      <Button size="sm" variant="ghost" onClick={() => resetOverride(m.key)}>
+                        Restablecer
+                      </Button>
+                    ) : null}
+                  </div>
                 </div>
               );
             })}
