@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, Settings2, Sliders, Trash2, User as UserIcon } from "lucide-react";
+import { Plus, Search, Settings2, Sliders, Trash2, User as UserIcon, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { MODULES, type ModuleKey } from "@/lib/modules";
@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { CreateMemberDialog } from "./CreateMemberDialog";
 
 const LEVELS: { value: AccessLevel; label: string }[] = [
   { value: "none", label: "Sin acceso" },
@@ -67,6 +68,7 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
   const [selectedUserId, setSelectedUserId] = React.useState<string | null>(null);
   const [search, setSearch] = React.useState("");
   const [addOpen, setAddOpen] = React.useState(false);
+  const [createOpen, setCreateOpen] = React.useState(false);
   const [overrideCtx, setOverrideCtx] = React.useState<{
     userId: string;
     teamId: string | null;
@@ -163,6 +165,11 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
       <div className="space-y-3">
+        {canEdit ? (
+          <Button className="w-full" variant="secondary" onClick={() => setCreateOpen(true)}>
+            <UserPlus className="mr-2 h-4 w-4" /> Crear miembro
+          </Button>
+        ) : null}
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -316,6 +323,15 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
           canEdit={canEdit}
         />
       ) : null}
+
+      <CreateMemberDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        clubId={clubId}
+        roles={rolesQ.data ?? []}
+        teams={teamsQ.data ?? []}
+        onCreated={(id) => setSelectedUserId(id)}
+      />
     </div>
   );
 }
