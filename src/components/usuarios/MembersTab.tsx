@@ -59,6 +59,7 @@ interface MembershipRow {
   user_id: string;
   team_id: string | null;
   role_id: string;
+  job_title: string | null;
   role: { id: string; name: string } | null;
   team: { id: string; name: string } | null;
 }
