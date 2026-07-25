@@ -242,7 +242,7 @@ function CreateClubDialog({
         { name: "Admin", is_system_default: true },
         { name: "Técnico", is_system_default: true },
         { name: "Médico", is_system_default: true },
-        { name: "Utilero", is_system_default: true },
+        { name: "Staff", is_system_default: true },
         { name: "Jugador", is_system_default: true },
       ];
       const { data: roles, error: rolesErr } = await supabase
@@ -290,7 +290,7 @@ function CreateClubDialog({
             <Input value={league} onChange={(e) => setLeague(e.target.value)} placeholder="Ej. Liga MX Femenil" />
           </div>
           <p className="text-xs text-muted-foreground">
-            Se crearán los roles de sistema (Admin, Técnico, Médico, Utilero, Jugador) y Admin tendrá
+            Se crearán los roles de sistema (Admin, Técnico, Médico, Staff, Jugador) y Admin tendrá
             acceso editor a todos los módulos. Después podrás invitar al Admin del club.
           </p>
         </div>

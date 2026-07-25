@@ -59,6 +59,7 @@ interface MembershipRow {
   user_id: string;
   team_id: string | null;
   role_id: string;
+  job_title: string | null;
   role: { id: string; name: string } | null;
   team: { id: string; name: string } | null;
 }
@@ -121,7 +122,7 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
     queryFn: async (): Promise<MembershipRow[]> => {
       const { data, error } = await supabase
         .from("team_memberships")
-        .select("id, user_id, team_id, role_id, role:roles(id, name), team:teams(id, name)")
+        .select("id, user_id, team_id, role_id, job_title, role:roles(id, name), team:teams(id, name)")
         .eq("user_id", selectedUserId!);
       if (error) throw error;
       return (data ?? []) as any;
@@ -244,6 +245,7 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
                         </div>
                         <p className="truncate text-xs text-muted-foreground">
                           {m.role?.name ?? "—"}
+                          {m.job_title ? ` · ${m.job_title}` : ""}
                         </p>
                       </div>
                       {canEdit ? (
@@ -353,6 +355,7 @@ function AddMembershipDialog({
 }) {
   const [roleId, setRoleId] = React.useState<string>("");
   const [teamId, setTeamId] = React.useState<string>("");
+  const [jobTitle, setJobTitle] = React.useState<string>("");
   const [saving, setSaving] = React.useState(false);
 
   const selectedRole = roles.find((r) => r.id === roleId) ?? null;
@@ -362,6 +365,7 @@ function AddMembershipDialog({
     if (!open) {
       setRoleId("");
       setTeamId("");
+      setJobTitle("");
     }
   }, [open]);
 
@@ -378,6 +382,7 @@ function AddMembershipDialog({
         user_id: userId,
         team_id: teamId === "__club__" ? null : teamId,
         role_id: roleId,
+        job_title: jobTitle.trim() || null,
       });
       if (error) throw error;
       toast.success("Membresía añadida");
@@ -438,6 +443,17 @@ function AddMembershipDialog({
                 Este rol no admite alcance de club. Elige una categoría específica.
               </p>
             ) : null}
+          </div>
+          <div className="space-y-2">
+            <Label>Puesto (opcional)</Label>
+            <Input
+              value={jobTitle}
+              onChange={(e) => setJobTitle(e.target.value)}
+              placeholder="Ej. Utilero, Kinesiólogo, Portero"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Solo informativo. No cambia los permisos.
+            </p>
           </div>
         </div>
         <DialogFooter>

@@ -5,6 +5,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 const membershipSchema = z.object({
   role_id: z.string().uuid(),
   team_id: z.string().uuid().nullable(),
+  job_title: z.string().trim().max(60).optional().nullable(),
 });
 
 const inputSchema = z.object({
@@ -154,6 +155,7 @@ export const createClubMember = createServerFn({ method: "POST" })
       user_id: newUserId,
       role_id: m.role_id,
       team_id: m.team_id,
+      job_title: m.job_title ? m.job_title : null,
     }));
     const { error: memErr } = await supabaseAdmin.from("team_memberships").insert(rows);
     if (memErr) {

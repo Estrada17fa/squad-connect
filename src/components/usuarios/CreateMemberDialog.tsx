@@ -35,6 +35,7 @@ interface TeamOpt {
 interface Draft {
   role_id: string;
   team_id: string; // "" | "__club__" | uuid
+  job_title: string;
 }
 
 export function CreateMemberDialog({
@@ -67,7 +68,7 @@ export function CreateMemberDialog({
   const [shoe, setShoe] = React.useState("");
   const [jersey, setJersey] = React.useState("");
   const [position, setPosition] = React.useState("");
-  const [memberships, setMemberships] = React.useState<Draft[]>([{ role_id: "", team_id: "" }]);
+  const [memberships, setMemberships] = React.useState<Draft[]>([{ role_id: "", team_id: "", job_title: "" }]);
   const [saving, setSaving] = React.useState(false);
 
   React.useEffect(() => {
@@ -84,7 +85,7 @@ export function CreateMemberDialog({
       setShoe("");
       setJersey("");
       setPosition("");
-      setMemberships([{ role_id: "", team_id: "" }]);
+      setMemberships([{ role_id: "", team_id: "", job_title: "" }]);
       setSaving(false);
     }
   }, [open]);
@@ -131,6 +132,7 @@ export function CreateMemberDialog({
         memberships: memberships.map((m) => ({
           role_id: m.role_id,
           team_id: m.team_id === "__club__" ? null : m.team_id,
+          job_title: m.job_title.trim() || null,
         })),
       };
       const res = await createFn({ data: payload });
@@ -254,7 +256,7 @@ export function CreateMemberDialog({
                 type="button"
                 size="sm"
                 variant="ghost"
-                onClick={() => setMemberships((l) => [...l, { role_id: "", team_id: "" }])}
+                onClick={() => setMemberships((l) => [...l, { role_id: "", team_id: "", job_title: "" }])}
               >
                 <Plus className="mr-1 h-4 w-4" /> Añadir
               </Button>
@@ -297,6 +299,11 @@ export function CreateMemberDialog({
                         </SelectContent>
                       </Select>
                     </div>
+                    <Input
+                      value={m.job_title}
+                      onChange={(e) => updateMembership(idx, { job_title: e.target.value })}
+                      placeholder="Puesto (opcional) — ej. Utilero, Kinesiólogo, Portero"
+                    />
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-[11px] text-muted-foreground">
                         {m.role_id && !clubWide
