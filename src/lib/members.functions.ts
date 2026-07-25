@@ -145,7 +145,7 @@ export const createClubMember = createServerFn({ method: "POST" })
     const norm = <T,>(v: T | null | undefined): T | null =>
       v === undefined || v === null || (typeof v === "string" && v.trim() === "") ? null : v;
 
-    const profileUpdate: Record<string, unknown> = {
+    const profileUpdate = {
       club_id: clubId,
       full_name: fullName,
       first_name: data.first_name.trim(),

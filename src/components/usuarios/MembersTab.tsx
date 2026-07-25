@@ -40,8 +40,20 @@ const LEVELS: { value: AccessLevel; label: string }[] = [
 interface ProfileRow {
   id: string;
   full_name: string | null;
+  first_name: string | null;
+  paternal_last_name: string | null;
+  maternal_last_name: string | null;
+  name_completed: boolean | null;
   email: string | null;
   avatar_url: string | null;
+}
+
+function displayName(p: Pick<ProfileRow, "first_name" | "paternal_last_name" | "maternal_last_name" | "full_name" | "email">) {
+  const composed = [p.first_name, p.paternal_last_name, p.maternal_last_name]
+    .map((s) => (s ?? "").trim())
+    .filter(Boolean)
+    .join(" ");
+  return composed || p.full_name || p.email || "Sin nombre";
 }
 interface RoleRow {
   id: string;
