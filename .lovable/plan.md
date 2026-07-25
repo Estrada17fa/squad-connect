@@ -1,63 +1,85 @@
-# Plan: Crear miembros desde el panel de Admin
+# Plan: Roles simplificados + puesto informativo
 
 ## Objetivo
 
-Permitir que un Admin de club cree un miembro (email + contraseña + datos personales) y le asigne una o más membresías en un solo formulario, sin tocar la lógica existente de permisos, RLS ni módulos.
+Reducir los roles del sistema a **5 buckets** que controlan permisos, y añadir un campo **"puesto"** puramente informativo que describe qué hace la persona (utilero, kinesiólogo, auxiliar, preparador físico, etc.). El puesto NO afecta permisos: es solo etiqueta visible en el perfil y en las listas de miembros.
 
-## 1. Base de datos (migración corta)
+## 1. Cambio conceptual
 
-Añadir a `profiles` los campos opcionales que faltan (no rompe nada porque son nullables):
+**Antes:** el rol mezclaba permisos y descripción del puesto → cada club terminaba creando "Utilero", "Kinesiólogo", "PF"… duplicando la matriz de permisos.
 
-- `birthdate date`
-- `nationality text`
-- `phone text` *(útil para contacto; si no lo quieres lo quito)*
-- `shirt_size text`, `pants_size text`, `shoe_size text`
-- `jersey_number int`, `position text`
+**Ahora:**
 
-`profiles` ya se lee filtrado por `club_id` y los admins del club ya pueden hacer UPDATE — no se requieren nuevas policies. `player_profiles` queda como está (para métricas físicas: altura, peso, disponibilidad, lesiones). No se duplica info: dorsal/posición si los edita el admin de plantel se seguirán editando ahí (o los movemos aquí — ver pregunta abierta abajo).
+- **Rol** = grupo de permisos. 5 opciones fijas de sistema:
+  1. **Admin** — acceso total al club.
+  2. **Técnico** — cuerpo técnico (permisos deportivos amplios).
+  3. **Médico** — cuerpo médico (Salud, Plantel lectura, etc.).
+  4. **Staff** — apoyo operativo (utilería, logística, multimedia…). Permisos base mínimos; el admin sube lo que necesite por override.
+  5. **Jugador** — vista de jugador.
+- **Puesto** (`job_title`) = texto libre por membresía. Ej. "Utilero", "Kinesiólogo", "Auxiliar técnico", "Portero". Se muestra en el perfil y en la tarjeta del miembro. No lo lee `useAccess` ni ninguna RLS.
 
-## 2. Server function `createClubMember` (única pieza sensible)
+El admin sigue pudiendo crear roles personalizados si algún club de verdad necesita otro bucket de permisos — no se elimina esa capacidad, solo cambian los defaults.
 
-Nueva `src/lib/members.functions.ts` con `createServerFn` + `requireSupabaseAuth`:
+## 2. Migración de base de datos
 
-1. Autoriza al llamador: debe ser super_admin **o** tener `editor`/`approver` en el módulo `usuarios` **de este club** (verificado con `context.supabase`, no con admin client).
-2. Recién entonces hace `await import("@/integrations/supabase/client.server")` para usar `supabaseAdmin`.
-3. `supabaseAdmin.auth.admin.createUser({ email, password, email_confirm: true, user_metadata: { full_name } })`.
-4. El trigger `handle_new_user` ya crea la fila en `profiles` — luego hace UPDATE para llenar `club_id` (forzado al club del admin, nunca el que venga del cliente) + campos del formulario.
-5. Inserta las membresías recibidas (`{ team_id | null, role_id }[]`) validando: cada `role_id` pertenece al club; `team_id`, si viene, también; si `team_id` es NULL el rol debe tener `allows_club_wide = true`.
-6. Devuelve `{ userId }`. Errores tipados: email duplicado, sin permisos, rol/team inválido.
+Una sola migración:
 
-Validación con Zod (email, password mínima 8, longitudes máximas, nacionalidad ISO opcional, etc.).
+1. **Renombrar rol "Utilero" → "Staff"** en `roles` (para todos los clubes existentes, filtrando `is_system_default = true`). Sus `role_permissions` y `team_memberships` se conservan automáticamente porque el `id` no cambia.
+2. **Añadir columna `job_title text NULL`** a `team_memberships`. Nullable, sin default. Ningún índice.
+3. **Actualizar el seed** en `handle_new_user` / lugar donde se crean roles de sistema: reemplazar la lista `[Admin, Técnico, Médico, Utilero, Jugador]` por `[Admin, Técnico, Médico, Staff, Jugador]`. (En `src/routes/_authenticated/admin.clubs.tsx` línea 245 y en el texto de la línea 293.)
 
-## 3. UI — nuevo diálogo "Crear miembro"
+No se toca `profiles.position` (esa es la posición futbolística del jugador — sigue existiendo separada).
 
-En `MembersTab` (arriba, junto a "Añadir miembro existente" actual):
+## 3. Server function `createClubMember`
 
-- Botón **"Crear miembro"** que abre `CreateMemberDialog`.
-- Formulario en 3 secciones colapsables/scrolleables (móvil-first, mismo patrón responsive que ya establecimos):
-  1. **Cuenta**: email, contraseña (con toggle mostrar/ocultar y medidor simple de fuerza), nombre completo.
-  2. **Datos personales** (todos opcionales salvo lo que marques): cumpleaños, nacionalidad, tallas (playera/inferior/calzado), dorsal, posición.
-  3. **Membresías** (mínimo 1): lista repetible con `+ Añadir otra`. Cada fila: `Select rol` → `Select equipo` (filtra "Todo el club" según `allows_club_wide` del rol elegido, misma regla que ya implementamos en `AddMembershipDialog`).
-- Botón "Crear" llama al server function, muestra toast, cierra diálogo, invalida `club-members` y abre el detalle del nuevo miembro para que el admin pueda personalizar permisos si quiere.
+- Añadir `job_title` opcional a cada item del array `memberships` en el schema Zod (`z.string().trim().max(60).optional().nullable()`).
+- Al insertar en `team_memberships`, incluir `job_title`.
+- Nada más cambia (auth, validaciones y forzado de `club_id` quedan igual).
 
-Después de creado, el admin sigue usando el flujo actual (añadir/quitar membresías, `OverridesDialog`) — no se cambia nada de eso.
+## 4. UI
 
-## 4. Seguridad — checklist
+### `CreateMemberDialog`
 
-- Contraseña nunca viaja a un endpoint público: server function con auth middleware.
-- `club_id` se toma del perfil del admin en el servidor; se ignora cualquier `club_id` que mande el cliente → un admin nunca puede crear un usuario en otro club.
-- `supabaseAdmin` solo se importa **después** de confirmar autorización.
-- Zod valida todo el payload; email se normaliza a lowercase.
-- Toast genérico ("No se pudo crear el miembro") + log server-side con detalle; no se filtran mensajes crudos de Supabase Auth al cliente.
-- Se pide activar HIBP en Supabase Auth para bloquear contraseñas filtradas (una sola llamada a `configure_auth`, sin tocar signup público).
+En la sección **Membresías**, cada fila añade un tercer campo bajo Rol+Equipo:
 
-## 5. Fuera de alcance (no se toca)
+```
+[ Rol ▾ ]   [ Equipo ▾ ]
+Puesto: [___________________]  (opcional, ej. Utilero, Kinesiólogo, Portero)
+```
 
-- Módulos existentes (Calendario, Plantel, Coordinación).
-- `useAccess`, `AppLayout`, `getModuleAccess`, overrides.
-- Flujo de invitación por email (`club_invitations`) — sigue disponible en paralelo si lo necesitas después.
-- Policies RLS existentes.
+### `MembersTab` — lista de miembros
+
+Debajo del nombre, además del rol, mostrar el puesto cuando exista:
+
+```
+Emilio Estrada
+Admin · Director deportivo
+```
+
+### `AddMembershipDialog` (añadir membresía a miembro existente)
+
+Añadir el mismo input "Puesto" opcional junto al selector de rol/equipo.
+
+### Detalle de miembro / perfil
+
+En la sección de membresías, mostrar el puesto junto al rol y equipo.
+
+### Ningún otro módulo cambia
+
+`useAccess`, `AppLayout`, `getModuleAccess`, la matriz de permisos y todos los módulos (Calendario, Plantel, Coordinación) siguen leyendo únicamente `role_id` + overrides. `job_title` es texto informativo, invisible para la lógica de permisos.
+
+## 5. Compatibilidad
+
+- Membresías existentes quedan con `job_title = NULL` → la UI simplemente no muestra la línea del puesto. Nada se rompe.
+- Miembros con rol "Utilero" pasan a mostrarse como "Staff" automáticamente porque solo se renombró la fila.
+- Roles personalizados que algún club ya haya creado se mantienen intactos.
+
+## 6. Fuera de alcance
+
+- No se recalculan los `role_permissions` de los roles renombrados (Staff hereda los que ya tenía Utilero). Si quieres afinar los defaults de Staff, lo hacemos en un paso aparte.
+- No se toca `useCoordinacion.ts` (el filtro "excluye Jugador" sigue funcionando porque ese nombre no cambia).
+- No se toca el flujo de invitación por email.
 
 ## Pregunta abierta
 
-Dorsal y posición: ¿los guardo en `profiles` (como pediste, disponibles para todo miembro) **o** los mantengo solo en `player_profiles` cuando el miembro tiene rol Jugador? Voy con `profiles` porque así lo pediste, pero avísame si prefieres separarlos.
+¿Quieres que además en esta misma tanda actualice los **defaults de permisos** que se siembran para "Staff" (hoy son los que tenía "Utilero" — probablemente `read` en varios módulos)? Si sí, dime qué debería ver Staff por defecto y lo incluyo; si no, lo dejo tal cual y cada admin lo ajusta con overrides.
