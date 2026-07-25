@@ -355,6 +355,7 @@ function AddMembershipDialog({
 }) {
   const [roleId, setRoleId] = React.useState<string>("");
   const [teamId, setTeamId] = React.useState<string>("");
+  const [jobTitle, setJobTitle] = React.useState<string>("");
   const [saving, setSaving] = React.useState(false);
 
   const selectedRole = roles.find((r) => r.id === roleId) ?? null;
@@ -364,6 +365,7 @@ function AddMembershipDialog({
     if (!open) {
       setRoleId("");
       setTeamId("");
+      setJobTitle("");
     }
   }, [open]);
 
