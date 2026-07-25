@@ -122,7 +122,7 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
     queryFn: async (): Promise<MembershipRow[]> => {
       const { data, error } = await supabase
         .from("team_memberships")
-        .select("id, user_id, team_id, role_id, role:roles(id, name), team:teams(id, name)")
+        .select("id, user_id, team_id, role_id, job_title, role:roles(id, name), team:teams(id, name)")
         .eq("user_id", selectedUserId!);
       if (error) throw error;
       return (data ?? []) as any;
