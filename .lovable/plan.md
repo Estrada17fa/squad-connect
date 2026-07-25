@@ -1,85 +1,48 @@
-# Plan: Roles simplificados + puesto informativo
-
 ## Objetivo
+Rediseñar el flujo de creación de miembros: primero se define(n) la(s) membresía(s) (rol + categoría + puesto), y luego el formulario personal se adapta al rol de mayor prioridad. Además, separar el nombre en tres campos y añadir "Lugar de nacimiento".
 
-Reducir los roles del sistema a **5 buckets** que controlan permisos, y añadir un campo **"puesto"** puramente informativo que describe qué hace la persona (utilero, kinesiólogo, auxiliar, preparador físico, etc.). El puesto NO afecta permisos: es solo etiqueta visible en el perfil y en las listas de miembros.
+## Cambios en base de datos
+Migración que:
+- Añade a `profiles`: `first_name text`, `paternal_last_name text`, `maternal_last_name text`, `birthplace text`, `name_completed boolean default false`.
+- Mantiene `full_name` (compatibilidad); al insertar nuevos miembros se rellena como `first_name + paternal + maternal`.
+- Marca todos los perfiles existentes con `name_completed = false` (aviso "Completar nombre" en la ficha del miembro).
+- Sin cambios en RLS ni en roles/permisos existentes.
 
-## 1. Cambio conceptual
+## Server function `createClubMember`
+- Validador Zod:
+  - `first_name`, `paternal_last_name`, `maternal_last_name` (requeridos).
+  - `birthplace` opcional.
+  - Campos "de jugador" (`jersey_number`, `position`, `shirt_size`, `pants_size`, `shoe_size`) solo aceptados si al menos una membresía usa el rol **Jugador**; si no, se ignoran/normalizan a null.
+  - `position` limitado al enum `Portero | Defensa | Mediocampista | Delantero`.
+- Al guardar el `profile`, calcula `full_name` concatenado y marca `name_completed = true`.
+- Sigue soportando **varias membresías mezclando roles** (respuesta del usuario).
 
-**Antes:** el rol mezclaba permisos y descripción del puesto → cada club terminaba creando "Utilero", "Kinesiólogo", "PF"… duplicando la matriz de permisos.
+## Rediseño de `CreateMemberDialog`
+Wizard de 2 pasos dentro del mismo diálogo, para no romper nada de estilo:
 
-**Ahora:**
+1. **Paso 1 — Membresías (primero)**
+   - Igual que hoy pero movido al inicio: filas de Rol → Categoría → Puesto.
+   - Botón "Añadir membresía" y validación de al menos una completa.
+   - Se calcula el "rol dominante" para el paso 2 con prioridad: Jugador > Admin > Técnico > Médico > Staff.
 
-- **Rol** = grupo de permisos. 5 opciones fijas de sistema:
-  1. **Admin** — acceso total al club.
-  2. **Técnico** — cuerpo técnico (permisos deportivos amplios).
-  3. **Médico** — cuerpo médico (Salud, Plantel lectura, etc.).
-  4. **Staff** — apoyo operativo (utilería, logística, multimedia…). Permisos base mínimos; el admin sube lo que necesite por override.
-  5. **Jugador** — vista de jugador.
-- **Puesto** (`job_title`) = texto libre por membresía. Ej. "Utilero", "Kinesiólogo", "Auxiliar técnico", "Portero". Se muestra en el perfil y en la tarjeta del miembro. No lo lee `useAccess` ni ninguna RLS.
+2. **Paso 2 — Datos del miembro** (campos condicionales según rol dominante)
+   - Comunes a todos los roles: Email, Contraseña, Nombre, Apellido Paterno, Apellido Materno, Fecha de nacimiento, Nacionalidad, Lugar de nacimiento, Teléfono (opcional).
+   - **Solo si Jugador**: Dorsal, Posición (Select con las 4 opciones), Tallas (playera / inferior / calzado).
+   - **Admin, Técnico, Médico, Staff**: se ocultan dorsal/posición/tallas.
 
-El admin sigue pudiendo crear roles personalizados si algún club de verdad necesita otro bucket de permisos — no se elimina esa capacidad, solo cambian los defaults.
+Navegación: botones "Atrás" / "Siguiente" / "Crear miembro". Reset al cerrar.
 
-## 2. Migración de base de datos
+## Ficha del miembro (`MembersTab`)
+- Mostrar nombre como `first_name paternal_last_name maternal_last_name` cuando `name_completed = true`; si no, mostrar `full_name` con un badge `Completar nombre`.
+- Sin cambios en la lista de membresías (ya muestra `Rol · Puesto`).
 
-Una sola migración:
+## Fuera de alcance (no se toca)
+- Matriz de permisos y roles del sistema.
+- `AddMembershipDialog` existente (sigue permitiendo añadir membresías después).
+- Módulos Calendario / Plantel / Coordinación.
+- Migración automática de `full_name` de miembros antiguos (quedan marcados como incompletos).
 
-1. **Renombrar rol "Utilero" → "Staff"** en `roles` (para todos los clubes existentes, filtrando `is_system_default = true`). Sus `role_permissions` y `team_memberships` se conservan automáticamente porque el `id` no cambia.
-2. **Añadir columna `job_title text NULL`** a `team_memberships`. Nullable, sin default. Ningún índice.
-3. **Actualizar el seed** en `handle_new_user` / lugar donde se crean roles de sistema: reemplazar la lista `[Admin, Técnico, Médico, Utilero, Jugador]` por `[Admin, Técnico, Médico, Staff, Jugador]`. (En `src/routes/_authenticated/admin.clubs.tsx` línea 245 y en el texto de la línea 293.)
-
-No se toca `profiles.position` (esa es la posición futbolística del jugador — sigue existiendo separada).
-
-## 3. Server function `createClubMember`
-
-- Añadir `job_title` opcional a cada item del array `memberships` en el schema Zod (`z.string().trim().max(60).optional().nullable()`).
-- Al insertar en `team_memberships`, incluir `job_title`.
-- Nada más cambia (auth, validaciones y forzado de `club_id` quedan igual).
-
-## 4. UI
-
-### `CreateMemberDialog`
-
-En la sección **Membresías**, cada fila añade un tercer campo bajo Rol+Equipo:
-
-```
-[ Rol ▾ ]   [ Equipo ▾ ]
-Puesto: [___________________]  (opcional, ej. Utilero, Kinesiólogo, Portero)
-```
-
-### `MembersTab` — lista de miembros
-
-Debajo del nombre, además del rol, mostrar el puesto cuando exista:
-
-```
-Emilio Estrada
-Admin · Director deportivo
-```
-
-### `AddMembershipDialog` (añadir membresía a miembro existente)
-
-Añadir el mismo input "Puesto" opcional junto al selector de rol/equipo.
-
-### Detalle de miembro / perfil
-
-En la sección de membresías, mostrar el puesto junto al rol y equipo.
-
-### Ningún otro módulo cambia
-
-`useAccess`, `AppLayout`, `getModuleAccess`, la matriz de permisos y todos los módulos (Calendario, Plantel, Coordinación) siguen leyendo únicamente `role_id` + overrides. `job_title` es texto informativo, invisible para la lógica de permisos.
-
-## 5. Compatibilidad
-
-- Membresías existentes quedan con `job_title = NULL` → la UI simplemente no muestra la línea del puesto. Nada se rompe.
-- Miembros con rol "Utilero" pasan a mostrarse como "Staff" automáticamente porque solo se renombró la fila.
-- Roles personalizados que algún club ya haya creado se mantienen intactos.
-
-## 6. Fuera de alcance
-
-- No se recalculan los `role_permissions` de los roles renombrados (Staff hereda los que ya tenía Utilero). Si quieres afinar los defaults de Staff, lo hacemos en un paso aparte.
-- No se toca `useCoordinacion.ts` (el filtro "excluye Jugador" sigue funcionando porque ese nombre no cambia).
-- No se toca el flujo de invitación por email.
-
-## Pregunta abierta
-
-¿Quieres que además en esta misma tanda actualice los **defaults de permisos** que se siembran para "Staff" (hoy son los que tenía "Utilero" — probablemente `read` en varios módulos)? Si sí, dime qué debería ver Staff por defecto y lo incluyo; si no, lo dejo tal cual y cada admin lo ajusta con overrides.
+## Detalles técnicos
+- Nuevo enum TS `PlayerPosition = 'Portero' | 'Defensa' | 'Mediocampista' | 'Delantero'` en `src/lib/members.functions.ts`; el campo `profiles.position` sigue siendo `text` para no romper datos previos, validación en el server.
+- `MembersTab` recibe helper `displayName(profile)` local para centralizar la lógica de nombre.
+- Nada se toca de `useAccess`, RLS ni server functions ajenas.
