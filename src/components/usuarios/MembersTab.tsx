@@ -323,6 +323,15 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
           canEdit={canEdit}
         />
       ) : null}
+
+      <CreateMemberDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        clubId={clubId}
+        roles={rolesQ.data ?? []}
+        teams={teamsQ.data ?? []}
+        onCreated={(id) => setSelectedUserId(id)}
+      />
     </div>
   );
 }
