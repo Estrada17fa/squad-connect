@@ -17,12 +17,19 @@ export interface AccessData {
   profile: { full_name: string | null; email: string | null; club_id: string | null } | null;
   clubName: string | null;
   teams: TeamOption[];
-  // module → best access level across memberships
+  /** Unión (mejor nivel) entre TODAS las membresías + overrides. Úsalo solo para decisiones globales (bottom nav). */
   permissions: Record<string, AccessLevel>;
+  /** Permisos efectivos por equipo: la clave 'club' representa el ámbito club (o cuando no hay equipo activo). */
+  permissionsByTeam: Record<string, Record<string, AccessLevel>>;
   isSuperAdmin: boolean;
 }
 
 const RANK: Record<AccessLevel, number> = { none: 0, read: 1, editor: 2, approver: 3 };
+const TEAM_CLUB_KEY = "club";
+
+function bumpLevel(target: Record<string, AccessLevel>, key: string, lvl: AccessLevel) {
+  if (!target[key] || RANK[lvl] > RANK[target[key]]) target[key] = lvl;
+}
 
 export function useAccess(userId: string) {
   const qc = useQueryClient();
@@ -35,6 +42,12 @@ export function useAccess(userId: string) {
       .on("postgres_changes", { event: "*", schema: "public", table: "roles" }, () => {
         qc.invalidateQueries({ queryKey: ["squad-access", userId] });
       })
+      .on("postgres_changes", { event: "*", schema: "public", table: "user_permission_overrides", filter: `user_id=eq.${userId}` }, () => {
+        qc.invalidateQueries({ queryKey: ["squad-access", userId] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "team_memberships", filter: `user_id=eq.${userId}` }, () => {
+        qc.invalidateQueries({ queryKey: ["squad-access", userId] });
+      })
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
@@ -43,7 +56,7 @@ export function useAccess(userId: string) {
   return useQuery({
     queryKey: ["squad-access", userId],
     queryFn: async (): Promise<AccessData> => {
-      const [profileRes, membershipsRes, superRes] = await Promise.all([
+      const [profileRes, membershipsRes, superRes, overridesRes] = await Promise.all([
         supabase
           .from("profiles")
           .select("full_name, email, club_id, club:clubs(name)")
@@ -56,6 +69,10 @@ export function useAccess(userId: string) {
           )
           .eq("user_id", userId),
         supabase.from("super_admins").select("id").eq("user_id", userId).maybeSingle(),
+        supabase
+          .from("user_permission_overrides")
+          .select("team_id, module_key, access_level")
+          .eq("user_id", userId),
       ]);
 
       if (profileRes.error) throw profileRes.error;
@@ -70,16 +87,49 @@ export function useAccess(userId: string) {
         roleName: m.role?.name ?? "",
       }));
 
+      // Permisos por membresía (por team_id o 'club' si team_id NULL)
+      const byMembership: Record<string, Record<string, AccessLevel>> = {};
+      for (const m of memberships as any[]) {
+        const key = m.team_id ?? TEAM_CLUB_KEY;
+        byMembership[key] ??= {};
+        const perms = m.role?.role_permissions ?? [];
+        for (const p of perms) bumpLevel(byMembership[key], p.module_key, p.access_level as AccessLevel);
+      }
+
+      // Overrides
+      const overrides = overridesRes.data ?? [];
+      const overridesByTeam: Record<string, Record<string, AccessLevel>> = {};
+      for (const o of overrides as any[]) {
+        const key = o.team_id ?? TEAM_CLUB_KEY;
+        overridesByTeam[key] ??= {};
+        overridesByTeam[key][o.module_key] = o.access_level as AccessLevel;
+      }
+
+      // Permisos efectivos por equipo: club-wide (membresías con team_id NULL) siempre se suman a cada equipo
+      const teamIds = Array.from(new Set(memberships.map((m: any) => m.team_id).filter(Boolean))) as string[];
+      const permissionsByTeam: Record<string, Record<string, AccessLevel>> = {};
+
+      const clubBase = byMembership[TEAM_CLUB_KEY] ?? {};
+      const clubOverride = overridesByTeam[TEAM_CLUB_KEY] ?? {};
+      // Contexto 'club' (sin equipo o módulos scope=club)
+      {
+        const merged: Record<string, AccessLevel> = { ...clubBase };
+        for (const [k, v] of Object.entries(clubOverride)) merged[k] = v;
+        permissionsByTeam[TEAM_CLUB_KEY] = merged;
+      }
+      for (const tid of teamIds) {
+        const merged: Record<string, AccessLevel> = { ...clubBase };
+        for (const [k, v] of Object.entries(byMembership[tid] ?? {})) bumpLevel(merged, k, v);
+        // Overrides club-wide primero, luego los específicos del equipo pisan
+        for (const [k, v] of Object.entries(clubOverride)) merged[k] = v;
+        for (const [k, v] of Object.entries(overridesByTeam[tid] ?? {})) merged[k] = v;
+        permissionsByTeam[tid] = merged;
+      }
+
+      // Unión (para bottom nav): mejor nivel entre todos los contextos
       const permissions: Record<string, AccessLevel> = {};
-      for (const m of memberships) {
-        const perms = (m as any).role?.role_permissions ?? [];
-        for (const p of perms) {
-          const key = p.module_key as string;
-          const lvl = p.access_level as AccessLevel;
-          if (!permissions[key] || RANK[lvl] > RANK[permissions[key]]) {
-            permissions[key] = lvl;
-          }
-        }
+      for (const map of Object.values(permissionsByTeam)) {
+        for (const [k, v] of Object.entries(map)) bumpLevel(permissions, k, v);
       }
 
       return {
@@ -93,6 +143,7 @@ export function useAccess(userId: string) {
         clubName: (profileRes.data as any)?.club?.name ?? null,
         teams,
         permissions,
+        permissionsByTeam,
         isSuperAdmin: !!superRes.data,
       };
     },
