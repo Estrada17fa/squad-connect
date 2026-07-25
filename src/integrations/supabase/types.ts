@@ -436,6 +436,7 @@ export type Database = {
       }
       roles: {
         Row: {
+          allows_club_wide: boolean
           club_id: string
           created_at: string
           id: string
@@ -443,6 +444,7 @@ export type Database = {
           name: string
         }
         Insert: {
+          allows_club_wide?: boolean
           club_id: string
           created_at?: string
           id?: string
@@ -450,6 +452,7 @@ export type Database = {
           name: string
         }
         Update: {
+          allows_club_wide?: boolean
           club_id?: string
           created_at?: string
           id?: string
