@@ -373,27 +373,51 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          birthdate: string | null
           club_id: string | null
           created_at: string
           email: string | null
           full_name: string | null
           id: string
+          jersey_number: number | null
+          nationality: string | null
+          pants_size: string | null
+          phone: string | null
+          position: string | null
+          shirt_size: string | null
+          shoe_size: string | null
         }
         Insert: {
           avatar_url?: string | null
+          birthdate?: string | null
           club_id?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id: string
+          jersey_number?: number | null
+          nationality?: string | null
+          pants_size?: string | null
+          phone?: string | null
+          position?: string | null
+          shirt_size?: string | null
+          shoe_size?: string | null
         }
         Update: {
           avatar_url?: string | null
+          birthdate?: string | null
           club_id?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id?: string
+          jersey_number?: number | null
+          nationality?: string | null
+          pants_size?: string | null
+          phone?: string | null
+          position?: string | null
+          shirt_size?: string | null
+          shoe_size?: string | null
         }
         Relationships: [
           {
