@@ -92,7 +92,7 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
     queryFn: async (): Promise<RoleRow[]> => {
       const { data, error } = await supabase
         .from("roles")
-        .select("id, name, is_system_default")
+        .select("id, name, is_system_default, allows_club_wide")
         .eq("club_id", clubId)
         .order("name");
       if (error) throw error;
