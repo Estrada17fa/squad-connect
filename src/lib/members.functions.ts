@@ -5,6 +5,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 const membershipSchema = z.object({
   role_id: z.string().uuid(),
   team_id: z.string().uuid().nullable(),
+  job_title: z.string().trim().max(60).optional().nullable(),
 });
 
 const inputSchema = z.object({
