@@ -79,6 +79,21 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
     navigate({ to: "/auth" });
   }
 
+  const clubPerms = data?.permissionsByTeam?.["club"] ?? {};
+  const activePermissions = React.useMemo<Record<string, AccessLevel>>(() => {
+    const teamKey = activeTeam?.id ?? "club";
+    return data?.permissionsByTeam?.[teamKey] ?? clubPerms;
+  }, [data?.permissionsByTeam, activeTeam?.id, clubPerms]);
+
+  const getModuleAccess = React.useCallback(
+    (key: ModuleKey): AccessLevel => {
+      const scope = MODULE_MAP[key].scope;
+      if (scope === "club") return clubPerms[key] ?? "none";
+      return activePermissions[key] ?? "none";
+    },
+    [clubPerms, activePermissions],
+  );
+
   if (isLoading || !data) {
     return (
       <div className="min-h-screen bg-background">
@@ -86,22 +101,6 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
       </div>
     );
   }
-
-  const clubPerms = data.permissionsByTeam?.["club"] ?? {};
-  const activePermissions = React.useMemo<Record<string, AccessLevel>>(() => {
-    const teamKey = activeTeam?.id ?? "club";
-    return data.permissionsByTeam?.[teamKey] ?? clubPerms;
-  }, [data.permissionsByTeam, activeTeam?.id, clubPerms]);
-
-  const getModuleAccess = React.useCallback(
-    (key: ModuleKey): AccessLevel => {
-      const scope = MODULE_MAP[key].scope;
-      if (scope === "club") return clubPerms[key] ?? "none";
-      // team o mixed: usar contexto activo
-      return activePermissions[key] ?? "none";
-    },
-    [clubPerms, activePermissions],
-  );
 
   const ctx: AppCtx = {
     user: { id: user.id },
@@ -115,6 +114,7 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
     isSuperAdmin: data.isSuperAdmin,
     profile: data.profile,
   };
+
 
 
   return (
