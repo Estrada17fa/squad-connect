@@ -31,8 +31,9 @@ export const Route = createFileRoute("/_authenticated/m/calendario")({
 const WEEKDAYS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
 function CalendarPage() {
-  const { activeTeam, permissions, user, isSuperAdmin } = useApp();
-  const canEdit = isSuperAdmin || permissions.calendario === "editor" || permissions.calendario === "approver";
+  const { activeTeam, getModuleAccess, user, isSuperAdmin } = useApp();
+  const canEdit = isSuperAdmin || getModuleAccess("calendario") === "editor" || getModuleAccess("calendario") === "approver";
+
 
   const [anchor, setAnchor] = React.useState(() => startOfDay(new Date()));
   const [selectedDay, setSelectedDay] = React.useState<Date | null>(null);

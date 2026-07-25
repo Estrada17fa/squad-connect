@@ -26,8 +26,9 @@ export const Route = createFileRoute("/_authenticated/m/plantel/$playerId")({
 
 function PlayerDetail() {
   const { playerId } = Route.useParams();
-  const { permissions, user, isSuperAdmin } = useApp();
-  const canEdit = isSuperAdmin || permissions.plantel === "editor" || permissions.plantel === "approver";
+  const { getModuleAccess, user, isSuperAdmin } = useApp();
+  const canEdit = isSuperAdmin || getModuleAccess("plantel") === "editor" || getModuleAccess("plantel") === "approver";
+
   const { data: player, isLoading } = usePlayer(playerId);
   const [editOpen, setEditOpen] = React.useState(false);
   const [clubId, setClubId] = React.useState<string | null>(null);

@@ -38,8 +38,9 @@ export const AVAILABILITY_META: Record<
 
 function PlantelPage() {
   const navigate = useNavigate();
-  const { activeTeam, permissions, user, isSuperAdmin } = useApp();
-  const canEdit = isSuperAdmin || permissions.plantel === "editor" || permissions.plantel === "approver";
+  const { activeTeam, getModuleAccess, user, isSuperAdmin } = useApp();
+  const canEdit = isSuperAdmin || getModuleAccess("plantel") === "editor" || getModuleAccess("plantel") === "approver";
+
 
   const { data: players, isLoading } = usePlayers(activeTeam?.id ?? null);
   const [clubId, setClubId] = React.useState<string | null>(null);
