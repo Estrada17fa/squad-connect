@@ -242,7 +242,7 @@ function CreateClubDialog({
         { name: "Admin", is_system_default: true },
         { name: "Técnico", is_system_default: true },
         { name: "Médico", is_system_default: true },
-        { name: "Utilero", is_system_default: true },
+        { name: "Staff", is_system_default: true },
         { name: "Jugador", is_system_default: true },
       ];
       const { data: roles, error: rolesErr } = await supabase
