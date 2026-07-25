@@ -290,7 +290,7 @@ function CreateClubDialog({
             <Input value={league} onChange={(e) => setLeague(e.target.value)} placeholder="Ej. Liga MX Femenil" />
           </div>
           <p className="text-xs text-muted-foreground">
-            Se crearán los roles de sistema (Admin, Técnico, Médico, Utilero, Jugador) y Admin tendrá
+            Se crearán los roles de sistema (Admin, Técnico, Médico, Staff, Jugador) y Admin tendrá
             acceso editor a todos los módulos. Después podrás invitar al Admin del club.
           </p>
         </div>
