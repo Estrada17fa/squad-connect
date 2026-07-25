@@ -220,7 +220,7 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
                     {displayName(selected)}
                   </h3>
                   {selected.name_completed === false ? (
-                    <StatusBadge variant="warning">Completar nombre</StatusBadge>
+                    <StatusBadge variant="pending">Completar nombre</StatusBadge>
                   ) : null}
                 </div>
                 <p className="truncate text-xs text-muted-foreground">{selected.email}</p>
