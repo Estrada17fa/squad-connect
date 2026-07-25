@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as AuthenticatedMasRouteImport } from './routes/_authenticated/mas'
+import { Route as AuthenticatedMUsuariosRouteImport } from './routes/_authenticated/m.usuarios'
 import { Route as AuthenticatedMPlantelRouteImport } from './routes/_authenticated/m.plantel'
 import { Route as AuthenticatedMCoordinacion_internaRouteImport } from './routes/_authenticated/m.coordinacion_interna'
 import { Route as AuthenticatedMCalendarioRouteImport } from './routes/_authenticated/m.calendario'
@@ -43,6 +44,11 @@ const InviteTokenRoute = InviteTokenRouteImport.update({
 const AuthenticatedMasRoute = AuthenticatedMasRouteImport.update({
   id: '/mas',
   path: '/mas',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMUsuariosRoute = AuthenticatedMUsuariosRouteImport.update({
+  id: '/m/usuarios',
+  path: '/m/usuarios',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedMPlantelRoute = AuthenticatedMPlantelRouteImport.update({
@@ -89,6 +95,7 @@ export interface FileRoutesByFullPath {
   '/m/calendario': typeof AuthenticatedMCalendarioRoute
   '/m/coordinacion_interna': typeof AuthenticatedMCoordinacion_internaRoute
   '/m/plantel': typeof AuthenticatedMPlantelRouteWithChildren
+  '/m/usuarios': typeof AuthenticatedMUsuariosRoute
   '/m/plantel/$playerId': typeof AuthenticatedMPlantelPlayerIdRoute
 }
 export interface FileRoutesByTo {
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/m/calendario': typeof AuthenticatedMCalendarioRoute
   '/m/coordinacion_interna': typeof AuthenticatedMCoordinacion_internaRoute
   '/m/plantel': typeof AuthenticatedMPlantelRouteWithChildren
+  '/m/usuarios': typeof AuthenticatedMUsuariosRoute
   '/m/plantel/$playerId': typeof AuthenticatedMPlantelPlayerIdRoute
 }
 export interface FileRoutesById {
@@ -115,6 +123,7 @@ export interface FileRoutesById {
   '/_authenticated/m/calendario': typeof AuthenticatedMCalendarioRoute
   '/_authenticated/m/coordinacion_interna': typeof AuthenticatedMCoordinacion_internaRoute
   '/_authenticated/m/plantel': typeof AuthenticatedMPlantelRouteWithChildren
+  '/_authenticated/m/usuarios': typeof AuthenticatedMUsuariosRoute
   '/_authenticated/m/plantel/$playerId': typeof AuthenticatedMPlantelPlayerIdRoute
 }
 export interface FileRouteTypes {
@@ -129,6 +138,7 @@ export interface FileRouteTypes {
     | '/m/calendario'
     | '/m/coordinacion_interna'
     | '/m/plantel'
+    | '/m/usuarios'
     | '/m/plantel/$playerId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -141,6 +151,7 @@ export interface FileRouteTypes {
     | '/m/calendario'
     | '/m/coordinacion_interna'
     | '/m/plantel'
+    | '/m/usuarios'
     | '/m/plantel/$playerId'
   id:
     | '__root__'
@@ -154,6 +165,7 @@ export interface FileRouteTypes {
     | '/_authenticated/m/calendario'
     | '/_authenticated/m/coordinacion_interna'
     | '/_authenticated/m/plantel'
+    | '/_authenticated/m/usuarios'
     | '/_authenticated/m/plantel/$playerId'
   fileRoutesById: FileRoutesById
 }
@@ -198,6 +210,13 @@ declare module '@tanstack/react-router' {
       path: '/mas'
       fullPath: '/mas'
       preLoaderRoute: typeof AuthenticatedMasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/m/usuarios': {
+      id: '/_authenticated/m/usuarios'
+      path: '/m/usuarios'
+      fullPath: '/m/usuarios'
+      preLoaderRoute: typeof AuthenticatedMUsuariosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/m/plantel': {
@@ -266,6 +285,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMCalendarioRoute: typeof AuthenticatedMCalendarioRoute
   AuthenticatedMCoordinacion_internaRoute: typeof AuthenticatedMCoordinacion_internaRoute
   AuthenticatedMPlantelRoute: typeof AuthenticatedMPlantelRouteWithChildren
+  AuthenticatedMUsuariosRoute: typeof AuthenticatedMUsuariosRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -277,6 +297,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMCoordinacion_internaRoute:
     AuthenticatedMCoordinacion_internaRoute,
   AuthenticatedMPlantelRoute: AuthenticatedMPlantelRouteWithChildren,
+  AuthenticatedMUsuariosRoute: AuthenticatedMUsuariosRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
