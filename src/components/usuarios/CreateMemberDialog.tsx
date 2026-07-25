@@ -132,6 +132,7 @@ export function CreateMemberDialog({
         memberships: memberships.map((m) => ({
           role_id: m.role_id,
           team_id: m.team_id === "__club__" ? null : m.team_id,
+          job_title: m.job_title.trim() || null,
         })),
       };
       const res = await createFn({ data: payload });
