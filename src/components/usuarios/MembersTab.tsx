@@ -218,21 +218,28 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
                   {(membershipsQ.data ?? []).map((m) => (
                     <div
                       key={m.id}
-                      className="glass flex flex-wrap items-center gap-3 rounded-lg p-3"
+                      className="glass rounded-lg p-3 space-y-3 sm:flex sm:flex-wrap sm:items-center sm:gap-3 sm:space-y-0"
                     >
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium">
-                          {m.team?.name ?? "Todo el club"}
+                      <div className="min-w-0 sm:flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="truncate text-sm font-medium">
+                            {m.team?.name ?? "Todo el club"}
+                          </p>
+                          {!m.team_id ? (
+                            <StatusBadge variant="info">Alcance club</StatusBadge>
+                          ) : null}
+                        </div>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {m.role?.name ?? "—"}
                         </p>
-                        <p className="text-xs text-muted-foreground">{m.role?.name ?? "—"}</p>
                       </div>
                       {canEdit ? (
-                        <>
+                        <div className="flex items-center gap-2">
                           <Select
                             value={m.role_id}
                             onValueChange={(v) => handleChangeRole(m, v)}
                           >
-                            <SelectTrigger className="w-[160px]">
+                            <SelectTrigger className="flex-1 sm:w-[160px] sm:flex-none">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -244,8 +251,9 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
                             </SelectContent>
                           </Select>
                           <Button
-                            size="sm"
+                            size="icon"
                             variant="ghost"
+                            title="Personalizar permisos"
                             onClick={() =>
                               setOverrideCtx({
                                 userId: selected.id,
@@ -255,12 +263,17 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
                               })
                             }
                           >
-                            <Sliders className="mr-2 h-4 w-4" /> Personalizar
+                            <Sliders className="h-4 w-4" />
                           </Button>
-                          <Button size="icon" variant="ghost" onClick={() => handleRemoveMembership(m)}>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            title="Eliminar membresía"
+                            onClick={() => handleRemoveMembership(m)}
+                          >
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
-                        </>
+                        </div>
                       ) : (
                         <StatusBadge variant="info">{m.role?.name ?? ""}</StatusBadge>
                       )}
