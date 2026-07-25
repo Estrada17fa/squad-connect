@@ -656,6 +656,51 @@ export type Database = {
           },
         ]
       }
+      user_permission_overrides: {
+        Row: {
+          access_level: Database["public"]["Enums"]["access_level"]
+          created_at: string
+          id: string
+          module_key: string
+          team_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_level: Database["public"]["Enums"]["access_level"]
+          created_at?: string
+          id?: string
+          module_key: string
+          team_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_level?: Database["public"]["Enums"]["access_level"]
+          created_at?: string
+          id?: string
+          module_key?: string
+          team_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_permission_overrides_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_permission_overrides_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
