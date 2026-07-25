@@ -322,13 +322,16 @@ function PermissionsMatrix({
         {MODULES.map((m) => {
           const Icon = m.icon;
           return (
-            <div key={m.key} className="flex items-center gap-3 py-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/5">
+            <div
+              key={m.key}
+              className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 py-2.5 sm:grid-cols-[auto_minmax(0,1fr)_auto]"
+            >
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/5">
                 <Icon className="h-4 w-4" />
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium truncate">{m.label}</p>
-                <p className="text-xs text-muted-foreground truncate">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium">{m.label}</p>
+                <p className="truncate text-xs text-muted-foreground">
                   {m.scope === "club" ? "Nivel club" : m.scope === "team" ? "Por categoría" : "Club + categoría"}
                 </p>
               </div>
@@ -337,7 +340,7 @@ function PermissionsMatrix({
                 onValueChange={(v) => setDraft((d) => ({ ...d, [m.key as ModuleKey]: v as AccessLevel }))}
                 disabled={!canEdit}
               >
-                <SelectTrigger className="w-[140px]">
+                <SelectTrigger className="col-span-2 w-full sm:col-span-1 sm:w-[140px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
