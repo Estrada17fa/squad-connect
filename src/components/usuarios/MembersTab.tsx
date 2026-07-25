@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, Settings2, Sliders, Trash2, User as UserIcon } from "lucide-react";
+import { Plus, Search, Settings2, Sliders, Trash2, User as UserIcon, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { MODULES, type ModuleKey } from "@/lib/modules";
@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { CreateMemberDialog } from "./CreateMemberDialog";
 
 const LEVELS: { value: AccessLevel; label: string }[] = [
   { value: "none", label: "Sin acceso" },
