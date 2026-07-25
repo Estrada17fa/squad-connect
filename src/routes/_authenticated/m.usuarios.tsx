@@ -1,7 +1,9 @@
 import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, ShieldCheck, Trash2, Pencil, Users as UsersIcon } from "lucide-react";
+import { Plus, ShieldCheck, Trash2, Pencil } from "lucide-react";
+import { MembersTab } from "@/components/usuarios/MembersTab";
+
 import { toast } from "sonner";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { EmptyState } from "@/components/squad/EmptyState";
@@ -77,12 +79,13 @@ function UsuariosPage() {
           <RolesTab clubId={profile?.club_id ?? null} canEdit={canEdit} />
         </TabsContent>
         <TabsContent value="miembros">
-          <EmptyState
-            icon={UsersIcon}
-            title="Miembros — próximamente"
-            message="Invitar, cambiar rol y asignar equipos vive aquí. Por ahora usa Administrar clubes."
-          />
+          {profile?.club_id ? (
+            <MembersTab clubId={profile.club_id} canEdit={canEdit} />
+          ) : (
+            <EmptyState title="Sin club" message="Tu perfil aún no está asociado a un club." />
+          )}
         </TabsContent>
+
       </Tabs>
     </div>
   );

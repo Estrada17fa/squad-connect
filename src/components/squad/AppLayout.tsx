@@ -2,12 +2,13 @@ import * as React from "react";
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { ChevronDown, LogOut, MoreHorizontal } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAccess, hasAccess, type TeamOption } from "@/hooks/useAccess";
+import { useAccess, hasAccess, type TeamOption, type AccessLevel } from "@/hooks/useAccess";
 import { HOME_MODULE, MODULES, MODULE_MAP, moduleFromPath, type ModuleKey } from "@/lib/modules";
 import { LoadingState } from "./LoadingState";
 import { FAB } from "./FAB";
 import { cn } from "@/lib/utils";
 import squadLogo from "@/assets/squad-logo.png.asset.json";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,13 +21,19 @@ import {
 interface AppCtx {
   user: { id: string };
   accessibleModules: ModuleKey[];
-  permissions: Record<string, "none" | "read" | "editor" | "approver">;
+  /** Unión (mejor nivel) — úsalo solo para navegación global. */
+  permissions: Record<string, AccessLevel>;
+  /** Permisos efectivos según el equipo activo (respeta scope de módulo). */
+  activePermissions: Record<string, AccessLevel>;
+  /** Devuelve el nivel efectivo para un módulo específico según su scope. */
+  getModuleAccess: (key: ModuleKey) => AccessLevel;
   activeTeam: TeamOption | null;
   setActiveTeamId: (id: string | null) => void;
   clubName: string | null;
   isSuperAdmin: boolean;
   profile: { full_name: string | null; email: string | null; club_id: string | null } | null;
 }
+
 
 
 const AppContext = React.createContext<AppCtx | null>(null);
@@ -80,17 +87,35 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
     );
   }
 
+  const clubPerms = data.permissionsByTeam?.["club"] ?? {};
+  const activePermissions = React.useMemo<Record<string, AccessLevel>>(() => {
+    const teamKey = activeTeam?.id ?? "club";
+    return data.permissionsByTeam?.[teamKey] ?? clubPerms;
+  }, [data.permissionsByTeam, activeTeam?.id, clubPerms]);
+
+  const getModuleAccess = React.useCallback(
+    (key: ModuleKey): AccessLevel => {
+      const scope = MODULE_MAP[key].scope;
+      if (scope === "club") return clubPerms[key] ?? "none";
+      // team o mixed: usar contexto activo
+      return activePermissions[key] ?? "none";
+    },
+    [clubPerms, activePermissions],
+  );
+
   const ctx: AppCtx = {
     user: { id: user.id },
     accessibleModules,
     permissions: data.permissions,
-
+    activePermissions,
+    getModuleAccess,
     activeTeam,
     setActiveTeamId,
     clubName: data.clubName,
     isSuperAdmin: data.isSuperAdmin,
     profile: data.profile,
   };
+
 
   return (
     <AppContext.Provider value={ctx}>
