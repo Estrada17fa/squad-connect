@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { ModuleKey } from "@/lib/modules";
 
@@ -24,6 +25,21 @@ export interface AccessData {
 const RANK: Record<AccessLevel, number> = { none: 0, read: 1, editor: 2, approver: 3 };
 
 export function useAccess(userId: string) {
+  const qc = useQueryClient();
+  useEffect(() => {
+    const ch = supabase
+      .channel(`role-perms-${userId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "role_permissions" }, () => {
+        qc.invalidateQueries({ queryKey: ["squad-access", userId] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "roles" }, () => {
+        qc.invalidateQueries({ queryKey: ["squad-access", userId] });
+      })
+      .subscribe();
+    return () => {
+      supabase.removeChannel(ch);
+    };
+  }, [userId, qc]);
   return useQuery({
     queryKey: ["squad-access", userId],
     queryFn: async (): Promise<AccessData> => {
