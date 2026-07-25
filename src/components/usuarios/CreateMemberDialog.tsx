@@ -299,6 +299,11 @@ export function CreateMemberDialog({
                         </SelectContent>
                       </Select>
                     </div>
+                    <Input
+                      value={m.job_title}
+                      onChange={(e) => updateMembership(idx, { job_title: e.target.value })}
+                      placeholder="Puesto (opcional) — ej. Utilero, Kinesiólogo, Portero"
+                    />
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-[11px] text-muted-foreground">
                         {m.role_id && !clubWide
