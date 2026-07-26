@@ -34,6 +34,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useApp } from "@/components/squad/AppLayout";
 import { MODULES, MODULE_MAP, type ModuleKey } from "@/lib/modules";
+import { groupModulesByPage, type BaseRole } from "@/lib/rolePages";
 import { cn } from "@/lib/utils";
 import type { AccessLevel } from "@/hooks/useAccess";
 
