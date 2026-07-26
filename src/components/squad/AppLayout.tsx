@@ -1,9 +1,10 @@
 import * as React from "react";
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
-import { ChevronDown, LogOut, MoreHorizontal } from "lucide-react";
+import { ChevronDown, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccess, hasAccess, type TeamOption, type AccessLevel } from "@/hooks/useAccess";
-import { HOME_MODULE, MODULES, MODULE_MAP, moduleFromPath, type ModuleKey } from "@/lib/modules";
+import { MODULES, MODULE_MAP, moduleFromPath, type ModuleKey } from "@/lib/modules";
+import { resolvePagesForUser, inferBaseRole, type BaseRole, type ResolvedPage } from "@/lib/rolePages";
 import { LoadingState } from "./LoadingState";
 import { FAB } from "./FAB";
 import { cn } from "@/lib/utils";
