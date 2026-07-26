@@ -18,44 +18,66 @@ export interface CalendarEventRow {
   created_at: string;
 }
 
-export const calendarEventsQueryOptions = (teamId: string | null | undefined) =>
+export interface CalendarScope {
+  /** Cuando `mode` es 'team' se filtra por este team + eventos club-wide (team_id null). */
+  teamId?: string | null;
+  /** Cuando `mode` es 'club' se traen TODOS los eventos del club. */
+  clubId?: string | null;
+  mode: "team" | "club";
+}
+
+export const calendarEventsQueryOptions = (scope: CalendarScope) =>
   queryOptions({
-    queryKey: ["calendar-events", teamId ?? "none"] as const,
-    enabled: !!teamId,
+    queryKey:
+      scope.mode === "club"
+        ? (["calendar-events", "club", scope.clubId ?? "none"] as const)
+        : (["calendar-events", "team", scope.teamId ?? "none"] as const),
+    enabled: scope.mode === "club" ? !!scope.clubId : !!scope.teamId,
     staleTime: 30_000,
     gcTime: 5 * 60_000,
     placeholderData: keepPreviousData,
     queryFn: async (): Promise<CalendarEventRow[]> => {
-      const { data, error } = await supabase
-        .from("calendar_events")
-        .select("*")
-        .or(`team_id.eq.${teamId},team_id.is.null`)
-        .order("starts_at", { ascending: true });
+      const q = supabase.from("calendar_events").select("*").order("starts_at", { ascending: true });
+      if (scope.mode === "club") q.eq("club_id", scope.clubId!);
+      else q.or(`team_id.eq.${scope.teamId},team_id.is.null`);
+      const { data, error } = await q;
       if (error) throw error;
       return (data ?? []) as CalendarEventRow[];
     },
   });
 
-export function useCalendarEvents(teamId: string | null | undefined) {
+export function useCalendarEvents(scope: CalendarScope) {
   const qc = useQueryClient();
-  const query = useQuery(calendarEventsQueryOptions(teamId));
+  const query = useQuery(calendarEventsQueryOptions(scope));
 
   React.useEffect(() => {
-    if (!teamId) return;
+    if (scope.mode === "club") {
+      if (!scope.clubId) return;
+      const channel = supabase
+        .channel(`calendar-events-club-${scope.clubId}`)
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "calendar_events", filter: `club_id=eq.${scope.clubId}` },
+          () => qc.invalidateQueries({ queryKey: ["calendar-events", "club", scope.clubId] }),
+        )
+        .subscribe();
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+    if (!scope.teamId) return;
     const channel = supabase
-      .channel(`calendar-events-${teamId}`)
+      .channel(`calendar-events-team-${scope.teamId}`)
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "calendar_events", filter: `team_id=eq.${teamId}` },
-        () => {
-          qc.invalidateQueries({ queryKey: ["calendar-events", teamId] });
-        },
+        { event: "*", schema: "public", table: "calendar_events", filter: `team_id=eq.${scope.teamId}` },
+        () => qc.invalidateQueries({ queryKey: ["calendar-events", "team", scope.teamId] }),
       )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [teamId, qc]);
+  }, [scope.mode, scope.teamId, scope.clubId, qc]);
 
   return query;
 }
