@@ -62,7 +62,7 @@ function CoordinacionPage() {
   const [editingMeeting, setEditingMeeting] = React.useState<MeetingRow | null>(null);
   const [filter, setFilter] = React.useState<TaskFilter>("mias");
   const [tab, setTab] = React.useState<"tareas" | "juntas">("tareas");
-  const [viewMode, setViewMode] = useViewMode("coordinacion", "grid");
+  
 
   if (!canAccess) {
     return (
