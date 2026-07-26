@@ -42,7 +42,7 @@ export function ModuleTabs({ activeKey, extraTabs = [], alwaysShow = false }: Mo
         aria-label="Módulos del hub"
         className="squad-tabs-scroll flex gap-1 overflow-x-auto"
       >
-        {modules.map((key) => {
+        {modules.map((key: ModuleKey) => {
           const m = MODULE_MAP[key];
           const active = key === activeKey;
           return (
