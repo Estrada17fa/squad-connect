@@ -66,7 +66,7 @@ function CoordinacionPage() {
   if (!canAccess) {
     return (
       <div className="space-y-6">
-        <PageHeader title="Coordinación" subtitle="Staff del club" />
+        <PageHeader hideTitle title="Coordinación" subtitle="Staff del club" />
         <EmptyState icon={MessagesSquare} title="Sin acceso" message="Tu rol actual no tiene permisos para este módulo." />
       </div>
     );
@@ -77,6 +77,7 @@ function CoordinacionPage() {
   return (
     <div className="space-y-6">
       <PageHeader
+        hideTitle
         title="Coordinación"
         subtitle="Ámbito club · staff sin importar equipo"
         action={

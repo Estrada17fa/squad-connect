@@ -33,7 +33,7 @@ function ModulePage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title={def.label} subtitle={def.description} />
+      <PageHeader hideTitle title={def.label} subtitle={def.description} />
       <ModuleTabs activeKey={def.key} />
       {!canAccess ? (
         <EmptyState

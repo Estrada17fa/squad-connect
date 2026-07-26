@@ -71,7 +71,7 @@ function UsuariosPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Usuarios" subtitle="Miembros del club, roles y permisos" />
+      <PageHeader hideTitle title="Usuarios" subtitle="Miembros del club, roles y permisos" />
       <ModuleTabs activeKey="usuarios" />
       <Tabs defaultValue="roles" className="space-y-4">
         <TabsList className="glass w-full sm:w-auto">

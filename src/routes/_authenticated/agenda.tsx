@@ -22,7 +22,7 @@ function AgendaPage() {
   }
   return (
     <div className="space-y-6">
-      <PageHeader title="Agenda" subtitle="Entrenamientos, partidos, juntas y viajes" />
+      <PageHeader hideTitle title="Agenda" subtitle="Entrenamientos, partidos, juntas y viajes" />
       <EmptyState
         icon={Calendar}
         title="Sin acceso a la agenda"

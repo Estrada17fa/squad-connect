@@ -69,6 +69,7 @@ function PlantelPage() {
     (initialRole as BaseRole | undefined) ?? "all",
   );
   const [search, setSearch] = React.useState("");
+  const [viewMode, setViewMode] = useViewMode("plantel", "grid");
 
   const [playerClubId, setPlayerClubId] = React.useState<string | null>(null);
   React.useEffect(() => {
@@ -98,14 +99,18 @@ function PlantelPage() {
   return (
     <div className="space-y-6">
       <PageHeader
+        hideTitle
         title="Plantel"
         subtitle={activeTeam.name}
         action={
-          canEdit ? (
-            <Button onClick={() => setDialogOpen(true)} className="glow-primary">
-              <Plus className="mr-2 h-4 w-4" /> Agregar jugador
-            </Button>
-          ) : null
+          <div className="flex items-center gap-2">
+            <ViewToggle value={viewMode} onChange={setViewMode} />
+            {canEdit ? (
+              <Button onClick={() => setDialogOpen(true)} className="glow-primary">
+                <Plus className="mr-2 h-4 w-4" /> Agregar jugador
+              </Button>
+            ) : null}
+          </div>
         }
       />
       <ModuleTabs activeKey="plantel" />
@@ -136,22 +141,32 @@ function PlantelPage() {
           }
         />
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div
+          className={cn(
+            viewMode === "grid"
+              ? "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
+              : "flex flex-col divide-y divide-border/50 overflow-hidden rounded-xl border border-border/50",
+          )}
+        >
           {filtered.map((m, i) => {
             const meta = m.availability ? AVAILABILITY_META[m.availability] : null;
             const birthday = formatBirthday(m.birthdate);
             const isJugador = m.baseRole === "jugador";
+            const isList = viewMode === "list";
             return (
               <button
                 type="button"
                 key={m.userId}
                 onClick={() => onCardClick(m)}
                 className={cn(
-                  "glass animate-card-in flex items-center gap-3 p-4 text-left transition-all hover:border-white/15 hover:bg-white/[0.06] active:scale-[0.99]",
+                  "animate-card-in flex items-center gap-3 text-left transition-all",
+                  isList
+                    ? "bg-white/[0.02] p-3 hover:bg-white/[0.05] active:scale-[0.995]"
+                    : "glass p-4 hover:border-white/15 hover:bg-white/[0.06] active:scale-[0.99]",
                 )}
                 style={{ animationDelay: `${i * 25}ms` }}
               >
-                <Avatar className="h-12 w-12 shrink-0">
+                <Avatar className={cn("shrink-0", isList ? "h-10 w-10" : "h-12 w-12")}>
                   <AvatarImage src={m.avatarUrl ?? undefined} />
                   <AvatarFallback>{(m.fullName ?? "?").slice(0, 1).toUpperCase()}</AvatarFallback>
                 </Avatar>
@@ -164,19 +179,29 @@ function PlantelPage() {
                       {m.fullName ?? "—"}
                     </span>
                   </div>
-                  <div className="mt-0.5 text-xs text-muted-foreground">
+                  <div className="mt-0.5 truncate text-xs text-muted-foreground">
                     {m.teamName ?? "Todo el club"}
                     {isJugador
                       ? m.position ? ` · ${m.position}` : ""
                       : m.jobTitle ? ` · ${m.jobTitle}` : m.roleName ? ` · ${m.roleName}` : ""}
                   </div>
-                  <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-                    {birthday ? <span>🎂 {birthday}</span> : null}
+                  {!isList ? (
+                    <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                      {birthday ? <span>🎂 {birthday}</span> : null}
+                      {isJugador && meta ? (
+                        <StatusBadge variant={meta.variant}>{meta.label}</StatusBadge>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
+                {isList ? (
+                  <div className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
+                    {birthday ? <span className="hidden sm:inline">🎂 {birthday}</span> : null}
                     {isJugador && meta ? (
                       <StatusBadge variant={meta.variant}>{meta.label}</StatusBadge>
                     ) : null}
                   </div>
-                </div>
+                ) : null}
               </button>
             );
           })}
