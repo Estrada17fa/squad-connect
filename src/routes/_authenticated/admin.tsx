@@ -1,10 +1,9 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router";
 import { Shield, Building2 } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { StandardCard } from "@/components/squad/StandardCard";
 import { EmptyState } from "@/components/squad/EmptyState";
 import { useApp } from "@/components/squad/AppLayout";
-import { MODULE_MAP } from "@/lib/modules";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
@@ -32,24 +31,17 @@ function AdminPage() {
     );
   }
 
+  // Redirige al primer módulo del hub para que las pestañas de módulos tomen el control.
+  if (modules[0]) {
+    return <Navigate to="/m/$module" params={{ module: modules[0] }} replace />;
+  }
+
+  // Sin módulos accesibles: si es super admin, mostrar acceso a "Administrar clubes".
   return (
     <div className="space-y-6">
       <PageHeader title="Admin" subtitle="Gestión del club" />
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {modules.map((key) => {
-          const m = MODULE_MAP[key];
-          return (
-            <StandardCard
-              key={key}
-              interactive
-              onClick={() => navigate({ to: "/m/$module", params: { module: key } })}
-              icon={m.icon}
-              title={m.label}
-              subtitle={m.description}
-            />
-          );
-        })}
-        {isSuperAdmin ? (
+      {isSuperAdmin ? (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <StandardCard
             interactive
             onClick={() => navigate({ to: "/admin/clubs" })}
@@ -57,8 +49,14 @@ function AdminPage() {
             title="Administrar clubes"
             subtitle="Panel de super admin"
           />
-        ) : null}
-      </div>
+        </div>
+      ) : (
+        <EmptyState
+          icon={Shield}
+          title="Sin módulos disponibles"
+          message="No tienes acceso a los módulos de administración."
+        />
+      )}
     </div>
   );
 }
