@@ -9,6 +9,8 @@ import { EmptyState } from "@/components/squad/EmptyState";
 import { LoadingState } from "@/components/squad/LoadingState";
 import { StandardCard } from "@/components/squad/StandardCard";
 import { StatusBadge, type StatusVariant } from "@/components/squad/StatusBadge";
+import { ViewToggle } from "@/components/squad/ViewToggle";
+import { useViewMode, type ViewMode } from "@/hooks/useViewMode";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useApp } from "@/components/squad/AppLayout";
