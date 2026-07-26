@@ -155,6 +155,10 @@ export function useAccess(userId: string) {
         permissions,
         permissionsByTeam,
         isSuperAdmin: !!superRes.data,
+        isPlayerOnly:
+          !superRes.data &&
+          teams.length > 0 &&
+          teams.every((t) => (t.baseRole ?? "").toLowerCase() === "jugador"),
       };
     },
   });
