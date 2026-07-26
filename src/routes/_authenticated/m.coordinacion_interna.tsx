@@ -191,14 +191,13 @@ function FilterChips({ filter, setFilter }: { filter: TaskFilter; setFilter: (f:
 }
 
 function TasksList({
-  tasks, isLoading, userId, filter, canEdit, viewMode, onEdit, onCreate, clubId,
+  tasks, isLoading, userId, filter, canEdit, onEdit, onCreate, clubId,
 }: {
   tasks: TaskRow[];
   isLoading: boolean;
   userId: string;
   filter: TaskFilter;
   canEdit: boolean;
-  viewMode: ViewMode;
   onEdit: (t: TaskRow) => void;
   onCreate?: () => void;
   clubId: string;
