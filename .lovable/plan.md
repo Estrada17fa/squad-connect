@@ -1,36 +1,80 @@
-## Nueva regla de visibilidad
+# Módulo Documentos
 
-- **No-jugadores (Admin, Técnico, Médico, Staff):** ven **todo el club**, sin importar a qué categoría/equipo pertenezcan sus membresías. Sus permisos (read/editor/approver) se calculan por unión de todas sus membresías y overrides.
-- **Jugadores:** siguen viendo únicamente lo de su(s) categoría(s).
-- Las membresías de no-jugadores dejan de ser por categoría: se asignan a nivel club (team_id NULL). Los jugadores siguen asignándose a un equipo específico.
+Biblioteca de documentos del club con metadatos, filtros y almacenamiento privado. Vive en la página Admin, respeta el sistema de diseño existente (chips scrolleables, glass cards, skeletons, FAB, StatusBadge, EmptyState).
 
-## Cambios en base de datos (migración)
+## 1. Base de datos (migración)
 
-1. Nueva función `public.is_player_only(_user_id)` STABLE SECURITY DEFINER: `true` si el usuario **solo** tiene membresías con rol base `jugador` y ninguna otra (fallback a Super Admin = false).
-2. Nueva función `public.user_sees_all_club(_user_id, _club_id)`: `is_super_admin OR (get_user_club_id = _club_id AND NOT is_player_only)`.
-3. Reemplazar SELECT policies dependientes del equipo:
-   - `player_profiles_select` → permitir si `user_sees_all_club(auth.uid(), teams.club_id)` o `has_team_scope` (para jugadores).
-   - `calendar_events_select` → permitir si `user_sees_all_club(auth.uid(), club_id)`; jugadores mantienen la regla actual (`has_team_access(team_id)` o invitado).
-   - Verificar `viajes`, `inventario`, `tacticas`, `salud`, `desarrollo`, `nutricion`, `multimedia`, `torneo`, `comunicados` (cuando existan tablas con `team_id`): aplicar el mismo patrón.
-4. Migración de datos: convertir membresías **no-jugador** con `team_id` no nulo a club-wide (`team_id = NULL`), deduplicando por `(user_id, role_id)`. Las membresías de rol `Jugador` permanecen intactas.
-5. Ajustar policies de escritura (`_insert/_update/_delete`) para que `has_module_editor_any` (unión de permisos) baste para no-jugadores; jugadores editores siguen restringidos a su team.
+**Enum** `document_category`: `jugador`, `staff`, `institucional`, `legal`, `competicion`, `comercial`, `operativo`.
 
-## Cambios en frontend
+**Tabla `public.documents`**
+- `id`, `club_id` (FK clubs), `title`, `description` (null)
+- `category` (enum), `file_path` (text, ruta en storage), `file_type` (null), `file_size` (bigint, null)
+- `related_user_id` (FK profiles, null), `team_id` (FK teams, null)
+- `issue_date` (date, null), `expiry_date` (date, null), `tags` (text[], null)
+- `uploaded_by` (FK profiles), `created_at`, `updated_at` (+ trigger)
 
-- **`useAccess.ts`**: exponer `isPlayerOnly` (calculado en cliente a partir de `teams[].baseRole`). Cuando `isPlayerOnly === false`, `getModuleAccess` usa `permissions` (unión) en vez de `activePermissions`.
-- **`AppLayout.tsx`**:
-  - Ocultar el selector de equipo para no-jugadores (siempre muestran datos de todo el club); mostrar solo nombre del club.
-  - Para jugadores con un solo equipo, tampoco mostrar selector.
-  - `activeBaseRole` de no-jugadores: elegir el "mejor" rol (Admin > Técnico > Médico > Staff) a partir de la unión, no del team activo.
-- **`useCalendarEvents.ts`**: si `isPlayerOnly` es `false`, listar todos los `calendar_events` del club (`club_id = profile.club_id`) sin filtrar por team; jugadores conservan el filtro por team.
-- **`useRoster.ts` / `usePlayers.ts`**: no-jugadores cargan todos los miembros/jugadores del club (todas las categorías); mostrar columna/etiqueta de categoría. Jugadores siguen scoped al team.
-- **`m.plantel.tsx`**: agregar filtro por categoría (opcional) visible solo para no-jugadores; el filtro por rol actual se mantiene.
-- **`CreateMemberDialog` / `MembersTab`**: al asignar rol distinto de "Jugador", forzar `team_id = NULL` (membresía club-wide) y ocultar el selector de categoría en esa fila. Para "Jugador" seguir pidiendo categoría obligatoria.
-- **`prefetch.ts`**: pasar `teamId = null` para no-jugadores al precargar calendario/plantel.
+Índices: `club_id`, `category`, `related_user_id`, `expiry_date`.
 
-## Verificación
+GRANTs: `authenticated` (SELECT/INSERT/UPDATE/DELETE), `service_role` (ALL).
 
-- Migración: comprobar que no-jugadores previamente ligados a un equipo específico quedan como club-wide y no pierden acceso.
-- Login como Técnico de una sola categoría: debe ver plantel completo del club, agenda con eventos de todas las categorías, sin selector de equipo.
-- Login como Jugador de Sub-15: solo ve su equipo, sin eventos ni jugadores de otras categorías.
-- Super Admin: sigue viendo todo (comportamiento intacto).
+**RLS `documents`:**
+- SELECT: `has_club_access(auth.uid(), club_id) AND (has_module_access(auth.uid(), 'documentos') OR related_user_id = auth.uid())`
+- INSERT/UPDATE/DELETE: `has_club_access(...) AND has_module_editor_any(auth.uid(), 'documentos')`
+
+## 2. Storage
+
+Bucket privado `documents` (via `supabase--storage_create_bucket`, `public=false`). Convención de path: `<club_id>/<document_id>/<filename>`.
+
+Policies en `storage.objects` para bucket `documents`:
+- SELECT: usuario con `has_module_access('documentos')` del club dueño del path, o cuyo `auth.uid()` coincida con `related_user_id` en la fila `documents` correspondiente.
+- INSERT/UPDATE/DELETE: `has_module_editor_any('documentos')` del club dueño.
+
+(Path prefix = club_id permite verificar club via `split_part(name, '/', 1)::uuid`.)
+
+## 3. Hook de datos
+
+`src/hooks/useDocuments.ts` — `documentsQueryOptions({ clubId, filters })` con Realtime sobre `documents`. Filtros: búsqueda texto (title/description/tags via `or` + `ilike`/`cs`), categoría (multi), `related_user_id`, `team_id`. `staleTime` 30s, placeholderData keepPrev.
+
+`useDocumentMutations` para crear/editar/eliminar + subida a Storage.
+
+## 4. UI
+
+`src/routes/_authenticated/m.documentos.tsx` — sigue el patrón exacto de `m.plantel.tsx`:
+1. `ModuleTabs` primero.
+2. `PageHeader hideTitle` con acción "Subir documento" (solo si editor).
+3. Buscador (Input con ícono Search integrado) + chips de categoría scrolleables ("Todos" + 7 categorías) + Selects de persona y equipo.
+4. `ViewToggle` grid/list.
+5. Grid/List de `StandardCard`:
+   - Icono según `file_type` (FileText / Image / File).
+   - Título, `StatusBadge` con categoría (mapeo a variant `info`/`pending`/etc.).
+   - Subtítulo: persona relacionada + equipo + fecha emisión.
+   - Indicador visual de expiración: badge sutil `pending` si `expiry_date` < 30d, `rejected` si vencida.
+   - Click → abre `DocumentPreviewDialog`.
+6. Skeleton (`CardGridSkeleton`) y `EmptyState`.
+
+**Componentes nuevos** en `src/components/documentos/`:
+- `DocumentFormDialog.tsx` — crear/editar. Campos: archivo (input file), título, categoría (Select), descripción, persona relacionada (Combobox buscable sobre profiles del club), equipo (Select con teams del club), fechas emisión/vencimiento, tags (input separado por comas). Sube a Storage → inserta fila.
+- `DocumentPreviewDialog.tsx` — PDFs en `<iframe>` con signed URL; imágenes en `<img>`; otros muestran botón "Descargar". Acciones editar/eliminar solo si editor.
+- `DocumentCard.tsx` (opcional) o inline en la página.
+
+FAB reutiliza la lógica (o el botón del header ya cubre "Subir"; el FAB global sigue).
+
+## 5. Integración Plantel
+
+En `m.plantel.$playerId.tsx` — añadir sección "Documentos" que reutiliza `useDocuments` con `related_user_id = playerId`, y botón "Subir documento" que abre `DocumentFormDialog` con `related_user_id` prefijado. Aplica igual para staff (la ruta ya es de miembro).
+
+## 6. Home
+
+En el Dashboard/Home, tarjeta opcional "Documentos por vencer" visible solo si el usuario es editor de `documentos`: cuenta `documents` con `expiry_date` entre hoy y +30d. Placeholder de conteo (query simple), sin sistema de alertas.
+
+## 7. Registrar módulo
+
+- `module_key = 'documentos'` ya existe en `src/lib/modules.ts` y `rolePages.ts` (página Admin). Verificar/agregar si falta.
+- Sin nuevos estilos: reutilizar tokens y componentes existentes.
+
+## Notas técnicas
+
+- Descargas usan `supabase.storage.from('documents').createSignedUrl(path, 60)`.
+- Búsqueda por tags: `contains` con array del término, o combinar `.or()` con `ilike` sobre title/description.
+- Categoría → variante de StatusBadge: mapa fijo en util local.
+- Todos los queries filtran por `club_id` explícitamente además de RLS.

@@ -185,6 +185,92 @@ export type Database = {
         }
         Relationships: []
       }
+      documents: {
+        Row: {
+          category: Database["public"]["Enums"]["document_category"]
+          club_id: string
+          created_at: string
+          description: string | null
+          expiry_date: string | null
+          file_path: string
+          file_size: number | null
+          file_type: string | null
+          id: string
+          issue_date: string | null
+          related_user_id: string | null
+          tags: string[] | null
+          team_id: string | null
+          title: string
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["document_category"]
+          club_id: string
+          created_at?: string
+          description?: string | null
+          expiry_date?: string | null
+          file_path: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          issue_date?: string | null
+          related_user_id?: string | null
+          tags?: string[] | null
+          team_id?: string | null
+          title: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["document_category"]
+          club_id?: string
+          created_at?: string
+          description?: string | null
+          expiry_date?: string | null
+          file_path?: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          issue_date?: string | null
+          related_user_id?: string | null
+          tags?: string[] | null
+          team_id?: string | null
+          title?: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_related_user_id_fkey"
+            columns: ["related_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_attendees: {
         Row: {
           created_at: string
@@ -842,6 +928,14 @@ export type Database = {
       access_level: "none" | "read" | "editor" | "approver"
       attendance_status: "invitado" | "confirmado" | "rechazado"
       availability_status: "apto" | "lesionado" | "en_duda"
+      document_category:
+        | "jugador"
+        | "staff"
+        | "institucional"
+        | "legal"
+        | "competicion"
+        | "comercial"
+        | "operativo"
       event_type:
         | "partido"
         | "entrenamiento"
@@ -980,6 +1074,15 @@ export const Constants = {
       access_level: ["none", "read", "editor", "approver"],
       attendance_status: ["invitado", "confirmado", "rechazado"],
       availability_status: ["apto", "lesionado", "en_duda"],
+      document_category: [
+        "jugador",
+        "staff",
+        "institucional",
+        "legal",
+        "competicion",
+        "comercial",
+        "operativo",
+      ],
       event_type: [
         "partido",
         "entrenamiento",
