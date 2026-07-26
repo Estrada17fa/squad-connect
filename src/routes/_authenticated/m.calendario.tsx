@@ -40,12 +40,32 @@ function CalendarPage() {
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<CalendarEventRow | null>(null);
   const [clubId, setClubId] = React.useState<string | null>(profile?.club_id ?? null);
+  const [clubTeams, setClubTeams] = React.useState<{ id: string; name: string }[]>([]);
+  const [createTeamId, setCreateTeamId] = React.useState<string | null>(activeTeam?.id ?? null);
 
   const { data: events, isLoading } = useCalendarEvents(
     viewsAllClub
       ? { mode: "club", clubId: profile?.club_id ?? null }
       : { mode: "team", teamId: activeTeam?.id ?? null },
   );
+
+  React.useEffect(() => {
+    if (!viewsAllClub || !profile?.club_id) return;
+    supabase
+      .from("teams")
+      .select("id, name")
+      .eq("club_id", profile.club_id)
+      .order("name")
+      .then(({ data }) => {
+        const list = (data ?? []) as { id: string; name: string }[];
+        setClubTeams(list);
+        setCreateTeamId((cur) => cur ?? list[0]?.id ?? null);
+      });
+  }, [viewsAllClub, profile?.club_id]);
+
+  React.useEffect(() => {
+    if (!viewsAllClub) setCreateTeamId(activeTeam?.id ?? null);
+  }, [viewsAllClub, activeTeam?.id]);
 
   React.useEffect(() => {
     if (profile?.club_id) {
