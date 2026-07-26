@@ -1,6 +1,6 @@
 import * as React from "react";
 import { createFileRoute, useNavigate, useRouterState } from "@tanstack/react-router";
-import { Plus, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { ModuleTabs } from "@/components/squad/ModuleTabs";
 import { EmptyState } from "@/components/squad/EmptyState";
@@ -8,17 +8,11 @@ import { CardGridSkeleton } from "@/components/squad/LoadingState";
 import { StatusBadge, type StatusVariant } from "@/components/squad/StatusBadge";
 import { ViewToggle } from "@/components/squad/ViewToggle";
 import { useViewMode } from "@/hooks/useViewMode";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useApp } from "@/components/squad/AppLayout";
 import { useRoster, type RosterMember } from "@/hooks/useRoster";
 import type { AvailabilityStatus } from "@/hooks/usePlayers";
-import { PlayerFormDialog } from "@/components/plantel/PlayerFormDialog";
-import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import type { BaseRole } from "@/lib/rolePages";
 
@@ -38,14 +32,14 @@ export const AVAILABILITY_META: Record<AvailabilityStatus, { label: string; vari
   en_duda: { label: "En duda", variant: "pending" },
 };
 
-const ROLE_FILTERS: { value: BaseRole | "all"; label: string }[] = [
-  { value: "all", label: "Todos los roles" },
+const ROLE_FILTERS: { value: BaseRole; label: string }[] = [
   { value: "admin", label: "Admin" },
   { value: "tecnico", label: "Técnico" },
   { value: "medico", label: "Médico" },
   { value: "staff", label: "Staff" },
   { value: "jugador", label: "Jugador" },
 ];
+
 
 function formatBirthday(iso: string | null): string | null {
   if (!iso) return null;
