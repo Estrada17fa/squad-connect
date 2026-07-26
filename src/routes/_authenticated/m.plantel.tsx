@@ -6,8 +6,6 @@ import { ModuleTabs } from "@/components/squad/ModuleTabs";
 import { EmptyState } from "@/components/squad/EmptyState";
 import { CardGridSkeleton } from "@/components/squad/LoadingState";
 import { StatusBadge, type StatusVariant } from "@/components/squad/StatusBadge";
-import { ViewToggle } from "@/components/squad/ViewToggle";
-import { useViewMode } from "@/hooks/useViewMode";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useApp } from "@/components/squad/AppLayout";
