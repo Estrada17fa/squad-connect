@@ -13,7 +13,10 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
-import { Route as AuthenticatedMasRouteImport } from './routes/_authenticated/mas'
+import { Route as AuthenticatedYoRouteImport } from './routes/_authenticated/yo'
+import { Route as AuthenticatedMiClubRouteImport } from './routes/_authenticated/mi-club'
+import { Route as AuthenticatedCoordinacionRouteImport } from './routes/_authenticated/coordinacion'
+import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
 import { Route as AuthenticatedMUsuariosRouteImport } from './routes/_authenticated/m.usuarios'
 import { Route as AuthenticatedMPlantelRouteImport } from './routes/_authenticated/m.plantel'
 import { Route as AuthenticatedMCoordinacion_internaRouteImport } from './routes/_authenticated/m.coordinacion_interna'
@@ -41,9 +44,25 @@ const InviteTokenRoute = InviteTokenRouteImport.update({
   path: '/invite/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedMasRoute = AuthenticatedMasRouteImport.update({
-  id: '/mas',
-  path: '/mas',
+const AuthenticatedYoRoute = AuthenticatedYoRouteImport.update({
+  id: '/yo',
+  path: '/yo',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMiClubRoute = AuthenticatedMiClubRouteImport.update({
+  id: '/mi-club',
+  path: '/mi-club',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCoordinacionRoute =
+  AuthenticatedCoordinacionRouteImport.update({
+    id: '/coordinacion',
+    path: '/coordinacion',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAgendaRoute = AuthenticatedAgendaRouteImport.update({
+  id: '/agenda',
+  path: '/agenda',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedMUsuariosRoute = AuthenticatedMUsuariosRouteImport.update({
@@ -88,7 +107,10 @@ const AuthenticatedMPlantelPlayerIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/auth': typeof AuthRoute
-  '/mas': typeof AuthenticatedMasRoute
+  '/agenda': typeof AuthenticatedAgendaRoute
+  '/coordinacion': typeof AuthenticatedCoordinacionRoute
+  '/mi-club': typeof AuthenticatedMiClubRoute
+  '/yo': typeof AuthenticatedYoRoute
   '/invite/$token': typeof InviteTokenRoute
   '/admin/clubs': typeof AuthenticatedAdminClubsRoute
   '/m/$module': typeof AuthenticatedMModuleRoute
@@ -100,7 +122,10 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
-  '/mas': typeof AuthenticatedMasRoute
+  '/agenda': typeof AuthenticatedAgendaRoute
+  '/coordinacion': typeof AuthenticatedCoordinacionRoute
+  '/mi-club': typeof AuthenticatedMiClubRoute
+  '/yo': typeof AuthenticatedYoRoute
   '/invite/$token': typeof InviteTokenRoute
   '/': typeof AuthenticatedIndexRoute
   '/admin/clubs': typeof AuthenticatedAdminClubsRoute
@@ -115,7 +140,10 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
-  '/_authenticated/mas': typeof AuthenticatedMasRoute
+  '/_authenticated/agenda': typeof AuthenticatedAgendaRoute
+  '/_authenticated/coordinacion': typeof AuthenticatedCoordinacionRoute
+  '/_authenticated/mi-club': typeof AuthenticatedMiClubRoute
+  '/_authenticated/yo': typeof AuthenticatedYoRoute
   '/invite/$token': typeof InviteTokenRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/admin/clubs': typeof AuthenticatedAdminClubsRoute
@@ -131,7 +159,10 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
-    | '/mas'
+    | '/agenda'
+    | '/coordinacion'
+    | '/mi-club'
+    | '/yo'
     | '/invite/$token'
     | '/admin/clubs'
     | '/m/$module'
@@ -143,7 +174,10 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/auth'
-    | '/mas'
+    | '/agenda'
+    | '/coordinacion'
+    | '/mi-club'
+    | '/yo'
     | '/invite/$token'
     | '/'
     | '/admin/clubs'
@@ -157,7 +191,10 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_authenticated'
     | '/auth'
-    | '/_authenticated/mas'
+    | '/_authenticated/agenda'
+    | '/_authenticated/coordinacion'
+    | '/_authenticated/mi-club'
+    | '/_authenticated/yo'
     | '/invite/$token'
     | '/_authenticated/'
     | '/_authenticated/admin/clubs'
@@ -205,11 +242,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InviteTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/mas': {
-      id: '/_authenticated/mas'
-      path: '/mas'
-      fullPath: '/mas'
-      preLoaderRoute: typeof AuthenticatedMasRouteImport
+    '/_authenticated/yo': {
+      id: '/_authenticated/yo'
+      path: '/yo'
+      fullPath: '/yo'
+      preLoaderRoute: typeof AuthenticatedYoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/mi-club': {
+      id: '/_authenticated/mi-club'
+      path: '/mi-club'
+      fullPath: '/mi-club'
+      preLoaderRoute: typeof AuthenticatedMiClubRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/coordinacion': {
+      id: '/_authenticated/coordinacion'
+      path: '/coordinacion'
+      fullPath: '/coordinacion'
+      preLoaderRoute: typeof AuthenticatedCoordinacionRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/agenda': {
+      id: '/_authenticated/agenda'
+      path: '/agenda'
+      fullPath: '/agenda'
+      preLoaderRoute: typeof AuthenticatedAgendaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/m/usuarios': {
@@ -278,7 +336,10 @@ const AuthenticatedMPlantelRouteWithChildren =
   )
 
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedMasRoute: typeof AuthenticatedMasRoute
+  AuthenticatedAgendaRoute: typeof AuthenticatedAgendaRoute
+  AuthenticatedCoordinacionRoute: typeof AuthenticatedCoordinacionRoute
+  AuthenticatedMiClubRoute: typeof AuthenticatedMiClubRoute
+  AuthenticatedYoRoute: typeof AuthenticatedYoRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedAdminClubsRoute: typeof AuthenticatedAdminClubsRoute
   AuthenticatedMModuleRoute: typeof AuthenticatedMModuleRoute
@@ -289,7 +350,10 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedMasRoute: AuthenticatedMasRoute,
+  AuthenticatedAgendaRoute: AuthenticatedAgendaRoute,
+  AuthenticatedCoordinacionRoute: AuthenticatedCoordinacionRoute,
+  AuthenticatedMiClubRoute: AuthenticatedMiClubRoute,
+  AuthenticatedYoRoute: AuthenticatedYoRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedAdminClubsRoute: AuthenticatedAdminClubsRoute,
   AuthenticatedMModuleRoute: AuthenticatedMModuleRoute,
@@ -311,13 +375,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

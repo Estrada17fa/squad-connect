@@ -11,6 +11,7 @@ export interface TeamOption {
   category: string | null;
   roleId: string;
   roleName: string;
+  baseRole: string | null;
 }
 
 export interface AccessData {
@@ -65,7 +66,7 @@ export function useAccess(userId: string) {
         supabase
           .from("team_memberships")
           .select(
-            "team_id, role_id, team:teams(name, category), role:roles(name, role_permissions(module_key, access_level))",
+            "team_id, role_id, team:teams(name, category), role:roles(name, base_role, role_permissions(module_key, access_level))",
           )
           .eq("user_id", userId),
         supabase.from("super_admins").select("id").eq("user_id", userId).maybeSingle(),
@@ -85,6 +86,7 @@ export function useAccess(userId: string) {
         category: m.team?.category ?? null,
         roleId: m.role_id,
         roleName: m.role?.name ?? "",
+        baseRole: m.role?.base_role ?? null,
       }));
 
       // Permisos por membresía (por team_id o 'club' si team_id NULL)

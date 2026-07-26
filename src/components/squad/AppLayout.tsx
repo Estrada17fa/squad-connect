@@ -1,9 +1,10 @@
 import * as React from "react";
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
-import { ChevronDown, LogOut, MoreHorizontal } from "lucide-react";
+import { ChevronDown, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccess, hasAccess, type TeamOption, type AccessLevel } from "@/hooks/useAccess";
-import { HOME_MODULE, MODULES, MODULE_MAP, moduleFromPath, type ModuleKey } from "@/lib/modules";
+import { MODULES, MODULE_MAP, moduleFromPath, type ModuleKey } from "@/lib/modules";
+import { resolvePagesForUser, inferBaseRole, type BaseRole, type ResolvedPage } from "@/lib/rolePages";
 import { LoadingState } from "./LoadingState";
 import { FAB } from "./FAB";
 import { cn } from "@/lib/utils";
@@ -32,6 +33,10 @@ interface AppCtx {
   clubName: string | null;
   isSuperAdmin: boolean;
   profile: { full_name: string | null; email: string | null; club_id: string | null } | null;
+  /** Rol base derivado del equipo activo (para el mapping de páginas). */
+  activeBaseRole: BaseRole;
+  /** Páginas visibles con los módulos que caen dentro de cada una. */
+  visiblePages: ResolvedPage[];
 }
 
 
@@ -102,6 +107,20 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
     );
   }
 
+  const activeBaseRole: BaseRole =
+    (activeTeam?.baseRole as BaseRole | null | undefined) ??
+    inferBaseRole(activeTeam?.roleName ?? null);
+
+  // Super admin ve todas las páginas como Admin.
+  const effectiveBaseRole: BaseRole = data.isSuperAdmin ? "admin" : activeBaseRole;
+  const effectiveModules = data.isSuperAdmin
+    ? MODULES.map((m) => m.key)
+    : accessibleModules;
+  const visiblePages = React.useMemo(
+    () => resolvePagesForUser(effectiveBaseRole, effectiveModules),
+    [effectiveBaseRole, effectiveModules],
+  );
+
   const ctx: AppCtx = {
     user: { id: user.id },
     accessibleModules,
@@ -113,9 +132,9 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
     clubName: data.clubName,
     isSuperAdmin: data.isSuperAdmin,
     profile: data.profile,
+    activeBaseRole: effectiveBaseRole,
+    visiblePages,
   };
-
-
 
   return (
     <AppContext.Provider value={ctx}>
@@ -129,10 +148,11 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
           isSuperAdmin={data.isSuperAdmin}
           onSignOut={signOut}
         />
+        <DesktopNav pages={visiblePages} />
         <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6">
           <Outlet />
         </main>
-        <BottomNav accessibleModules={accessibleModules} />
+        <BottomNav pages={visiblePages} />
         <FAB />
       </div>
     </AppContext.Provider>
@@ -229,64 +249,70 @@ function Header({
   );
 }
 
-function BottomNav({ accessibleModules }: { accessibleModules: ModuleKey[] }) {
+function BottomNav({ pages }: { pages: ResolvedPage[] }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
-  // Home + Calendario always first, then up to 2 more, rest under "Más".
-  const primary: ModuleKey[] = ["calendario"];
-  const extras = accessibleModules.filter((k) => !primary.includes(k));
-  const inNav = extras.slice(0, 2);
-  const inMore = extras.slice(2);
-
-  const items = [
-    { key: "home", label: HOME_MODULE.label, icon: HOME_MODULE.icon, to: "/" as const, active: pathname === "/" },
-    ...primary.map((k) => ({
-      key: k,
-      label: MODULE_MAP[k].label,
-      icon: MODULE_MAP[k].icon,
-      to: `/m/${k}` as const,
-      active: pathname === `/m/${k}`,
-    })),
-    ...inNav.map((k) => ({
-      key: k,
-      label: MODULE_MAP[k].label,
-      icon: MODULE_MAP[k].icon,
-      to: `/m/${k}` as const,
-      active: pathname === `/m/${k}`,
-    })),
-  ];
+  const isActive = (to: string) => {
+    if (to === "/") return pathname === "/";
+    return pathname === to || pathname.startsWith(to + "/");
+  };
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border/60 bg-background/85 backdrop-blur-xl sm:hidden">
       <div className="mx-auto flex max-w-6xl items-stretch justify-around px-2 py-1.5">
-        {items.map((it) => (
-          <Link
-            key={it.key}
-            to={it.to}
-            className={cn(
-              "flex flex-1 flex-col items-center gap-0.5 rounded-lg px-2 py-1.5 text-[11px] transition-colors",
-              it.active ? "text-primary" : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            <it.icon className={cn("h-5 w-5", it.active && "drop-shadow-[0_0_6px_hsl(150_100%_50%/0.7)]")} />
-            <span>{it.label}</span>
-          </Link>
-        ))}
-        {inMore.length > 0 || accessibleModules.length > 3 ? (
-          <Link
-            to="/mas"
-            className={cn(
-              "flex flex-1 flex-col items-center gap-0.5 rounded-lg px-2 py-1.5 text-[11px] transition-colors",
-              pathname === "/mas"
-                ? "text-primary"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            <MoreHorizontal className="h-5 w-5" />
-            <span>Más</span>
-          </Link>
-        ) : null}
+        {pages.map((rp) => {
+          const active = isActive(rp.page.to);
+          const Icon = rp.page.icon;
+          const label = rp.labelOverride ?? rp.page.label;
+          return (
+            <Link
+              key={rp.page.key}
+              to={rp.page.to as any}
+              className={cn(
+                "flex flex-1 flex-col items-center gap-0.5 rounded-lg px-2 py-1.5 text-[11px] transition-colors",
+                active ? "text-primary" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <Icon className={cn("h-5 w-5", active && "drop-shadow-[0_0_6px_hsl(150_100%_50%/0.7)]")} />
+              <span className="truncate">{label}</span>
+            </Link>
+          );
+        })}
       </div>
     </nav>
+  );
+}
+
+function DesktopNav({ pages }: { pages: ResolvedPage[] }) {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isActive = (to: string) => {
+    if (to === "/") return pathname === "/";
+    return pathname === to || pathname.startsWith(to + "/");
+  };
+  return (
+    <div className="hidden border-b border-border/40 bg-background/40 sm:block">
+      <div className="mx-auto flex max-w-6xl items-center gap-1 px-4 py-2 sm:px-6">
+        {pages.map((rp) => {
+          const active = isActive(rp.page.to);
+          const Icon = rp.page.icon;
+          const label = rp.labelOverride ?? rp.page.label;
+          return (
+            <Link
+              key={rp.page.key}
+              to={rp.page.to as any}
+              className={cn(
+                "inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
+                active
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:bg-white/[0.04] hover:text-foreground",
+              )}
+            >
+              <Icon className="h-4 w-4" />
+              <span>{label}</span>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
   );
 }
