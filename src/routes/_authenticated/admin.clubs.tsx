@@ -110,6 +110,8 @@ function AdminClubsPage() {
           </Button>
         }
       />
+      <ModuleTabs hubKey="admin" extraActiveKey="admin-clubs" />
+
 
       <section className="space-y-3">
         <h2 className="font-display text-sm uppercase tracking-wide text-muted-foreground">Clubes</h2>
