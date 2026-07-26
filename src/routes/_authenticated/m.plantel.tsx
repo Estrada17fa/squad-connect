@@ -6,6 +6,8 @@ import { ModuleTabs } from "@/components/squad/ModuleTabs";
 import { EmptyState } from "@/components/squad/EmptyState";
 import { LoadingState } from "@/components/squad/LoadingState";
 import { StatusBadge, type StatusVariant } from "@/components/squad/StatusBadge";
+import { ViewToggle } from "@/components/squad/ViewToggle";
+import { useViewMode } from "@/hooks/useViewMode";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
