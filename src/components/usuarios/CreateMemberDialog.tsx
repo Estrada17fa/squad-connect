@@ -222,7 +222,7 @@ export function CreateMemberDialog({
             <div className="grid gap-2">
               {memberships.map((m, idx) => {
                 const role = roles.find((r) => r.id === m.role_id);
-                const clubWide = !!role?.allows_club_wide;
+                const isPlayer = role?.name === "Jugador";
                 return (
                   <div key={idx} className="glass rounded-lg p-3 space-y-2">
                     <div className="grid gap-2 sm:grid-cols-2">
@@ -234,28 +234,32 @@ export function CreateMemberDialog({
                           {roles.map((r) => (
                             <SelectItem key={r.id} value={r.id}>
                               {r.name}
-                              {r.allows_club_wide ? " · alcance club" : ""}
+                              {r.name !== "Jugador" ? " · ve todo el club" : ""}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
-                      <Select
-                        value={m.team_id}
-                        onValueChange={(v) => updateMembership(idx, { team_id: v })}
-                        disabled={!m.role_id}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder={m.role_id ? "Categoría" : "Elige rol primero"} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {clubWide ? <SelectItem value="__club__">Todo el club</SelectItem> : null}
-                          {teams.map((t) => (
-                            <SelectItem key={t.id} value={t.id}>
-                              {t.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      {isPlayer ? (
+                        <Select
+                          value={m.team_id === "__club__" ? "" : m.team_id}
+                          onValueChange={(v) => updateMembership(idx, { team_id: v })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Categoría" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {teams.map((t) => (
+                              <SelectItem key={t.id} value={t.id}>
+                                {t.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <div className="flex items-center rounded-md border border-dashed border-border/60 px-3 py-2 text-xs text-muted-foreground">
+                          Alcance: todo el club
+                        </div>
+                      )}
                     </div>
                     <Input
                       value={m.job_title}
@@ -264,9 +268,9 @@ export function CreateMemberDialog({
                     />
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-[11px] text-muted-foreground">
-                        {m.role_id && !clubWide
-                          ? "Este rol requiere una categoría específica."
-                          : "Elige rol y categoría."}
+                        {isPlayer
+                          ? "Selecciona la categoría en la que juega."
+                          : "Este rol ve toda la información del club."}
                       </p>
                       {memberships.length > 1 ? (
                         <Button
