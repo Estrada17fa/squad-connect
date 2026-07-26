@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryOptions, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export type AvailabilityStatus = "apto" | "lesionado" | "en_duda";
@@ -23,11 +23,13 @@ export interface PlayerRow {
   } | null;
 }
 
-export function usePlayers(teamId: string | null | undefined) {
-  const qc = useQueryClient();
-  const query = useQuery({
-    queryKey: ["players", teamId ?? "none"],
+export const playersQueryOptions = (teamId: string | null | undefined) =>
+  queryOptions({
+    queryKey: ["players", teamId ?? "none"] as const,
     enabled: !!teamId,
+    staleTime: 30_000,
+    gcTime: 5 * 60_000,
+    placeholderData: keepPreviousData,
     queryFn: async (): Promise<PlayerRow[]> => {
       const { data, error } = await supabase
         .from("player_profiles")
@@ -39,6 +41,10 @@ export function usePlayers(teamId: string | null | undefined) {
       return (data ?? []) as unknown as PlayerRow[];
     },
   });
+
+export function usePlayers(teamId: string | null | undefined) {
+  const qc = useQueryClient();
+  const query = useQuery(playersQueryOptions(teamId));
 
   React.useEffect(() => {
     if (!teamId) return;
@@ -62,6 +68,7 @@ export function usePlayer(playerId: string | undefined) {
   return useQuery({
     queryKey: ["player", playerId ?? "none"],
     enabled: !!playerId,
+    staleTime: 30_000,
     queryFn: async (): Promise<PlayerRow | null> => {
       const { data, error } = await supabase
         .from("player_profiles")
