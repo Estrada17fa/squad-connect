@@ -107,7 +107,7 @@ function CalendarPage() {
       <PageHeader
         hideTitle
         title="Calendario"
-        subtitle={activeTeam.name}
+        subtitle={activeTeam?.name ?? "Todo el club"}
         action={
           canEdit ? (
             <Button onClick={() => openCreate()} className="glow-primary">
