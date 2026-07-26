@@ -156,7 +156,13 @@ function DocumentosPage() {
                     ? "Sube el primer documento del club."
                     : "Aún no hay documentos disponibles."
               }
-              action={canEdit && !(data && data.length) ? { label: "Subir documento", onClick: openNew } : undefined}
+              action={
+                canEdit && !(data && data.length) ? (
+                  <Button onClick={openNew}>
+                    <Plus className="h-4 w-4 mr-2" /> Subir documento
+                  </Button>
+                ) : undefined
+              }
             />
           ) : (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
