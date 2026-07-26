@@ -91,23 +91,38 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
   }
 
   const clubPerms = data?.permissionsByTeam?.["club"] ?? {};
+  const viewsAllClub = !!(data?.isSuperAdmin || (data && !data.isPlayerOnly));
   const activePermissions = React.useMemo<Record<string, AccessLevel>>(() => {
+    // No-jugadores y super admin: usan la unión (ven todo el club).
+    if (viewsAllClub) return data?.permissions ?? {};
     const teamKey = activeTeam?.id ?? "club";
     return data?.permissionsByTeam?.[teamKey] ?? clubPerms;
-  }, [data?.permissionsByTeam, activeTeam?.id, clubPerms]);
+  }, [viewsAllClub, data?.permissions, data?.permissionsByTeam, activeTeam?.id, clubPerms]);
 
   const getModuleAccess = React.useCallback(
     (key: ModuleKey): AccessLevel => {
+      if (viewsAllClub) return data?.permissions?.[key] ?? "none";
       const scope = MODULE_MAP[key].scope;
       if (scope === "club") return clubPerms[key] ?? "none";
       return activePermissions[key] ?? "none";
     },
-    [clubPerms, activePermissions],
+    [viewsAllClub, data?.permissions, clubPerms, activePermissions],
   );
 
-  const activeBaseRole: BaseRole =
-    (activeTeam?.baseRole as BaseRole | null | undefined) ??
-    inferBaseRole(activeTeam?.roleName ?? null);
+  // Rol base efectivo. Para no-jugadores tomamos el "mejor" rol entre todas sus
+  // membresías (Admin > Técnico > Médico > Staff) para elegir el mapa de páginas.
+  const BASE_ROLE_RANK: Record<BaseRole, number> = { admin: 4, tecnico: 3, medico: 2, staff: 1, jugador: 0 };
+  const dominantBaseRole: BaseRole = React.useMemo(() => {
+    const roles = (data?.teams ?? [])
+      .map((t) => (t.baseRole as BaseRole | null) ?? inferBaseRole(t.roleName ?? null))
+      .filter((r): r is BaseRole => !!r);
+    if (roles.length === 0) return "staff";
+    return roles.reduce((best, r) => (BASE_ROLE_RANK[r] > BASE_ROLE_RANK[best] ? r : best), roles[0]);
+  }, [data?.teams]);
+
+  const activeBaseRole: BaseRole = viewsAllClub
+    ? (data?.isSuperAdmin ? "admin" : dominantBaseRole)
+    : ((activeTeam?.baseRole as BaseRole | null | undefined) ?? inferBaseRole(activeTeam?.roleName ?? null));
 
   const effectiveBaseRole: BaseRole = data?.isSuperAdmin ? "admin" : activeBaseRole;
   const effectiveModules = React.useMemo<ModuleKey[]>(
