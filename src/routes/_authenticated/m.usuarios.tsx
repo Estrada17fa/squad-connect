@@ -7,6 +7,7 @@ import { CategoriesTab } from "@/components/usuarios/CategoriesTab";
 
 import { toast } from "sonner";
 import { PageHeader } from "@/components/squad/PageHeader";
+import { ModuleTabs } from "@/components/squad/ModuleTabs";
 import { EmptyState } from "@/components/squad/EmptyState";
 import { LoadingState } from "@/components/squad/LoadingState";
 import { StandardCard } from "@/components/squad/StandardCard";
