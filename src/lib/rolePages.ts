@@ -27,7 +27,7 @@ const ROLE_PAGES: Record<BaseRole, Record<PageKey, ModuleKey[]>> = {
   admin: {
     home: [],
     agenda: [],
-    club: ["plantel", "salud", "desarrollo", "tacticas", "torneo", "comunicados", "multimedia", "uniformes"],
+    club: ["plantel", "salud", "desarrollo", "tacticas", "torneo", "comunicados", "multimedia"],
     coordinacion: ["coordinacion_interna", "solicitudes", "inventario", "viajes"],
     admin: ["usuarios", "documentos"],
   },
@@ -48,7 +48,7 @@ const ROLE_PAGES: Record<BaseRole, Record<PageKey, ModuleKey[]>> = {
   staff: {
     home: [],
     agenda: [],
-    club: ["plantel", "comunicados", "multimedia", "uniformes"],
+    club: ["plantel", "comunicados", "multimedia"],
     coordinacion: ["coordinacion_interna", "solicitudes", "inventario", "viajes"],
     admin: [],
   },
@@ -70,7 +70,7 @@ const DEFAULT_PAGE_FOR_MODULE: Record<ModuleKey, PageKey> = {
   torneo: "club",
   comunicados: "club",
   multimedia: "club",
-  uniformes: "club",
+  
   nutricion: "club",
   coordinacion_interna: "coordinacion",
   solicitudes: "coordinacion",
