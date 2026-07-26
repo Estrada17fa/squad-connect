@@ -196,13 +196,14 @@ function FilterChips({ filter, setFilter }: { filter: TaskFilter; setFilter: (f:
 }
 
 function TasksList({
-  tasks, isLoading, userId, filter, canEdit, onEdit, onCreate, clubId,
+  tasks, isLoading, userId, filter, canEdit, viewMode, onEdit, onCreate, clubId,
 }: {
   tasks: TaskRow[];
   isLoading: boolean;
   userId: string;
   filter: TaskFilter;
   canEdit: boolean;
+  viewMode: ViewMode;
   onEdit: (t: TaskRow) => void;
   onCreate?: () => void;
   clubId: string;
@@ -241,7 +242,7 @@ function TasksList({
             <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
               {STATUS_LABEL[status]} <span className="text-foreground/60">· {group.length}</span>
             </h3>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className={cn(viewMode === "grid" ? "grid grid-cols-1 gap-3 sm:grid-cols-2" : "flex flex-col gap-2")}>
               {group.map((t, i) => (
                 <div key={t.id} className="animate-card-in" style={{ animationDelay: `${i * 30}ms` }}>
                   <TaskCard task={t} userId={userId} canEdit={canEdit} onEdit={onEdit} clubId={clubId} />
