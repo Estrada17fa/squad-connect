@@ -248,63 +248,35 @@ function Header({
   );
 }
 
-function BottomNav({ accessibleModules }: { accessibleModules: ModuleKey[] }) {
+function BottomNav({ pages }: { pages: ResolvedPage[] }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
-  // Home + Calendario always first, then up to 2 more, rest under "Más".
-  const primary: ModuleKey[] = ["calendario"];
-  const extras = accessibleModules.filter((k) => !primary.includes(k));
-  const inNav = extras.slice(0, 2);
-  const inMore = extras.slice(2);
-
-  const items = [
-    { key: "home", label: HOME_MODULE.label, icon: HOME_MODULE.icon, to: "/" as const, active: pathname === "/" },
-    ...primary.map((k) => ({
-      key: k,
-      label: MODULE_MAP[k].label,
-      icon: MODULE_MAP[k].icon,
-      to: `/m/${k}` as const,
-      active: pathname === `/m/${k}`,
-    })),
-    ...inNav.map((k) => ({
-      key: k,
-      label: MODULE_MAP[k].label,
-      icon: MODULE_MAP[k].icon,
-      to: `/m/${k}` as const,
-      active: pathname === `/m/${k}`,
-    })),
-  ];
+  const isActive = (to: string) => {
+    if (to === "/") return pathname === "/";
+    return pathname === to || pathname.startsWith(to + "/");
+  };
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border/60 bg-background/85 backdrop-blur-xl sm:hidden">
       <div className="mx-auto flex max-w-6xl items-stretch justify-around px-2 py-1.5">
-        {items.map((it) => (
-          <Link
-            key={it.key}
-            to={it.to}
-            className={cn(
-              "flex flex-1 flex-col items-center gap-0.5 rounded-lg px-2 py-1.5 text-[11px] transition-colors",
-              it.active ? "text-primary" : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            <it.icon className={cn("h-5 w-5", it.active && "drop-shadow-[0_0_6px_hsl(150_100%_50%/0.7)]")} />
-            <span>{it.label}</span>
-          </Link>
-        ))}
-        {inMore.length > 0 || accessibleModules.length > 3 ? (
-          <Link
-            to="/mas"
-            className={cn(
-              "flex flex-1 flex-col items-center gap-0.5 rounded-lg px-2 py-1.5 text-[11px] transition-colors",
-              pathname === "/mas"
-                ? "text-primary"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            <MoreHorizontal className="h-5 w-5" />
-            <span>Más</span>
-          </Link>
-        ) : null}
+        {pages.map((rp) => {
+          const active = isActive(rp.page.to);
+          const Icon = rp.page.icon;
+          const label = rp.labelOverride ?? rp.page.label;
+          return (
+            <Link
+              key={rp.page.key}
+              to={rp.page.to}
+              className={cn(
+                "flex flex-1 flex-col items-center gap-0.5 rounded-lg px-2 py-1.5 text-[11px] transition-colors",
+                active ? "text-primary" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <Icon className={cn("h-5 w-5", active && "drop-shadow-[0_0_6px_hsl(150_100%_50%/0.7)]")} />
+              <span className="truncate">{label}</span>
+            </Link>
+          );
+        })}
       </div>
     </nav>
   );
