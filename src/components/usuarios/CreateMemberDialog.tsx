@@ -8,13 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  EntitySheet,
+  EntitySheetBody,
+  EntitySheetDescription,
+  EntitySheetFooter,
+  EntitySheetHeader,
+  EntitySheetTitle,
+} from "@/components/squad/EntitySheet";
 import {
   Select,
   SelectContent,
@@ -34,16 +34,15 @@ interface TeamOpt {
 }
 interface Draft {
   role_id: string;
-  team_id: string; // "" | "__club__" | uuid
+  team_id: string;
   job_title: string;
 }
 
-// Priority: Jugador > Admin > Técnico > Médico > Staff > any other
 const ROLE_PRIORITY: Record<string, number> = {
   Jugador: 100,
   Admin: 80,
   Técnico: 60,
-  Medico: 40, // just in case of unaccented
+  Medico: 40,
   Médico: 40,
   Staff: 20,
 };
@@ -123,7 +122,6 @@ export function CreateMemberDialog({
   const dominant = dominantRoleName(memberships, roles);
   const isPlayer = dominant === "Jugador";
 
-  // Un jugador SIEMPRE requiere categoría específica. Los demás roles son club-wide.
   const membershipsOk =
     memberships.length > 0 &&
     memberships.every((m) => {
@@ -132,7 +130,7 @@ export function CreateMemberDialog({
       if (r?.name === "Jugador") {
         return !!m.team_id && m.team_id !== "__club__";
       }
-      return true; // no-jugador: club-wide implícito
+      return true;
     });
 
   const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
@@ -148,7 +146,6 @@ export function CreateMemberDialog({
         const next = { ...m, ...patch };
         if (patch.role_id) {
           const r = roles.find((x) => x.id === patch.role_id);
-          // Rol distinto de Jugador => forzar club-wide.
           if (r && r.name !== "Jugador") next.team_id = "__club__";
           else if (next.team_id === "__club__") next.team_id = "";
         }
@@ -195,17 +192,17 @@ export function CreateMemberDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Crear miembro</DialogTitle>
-          <DialogDescription>
-            {step === 1
-              ? "Paso 1 de 2 — Define primero el rol, la categoría y el puesto (puedes añadir varias)."
-              : `Paso 2 de 2 — Datos personales${dominant ? ` · ${dominant}` : ""}.`}
-          </DialogDescription>
-        </DialogHeader>
+    <EntitySheet open={open} onOpenChange={onOpenChange}>
+      <EntitySheetHeader>
+        <EntitySheetTitle>Crear miembro</EntitySheetTitle>
+        <EntitySheetDescription>
+          {step === 1
+            ? "Paso 1 de 2 — Define rol, categoría y puesto (puedes añadir varias)."
+            : `Paso 2 de 2 — Datos personales${dominant ? ` · ${dominant}` : ""}.`}
+        </EntitySheetDescription>
+      </EntitySheetHeader>
 
+      <EntitySheetBody>
         {step === 1 ? (
           <section className="space-y-3">
             <div className="flex items-center justify-between gap-2">
@@ -222,7 +219,7 @@ export function CreateMemberDialog({
             <div className="grid gap-2">
               {memberships.map((m, idx) => {
                 const role = roles.find((r) => r.id === m.role_id);
-                const isPlayer = role?.name === "Jugador";
+                const isPlayerRow = role?.name === "Jugador";
                 return (
                   <div key={idx} className="glass rounded-lg p-3 space-y-2">
                     <div className="grid gap-2 sm:grid-cols-2">
@@ -239,7 +236,7 @@ export function CreateMemberDialog({
                           ))}
                         </SelectContent>
                       </Select>
-                      {isPlayer ? (
+                      {isPlayerRow ? (
                         <Select
                           value={m.team_id === "__club__" ? "" : m.team_id}
                           onValueChange={(v) => updateMembership(idx, { team_id: v })}
@@ -249,9 +246,7 @@ export function CreateMemberDialog({
                           </SelectTrigger>
                           <SelectContent>
                             {teams.map((t) => (
-                              <SelectItem key={t.id} value={t.id}>
-                                {t.name}
-                              </SelectItem>
+                              <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -268,9 +263,7 @@ export function CreateMemberDialog({
                     />
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-[11px] text-muted-foreground">
-                        {isPlayer
-                          ? "Selecciona la categoría en la que juega."
-                          : "Este rol ve toda la información del club."}
+                        {isPlayerRow ? "Selecciona la categoría en la que juega." : "Este rol ve toda la información del club."}
                       </p>
                       {memberships.length > 1 ? (
                         <Button
@@ -409,27 +402,27 @@ export function CreateMemberDialog({
             ) : null}
           </div>
         )}
+      </EntitySheetBody>
 
-        <DialogFooter className="gap-2 sm:gap-2">
-          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}>
-            Cancelar
+      <EntitySheetFooter>
+        <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}>
+          Cancelar
+        </Button>
+        {step === 2 ? (
+          <Button variant="secondary" onClick={() => setStep(1)} disabled={saving}>
+            <ArrowLeft className="mr-1 h-4 w-4" /> Atrás
           </Button>
-          {step === 2 ? (
-            <Button variant="secondary" onClick={() => setStep(1)} disabled={saving}>
-              <ArrowLeft className="mr-1 h-4 w-4" /> Atrás
-            </Button>
-          ) : null}
-          {step === 1 ? (
-            <Button onClick={() => setStep(2)} disabled={!membershipsOk}>
-              Siguiente <ArrowRight className="ml-1 h-4 w-4" />
-            </Button>
-          ) : (
-            <Button onClick={handleSubmit} disabled={!canSubmit}>
-              {saving ? "Creando..." : "Crear miembro"}
-            </Button>
-          )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        ) : null}
+        {step === 1 ? (
+          <Button onClick={() => setStep(2)} disabled={!membershipsOk}>
+            Siguiente <ArrowRight className="ml-1 h-4 w-4" />
+          </Button>
+        ) : (
+          <Button onClick={handleSubmit} disabled={!canSubmit}>
+            {saving ? "Creando..." : "Crear miembro"}
+          </Button>
+        )}
+      </EntitySheetFooter>
+    </EntitySheet>
   );
 }

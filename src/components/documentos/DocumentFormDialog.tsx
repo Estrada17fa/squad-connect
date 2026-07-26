@@ -3,12 +3,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Upload, X, FileText } from "lucide-react";
 import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  EntitySheet,
+  EntitySheetBody,
+  EntitySheetFooter,
+  EntitySheetHeader,
+  EntitySheetTitle,
+} from "@/components/squad/EntitySheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -33,22 +33,12 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   existing?: DocumentRow | null;
-  /** Prefija persona relacionada (ficha de plantel). */
   presetRelatedUserId?: string | null;
-  /** Prefija equipo. */
   presetTeamId?: string | null;
 }
 
-interface ProfileOption {
-  id: string;
-  full_name: string | null;
-  email: string | null;
-}
-interface TeamOpt {
-  id: string;
-  name: string;
-  category: string | null;
-}
+interface ProfileOption { id: string; full_name: string | null; email: string | null }
+interface TeamOpt { id: string; name: string; category: string | null }
 
 export function DocumentFormDialog({
   open,
@@ -96,7 +86,6 @@ export function DocumentFormDialog({
     }
   }, [open, existing, presetRelatedUserId, presetTeamId]);
 
-  // Cargar personas y equipos del club para los selects
   const { data: people } = useQuery({
     queryKey: ["doc-people", clubId ?? "none"],
     enabled: !!clubId && open,
@@ -132,10 +121,7 @@ export function DocumentFormDialog({
       if (!title.trim()) throw new Error("El título es requerido");
       if (!existing && !file) throw new Error("Selecciona un archivo");
 
-      const tagArr = tags
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean);
+      const tagArr = tags.split(",").map((t) => t.trim()).filter(Boolean);
 
       let file_path = existing?.file_path ?? "";
       let file_type: string | null = existing?.file_type ?? null;
@@ -149,7 +135,6 @@ export function DocumentFormDialog({
           .from("documents")
           .upload(path, file, { upsert: false, contentType: file.type || undefined });
         if (upErr) throw upErr;
-        // Eliminar el anterior si es edición
         if (existing?.file_path) {
           await supabase.storage.from("documents").remove([existing.file_path]);
         }
@@ -191,121 +176,121 @@ export function DocumentFormDialog({
   });
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg glass border-white/10">
-        <DialogHeader>
-          <DialogTitle className="font-display">
-            {existing ? "Editar documento" : "Subir documento"}
-          </DialogTitle>
-        </DialogHeader>
+    <EntitySheet open={open} onOpenChange={onOpenChange}>
+      <EntitySheetHeader>
+        <EntitySheetTitle>{existing ? "Editar documento" : "Subir documento"}</EntitySheetTitle>
+      </EntitySheetHeader>
 
-        <div className="space-y-4 max-h-[65vh] overflow-y-auto pr-1">
+      <EntitySheetBody>
+        <div className="space-y-1.5">
+          <Label>Archivo{existing ? " (opcional para reemplazar)" : ""}</Label>
+          <label
+            htmlFor="doc-file"
+            className="flex items-center gap-3 rounded-xl border border-dashed border-white/15 bg-white/[0.02] p-3 cursor-pointer hover:border-white/25"
+          >
+            {file ? (
+              <FileText className="h-5 w-5 text-primary shrink-0" />
+            ) : (
+              <Upload className="h-5 w-5 text-muted-foreground shrink-0" />
+            )}
+            <span className="text-sm text-muted-foreground truncate min-w-0 flex-1">
+              {file ? file.name : existing?.file_path.split("/").pop() ?? "Seleccionar archivo…"}
+            </span>
+            {file ? (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setFile(null);
+                }}
+                className="shrink-0 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            ) : null}
+            <input
+              id="doc-file"
+              type="file"
+              className="hidden"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            />
+          </label>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="doc-title">Título *</Label>
+          <Input id="doc-title" value={title} onChange={(e) => setTitle(e.target.value)} />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <Label>Archivo{existing ? " (opcional para reemplazar)" : ""}</Label>
-            <label
-              htmlFor="doc-file"
-              className="flex items-center gap-3 rounded-xl border border-dashed border-white/15 bg-white/[0.02] p-3 cursor-pointer hover:border-white/25"
-            >
-              {file ? <FileText className="h-5 w-5 text-primary" /> : <Upload className="h-5 w-5 text-muted-foreground" />}
-              <span className="text-sm text-muted-foreground truncate">
-                {file ? file.name : existing?.file_path.split("/").pop() ?? "Seleccionar archivo…"}
-              </span>
-              {file ? (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setFile(null);
-                  }}
-                  className="ml-auto text-muted-foreground hover:text-foreground"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              ) : null}
-              <input
-                id="doc-file"
-                type="file"
-                className="hidden"
-                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-              />
-            </label>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="doc-title">Título *</Label>
-            <Input id="doc-title" value={title} onChange={(e) => setTitle(e.target.value)} />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label>Categoría *</Label>
-              <Select value={category} onValueChange={(v) => setCategory(v as DocumentCategory)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {DOCUMENT_CATEGORIES.map((c) => (
-                    <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Equipo (opcional)</Label>
-              <Select value={teamId || "__none"} onValueChange={(v) => setTeamId(v === "__none" ? "" : v)}>
-                <SelectTrigger><SelectValue placeholder="Todo el club" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none">Todo el club</SelectItem>
-                  {(teams ?? []).map((t) => (
-                    <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label>Persona relacionada (opcional)</Label>
-            <Select value={relatedUserId || "__none"} onValueChange={(v) => setRelatedUserId(v === "__none" ? "" : v)}>
-              <SelectTrigger><SelectValue placeholder="Documento general" /></SelectTrigger>
+            <Label>Categoría *</Label>
+            <Select value={category} onValueChange={(v) => setCategory(v as DocumentCategory)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="__none">Documento general</SelectItem>
-                {(people ?? []).map((p) => (
-                  <SelectItem key={p.id} value={p.id}>{p.full_name ?? p.email ?? p.id}</SelectItem>
+                {DOCUMENT_CATEGORIES.map((c) => (
+                  <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-
           <div className="space-y-1.5">
-            <Label htmlFor="doc-desc">Descripción</Label>
-            <Textarea id="doc-desc" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="doc-issue">Fecha de emisión</Label>
-              <Input id="doc-issue" type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="doc-expiry">Fecha de vencimiento</Label>
-              <Input id="doc-expiry" type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} />
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="doc-tags">Etiquetas (separadas por coma)</Label>
-            <Input id="doc-tags" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="contrato, 2026, temporada" />
+            <Label>Equipo (opcional)</Label>
+            <Select value={teamId || "__none"} onValueChange={(v) => setTeamId(v === "__none" ? "" : v)}>
+              <SelectTrigger><SelectValue placeholder="Todo el club" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none">Todo el club</SelectItem>
+                {(teams ?? []).map((t) => (
+                  <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={save.isPending}>
-            Cancelar
-          </Button>
-          <Button onClick={() => save.mutate()} disabled={save.isPending}>
-            {save.isPending ? "Guardando…" : existing ? "Guardar cambios" : "Subir"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        <div className="space-y-1.5">
+          <Label>Persona relacionada (opcional)</Label>
+          <Select value={relatedUserId || "__none"} onValueChange={(v) => setRelatedUserId(v === "__none" ? "" : v)}>
+            <SelectTrigger><SelectValue placeholder="Documento general" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none">Documento general</SelectItem>
+              {(people ?? []).map((p) => (
+                <SelectItem key={p.id} value={p.id}>{p.full_name ?? p.email ?? p.id}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="doc-desc">Descripción</Label>
+          <Textarea id="doc-desc" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="doc-issue">Fecha de emisión</Label>
+            <Input id="doc-issue" type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="doc-expiry">Fecha de vencimiento</Label>
+            <Input id="doc-expiry" type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} />
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="doc-tags">Etiquetas (separadas por coma)</Label>
+          <Input id="doc-tags" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="contrato, 2026, temporada" />
+        </div>
+      </EntitySheetBody>
+
+      <EntitySheetFooter>
+        <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={save.isPending}>
+          Cancelar
+        </Button>
+        <Button onClick={() => save.mutate()} disabled={save.isPending}>
+          {save.isPending ? "Guardando…" : existing ? "Guardar cambios" : "Subir"}
+        </Button>
+      </EntitySheetFooter>
+    </EntitySheet>
   );
 }

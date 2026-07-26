@@ -3,8 +3,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
-} from "@/components/ui/dialog";
+  EntitySheet,
+  EntitySheetBody,
+  EntitySheetDescription,
+  EntitySheetFooter,
+  EntitySheetHeader,
+  EntitySheetTitle,
+} from "@/components/squad/EntitySheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -68,9 +73,7 @@ export function PlayerFormDialog({ open, onOpenChange, clubId, teamId, player }:
     },
   });
 
-  const eligible = (membersQ.data ?? []).filter(
-    (m) => isEdit || !existingQ.data?.has(m.id),
-  );
+  const eligible = (membersQ.data ?? []).filter((m) => isEdit || !existingQ.data?.has(m.id));
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -118,99 +121,95 @@ export function PlayerFormDialog({ open, onOpenChange, clubId, teamId, player }:
   });
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="font-display">{isEdit ? "Editar jugador" : "Agregar jugador"}</DialogTitle>
-          <DialogDescription>
-            {isEdit ? "Actualiza los datos del jugador." : "Selecciona un miembro y define sus datos."}
-          </DialogDescription>
-        </DialogHeader>
+    <EntitySheet open={open} onOpenChange={onOpenChange}>
+      <EntitySheetHeader>
+        <EntitySheetTitle>{isEdit ? "Editar jugador" : "Agregar jugador"}</EntitySheetTitle>
+        <EntitySheetDescription>
+          {isEdit ? "Actualiza los datos del jugador." : "Selecciona un miembro y define sus datos."}
+        </EntitySheetDescription>
+      </EntitySheetHeader>
 
-        <div className="space-y-4">
-          {!isEdit ? (
-            <div className="space-y-1.5">
-              <Label>Miembro</Label>
-              <Select value={userId} onValueChange={setUserId}>
-                <SelectTrigger><SelectValue placeholder="Selecciona un miembro" /></SelectTrigger>
-                <SelectContent>
-                  {eligible.length === 0 ? (
-                    <div className="p-2 text-sm text-muted-foreground">Sin miembros disponibles</div>
-                  ) : (
-                    eligible.map((m) => (
-                      <SelectItem key={m.id} value={m.id}>{m.full_name ?? m.email}</SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-          ) : null}
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="pos">Posición</Label>
-              <Input id="pos" value={position} onChange={(e) => setPosition(e.target.value)} placeholder="p.ej. Delantero" />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="dorsal">Dorsal</Label>
-              <Input id="dorsal" type="number" inputMode="numeric" value={jerseyNumber} onChange={(e) => setJerseyNumber(e.target.value)} />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="bd">Nacimiento</Label>
-              <Input id="bd" type="date" value={birthdate} onChange={(e) => setBirthdate(e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="h">Altura (cm)</Label>
-              <Input id="h" type="number" inputMode="numeric" value={heightCm} onChange={(e) => setHeightCm(e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="w">Peso (kg)</Label>
-              <Input id="w" type="number" inputMode="numeric" value={weightKg} onChange={(e) => setWeightKg(e.target.value)} />
-            </div>
-          </div>
-
+      <EntitySheetBody>
+        {!isEdit ? (
           <div className="space-y-1.5">
-            <Label>Disponibilidad</Label>
-            <Select value={availability} onValueChange={(v) => setAvailability(v as AvailabilityStatus)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+            <Label>Miembro</Label>
+            <Select value={userId} onValueChange={setUserId}>
+              <SelectTrigger><SelectValue placeholder="Selecciona un miembro" /></SelectTrigger>
               <SelectContent>
-                {AVAILABILITY.map((a) => (
-                  <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>
-                ))}
+                {eligible.length === 0 ? (
+                  <div className="p-2 text-sm text-muted-foreground">Sin miembros disponibles</div>
+                ) : (
+                  eligible.map((m) => (
+                    <SelectItem key={m.id} value={m.id}>{m.full_name ?? m.email}</SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>
+        ) : null}
 
+        <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <Label htmlFor="notes">Notas</Label>
-            <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} />
+            <Label htmlFor="pos">Posición</Label>
+            <Input id="pos" value={position} onChange={(e) => setPosition(e.target.value)} placeholder="p.ej. Delantero" />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="dorsal">Dorsal</Label>
+            <Input id="dorsal" type="number" inputMode="numeric" value={jerseyNumber} onChange={(e) => setJerseyNumber(e.target.value)} />
           </div>
         </div>
 
-        <DialogFooter className="flex-col-reverse gap-2 sm:flex-row sm:justify-between">
-          {isEdit ? (
-            <Button
-              type="button"
-              variant="ghost"
-              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-              onClick={() => deleteMutation.mutate()}
-              disabled={deleteMutation.isPending}
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Quitar
-            </Button>
-          ) : <span />}
-          <div className="flex gap-2">
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button type="button" onClick={() => mutation.mutate()} disabled={mutation.isPending}>
-              {isEdit ? "Guardar" : "Agregar"}
-            </Button>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="bd">Nacimiento</Label>
+            <Input id="bd" type="date" value={birthdate} onChange={(e) => setBirthdate(e.target.value)} />
           </div>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <div className="space-y-1.5">
+            <Label htmlFor="h">Altura (cm)</Label>
+            <Input id="h" type="number" inputMode="numeric" value={heightCm} onChange={(e) => setHeightCm(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="w">Peso (kg)</Label>
+            <Input id="w" type="number" inputMode="numeric" value={weightKg} onChange={(e) => setWeightKg(e.target.value)} />
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label>Disponibilidad</Label>
+          <Select value={availability} onValueChange={(v) => setAvailability(v as AvailabilityStatus)}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {AVAILABILITY.map((a) => (
+                <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="notes">Notas</Label>
+          <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} />
+        </div>
+      </EntitySheetBody>
+
+      <EntitySheetFooter>
+        {isEdit ? (
+          <Button
+            type="button"
+            variant="ghost"
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive sm:mr-auto"
+            onClick={() => deleteMutation.mutate()}
+            disabled={deleteMutation.isPending}
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Quitar
+          </Button>
+        ) : null}
+        <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
+        <Button type="button" onClick={() => mutation.mutate()} disabled={mutation.isPending}>
+          {isEdit ? "Guardar" : "Agregar"}
+        </Button>
+      </EntitySheetFooter>
+    </EntitySheet>
   );
 }

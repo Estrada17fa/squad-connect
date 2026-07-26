@@ -3,8 +3,13 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
-} from "@/components/ui/dialog";
+  EntitySheet,
+  EntitySheetBody,
+  EntitySheetDescription,
+  EntitySheetFooter,
+  EntitySheetHeader,
+  EntitySheetTitle,
+} from "@/components/squad/EntitySheet";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -138,101 +143,97 @@ export function MeetingFormDialog({ open, onOpenChange, clubId, userId, meeting 
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="font-display">{isEdit ? "Editar junta" : "Nueva junta"}</DialogTitle>
-          <DialogDescription>
-            La junta se sincroniza con el calendario de los invitados.
-          </DialogDescription>
-        </DialogHeader>
+    <EntitySheet open={open} onOpenChange={onOpenChange}>
+      <EntitySheetHeader>
+        <EntitySheetTitle>{isEdit ? "Editar junta" : "Nueva junta"}</EntitySheetTitle>
+        <EntitySheetDescription>
+          La junta se sincroniza con el calendario de los invitados.
+        </EntitySheetDescription>
+      </EntitySheetHeader>
 
-        <div className="space-y-4">
+      <EntitySheetBody>
+        <div className="space-y-1.5">
+          <Label htmlFor="m-title">Título</Label>
+          <Input id="m-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="p.ej. Reunión semanal de staff" />
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
-            <Label htmlFor="m-title">Título</Label>
-            <Input id="m-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="p.ej. Reunión semanal de staff" />
+            <Label htmlFor="m-start">Fecha y hora</Label>
+            <Input id="m-start" type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} />
           </div>
-
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="m-start">Fecha y hora</Label>
-              <Input id="m-start" type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="m-end">Fin (opcional)</Label>
-              <Input id="m-end" type="datetime-local" value={endsAt} onChange={(e) => setEndsAt(e.target.value)} />
-            </div>
-          </div>
-
           <div className="space-y-1.5">
-            <Label htmlFor="m-loc">Ubicación</Label>
-            <Input id="m-loc" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Sala, oficina, videollamada…" />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="m-agenda">Agenda</Label>
-            <Textarea id="m-agenda" value={agenda} onChange={(e) => setAgenda(e.target.value)} rows={3} />
-          </div>
-
-          {isEdit && isPast ? (
-            <div className="space-y-1.5">
-              <Label htmlFor="m-notes">Minuta / notas</Label>
-              <Textarea id="m-notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} placeholder="Registra los acuerdos de la junta…" />
-            </div>
-          ) : null}
-
-          <div className="space-y-1.5">
-            <Label>Invitados ({invitees.size})</Label>
-            <Input placeholder="Buscar staff…" value={search} onChange={(e) => setSearch(e.target.value)} />
-            <div className="max-h-48 overflow-y-auto rounded-lg border border-border/60">
-              {filtered.length === 0 ? (
-                <div className="p-3 text-sm text-muted-foreground">Sin miembros</div>
-              ) : (
-                filtered.map((m) => {
-                  const selected = invitees.has(m.id);
-                  return (
-                    <button
-                      type="button"
-                      key={m.id}
-                      onClick={() => toggle(m.id)}
-                      className={cn(
-                        "flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-white/[0.04]",
-                        selected && "bg-white/[0.06]",
-                      )}
-                    >
-                      <span className="truncate">
-                        <span className="text-foreground">{m.full_name ?? m.email ?? "—"}</span>
-                        {m.role_name ? <span className="ml-2 text-xs text-muted-foreground">{m.role_name}</span> : null}
-                      </span>
-                      <span className={cn("h-4 w-4 shrink-0 rounded border", selected ? "border-primary bg-primary" : "border-border")} />
-                    </button>
-                  );
-                })
-              )}
-            </div>
+            <Label htmlFor="m-end">Fin (opcional)</Label>
+            <Input id="m-end" type="datetime-local" value={endsAt} onChange={(e) => setEndsAt(e.target.value)} />
           </div>
         </div>
 
-        <DialogFooter className="flex-col-reverse gap-2 sm:flex-row sm:justify-between">
-          {isEdit ? (
-            <Button
-              type="button"
-              variant="ghost"
-              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-              onClick={() => deleteMutation.mutate()}
-              disabled={deleteMutation.isPending}
-            >
-              <Trash2 className="mr-2 h-4 w-4" /> Eliminar
-            </Button>
-          ) : <span />}
-          <div className="flex gap-2">
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button type="button" onClick={() => mutation.mutate()} disabled={mutation.isPending}>
-              {isEdit ? "Guardar cambios" : "Crear junta"}
-            </Button>
+        <div className="space-y-1.5">
+          <Label htmlFor="m-loc">Ubicación</Label>
+          <Input id="m-loc" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Sala, oficina, videollamada…" />
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="m-agenda">Agenda</Label>
+          <Textarea id="m-agenda" value={agenda} onChange={(e) => setAgenda(e.target.value)} rows={3} />
+        </div>
+
+        {isEdit && isPast ? (
+          <div className="space-y-1.5">
+            <Label htmlFor="m-notes">Minuta / notas</Label>
+            <Textarea id="m-notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} placeholder="Registra los acuerdos de la junta…" />
           </div>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        ) : null}
+
+        <div className="space-y-1.5">
+          <Label>Invitados ({invitees.size})</Label>
+          <Input placeholder="Buscar staff…" value={search} onChange={(e) => setSearch(e.target.value)} />
+          <div className="max-h-48 overflow-y-auto rounded-lg border border-border/60">
+            {filtered.length === 0 ? (
+              <div className="p-3 text-sm text-muted-foreground">Sin miembros</div>
+            ) : (
+              filtered.map((m) => {
+                const selected = invitees.has(m.id);
+                return (
+                  <button
+                    type="button"
+                    key={m.id}
+                    onClick={() => toggle(m.id)}
+                    className={cn(
+                      "flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-white/[0.04]",
+                      selected && "bg-white/[0.06]",
+                    )}
+                  >
+                    <span className="truncate">
+                      <span className="text-foreground">{m.full_name ?? m.email ?? "—"}</span>
+                      {m.role_name ? <span className="ml-2 text-xs text-muted-foreground">{m.role_name}</span> : null}
+                    </span>
+                    <span className={cn("h-4 w-4 shrink-0 rounded border", selected ? "border-primary bg-primary" : "border-border")} />
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </div>
+      </EntitySheetBody>
+
+      <EntitySheetFooter>
+        {isEdit ? (
+          <Button
+            type="button"
+            variant="ghost"
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive sm:mr-auto"
+            onClick={() => deleteMutation.mutate()}
+            disabled={deleteMutation.isPending}
+          >
+            <Trash2 className="mr-2 h-4 w-4" /> Eliminar
+          </Button>
+        ) : null}
+        <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
+        <Button type="button" onClick={() => mutation.mutate()} disabled={mutation.isPending}>
+          {isEdit ? "Guardar cambios" : "Crear junta"}
+        </Button>
+      </EntitySheetFooter>
+    </EntitySheet>
   );
 }
