@@ -23,6 +23,8 @@ export interface AccessData {
   /** Permisos efectivos por equipo: la clave 'club' representa el ámbito club (o cuando no hay equipo activo). */
   permissionsByTeam: Record<string, Record<string, AccessLevel>>;
   isSuperAdmin: boolean;
+  /** true si TODAS las membresías del usuario son de rol base 'jugador' (y no es super admin). */
+  isPlayerOnly: boolean;
 }
 
 const RANK: Record<AccessLevel, number> = { none: 0, read: 1, editor: 2, approver: 3 };
@@ -153,6 +155,10 @@ export function useAccess(userId: string) {
         permissions,
         permissionsByTeam,
         isSuperAdmin: !!superRes.data,
+        isPlayerOnly:
+          !superRes.data &&
+          teams.length > 0 &&
+          teams.every((t) => (t.baseRole ?? "").toLowerCase() === "jugador"),
       };
     },
   });

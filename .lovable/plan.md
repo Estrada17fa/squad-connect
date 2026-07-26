@@ -1,42 +1,36 @@
-## Diagnóstico
+## Nueva regla de visibilidad
 
-En los logs de red vi **más de 15 llamadas a `/auth/v1/user`** en apenas 10 segundos mientras navegabas. Cada una es un round-trip al servidor de auth y **bloquea la navegación** antes de que la página empiece a cargar sus datos. Eso es lo que se siente como "cada página tarda en cargar".
+- **No-jugadores (Admin, Técnico, Médico, Staff):** ven **todo el club**, sin importar a qué categoría/equipo pertenezcan sus membresías. Sus permisos (read/editor/approver) se calculan por unión de todas sus membresías y overrides.
+- **Jugadores:** siguen viendo únicamente lo de su(s) categoría(s).
+- Las membresías de no-jugadores dejan de ser por categoría: se asignan a nivel club (team_id NULL). Los jugadores siguen asignándose a un equipo específico.
 
-### Causa raíz
+## Cambios en base de datos (migración)
 
-`src/routes/_authenticated/route.tsx` corre en su `beforeLoad`:
+1. Nueva función `public.is_player_only(_user_id)` STABLE SECURITY DEFINER: `true` si el usuario **solo** tiene membresías con rol base `jugador` y ninguna otra (fallback a Super Admin = false).
+2. Nueva función `public.user_sees_all_club(_user_id, _club_id)`: `is_super_admin OR (get_user_club_id = _club_id AND NOT is_player_only)`.
+3. Reemplazar SELECT policies dependientes del equipo:
+   - `player_profiles_select` → permitir si `user_sees_all_club(auth.uid(), teams.club_id)` o `has_team_scope` (para jugadores).
+   - `calendar_events_select` → permitir si `user_sees_all_club(auth.uid(), club_id)`; jugadores mantienen la regla actual (`has_team_access(team_id)` o invitado).
+   - Verificar `viajes`, `inventario`, `tacticas`, `salud`, `desarrollo`, `nutricion`, `multimedia`, `torneo`, `comunicados` (cuando existan tablas con `team_id`): aplicar el mismo patrón.
+4. Migración de datos: convertir membresías **no-jugador** con `team_id` no nulo a club-wide (`team_id = NULL`), deduplicando por `(user_id, role_id)`. Las membresías de rol `Jugador` permanecen intactas.
+5. Ajustar policies de escritura (`_insert/_update/_delete`) para que `has_module_editor_any` (unión de permisos) baste para no-jugadores; jugadores editores siguen restringidos a su team.
 
-```ts
-const { data } = await supabase.auth.getUser();
-```
+## Cambios en frontend
 
-`getUser()` hace una petición HTTP al servidor de Supabase **cada vez** que se entra a una ruta bajo `_authenticated`, y también en cada **preload al pasar el cursor** por los tabs/nav (que agregamos para el prefetch). Multiplicado por hover + navegación real = decenas de llamadas.
+- **`useAccess.ts`**: exponer `isPlayerOnly` (calculado en cliente a partir de `teams[].baseRole`). Cuando `isPlayerOnly === false`, `getModuleAccess` usa `permissions` (unión) en vez de `activePermissions`.
+- **`AppLayout.tsx`**:
+  - Ocultar el selector de equipo para no-jugadores (siempre muestran datos de todo el club); mostrar solo nombre del club.
+  - Para jugadores con un solo equipo, tampoco mostrar selector.
+  - `activeBaseRole` de no-jugadores: elegir el "mejor" rol (Admin > Técnico > Médico > Staff) a partir de la unión, no del team activo.
+- **`useCalendarEvents.ts`**: si `isPlayerOnly` es `false`, listar todos los `calendar_events` del club (`club_id = profile.club_id`) sin filtrar por team; jugadores conservan el filtro por team.
+- **`useRoster.ts` / `usePlayers.ts`**: no-jugadores cargan todos los miembros/jugadores del club (todas las categorías); mostrar columna/etiqueta de categoría. Jugadores siguen scoped al team.
+- **`m.plantel.tsx`**: agregar filtro por categoría (opcional) visible solo para no-jugadores; el filtro por rol actual se mantiene.
+- **`CreateMemberDialog` / `MembersTab`**: al asignar rol distinto de "Jugador", forzar `team_id = NULL` (membresía club-wide) y ocultar el selector de categoría en esa fila. Para "Jugador" seguir pidiendo categoría obligatoria.
+- **`prefetch.ts`**: pasar `teamId = null` para no-jugadores al precargar calendario/plantel.
 
-Además, cada navegación queda esperando esos ~200–500 ms antes de que los loaders de datos (tareas, plantel, etc.) siquiera arranquen.
+## Verificación
 
-## Plan de arreglo (solo rendimiento, sin cambiar features)
-
-1. **Sustituir `getUser()` por `getSession()`** en `_authenticated/route.tsx`.
-   `getSession()` es **local** (lee el token de memoria/localStorage), sin round-trip. Sigue redirigiendo a `/auth` si no hay sesión.
-
-2. **Cachear el usuario en el `context` del router** para que rutas hijas no lo vuelvan a resolver. `beforeLoad` retorna `{ user }` una sola vez y las subrutas lo leen de `useRouteContext()`.
-
-3. **Evitar el preload de auth en hover.** Añadir `preload: false` (o gate por `loader`) al `beforeLoad` de `_authenticated` no aplica porque `beforeLoad` siempre corre en preload. La solución real es que sea instantáneo (paso 1) — ya no importa que se dispare en hover porque no toca la red.
-
-4. **Revisar `auth-attacher.ts`**: usa `getSession()` (bien, es local), pero verificar que no haya un `getUser()` colado en otro middleware que se ejecute en cada server-fn.
-
-5. **Verificar** con el panel de red que tras el cambio solo haya 1 llamada a `/auth/v1/user` al inicio de sesión (el refresco automático del SDK), y que la navegación entre módulos sea inmediata.
-
-### Archivos a tocar
-
-- `src/routes/_authenticated/route.tsx` — cambiar `getUser()` → `getSession()`.
-- (Opcional) `src/routes/auth.tsx` — el `getUser()` inicial se puede dejar; solo corre una vez al montar `/auth`.
-
-### Fuera de alcance
-
-- No toco `admin.clubs.tsx` ni `invite.$token.tsx`: son llamadas puntuales en handlers, no en cada navegación.
-- No cambio lógica de permisos, RLS, ni UI.
-
-### Resultado esperado
-
-Navegación entre módulos y hover sobre tabs deja de disparar `/auth/v1/user`. La carga percibida de cada página baja al tiempo real de sus queries (que ya tienen `staleTime` de 30s y skeletons).
+- Migración: comprobar que no-jugadores previamente ligados a un equipo específico quedan como club-wide y no pierden acceso.
+- Login como Técnico de una sola categoría: debe ver plantel completo del club, agenda con eventos de todas las categorías, sin selector de equipo.
+- Login como Jugador de Sub-15: solo ve su equipo, sin eventos ni jugadores de otras categorías.
+- Super Admin: sigue viendo todo (comportamiento intacto).

@@ -831,7 +831,12 @@ export type Database = {
         Args: { _team_id: string; _user_id: string }
         Returns: boolean
       }
+      is_player_only: { Args: { _user_id: string }; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      user_sees_all_club: {
+        Args: { _club_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       access_level: "none" | "read" | "editor" | "approver"

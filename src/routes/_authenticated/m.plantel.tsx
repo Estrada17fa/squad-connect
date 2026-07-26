@@ -50,10 +50,12 @@ function formatBirthday(iso: string | null): string | null {
 
 function PlantelPage() {
   const navigate = useNavigate();
-  const { activeTeam, user, profile } = useApp();
+  const { activeTeam, user, profile, viewsAllClub } = useApp();
 
   const clubId = profile?.club_id ?? null;
-  const { data: members, isLoading } = useRoster(clubId, activeTeam?.id ?? null);
+  // No-jugadores y super admin: cargar el plantel completo del club (todas las categorías).
+  const rosterTeamId = viewsAllClub ? null : activeTeam?.id ?? null;
+  const { data: members, isLoading } = useRoster(clubId, rosterTeamId);
   const initialRole = useRouterState({
     select: (s) => (s.location.search as { role?: string } | undefined)?.role,
   });
@@ -78,7 +80,7 @@ function PlantelPage() {
     return true;
   });
 
-  if (!activeTeam) {
+  if (!viewsAllClub && !activeTeam) {
     return <EmptyState title="Sin equipo activo" message="Selecciona un equipo desde el encabezado." />;
   }
 
@@ -96,7 +98,7 @@ function PlantelPage() {
       <PageHeader
         hideTitle
         title="Plantel"
-        subtitle={activeTeam.name}
+        subtitle={viewsAllClub ? "Todo el club" : activeTeam?.name ?? ""}
         action={<ViewToggle value={viewMode} onChange={setViewMode} />}
       />
 

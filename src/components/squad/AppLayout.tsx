@@ -34,6 +34,10 @@ interface AppCtx {
   setActiveTeamId: (id: string | null) => void;
   clubName: string | null;
   isSuperAdmin: boolean;
+  /** true si el usuario ve todo el club (no-jugadores + super admin). */
+  viewsAllClub: boolean;
+  /** true si el usuario es exclusivamente jugador. */
+  isPlayerOnly: boolean;
   profile: { full_name: string | null; email: string | null; club_id: string | null } | null;
   /** Rol base derivado del equipo activo (para el mapping de páginas). */
   activeBaseRole: BaseRole;
@@ -87,23 +91,38 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
   }
 
   const clubPerms = data?.permissionsByTeam?.["club"] ?? {};
+  const viewsAllClub = !!(data?.isSuperAdmin || (data && !data.isPlayerOnly));
   const activePermissions = React.useMemo<Record<string, AccessLevel>>(() => {
+    // No-jugadores y super admin: usan la unión (ven todo el club).
+    if (viewsAllClub) return data?.permissions ?? {};
     const teamKey = activeTeam?.id ?? "club";
     return data?.permissionsByTeam?.[teamKey] ?? clubPerms;
-  }, [data?.permissionsByTeam, activeTeam?.id, clubPerms]);
+  }, [viewsAllClub, data?.permissions, data?.permissionsByTeam, activeTeam?.id, clubPerms]);
 
   const getModuleAccess = React.useCallback(
     (key: ModuleKey): AccessLevel => {
+      if (viewsAllClub) return data?.permissions?.[key] ?? "none";
       const scope = MODULE_MAP[key].scope;
       if (scope === "club") return clubPerms[key] ?? "none";
       return activePermissions[key] ?? "none";
     },
-    [clubPerms, activePermissions],
+    [viewsAllClub, data?.permissions, clubPerms, activePermissions],
   );
 
-  const activeBaseRole: BaseRole =
-    (activeTeam?.baseRole as BaseRole | null | undefined) ??
-    inferBaseRole(activeTeam?.roleName ?? null);
+  // Rol base efectivo. Para no-jugadores tomamos el "mejor" rol entre todas sus
+  // membresías (Admin > Técnico > Médico > Staff) para elegir el mapa de páginas.
+  const BASE_ROLE_RANK: Record<BaseRole, number> = { admin: 4, tecnico: 3, medico: 2, staff: 1, jugador: 0 };
+  const dominantBaseRole: BaseRole = React.useMemo(() => {
+    const roles = (data?.teams ?? [])
+      .map((t) => (t.baseRole as BaseRole | null) ?? inferBaseRole(t.roleName ?? null))
+      .filter((r): r is BaseRole => !!r);
+    if (roles.length === 0) return "staff";
+    return roles.reduce((best, r) => (BASE_ROLE_RANK[r] > BASE_ROLE_RANK[best] ? r : best), roles[0]);
+  }, [data?.teams]);
+
+  const activeBaseRole: BaseRole = viewsAllClub
+    ? (data?.isSuperAdmin ? "admin" : dominantBaseRole)
+    : ((activeTeam?.baseRole as BaseRole | null | undefined) ?? inferBaseRole(activeTeam?.roleName ?? null));
 
   const effectiveBaseRole: BaseRole = data?.isSuperAdmin ? "admin" : activeBaseRole;
   const effectiveModules = React.useMemo<ModuleKey[]>(
@@ -134,6 +153,8 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
     setActiveTeamId,
     clubName: data.clubName,
     isSuperAdmin: data.isSuperAdmin,
+    viewsAllClub,
+    isPlayerOnly: data.isPlayerOnly,
     profile: data.profile,
     activeBaseRole: effectiveBaseRole,
     visiblePages,
@@ -149,6 +170,7 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
           setActiveTeamId={setActiveTeamId}
           userName={data.profile?.full_name ?? user.email ?? ""}
           isSuperAdmin={data.isSuperAdmin}
+          viewsAllClub={viewsAllClub}
           onSignOut={signOut}
         />
         <DesktopNav pages={visiblePages} />
@@ -169,6 +191,7 @@ function Header({
   setActiveTeamId,
   userName,
   isSuperAdmin,
+  viewsAllClub,
   onSignOut,
 }: {
   clubName: string | null;
@@ -177,14 +200,16 @@ function Header({
   setActiveTeamId: (id: string | null) => void;
   userName: string;
   isSuperAdmin: boolean;
+  viewsAllClub: boolean;
   onSignOut: () => void;
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const activeModule = moduleFromPath(pathname);
   const activeScope = activeModule ? MODULE_MAP[activeModule].scope : null;
-  // Ocultar selector cuando estamos en un módulo estrictamente de club.
-  const showTeamSelector = activeScope !== "club" && teams.length > 1;
-  const showClubName = activeScope === "club" || teams.length <= 1;
+  // No-jugadores y super admin ven todo el club: nunca mostramos selector de equipo.
+  // Jugadores solo lo ven cuando pertenecen a varios equipos y el módulo no es de club.
+  const showTeamSelector = !viewsAllClub && activeScope !== "club" && teams.length > 1;
+  const showClubName = !showTeamSelector;
 
   return (
     <header className="sticky top-0 z-30 border-b border-border/60 bg-background/70 backdrop-blur-xl">

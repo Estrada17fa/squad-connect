@@ -30,14 +30,29 @@ async function fetchRoster(clubId: string, teamId: string | null): Promise<Roste
   const { data, error } = await q;
   if (error) throw error;
 
-  const players = teamId
-    ? (
+  let players: { id: string; user_id: string; team_id: string; jersey_number: number | null; position: string | null; availability_status: string | null }[] = [];
+  if (teamId) {
+    players =
+      (
         await supabase
           .from("player_profiles")
-          .select("id, user_id, jersey_number, position, availability_status")
+          .select("id, user_id, team_id, jersey_number, position, availability_status")
           .eq("team_id", teamId)
-      ).data ?? []
-    : [];
+      ).data ?? [];
+  } else {
+    // Club-wide: traer todos los player_profiles de equipos del club.
+    const { data: teamRows } = await supabase.from("teams").select("id").eq("club_id", clubId);
+    const ids = (teamRows ?? []).map((t: any) => t.id);
+    if (ids.length > 0) {
+      players =
+        (
+          await supabase
+            .from("player_profiles")
+            .select("id, user_id, team_id, jersey_number, position, availability_status")
+            .in("team_id", ids)
+        ).data ?? [];
+    }
+  }
   const byUser = new Map<string, (typeof players)[number]>();
   for (const p of players) byUser.set(p.user_id, p);
 

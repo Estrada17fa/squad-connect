@@ -31,7 +31,7 @@ export const Route = createFileRoute("/_authenticated/m/calendario")({
 const WEEKDAYS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
 function CalendarPage() {
-  const { activeTeam, getModuleAccess, user, isSuperAdmin } = useApp();
+  const { activeTeam, getModuleAccess, user, isSuperAdmin, viewsAllClub, profile } = useApp();
   const canEdit = isSuperAdmin || getModuleAccess("calendario") === "editor" || getModuleAccess("calendario") === "approver";
 
 
@@ -39,11 +39,39 @@ function CalendarPage() {
   const [selectedDay, setSelectedDay] = React.useState<Date | null>(null);
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<CalendarEventRow | null>(null);
-  const [clubId, setClubId] = React.useState<string | null>(null);
+  const [clubId, setClubId] = React.useState<string | null>(profile?.club_id ?? null);
+  const [clubTeams, setClubTeams] = React.useState<{ id: string; name: string }[]>([]);
+  const [createTeamId, setCreateTeamId] = React.useState<string | null>(activeTeam?.id ?? null);
 
-  const { data: events, isLoading } = useCalendarEvents(activeTeam?.id ?? null);
+  const { data: events, isLoading } = useCalendarEvents(
+    viewsAllClub
+      ? { mode: "club", clubId: profile?.club_id ?? null }
+      : { mode: "team", teamId: activeTeam?.id ?? null },
+  );
 
   React.useEffect(() => {
+    if (!viewsAllClub || !profile?.club_id) return;
+    supabase
+      .from("teams")
+      .select("id, name")
+      .eq("club_id", profile.club_id)
+      .order("name")
+      .then(({ data }) => {
+        const list = (data ?? []) as { id: string; name: string }[];
+        setClubTeams(list);
+        setCreateTeamId((cur) => cur ?? list[0]?.id ?? null);
+      });
+  }, [viewsAllClub, profile?.club_id]);
+
+  React.useEffect(() => {
+    if (!viewsAllClub) setCreateTeamId(activeTeam?.id ?? null);
+  }, [viewsAllClub, activeTeam?.id]);
+
+  React.useEffect(() => {
+    if (profile?.club_id) {
+      setClubId(profile.club_id);
+      return;
+    }
     if (!activeTeam?.id) {
       setClubId(null);
       return;
@@ -54,7 +82,7 @@ function CalendarPage() {
       .eq("id", activeTeam.id)
       .maybeSingle()
       .then(({ data }) => setClubId(data?.club_id ?? null));
-  }, [activeTeam?.id]);
+  }, [profile?.club_id, activeTeam?.id]);
 
   const eventsByDay = React.useMemo(() => {
     const map = new Map<string, CalendarEventRow[]>();
@@ -72,7 +100,7 @@ function CalendarPage() {
     return (events ?? []).filter((e) => new Date(e.starts_at) >= startOfDay(now));
   }, [events]);
 
-  if (!activeTeam) {
+  if (!viewsAllClub && !activeTeam) {
     return <EmptyState title="Sin equipo activo" message="Selecciona un equipo desde el encabezado." />;
   }
 
@@ -99,12 +127,26 @@ function CalendarPage() {
       <PageHeader
         hideTitle
         title="Calendario"
-        subtitle={activeTeam.name}
+        subtitle={activeTeam?.name ?? "Todo el club"}
         action={
           canEdit ? (
-            <Button onClick={() => openCreate()} className="glow-primary">
-              <Plus className="mr-2 h-4 w-4" /> Nuevo evento
-            </Button>
+            <div className="flex items-center gap-2">
+              {viewsAllClub && clubTeams.length > 0 ? (
+                <select
+                  value={createTeamId ?? ""}
+                  onChange={(e) => setCreateTeamId(e.target.value)}
+                  className="rounded-md border border-border/60 bg-background/60 px-2 py-1.5 text-sm text-foreground"
+                  aria-label="Categoría para nuevo evento"
+                >
+                  {clubTeams.map((t) => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
+              ) : null}
+              <Button onClick={() => openCreate()} className="glow-primary" disabled={!createTeamId}>
+                <Plus className="mr-2 h-4 w-4" /> Nuevo evento
+              </Button>
+            </div>
           ) : null
         }
       />
@@ -221,12 +263,12 @@ function CalendarPage() {
         onSelect={(e) => (canEdit ? openEdit(e) : null)}
       />
 
-      {clubId && activeTeam?.id ? (
+      {clubId && (editing?.team_id ?? createTeamId) ? (
         <EventFormDialog
           open={dialogOpen}
           onOpenChange={setDialogOpen}
           clubId={clubId}
-          teamId={activeTeam.id}
+          teamId={(editing?.team_id ?? createTeamId)!}
           userId={user.id}
           defaultDate={selectedDay ?? undefined}
           event={editing}
