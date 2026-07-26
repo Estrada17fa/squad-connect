@@ -80,6 +80,7 @@ interface MembershipRow {
 
 export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boolean }) {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [selectedUserId, setSelectedUserId] = React.useState<string | null>(null);
   const [search, setSearch] = React.useState("");
   const [addOpen, setAddOpen] = React.useState(false);
