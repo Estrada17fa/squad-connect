@@ -58,7 +58,7 @@ export const documentsQueryOptions = ({ clubId, relatedUserId, teamId }: Documen
       let q = supabase
         .from("documents")
         .select(
-          "id, club_id, title, description, category, file_path, file_type, file_size, related_user_id, team_id, issue_date, expiry_date, tags, uploaded_by, created_at, updated_at, related_user:profiles!documents_related_user_id_fkey(id, full_name, avatar_url), team:teams(id, name, category)",
+          "id, club_id, title, description, category, file_path, file_type, file_size, related_user_id, team_id, issue_date, expiry_date, tags, uploaded_by, created_at, updated_at, related_user:profiles!documents_related_user_id_fkey(id, full_name, avatar_url), team:teams(id, name, category), uploader:profiles!documents_uploaded_by_fkey(id, full_name, avatar_url)",
         )
         .eq("club_id", clubId!)
         .order("created_at", { ascending: false });
