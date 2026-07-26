@@ -34,6 +34,10 @@ interface AppCtx {
   setActiveTeamId: (id: string | null) => void;
   clubName: string | null;
   isSuperAdmin: boolean;
+  /** true si el usuario ve todo el club (no-jugadores + super admin). */
+  viewsAllClub: boolean;
+  /** true si el usuario es exclusivamente jugador. */
+  isPlayerOnly: boolean;
   profile: { full_name: string | null; email: string | null; club_id: string | null } | null;
   /** Rol base derivado del equipo activo (para el mapping de páginas). */
   activeBaseRole: BaseRole;
