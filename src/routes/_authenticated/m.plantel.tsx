@@ -4,7 +4,7 @@ import { Plus, Users } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { ModuleTabs } from "@/components/squad/ModuleTabs";
 import { EmptyState } from "@/components/squad/EmptyState";
-import { LoadingState } from "@/components/squad/LoadingState";
+import { CardGridSkeleton } from "@/components/squad/LoadingState";
 import { StatusBadge, type StatusVariant } from "@/components/squad/StatusBadge";
 import { ViewToggle } from "@/components/squad/ViewToggle";
 import { useViewMode } from "@/hooks/useViewMode";
@@ -128,8 +128,8 @@ function PlantelPage() {
         </Select>
       </div>
 
-      {isLoading ? (
-        <LoadingState />
+      {isLoading && !members ? (
+        <CardGridSkeleton variant={viewMode === "list" ? "list" : "grid"} count={6} />
       ) : filtered.length === 0 ? (
         <EmptyState
           icon={Users}

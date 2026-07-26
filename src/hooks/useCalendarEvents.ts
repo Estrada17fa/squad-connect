@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryOptions, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { EventType } from "@/lib/eventTypes";
 
@@ -18,14 +18,14 @@ export interface CalendarEventRow {
   created_at: string;
 }
 
-export function useCalendarEvents(teamId: string | null | undefined) {
-  const qc = useQueryClient();
-  const query = useQuery({
-    queryKey: ["calendar-events", teamId ?? "none"],
+export const calendarEventsQueryOptions = (teamId: string | null | undefined) =>
+  queryOptions({
+    queryKey: ["calendar-events", teamId ?? "none"] as const,
     enabled: !!teamId,
+    staleTime: 30_000,
+    gcTime: 5 * 60_000,
+    placeholderData: keepPreviousData,
     queryFn: async (): Promise<CalendarEventRow[]> => {
-      // Team events + club-wide events (team_id NULL) the user can see via RLS
-      // (meetings sync into calendar_events with team_id NULL + event_attendees).
       const { data, error } = await supabase
         .from("calendar_events")
         .select("*")
@@ -35,6 +35,10 @@ export function useCalendarEvents(teamId: string | null | undefined) {
       return (data ?? []) as CalendarEventRow[];
     },
   });
+
+export function useCalendarEvents(teamId: string | null | undefined) {
+  const qc = useQueryClient();
+  const query = useQuery(calendarEventsQueryOptions(teamId));
 
   React.useEffect(() => {
     if (!teamId) return;
@@ -60,6 +64,7 @@ export function useEventAttendees(eventId: string | null | undefined) {
   return useQuery({
     queryKey: ["event-attendees", eventId ?? "none"],
     enabled: !!eventId,
+    staleTime: 30_000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("event_attendees")

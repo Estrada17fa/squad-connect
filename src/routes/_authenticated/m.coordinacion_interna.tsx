@@ -6,7 +6,7 @@ import { Plus, CalendarDays, MapPin, Check, X as XIcon, AlertTriangle, MessagesS
 import { PageHeader } from "@/components/squad/PageHeader";
 import { ModuleTabs } from "@/components/squad/ModuleTabs";
 import { EmptyState } from "@/components/squad/EmptyState";
-import { LoadingState } from "@/components/squad/LoadingState";
+import { LoadingState, CardGridSkeleton } from "@/components/squad/LoadingState";
 import { StandardCard } from "@/components/squad/StandardCard";
 import { StatusBadge, type StatusVariant } from "@/components/squad/StatusBadge";
 import { ViewToggle } from "@/components/squad/ViewToggle";
@@ -216,7 +216,7 @@ function TasksList({
     });
   }, [tasks, filter, userId]);
 
-  if (isLoading) return <LoadingState />;
+  if (isLoading && tasks.length === 0) return <CardGridSkeleton variant={viewMode === "list" ? "list" : "grid"} count={4} />;
   if (filtered.length === 0) {
     return (
       <EmptyState
@@ -360,7 +360,7 @@ function MeetingsList({
   onCreate?: () => void;
   clubId: string;
 }) {
-  if (isLoading) return <LoadingState />;
+  if (isLoading && meetings.length === 0) return <CardGridSkeleton variant={viewMode === "list" ? "list" : "grid"} count={3} />;
   if (meetings.length === 0) {
     return (
       <EmptyState

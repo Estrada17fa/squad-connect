@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryOptions, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export type TaskPriority = "baja" | "media" | "alta";
@@ -41,11 +41,13 @@ export interface MeetingRow {
   attendees: { user_id: string; attendance_status: AttendanceStatus; profile: AssigneeProfile }[];
 }
 
-export function useTasks(clubId: string | null | undefined) {
-  const qc = useQueryClient();
-  const query = useQuery({
-    queryKey: ["coord-tasks", clubId ?? "none"],
+export const tasksQueryOptions = (clubId: string | null | undefined) =>
+  queryOptions({
+    queryKey: ["coord-tasks", clubId ?? "none"] as const,
     enabled: !!clubId,
+    staleTime: 30_000,
+    gcTime: 5 * 60_000,
+    placeholderData: keepPreviousData,
     queryFn: async (): Promise<TaskRow[]> => {
       const { data, error } = await supabase
         .from("tasks")
@@ -62,6 +64,10 @@ export function useTasks(clubId: string | null | undefined) {
       })) as TaskRow[];
     },
   });
+
+export function useTasks(clubId: string | null | undefined) {
+  const qc = useQueryClient();
+  const query = useQuery(tasksQueryOptions(clubId));
 
   React.useEffect(() => {
     if (!clubId) return;
@@ -82,11 +88,13 @@ export function useTasks(clubId: string | null | undefined) {
   return query;
 }
 
-export function useMeetings(clubId: string | null | undefined) {
-  const qc = useQueryClient();
-  const query = useQuery({
-    queryKey: ["coord-meetings", clubId ?? "none"],
+export const meetingsQueryOptions = (clubId: string | null | undefined) =>
+  queryOptions({
+    queryKey: ["coord-meetings", clubId ?? "none"] as const,
     enabled: !!clubId,
+    staleTime: 30_000,
+    gcTime: 5 * 60_000,
+    placeholderData: keepPreviousData,
     queryFn: async (): Promise<MeetingRow[]> => {
       const { data, error } = await supabase
         .from("meetings")
@@ -106,6 +114,10 @@ export function useMeetings(clubId: string | null | undefined) {
       })) as MeetingRow[];
     },
   });
+
+export function useMeetings(clubId: string | null | undefined) {
+  const qc = useQueryClient();
+  const query = useQuery(meetingsQueryOptions(clubId));
 
   React.useEffect(() => {
     if (!clubId) return;

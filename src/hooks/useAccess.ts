@@ -56,6 +56,12 @@ export function useAccess(userId: string) {
   }, [userId, qc]);
   return useQuery({
     queryKey: ["squad-access", userId],
+    // Permisos y membresías cambian raramente; se invalidan por realtime
+    // cuando cambian roles/permisos, así que no revalidamos al navegar.
+    staleTime: 5 * 60_000,
+    gcTime: 30 * 60_000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
     queryFn: async (): Promise<AccessData> => {
       const [profileRes, membershipsRes, superRes, overridesRes] = await Promise.all([
         supabase

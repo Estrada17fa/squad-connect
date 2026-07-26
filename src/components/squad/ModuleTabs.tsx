@@ -1,9 +1,11 @@
 import * as React from "react";
 import { Link } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { Building2, type LucideIcon } from "lucide-react";
 import { useApp } from "./AppLayout";
 import { MODULE_MAP, type ModuleKey } from "@/lib/modules";
 import { findHubForModule, type PageKey } from "@/lib/rolePages";
+import { prefetchModule } from "@/lib/prefetch";
 import { cn } from "@/lib/utils";
 
 interface ExtraTab {
@@ -32,7 +34,12 @@ interface ModuleTabsProps {
  * del módulo, preservando URL, back button y deep-linking.
  */
 export function ModuleTabs({ activeKey, hubKey, extraActiveKey }: ModuleTabsProps) {
-  const { visiblePages, isSuperAdmin } = useApp();
+  const { visiblePages, isSuperAdmin, profile, activeTeam } = useApp();
+  const qc = useQueryClient();
+  const prefetchCtx = React.useMemo(
+    () => ({ clubId: profile?.club_id ?? null, teamId: activeTeam?.id ?? null }),
+    [profile?.club_id, activeTeam?.id],
+  );
   const hub = activeKey
     ? findHubForModule(visiblePages, activeKey)
     : hubKey
@@ -75,6 +82,9 @@ export function ModuleTabs({ activeKey, hubKey, extraActiveKey }: ModuleTabsProp
               params={{ module: key }}
               role="tab"
               aria-current={active ? "page" : undefined}
+              onMouseEnter={() => prefetchModule(qc, key, prefetchCtx)}
+              onFocus={() => prefetchModule(qc, key, prefetchCtx)}
+              onTouchStart={() => prefetchModule(qc, key, prefetchCtx)}
               className={cn(
                 "relative flex shrink-0 items-center gap-2 whitespace-nowrap px-3 py-3 text-sm font-medium transition-colors",
                 active ? "text-foreground" : "text-muted-foreground hover:text-foreground",

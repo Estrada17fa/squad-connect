@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { EmptyState } from "@/components/squad/EmptyState";
-import { LoadingState } from "@/components/squad/LoadingState";
+import { AgendaSkeleton } from "@/components/squad/LoadingState";
 import { StandardCard } from "@/components/squad/StandardCard";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -116,8 +116,8 @@ function CalendarPage() {
         </TabsList>
 
         <TabsContent value="agenda" className="mt-4 space-y-3">
-          {isLoading ? (
-            <LoadingState />
+          {isLoading && !events ? (
+            <AgendaSkeleton count={4} />
           ) : upcoming.length === 0 ? (
             <EmptyState
               title="Sin próximos eventos"

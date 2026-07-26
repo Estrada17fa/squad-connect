@@ -1,5 +1,7 @@
 import * as React from "react";
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { prefetchModule } from "@/lib/prefetch";
 import { ChevronDown, LogOut, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccess, hasAccess, type TeamOption, type AccessLevel } from "@/hooks/useAccess";
@@ -276,9 +278,25 @@ function computeActiveKey(
   return match ? match.page.key : null;
 }
 
+function useHubPrefetch() {
+  const qc = useQueryClient();
+  const { profile, activeTeam } = useApp();
+  const ctx = React.useMemo(
+    () => ({ clubId: profile?.club_id ?? null, teamId: activeTeam?.id ?? null }),
+    [profile?.club_id, activeTeam?.id],
+  );
+  return React.useCallback(
+    (rp: ResolvedPage) => {
+      for (const mk of rp.modules) prefetchModule(qc, mk, ctx);
+    },
+    [qc, ctx],
+  );
+}
+
 function BottomNav({ pages }: { pages: ResolvedPage[] }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const activeKey = computeActiveKey(pathname, pages);
+  const prefetchHub = useHubPrefetch();
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border/60 bg-background/85 backdrop-blur-xl sm:hidden">
@@ -291,6 +309,9 @@ function BottomNav({ pages }: { pages: ResolvedPage[] }) {
             <Link
               key={rp.page.key}
               to={rp.page.to as any}
+              onMouseEnter={() => prefetchHub(rp)}
+              onFocus={() => prefetchHub(rp)}
+              onTouchStart={() => prefetchHub(rp)}
               className={cn(
                 "relative flex flex-1 flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 text-[11px] transition-colors",
                 active
@@ -316,6 +337,7 @@ function BottomNav({ pages }: { pages: ResolvedPage[] }) {
 function DesktopNav({ pages }: { pages: ResolvedPage[] }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const activeKey = computeActiveKey(pathname, pages);
+  const prefetchHub = useHubPrefetch();
   return (
     <div className="hidden border-b border-border/40 bg-background/40 sm:block">
       <div className="mx-auto flex max-w-6xl items-center gap-1 px-4 py-2 sm:px-6">
@@ -327,6 +349,8 @@ function DesktopNav({ pages }: { pages: ResolvedPage[] }) {
             <Link
               key={rp.page.key}
               to={rp.page.to as any}
+              onMouseEnter={() => prefetchHub(rp)}
+              onFocus={() => prefetchHub(rp)}
               className={cn(
                 "inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
                 active
@@ -343,4 +367,5 @@ function DesktopNav({ pages }: { pages: ResolvedPage[] }) {
     </div>
   );
 }
+
 
