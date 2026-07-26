@@ -128,27 +128,6 @@ function CalendarPage() {
         hideTitle
         title="Calendario"
         subtitle={activeTeam?.name ?? "Todo el club"}
-        action={
-          canEdit ? (
-            <div className="flex items-center gap-2">
-              {viewsAllClub && clubTeams.length > 0 ? (
-                <select
-                  value={createTeamId ?? ""}
-                  onChange={(e) => setCreateTeamId(e.target.value)}
-                  className="rounded-md border border-border/60 bg-background/60 px-2 py-1.5 text-sm text-foreground"
-                  aria-label="Categoría para nuevo evento"
-                >
-                  {clubTeams.map((t) => (
-                    <option key={t.id} value={t.id}>{t.name}</option>
-                  ))}
-                </select>
-              ) : null}
-              <Button onClick={() => openCreate()} className="glow-primary" disabled={!createTeamId}>
-                <Plus className="mr-2 h-4 w-4" /> Nuevo evento
-              </Button>
-            </div>
-          ) : null
-        }
       />
 
       <Tabs defaultValue="agenda" className="w-full">
@@ -156,6 +135,32 @@ function CalendarPage() {
           <TabsTrigger value="agenda">Agenda</TabsTrigger>
           <TabsTrigger value="mes">Mes</TabsTrigger>
         </TabsList>
+
+        {canEdit ? (
+          <div className="mt-4 flex items-center gap-2">
+            {viewsAllClub && clubTeams.length > 0 ? (
+              <select
+                value={createTeamId ?? ""}
+                onChange={(e) => setCreateTeamId(e.target.value)}
+                className="rounded-md border border-border/60 bg-background/60 px-2 py-2 text-sm text-foreground"
+                aria-label="Categoría para nuevo evento"
+              >
+                {clubTeams.map((t) => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </select>
+            ) : null}
+            <Button
+              onClick={() => openCreate()}
+              className="flex-1 glow-primary"
+              disabled={!createTeamId}
+            >
+              <Plus className="mr-2 h-4 w-4" /> Nuevo evento
+            </Button>
+          </div>
+        ) : null}
+
+
 
         <TabsContent value="agenda" className="mt-4 space-y-3">
           {isLoading && !events ? (
