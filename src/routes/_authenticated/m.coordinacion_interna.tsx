@@ -79,6 +79,7 @@ function CoordinacionPage() {
 
   return (
     <div className="space-y-6">
+      <ModuleTabs activeKey="coordinacion_interna" />
       <PageHeader
         hideTitle
         title="Coordinación"
@@ -100,7 +101,7 @@ function CoordinacionPage() {
           </div>
         }
       />
-      <ModuleTabs activeKey="coordinacion_interna" />
+
 
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as any)} className="w-full">
