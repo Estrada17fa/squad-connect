@@ -378,6 +378,8 @@ export type Database = {
           club_id: string | null
           created_at: string
           email: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
           first_name: string | null
           full_name: string | null
           id: string
@@ -399,6 +401,8 @@ export type Database = {
           club_id?: string | null
           created_at?: string
           email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
           first_name?: string | null
           full_name?: string | null
           id: string
@@ -420,6 +424,8 @@ export type Database = {
           club_id?: string | null
           created_at?: string
           email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
           first_name?: string | null
           full_name?: string | null
           id?: string
