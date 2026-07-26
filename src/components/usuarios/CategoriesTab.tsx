@@ -73,12 +73,11 @@ export function CategoriesTab({ clubId, canEdit }: { clubId: string; canEdit: bo
   return (
     <div className="space-y-4">
       {canEdit ? (
-        <div className="flex justify-end">
-          <Button onClick={() => setCreateOpen(true)} variant="secondary">
-            <Plus className="mr-2 h-4 w-4" /> Nueva categoría
-          </Button>
-        </div>
+        <Button onClick={() => setCreateOpen(true)} className="w-full glow-primary">
+          <Plus className="mr-2 h-4 w-4" /> Nueva categoría
+        </Button>
       ) : null}
+
 
       {teams.length === 0 ? (
         <EmptyState
