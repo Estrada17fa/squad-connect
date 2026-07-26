@@ -277,12 +277,22 @@ function BottomNav({ pages }: { pages: ResolvedPage[] }) {
               key={rp.page.key}
               to={rp.page.to as any}
               className={cn(
-                "flex flex-1 flex-col items-center gap-0.5 rounded-lg px-2 py-1.5 text-[11px] transition-colors",
-                active ? "text-primary" : "text-muted-foreground hover:text-foreground",
+                "relative flex flex-1 flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 text-[11px] transition-colors",
+                active
+                  ? "bg-primary/15 text-primary"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
-              <Icon className={cn("h-5 w-5", active && "drop-shadow-[0_0_6px_hsl(150_100%_50%/0.7)]")} />
-              <span className="truncate">{label}</span>
+              {active ? (
+                <span className="pointer-events-none absolute inset-x-4 -top-px h-[2px] rounded-full bg-primary shadow-[0_0_8px_hsl(150_100%_50%/0.8)]" />
+              ) : null}
+              <Icon
+                className={cn(
+                  "h-5 w-5",
+                  active && "drop-shadow-[0_0_8px_hsl(150_100%_50%/0.85)]",
+                )}
+              />
+              <span className={cn("truncate", active && "font-semibold")}>{label}</span>
             </Link>
           );
         })}
@@ -311,7 +321,7 @@ function DesktopNav({ pages }: { pages: ResolvedPage[] }) {
               className={cn(
                 "inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
                 active
-                  ? "bg-primary/10 text-primary"
+                  ? "bg-primary/15 text-primary ring-1 ring-primary/40 shadow-[var(--glow-primary)]"
                   : "text-muted-foreground hover:bg-white/[0.04] hover:text-foreground",
               )}
             >

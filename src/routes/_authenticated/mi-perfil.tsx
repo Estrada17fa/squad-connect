@@ -89,7 +89,7 @@ function MiPerfilPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Mi Perfil" subtitle={activeTeam ? `${activeTeam.name} · ${activeTeam.roleName}` : displayName} />
+      <PageHeader hideTitle title="Mi Perfil" subtitle={activeTeam ? `${activeTeam.name} · ${activeTeam.roleName}` : displayName} />
 
       <StandardCard icon={User} title={displayName} subtitle={data.email ?? undefined}>
         <div className="flex items-center gap-4">

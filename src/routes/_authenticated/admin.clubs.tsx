@@ -102,6 +102,7 @@ function AdminClubsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
+        hideTitle
         title="Administrar clubes"
         subtitle="Alta de clubes e invitaciones a administradores"
         action={

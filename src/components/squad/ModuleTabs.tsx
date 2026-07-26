@@ -63,7 +63,7 @@ export function ModuleTabs({ activeKey, hubKey, extraActiveKey }: ModuleTabsProp
       <div
         role="tablist"
         aria-label="Módulos del hub"
-        className="flex gap-1 overflow-x-auto"
+        className="flex gap-1 overflow-x-auto overflow-y-hidden touch-pan-x overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {modules.map((key: ModuleKey) => {
           const m = MODULE_MAP[key];

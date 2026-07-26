@@ -97,6 +97,7 @@ function CalendarPage() {
   return (
     <div className="space-y-6">
       <PageHeader
+        hideTitle
         title="Calendario"
         subtitle={activeTeam.name}
         action={

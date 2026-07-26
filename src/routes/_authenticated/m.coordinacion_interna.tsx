@@ -9,6 +9,8 @@ import { EmptyState } from "@/components/squad/EmptyState";
 import { LoadingState } from "@/components/squad/LoadingState";
 import { StandardCard } from "@/components/squad/StandardCard";
 import { StatusBadge, type StatusVariant } from "@/components/squad/StatusBadge";
+import { ViewToggle } from "@/components/squad/ViewToggle";
+import { useViewMode, type ViewMode } from "@/hooks/useViewMode";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useApp } from "@/components/squad/AppLayout";
@@ -62,11 +64,12 @@ function CoordinacionPage() {
   const [editingMeeting, setEditingMeeting] = React.useState<MeetingRow | null>(null);
   const [filter, setFilter] = React.useState<TaskFilter>("mias");
   const [tab, setTab] = React.useState<"tareas" | "juntas">("tareas");
+  const [viewMode, setViewMode] = useViewMode("coordinacion", "grid");
 
   if (!canAccess) {
     return (
       <div className="space-y-6">
-        <PageHeader title="Coordinación" subtitle="Staff del club" />
+        <PageHeader hideTitle title="Coordinación" subtitle="Staff del club" />
         <EmptyState icon={MessagesSquare} title="Sin acceso" message="Tu rol actual no tiene permisos para este módulo." />
       </div>
     );
@@ -77,20 +80,24 @@ function CoordinacionPage() {
   return (
     <div className="space-y-6">
       <PageHeader
+        hideTitle
         title="Coordinación"
         subtitle="Ámbito club · staff sin importar equipo"
         action={
-          canEdit ? (
-            <Button
-              onClick={() => {
-                if (tab === "tareas") { setEditingTask(null); setTaskDialog(true); }
-                else { setEditingMeeting(null); setMeetingDialog(true); }
-              }}
-              className="glow-primary"
-            >
-              <Plus className="mr-2 h-4 w-4" /> {tab === "tareas" ? "Nueva tarea" : "Nueva junta"}
-            </Button>
-          ) : null
+          <div className="flex items-center gap-2">
+            <ViewToggle value={viewMode} onChange={setViewMode} />
+            {canEdit ? (
+              <Button
+                onClick={() => {
+                  if (tab === "tareas") { setEditingTask(null); setTaskDialog(true); }
+                  else { setEditingMeeting(null); setMeetingDialog(true); }
+                }}
+                className="glow-primary"
+              >
+                <Plus className="mr-2 h-4 w-4" /> {tab === "tareas" ? "Nueva tarea" : "Nueva junta"}
+              </Button>
+            ) : null}
+          </div>
         }
       />
       <ModuleTabs activeKey="coordinacion_interna" />
@@ -110,6 +117,7 @@ function CoordinacionPage() {
             userId={user.id}
             filter={filter}
             canEdit={canEdit}
+            viewMode={viewMode}
             onEdit={(t) => { setEditingTask(t); setTaskDialog(true); }}
             onCreate={canEdit ? () => { setEditingTask(null); setTaskDialog(true); } : undefined}
             clubId={clubId}
@@ -122,6 +130,7 @@ function CoordinacionPage() {
             isLoading={meetingsQ.isLoading}
             userId={user.id}
             canEdit={canEdit}
+            viewMode={viewMode}
             onEdit={(m) => { setEditingMeeting(m); setMeetingDialog(true); }}
             onCreate={canEdit ? () => { setEditingMeeting(null); setMeetingDialog(true); } : undefined}
             clubId={clubId}
@@ -187,13 +196,14 @@ function FilterChips({ filter, setFilter }: { filter: TaskFilter; setFilter: (f:
 }
 
 function TasksList({
-  tasks, isLoading, userId, filter, canEdit, onEdit, onCreate, clubId,
+  tasks, isLoading, userId, filter, canEdit, viewMode, onEdit, onCreate, clubId,
 }: {
   tasks: TaskRow[];
   isLoading: boolean;
   userId: string;
   filter: TaskFilter;
   canEdit: boolean;
+  viewMode: ViewMode;
   onEdit: (t: TaskRow) => void;
   onCreate?: () => void;
   clubId: string;
@@ -232,7 +242,7 @@ function TasksList({
             <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
               {STATUS_LABEL[status]} <span className="text-foreground/60">· {group.length}</span>
             </h3>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className={cn(viewMode === "grid" ? "grid grid-cols-1 gap-3 sm:grid-cols-2" : "flex flex-col gap-2")}>
               {group.map((t, i) => (
                 <div key={t.id} className="animate-card-in" style={{ animationDelay: `${i * 30}ms` }}>
                   <TaskCard task={t} userId={userId} canEdit={canEdit} onEdit={onEdit} clubId={clubId} />
@@ -339,12 +349,13 @@ function AvatarStack({ people }: { people: { id: string; full_name: string | nul
 }
 
 function MeetingsList({
-  meetings, isLoading, userId, canEdit, onEdit, onCreate, clubId,
+  meetings, isLoading, userId, canEdit, viewMode, onEdit, onCreate, clubId,
 }: {
   meetings: MeetingRow[];
   isLoading: boolean;
   userId: string;
   canEdit: boolean;
+  viewMode: ViewMode;
   onEdit: (m: MeetingRow) => void;
   onCreate?: () => void;
   clubId: string;
@@ -371,19 +382,20 @@ function MeetingsList({
 
   return (
     <div className="space-y-6">
-      <Section title="Próximas" items={upcoming} userId={userId} canEdit={canEdit} onEdit={onEdit} clubId={clubId} />
-      <Section title="Pasadas" items={past} userId={userId} canEdit={canEdit} onEdit={onEdit} clubId={clubId} isPast />
+      <Section title="Próximas" items={upcoming} userId={userId} canEdit={canEdit} viewMode={viewMode} onEdit={onEdit} clubId={clubId} />
+      <Section title="Pasadas" items={past} userId={userId} canEdit={canEdit} viewMode={viewMode} onEdit={onEdit} clubId={clubId} isPast />
     </div>
   );
 }
 
 function Section({
-  title, items, userId, canEdit, onEdit, clubId, isPast,
+  title, items, userId, canEdit, viewMode, onEdit, clubId, isPast,
 }: {
   title: string;
   items: MeetingRow[];
   userId: string;
   canEdit: boolean;
+  viewMode: ViewMode;
   onEdit: (m: MeetingRow) => void;
   clubId: string;
   isPast?: boolean;
@@ -394,7 +406,7 @@ function Section({
       <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
         {title} <span className="text-foreground/60">· {items.length}</span>
       </h3>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className={cn(viewMode === "grid" ? "grid grid-cols-1 gap-3 sm:grid-cols-2" : "flex flex-col gap-2")}>
         {items.map((m, i) => (
           <div key={m.id} className="animate-card-in" style={{ animationDelay: `${i * 30}ms` }}>
             <MeetingCard meeting={m} userId={userId} canEdit={canEdit} onEdit={onEdit} clubId={clubId} isPast={!!isPast} />

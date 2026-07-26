@@ -1,77 +1,88 @@
-# Pestañas de módulos dentro de los hubs
 
-Convertir los hubs (`Mi Club`, `Coordinación`, `Admin`) de una grilla de tarjetas que "abre otra página" a una **barra de pestañas horizontal sticky** que cambia el contenido del módulo activo sin salir del hub. Cada módulo conserva su URL propia.
+## Objetivo
 
-## Alcance
+Cuatro ajustes transversales de UI/UX, sin tocar datos ni lógica de permisos.
 
-Afecta solo capa visual / navegación interna de los hubs. No toca datos, permisos, RLS, ni la navbar inferior.
+---
 
-Hubs a modificar:
-- `/mi-club` → pestañas de los módulos del rol (plantel, salud, tácticas, torneo, comunicados, multimedia, desarrollo…)
-- `/coordinacion` → pestañas (coordinación interna, solicitudes, inventario, viajes…)
-- `/admin` → pestañas (usuarios, documentos, y "Administrar clubes" si es super admin)
-- `/agenda` se queda igual (un solo módulo)
+### 1. Pestañas de módulos: bloquear scroll vertical
 
-## Comportamiento UX
+**Archivo:** `src/components/squad/ModuleTabs.tsx`
 
-- Al entrar al hub, se abre el **primer módulo permitido** por defecto (redirect suave, no pantalla intermedia de grid).
-- Barra de pestañas **sticky** debajo del `PageHeader`, con scroll horizontal en móvil (snap + fade en los bordes), ícono + label, indicador verde neón para la pestaña activa y contador opcional (ej: tareas pendientes).
-- Cada pestaña navega a su ruta real (`/m/<module>`) usando `<Link>` de TanStack Router, así se preservan URL, back button, deep-links, preload y accesibilidad.
-- El contenido del módulo se renderiza **dentro del layout del hub** (mismo `PageHeader` + tabs arriba), no como página aislada. Rutas de detalle (ej. `/m/plantel/$playerId`) siguen abriendo pantalla completa como hoy.
-- Desktop/tablet: la misma barra horizontal (no barra lateral en esta iteración — se puede añadir después).
-- Caso "Mis Solicitudes" (jugador en `/coordinacion`): igual, pestañas si hay más de un módulo; si hay uno solo, se oculta la barra.
+El contenedor `overflow-x-auto` permite un rebote vertical en móvil. Cambiar a `overflow-x-auto overflow-y-hidden` y añadir `touch-action: pan-x` (`touch-pan-x`) para que el gesto vertical propague al scroll de la página en lugar de "mecerse" dentro de la barra. Aplicar el mismo tratamiento al selector de contexto/equipo en el header si comparte patrón (no requerido si no hay reporte).
 
-## Estructura técnica
+---
 
-Layout compartido de hub:
+### 2. Navbar: highlight verde más marcado en la página activa
 
-```text
-src/routes/_authenticated/
-  _hub.tsx                 (pathless layout: PageHeader + ModuleTabs + <Outlet/>)
-  _hub/
-    mi-club.tsx            (redirige al primer módulo del hub)
-    coordinacion.tsx       (idem)
-    admin.tsx              (idem)
-    m.$module.tsx          (mueve el actual m.$module bajo el layout de hub)
-    m.plantel.tsx          (idem)
-    m.calendario.tsx       (queda fuera — lo usa /agenda)
-    ...
-```
+**Archivo:** `src/components/squad/AppLayout.tsx` (`BottomNav` y `DesktopNav`)
 
-Alternativa más quirúrgica (preferida, menos churn de rutas): NO mover archivos. En su lugar:
+Estado actual: activo = `text-primary` + drop-shadow suave en el icono (móvil) / `bg-primary/10 text-primary` (desktop). Se percibe débil.
 
-1. Crear `src/components/squad/ModuleTabs.tsx` — barra sticky reutilizable que recibe `modules: ModuleKey[]` y `activeKey`.
-2. Cada ruta de módulo (`m.plantel.tsx`, `m.coordinacion_interna.tsx`, etc.) determina a qué hub pertenece vía `DEFAULT_PAGE_FOR_MODULE` (ya existe en `src/lib/rolePages.ts`), obtiene los módulos hermanos accesibles desde `useApp()`, y renderiza `<ModuleTabs>` arriba de su contenido actual.
-3. `mi-club.tsx`, `coordinacion.tsx`, `admin.tsx` dejan de mostrar la grilla de tarjetas y hacen `<Navigate replace>` al primer módulo permitido. Si no hay ninguno, muestran `EmptyState` como hoy.
-4. `m.$module.tsx` (placeholder de módulos sin construir) también renderiza `ModuleTabs` para que la pestaña activa se vea aunque el contenido diga "próximamente".
+Cambios:
+- **BottomNav (móvil):** ítem activo con "pill" verde: fondo `bg-primary/15`, texto `text-primary`, icono con glow más fuerte, y una barra superior de 2px verde neón (`bg-primary`) sobre el ítem activo, similar a la línea inferior de `ModuleTabs`.
+- **DesktopNav:** ítem activo con `bg-primary/15 text-primary` + `ring-1 ring-primary/40` y opcional `shadow-[var(--glow-primary)]` para el efecto neón. Inactivos sin cambio.
 
-Voy con la alternativa quirúrgica.
+Mantener contraste accesible y respetar tokens semánticos (nada de colores hardcoded).
 
-## Componente `ModuleTabs`
+---
 
-- Contenedor: `sticky top-0 z-10 -mx-4 px-4 bg-background/80 backdrop-blur border-b border-border`.
-- Lista con `overflow-x-auto snap-x snap-mandatory`, cada tab `snap-start`.
-- Tab: `<Link to="/m/$module" params={{module: key}}>` con ícono (16-18px) + label, `data-status="active"` estilizado con barra inferior verde neón (`bg-primary`) y texto `text-foreground`; inactivo `text-muted-foreground hover:text-foreground`.
-- En desktop, si caben todas sin scroll, centrar o alinear a la izquierda; si no, permitir scroll horizontal con `mask-image` fade en los bordes.
-- Accesibilidad: `role="tablist"`, cada link `role="tab"` y `aria-current="page"` cuando activo.
+### 3. Quitar el título de página
 
-## Ediciones concretas
+Como la navbar ya indica dónde estamos, retirar el `<PageHeader title="…" />` de las páginas de módulo/hub. Se conserva el `action` (botones tipo "Agregar jugador") y opcionalmente el `subtitle` cuando aporta contexto dinámico (nombre del equipo activo, etc.), colocándolo con un componente ligero (o extendiendo `PageHeader` con una prop `hideTitle`).
 
-1. **Nuevo**: `src/components/squad/ModuleTabs.tsx`.
-2. **Editar** `src/routes/_authenticated/mi-club.tsx`: reemplazar grid por `<Navigate>` al primer módulo del hub (o `EmptyState` si no hay).
-3. **Editar** `src/routes/_authenticated/coordinacion.tsx`: idem.
-4. **Editar** `src/routes/_authenticated/admin.tsx`: idem, considerando la tarjeta especial "Administrar clubes" del super admin como una pestaña más al final.
-5. **Editar** cada `m.<module>.tsx` real (`m.plantel.tsx`, `m.coordinacion_interna.tsx`, `m.usuarios.tsx`, `m.$module.tsx`, `m.plantel.$playerId.tsx` NO — es detalle): insertar `<ModuleTabs>` justo debajo del `PageHeader`. Para saber qué pestañas mostrar: buscar la `ResolvedPage` cuyo `modules` incluye el módulo actual y usar esa lista.
-6. Pequeño helper en `src/lib/rolePages.ts`: `findHubForModule(visiblePages, moduleKey)` que devuelva `{ page, modules }` — evita duplicar la lógica en cada ruta.
+**Alcance (páginas afectadas):**
+- `src/routes/_authenticated/m.plantel.tsx`
+- `src/routes/_authenticated/m.coordinacion_interna.tsx`
+- `src/routes/_authenticated/m.usuarios.tsx`
+- `src/routes/_authenticated/m.calendario.tsx`
+- `src/routes/_authenticated/m.$module.tsx` (placeholder)
+- `src/routes/_authenticated/agenda.tsx`
+- `src/routes/_authenticated/mi-perfil.tsx`
+- `src/routes/_authenticated/admin.clubs.tsx`
+- `src/routes/_authenticated/m.plantel.$playerId.tsx` (mantener nombre del jugador, ese sí es contenido, no título de sección)
 
-## Notas de diseño (tokens existentes)
+Enfoque: extender `PageHeader` con `hideTitle?: boolean` para preservar la fila de acciones sin refactor invasivo, o sustituir por un `ActionBar` cuando no queda nada más que un botón a la derecha.
 
-- Reutiliza `--primary` (verde neón) para el indicador activo y `--border` / `--muted-foreground` para el resto. Sin colores nuevos ni hardcodes.
-- Sticky respeta el `PageHeader`: el header queda arriba, tabs justo abajo, contenido scrollea.
-- En móvil (393px) la barra ocupa el ancho completo con padding lateral consistente con el resto de la app.
+---
 
-## Fuera de alcance
+### 4. Toggle Lista / Cuadrícula en listados con cards
 
-- Cambios en permisos, RLS, datos o navbar inferior.
-- Barra lateral vertical de módulos en desktop (se puede añadir en un segundo paso si lo pides).
-- Animaciones de transición entre módulos (fade/slide) — se puede añadir después con Motion for React.
+Nuevo componente `src/components/squad/ViewToggle.tsx`: dos botones (icono `LayoutGrid` / `List`) con estado controlado, estilizados con tokens (`bg-primary/15` cuando activos). Se coloca en la fila de acciones de cada página o justo encima del listado.
+
+Hook auxiliar `src/hooks/useViewMode.ts`:
+- Estado `"grid" | "list"`.
+- Persistencia por clave en `localStorage` (ej. `squad.view.plantel`) para recordar la preferencia del usuario por listado.
+- Default: `grid` (comportamiento actual).
+
+Adaptar cada listado para renderizar dos variantes:
+- **Grid:** el layout actual de cards (`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3`).
+- **List:** una fila compacta por elemento (`flex items-center gap-3 p-3` con divisores sutiles), mismo contenido esencial (avatar/icono, título, meta, badge, acción).
+
+**Alcance (listados afectados):**
+- Plantel: `src/routes/_authenticated/m.plantel.tsx` (miembros).
+- Coordinación Interna: `src/routes/_authenticated/m.coordinacion_interna.tsx` (tareas y juntas — un toggle por pestaña interna o compartido).
+- Usuarios: `src/components/usuarios/MembersTab.tsx` y `CategoriesTab.tsx` cuando aplique.
+- Solicitudes del Jugador: si existe vista de cards en el hub de solicitudes.
+- (Calendario/Agenda quedan fuera: ya tienen sus propias vistas Mes/Agenda.)
+
+---
+
+### Detalles técnicos
+
+- Sin cambios en Supabase, RLS, `useAccess`, `rolePages` ni permisos.
+- Sin renombrar rutas ni tocar `routeTree.gen.ts`.
+- Todo el color pasa por tokens (`--primary`, `--glow-primary`, `bg-primary/15`, `ring-primary/40`). Nada de `bg-green-*` ni hex hardcodeado.
+- Verificar con `tsgo` que las páginas siguen compilando después de quitar `title` de `PageHeader`.
+- Probar en el viewport 393×852 (móvil actual del usuario) que:
+  - Las pestañas ya no se mecen verticalmente.
+  - El highlight verde se percibe claramente en la barra inferior.
+  - El toggle grid/list persiste tras navegar y volver.
+
+---
+
+### Fuera de alcance
+
+- No se cambian nombres de páginas ni orden de navegación.
+- No se toca la lógica de FAB, permisos, ni el header (salvo el ajuste vertical del selector si se detecta el mismo bug).
+- No se rediseñan los cards en sí, solo se añade la variante lista.
