@@ -257,19 +257,34 @@ function Header({
   );
 }
 
+function computeActiveKey(
+  pathname: string,
+  pages: ResolvedPage[],
+): string | null {
+  if (pathname === "/") return "home";
+  const activeModule = moduleFromPath(pathname);
+  if (activeModule) {
+    const hub = pages.find((p) => p.modules.includes(activeModule));
+    if (hub) return hub.page.key;
+  }
+  // Fallback: prefix match on the hub route (e.g. /mi-club, /coordinacion)
+  const match = pages.find((p) => {
+    const to = p.page.to;
+    if (to === "/") return false;
+    return pathname === to || pathname.startsWith(to + "/");
+  });
+  return match ? match.page.key : null;
+}
+
 function BottomNav({ pages }: { pages: ResolvedPage[] }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-
-  const isActive = (to: string) => {
-    if (to === "/") return pathname === "/";
-    return pathname === to || pathname.startsWith(to + "/");
-  };
+  const activeKey = computeActiveKey(pathname, pages);
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border/60 bg-background/85 backdrop-blur-xl sm:hidden">
       <div className="mx-auto flex max-w-6xl items-stretch justify-around px-2 py-1.5">
         {pages.map((rp) => {
-          const active = isActive(rp.page.to);
+          const active = rp.page.key === activeKey;
           const Icon = rp.page.icon;
           const label = rp.labelOverride ?? rp.page.label;
           return (
@@ -300,15 +315,12 @@ function BottomNav({ pages }: { pages: ResolvedPage[] }) {
 
 function DesktopNav({ pages }: { pages: ResolvedPage[] }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const isActive = (to: string) => {
-    if (to === "/") return pathname === "/";
-    return pathname === to || pathname.startsWith(to + "/");
-  };
+  const activeKey = computeActiveKey(pathname, pages);
   return (
     <div className="hidden border-b border-border/40 bg-background/40 sm:block">
       <div className="mx-auto flex max-w-6xl items-center gap-1 px-4 py-2 sm:px-6">
         {pages.map((rp) => {
-          const active = isActive(rp.page.to);
+          const active = rp.page.key === activeKey;
           const Icon = rp.page.icon;
           const label = rp.labelOverride ?? rp.page.label;
           return (
@@ -331,3 +343,4 @@ function DesktopNav({ pages }: { pages: ResolvedPage[] }) {
     </div>
   );
 }
+
