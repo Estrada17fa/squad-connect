@@ -48,6 +48,10 @@ function CalendarPage() {
   );
 
   React.useEffect(() => {
+    if (profile?.club_id) {
+      setClubId(profile.club_id);
+      return;
+    }
     if (!activeTeam?.id) {
       setClubId(null);
       return;
@@ -58,7 +62,7 @@ function CalendarPage() {
       .eq("id", activeTeam.id)
       .maybeSingle()
       .then(({ data }) => setClubId(data?.club_id ?? null));
-  }, [activeTeam?.id]);
+  }, [profile?.club_id, activeTeam?.id]);
 
   const eventsByDay = React.useMemo(() => {
     const map = new Map<string, CalendarEventRow[]>();
@@ -76,7 +80,7 @@ function CalendarPage() {
     return (events ?? []).filter((e) => new Date(e.starts_at) >= startOfDay(now));
   }, [events]);
 
-  if (!activeTeam) {
+  if (!viewsAllClub && !activeTeam) {
     return <EmptyState title="Sin equipo activo" message="Selecciona un equipo desde el encabezado." />;
   }
 
