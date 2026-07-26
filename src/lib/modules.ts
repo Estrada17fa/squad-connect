@@ -14,7 +14,6 @@ import {
   HeartPulse,
   TrendingUp,
   Apple,
-  Shirt,
   Home,
   type LucideIcon,
 } from "lucide-react";
