@@ -64,6 +64,7 @@ function CoordinacionPage() {
   const [editingMeeting, setEditingMeeting] = React.useState<MeetingRow | null>(null);
   const [filter, setFilter] = React.useState<TaskFilter>("mias");
   const [tab, setTab] = React.useState<"tareas" | "juntas">("tareas");
+  const [viewMode, setViewMode] = useViewMode("coordinacion", "grid");
 
   if (!canAccess) {
     return (
@@ -83,17 +84,20 @@ function CoordinacionPage() {
         title="Coordinación"
         subtitle="Ámbito club · staff sin importar equipo"
         action={
-          canEdit ? (
-            <Button
-              onClick={() => {
-                if (tab === "tareas") { setEditingTask(null); setTaskDialog(true); }
-                else { setEditingMeeting(null); setMeetingDialog(true); }
-              }}
-              className="glow-primary"
-            >
-              <Plus className="mr-2 h-4 w-4" /> {tab === "tareas" ? "Nueva tarea" : "Nueva junta"}
-            </Button>
-          ) : null
+          <div className="flex items-center gap-2">
+            <ViewToggle value={viewMode} onChange={setViewMode} />
+            {canEdit ? (
+              <Button
+                onClick={() => {
+                  if (tab === "tareas") { setEditingTask(null); setTaskDialog(true); }
+                  else { setEditingMeeting(null); setMeetingDialog(true); }
+                }}
+                className="glow-primary"
+              >
+                <Plus className="mr-2 h-4 w-4" /> {tab === "tareas" ? "Nueva tarea" : "Nueva junta"}
+              </Button>
+            ) : null}
+          </div>
         }
       />
       <ModuleTabs activeKey="coordinacion_interna" />
