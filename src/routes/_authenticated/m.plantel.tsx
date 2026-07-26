@@ -2,6 +2,7 @@ import * as React from "react";
 import { createFileRoute, useNavigate, useRouterState } from "@tanstack/react-router";
 import { Plus, Users } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
+import { ModuleTabs } from "@/components/squad/ModuleTabs";
 import { EmptyState } from "@/components/squad/EmptyState";
 import { LoadingState } from "@/components/squad/LoadingState";
 import { StatusBadge, type StatusVariant } from "@/components/squad/StatusBadge";
