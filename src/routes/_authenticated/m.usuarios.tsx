@@ -115,12 +115,12 @@ function RolesTab({ clubId, canEdit }: { clubId: string | null; canEdit: boolean
     queryFn: async (): Promise<RoleRow[]> => {
       const { data, error } = await supabase
         .from("roles")
-        .select("id, club_id, name, is_system_default")
+        .select("id, club_id, name, is_system_default, base_role")
         .eq("club_id", clubId!)
         .order("is_system_default", { ascending: false })
         .order("name");
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as RoleRow[];
     },
   });
 
