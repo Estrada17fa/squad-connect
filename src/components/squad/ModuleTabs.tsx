@@ -1,12 +1,12 @@
 import * as React from "react";
 import { Link } from "@tanstack/react-router";
-import type { LucideIcon } from "lucide-react";
+import { Building2, type LucideIcon } from "lucide-react";
 import { useApp } from "./AppLayout";
 import { MODULE_MAP, type ModuleKey } from "@/lib/modules";
-import { findHubForModule } from "@/lib/rolePages";
+import { findHubForModule, type PageKey } from "@/lib/rolePages";
 import { cn } from "@/lib/utils";
 
-export interface ExtraTab {
+interface ExtraTab {
   key: string;
   label: string;
   icon: LucideIcon;
@@ -17,30 +17,53 @@ export interface ExtraTab {
 interface ModuleTabsProps {
   /** Módulo activo — se usa para resolver el hub y las pestañas hermanas. */
   activeKey?: ModuleKey;
-  /** Pestañas adicionales (p. ej. "Administrar clubes" para super admin). */
-  extraTabs?: ExtraTab[];
-  /** Fuerza mostrar la barra aunque solo haya una pestaña. */
-  alwaysShow?: boolean;
+  /**
+   * Fuerza el hub cuando no hay `activeKey` (p. ej. en rutas que no son de módulo
+   * pero pertenecen a un hub, como `/admin/clubs`).
+   */
+  hubKey?: PageKey;
+  /** Clave de una pestaña extra activa (para rutas fuera de `/m/...`). */
+  extraActiveKey?: string;
 }
 
 /**
  * Barra de pestañas horizontal sticky para módulos dentro de un hub
  * (Mi Club, Coordinación, Admin). Cada pestaña navega a la ruta real
- * del módulo (`/m/$module`), preservando URL, back button y deep-linking.
+ * del módulo, preservando URL, back button y deep-linking.
  */
-export function ModuleTabs({ activeKey, extraTabs = [], alwaysShow = false }: ModuleTabsProps) {
-  const { visiblePages } = useApp();
-  const hub = activeKey ? findHubForModule(visiblePages, activeKey) : null;
+export function ModuleTabs({ activeKey, hubKey, extraActiveKey }: ModuleTabsProps) {
+  const { visiblePages, isSuperAdmin } = useApp();
+  const hub = activeKey
+    ? findHubForModule(visiblePages, activeKey)
+    : hubKey
+      ? visiblePages.find((p) => p.page.key === hubKey) ?? null
+      : null;
+
   const modules = hub?.modules ?? [];
-  const total = modules.length + extraTabs.length;
-  if (!alwaysShow && total <= 1) return null;
+
+  const extras: ExtraTab[] = React.useMemo(() => {
+    const out: ExtraTab[] = [];
+    if (hub?.page.key === "admin" && isSuperAdmin) {
+      out.push({
+        key: "admin-clubs",
+        label: "Administrar clubes",
+        icon: Building2,
+        to: "/admin/clubs",
+        active: extraActiveKey === "admin-clubs",
+      });
+    }
+    return out;
+  }, [hub?.page.key, isSuperAdmin, extraActiveKey]);
+
+  const total = modules.length + extras.length;
+  if (total <= 1) return null;
 
   return (
     <div className="sticky top-14 z-20 -mx-4 border-b border-border/60 bg-background/85 px-4 backdrop-blur-xl sm:-mx-6 sm:px-6">
       <div
         role="tablist"
         aria-label="Módulos del hub"
-        className="squad-tabs-scroll flex gap-1 overflow-x-auto"
+        className="flex gap-1 overflow-x-auto"
       >
         {modules.map((key: ModuleKey) => {
           const m = MODULE_MAP[key];
@@ -65,7 +88,7 @@ export function ModuleTabs({ activeKey, extraTabs = [], alwaysShow = false }: Mo
             </Link>
           );
         })}
-        {extraTabs.map((t) => {
+        {extras.map((t) => {
           const Icon = t.icon;
           const active = !!t.active;
           return (
