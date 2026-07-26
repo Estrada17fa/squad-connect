@@ -14,7 +14,6 @@ import {
   HeartPulse,
   TrendingUp,
   Apple,
-  Shirt,
   Home,
   type LucideIcon,
 } from "lucide-react";
@@ -35,7 +34,7 @@ export type ModuleKey =
   | "salud"
   | "desarrollo"
   | "nutricion"
-  | "uniformes";
+  | "nutricion";
 
 /**
  * Ámbito de datos del módulo:
@@ -69,7 +68,7 @@ export const MODULES: ModuleDef[] = [
   { key: "salud", label: "Salud", icon: HeartPulse, description: "Parte médico y lesiones", scope: "team" },
   { key: "desarrollo", label: "Desarrollo", icon: TrendingUp, description: "Evaluaciones y progresos", scope: "team" },
   { key: "nutricion", label: "Nutrición", icon: Apple, description: "Planes alimenticios", scope: "team" },
-  { key: "uniformes", label: "Uniformes", icon: Shirt, description: "Kits y asignaciones", scope: "team" },
+  
 ];
 
 export const MODULE_MAP: Record<ModuleKey, ModuleDef> = Object.fromEntries(

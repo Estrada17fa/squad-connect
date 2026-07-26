@@ -256,7 +256,7 @@ function CreateClubDialog({
         const moduleKeys = [
           "calendario","plantel","viajes","inventario","coordinacion_interna","solicitudes",
           "documentos","usuarios","comunicados","multimedia","torneo","tacticas","salud",
-          "desarrollo","nutricion","uniformes",
+          "desarrollo","nutricion",
         ];
         await supabase.from("role_permissions").insert(
           moduleKeys.map((k) => ({ role_id: adminId, module_key: k, access_level: "editor" as const })),
