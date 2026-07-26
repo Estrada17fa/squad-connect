@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -33,6 +34,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useApp } from "@/components/squad/AppLayout";
 import { MODULES, MODULE_MAP, type ModuleKey } from "@/lib/modules";
+import { groupModulesByPage, type BaseRole } from "@/lib/rolePages";
 import { cn } from "@/lib/utils";
 import type { AccessLevel } from "@/hooks/useAccess";
 
@@ -51,6 +53,7 @@ interface RoleRow {
   club_id: string;
   name: string;
   is_system_default: boolean;
+  base_role: string | null;
 }
 interface PermRow {
   role_id: string;
@@ -114,12 +117,12 @@ function RolesTab({ clubId, canEdit }: { clubId: string | null; canEdit: boolean
     queryFn: async (): Promise<RoleRow[]> => {
       const { data, error } = await supabase
         .from("roles")
-        .select("id, club_id, name, is_system_default")
+        .select("id, club_id, name, is_system_default, base_role")
         .eq("club_id", clubId!)
         .order("is_system_default", { ascending: false })
         .order("name");
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as RoleRow[];
     },
   });
 
@@ -304,6 +307,23 @@ function PermissionsMatrix({
     }
   }
 
+  const pageGroups = React.useMemo(
+    () => groupModulesByPage(role.base_role as BaseRole | null, MODULES.map((m) => m.key)),
+    [role.base_role],
+  );
+
+  function togglePage(modules: ModuleKey[], on: boolean) {
+    setDraft((d) => {
+      const next = { ...d };
+      if (on) {
+        for (const mk of modules) if (!next[mk] || next[mk] === "none") next[mk] = "read";
+      } else {
+        for (const mk of modules) next[mk] = "none";
+      }
+      return next;
+    });
+  }
+
   return (
     <div className="glass p-4 space-y-4">
       <div className="flex items-center justify-between gap-3">
@@ -322,42 +342,76 @@ function PermissionsMatrix({
         )}
       </div>
 
-      <div className="divide-y divide-border/50">
-        {MODULES.map((m) => {
-          const Icon = m.icon;
+      <div className="space-y-3">
+        {pageGroups.map(({ page, modules }) => {
+          const PageIcon = page.icon;
+          const activeCount = modules.filter((mk) => draft[mk] && draft[mk] !== "none").length;
+          const isActive = activeCount > 0;
           return (
-            <div
-              key={m.key}
-              className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 py-2.5 sm:grid-cols-[auto_minmax(0,1fr)_auto]"
-            >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/5">
-                <Icon className="h-4 w-4" />
+            <div key={page.key + page.label} className="glass rounded-lg overflow-hidden">
+              <div className="flex items-center gap-3 px-3 py-2.5">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white/5">
+                  <PageIcon className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold">{page.label}</p>
+                  <p className="truncate text-[11px] text-muted-foreground">
+                    {isActive ? `${activeCount} de ${modules.length} activos` : "Página desactivada"}
+                  </p>
+                </div>
+                <Switch
+                  checked={isActive}
+                  disabled={!canEdit}
+                  onCheckedChange={(on) => togglePage(modules, on)}
+                />
               </div>
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium">{m.label}</p>
-                <p className="truncate text-xs text-muted-foreground">
-                  {m.scope === "club" ? "Nivel club" : m.scope === "team" ? "Por categoría" : "Club + categoría"}
-                </p>
-              </div>
-              <Select
-                value={draft[m.key]}
-                onValueChange={(v) => setDraft((d) => ({ ...d, [m.key as ModuleKey]: v as AccessLevel }))}
-                disabled={!canEdit}
-              >
-                <SelectTrigger className="col-span-2 w-full sm:col-span-1 sm:w-[140px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {LEVELS.map((l) => (
-                    <SelectItem key={l.value} value={l.value}>
-                      {l.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {isActive ? (
+                <div className="divide-y divide-border/50 border-t border-border/50 px-3">
+                  {modules.map((mk) => {
+                    const m = MODULE_MAP[mk];
+                    if (!m) return null;
+                    const Icon = m.icon;
+                    return (
+                      <div
+                        key={mk}
+                        className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 py-2.5 sm:grid-cols-[auto_minmax(0,1fr)_auto]"
+                      >
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white/5">
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium">{m.label}</p>
+                          <p className="truncate text-xs text-muted-foreground">
+                            {m.scope === "club" ? "Nivel club" : m.scope === "team" ? "Por categoría" : "Club + categoría"}
+                          </p>
+                        </div>
+                        <Select
+                          value={draft[mk]}
+                          onValueChange={(v) => setDraft((d) => ({ ...d, [mk]: v as AccessLevel }))}
+                          disabled={!canEdit}
+                        >
+                          <SelectTrigger className="col-span-2 w-full sm:col-span-1 sm:w-[140px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {LEVELS.map((l) => (
+                              <SelectItem key={l.value} value={l.value}>
+                                {l.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : null}
             </div>
           );
         })}
+        {pageGroups.length === 0 ? (
+          <p className="text-xs text-muted-foreground">Este rol no tiene páginas configurables.</p>
+        ) : null}
       </div>
     </div>
   );

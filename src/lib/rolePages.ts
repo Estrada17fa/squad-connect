@@ -164,3 +164,31 @@ export function findHubForModule(
 ): ResolvedPage | null {
   return visiblePages.find((p) => p.modules.includes(moduleKey)) ?? null;
 }
+
+/**
+ * Agrupa módulos por página según el mapa fijo de `base_role`.
+ * Los módulos que no encajen en ninguna página del rol se devuelven en un grupo "Otros".
+ */
+export function groupModulesByPage(
+  baseRole: BaseRole | null | undefined,
+  moduleKeys: ModuleKey[],
+): Array<{ page: PageDef; modules: ModuleKey[] }> {
+  const role: BaseRole = baseRole ?? "staff";
+  const roleMap = ROLE_PAGES[role];
+  const set = new Set(moduleKeys);
+  const used = new Set<ModuleKey>();
+  const out: Array<{ page: PageDef; modules: ModuleKey[] }> = [];
+  for (const p of PAGES) {
+    const mods = roleMap[p.key].filter((mk) => set.has(mk));
+    for (const mk of mods) used.add(mk);
+    if (mods.length > 0) out.push({ page: p, modules: mods });
+  }
+  const others = moduleKeys.filter((mk) => !used.has(mk));
+  if (others.length > 0) {
+    out.push({
+      page: { key: "home", label: "Otros", icon: PAGE_MAP.home.icon, to: "/" },
+      modules: others,
+    });
+  }
+  return out;
+}

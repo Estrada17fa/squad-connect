@@ -1,44 +1,49 @@
 ## Objetivo
-Todos los botones de crear/subir en los módulos siguen el patrón del botón "Nuevo rol" de Usuarios (ancho completo, ubicado debajo del pill/tabs), pero en verde neón (primary) como "Agregar tarea" — no gris (`variant="secondary"`).
+En lugar de una lista plana de módulos, agrupar los permisos por **página fija** (Inicio, Agenda, Mi Club, Coordinación, Admin) tanto en el editor de permisos de un rol como en los overrides por miembro. Cada página tiene un toggle activar/desactivar y solo se muestran los módulos autorizados para la página + base_role.
 
-## Patrón unificado
-```tsx
-<Button onClick={...} className="w-full glow-primary">
-  <Plus className="mr-2 h-4 w-4" /> {label}
-</Button>
-```
-- Sin `variant="secondary"` (queda en el default = verde primary).
-- `w-full` para ancho completo.
-- `glow-primary` para el glow verde consistente.
-- Se coloca **debajo** de `ModuleTabs` / `TabsList` (pill), no en el `action` del `PageHeader`.
+## Cómo se agrupan
+Usar `ROLE_PAGES` de `src/lib/rolePages.ts` (ya existe). El `base_role` del rol seleccionado determina qué módulos aparecen en cada página. Módulos fuera del mapa del base_role se agrupan en una sección "Otros" al final (edge case).
+
+Ejemplo (base_role = admin):
+- **Mi Club**: plantel, salud, desarrollo, tácticas, torneo, comunicados, multimedia
+- **Coordinación**: coordinacion_interna, solicitudes, inventario, viajes
+- **Admin**: usuarios, documentos
+- Inicio y Agenda no tienen módulos configurables (Agenda = calendario, se muestra si el rol tiene acceso a `calendario`).
+
+## Comportamiento del toggle de página
+- **Activo (derivado)**: la página está activa si ≥1 módulo tiene nivel > `none`.
+- **Apagar página**: pone todos sus módulos en `none`.
+- **Prender página** (cuando todos estaban en `none`): pone todos sus módulos en `read` por defecto.
+- Cada módulo dentro sigue teniendo su Select de nivel (`none/read/editor/approver`). Cambiar un módulo a >none activa la página automáticamente; poner el último en `none` la desactiva.
+- Solo se listan los módulos autorizados para esa página según el base_role. Si un módulo está en `none`, sigue visible dentro de la página (para poder subirlo) mientras la página esté activa; con la página apagada se colapsa la sección (solo se ve el toggle y el conteo).
 
 ## Cambios por archivo
 
-1. **`src/routes/_authenticated/m.coordinacion_interna.tsx`**
-   - Quitar la prop `action` del `PageHeader` (el que dispara "Nueva tarea/Nueva junta").
-   - Dentro de cada `TabsContent` (tareas y juntas), justo después de abrir el contenido y antes de `FilterChips`, agregar el botón full-width verde:
-     - Tab tareas: "Nueva tarea".
-     - Tab juntas: "Nueva junta".
-   - Los botones internos que ya existen en `EmptyState` se mantienen como están (son CTA de vacío, no el principal).
+### 1. `src/routes/_authenticated/m.usuarios.tsx` — `PermissionsMatrix`
+- Recibir además `baseRole` del rol seleccionado (leer `roles.base_role`; añadir el campo a la query `rolesQ`).
+- Construir `pageGroups` desde `ROLE_PAGES[baseRole]` filtrando módulos que existen en `MODULE_MAP`.
+- Renderizar una sección por página con:
+  - Header: icono + label de la página + `Switch` (shadcn) + contador "N activos".
+  - Cuerpo colapsable: filas por módulo (icono, nombre, Select de nivel) — solo visible si la página está activa.
+- Añadir sección "Otros" con módulos accesibles que no encajen en ninguna página del base_role (mantiene UX plana para ese subset).
+- Lógica de toggle sobre el estado `draft` (nada cambia en la firma de guardado).
 
-2. **`src/routes/_authenticated/m.calendario.tsx`**
-   - Sacar el `<Button>` "Nuevo evento" del `action` del `PageHeader`.
-   - Colocarlo debajo de `TabsList` como botón `w-full glow-primary`.
-   - Mantener el `<select>` de categoría junto al botón: fila con `select` a la izquierda y botón que ocupa el resto (`flex gap-2` + `flex-1` en el botón) para conservar la selección de equipo cuando `viewsAllClub`.
+### 2. `src/components/usuarios/MembersTab.tsx` — `OverridesDialog`
+- Leer `base_role` del rol de la membresía (añadir a `rolePermsQ` un fetch de `roles.base_role` o incluirlo en `ctx`).
+- Reutilizar la misma lógica de agrupación por página.
+- Toggle de página aplica setOverride en batch sobre todos los módulos de la página:
+  - Apagar → `setOverride(m, 'none')` para todos.
+  - Prender → para los que estén en `none` (efectivo), `setOverride(m, 'read')`.
+- Botón "Restablecer" por módulo se conserva; añadir "Restablecer página" en el header (borra overrides de todos los módulos de la página).
 
-3. **`src/routes/_authenticated/m.documentos.tsx`**
-   - Quitar el botón "Subir documento" de la fila del buscador.
-   - Reubicarlo debajo de los chips de categoría (que son el "pill" de este módulo) como `w-full glow-primary`.
-   - El input de búsqueda queda solo en su fila (ancho completo natural).
-   - El botón dentro del `EmptyState` se mantiene.
+### 3. `src/lib/rolePages.ts`
+- Exportar helper `groupModulesByPage(baseRole, moduleKeys)` que devuelva `Array<{ page: PageDef, modules: ModuleKey[] }>` reutilizable por ambos componentes.
 
-4. **`src/components/usuarios/CategoriesTab.tsx`**
-   - Cambiar el botón "Nueva categoría": quitar `variant="secondary"` y el wrapper `flex justify-end`; dejarlo `w-full glow-primary` arriba del grid de categorías.
-
-5. **`src/routes/_authenticated/m.usuarios.tsx`** (tab Roles)
-   - Ajustar "Nuevo rol": quitar `variant="secondary"` y añadir `glow-primary` (ya es `w-full`), para que quede verde como el resto.
+## Componente
+- Usar `@/components/ui/switch` (shadcn) para el toggle de página.
+- Estilo: header de sección con `glass` sutil, chevron opcional para colapsar cuando esté apagada.
 
 ## Fuera de alcance
-- No se toca la lógica de permisos ni los formularios/sheets.
-- No se cambian los CTAs internos de los `EmptyState`.
-- Home / FAB no se modifican.
+- No se cambia el esquema de BD.
+- No se toca el cálculo efectivo de permisos en `useAccess`.
+- Home/Agenda siguen sin ser páginas "configurables" (Agenda depende solo del módulo `calendario`).

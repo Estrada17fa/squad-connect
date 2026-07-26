@@ -4,8 +4,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Settings2, Sliders, Trash2, User as UserIcon, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { MODULES, type ModuleKey } from "@/lib/modules";
-import { inferBaseRole } from "@/lib/rolePages";
+import { MODULES, MODULE_MAP, type ModuleKey } from "@/lib/modules";
+import { inferBaseRole, groupModulesByPage, type BaseRole } from "@/lib/rolePages";
 import type { AccessLevel } from "@/hooks/useAccess";
 import { EmptyState } from "@/components/squad/EmptyState";
 import { LoadingState } from "@/components/squad/LoadingState";
@@ -29,6 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { CreateMemberDialog } from "./CreateMemberDialog";
 
@@ -508,6 +509,19 @@ function OverridesDialog({
   canEdit: boolean;
 }) {
   const qc = useQueryClient();
+  const roleQ = useQuery({
+    queryKey: ["role-info", ctx.roleId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("roles")
+        .select("id, name, base_role")
+        .eq("id", ctx.roleId)
+        .maybeSingle();
+      if (error) throw error;
+      return data as { id: string; name: string; base_role: string | null } | null;
+    },
+  });
+
   const rolePermsQ = useQuery({
     queryKey: ["role-perms", ctx.roleId],
     queryFn: async (): Promise<PermRow[]> => {
@@ -545,14 +559,17 @@ function OverridesDialog({
     return m;
   }, [overridesQ.data]);
 
+  const effectiveLevel = React.useCallback(
+    (mk: string): AccessLevel => overrideMap[mk] ?? roleMap[mk] ?? "none",
+    [overrideMap, roleMap],
+  );
+
+  const pageGroups = React.useMemo(
+    () => groupModulesByPage(roleQ.data?.base_role as BaseRole | null, MODULES.map((m) => m.key)),
+    [roleQ.data?.base_role],
+  );
+
   async function setOverride(moduleKey: string, level: AccessLevel) {
-    const payload = {
-      user_id: ctx.userId,
-      team_id: ctx.teamId,
-      module_key: moduleKey,
-      access_level: level,
-    };
-    // upsert manual: buscar existente
     const existing = (overridesQ.data ?? []).find((o) => o.module_key === moduleKey);
     let error;
     if (existing) {
@@ -564,11 +581,14 @@ function OverridesDialog({
       q = ctx.teamId ? q.eq("team_id", ctx.teamId) : q.is("team_id", null);
       ({ error } = await q);
     } else {
-      ({ error } = await supabase.from("user_permission_overrides").insert(payload));
+      ({ error } = await supabase.from("user_permission_overrides").insert({
+        user_id: ctx.userId,
+        team_id: ctx.teamId,
+        module_key: moduleKey,
+        access_level: level,
+      }));
     }
-    if (error) return toast.error(error.message);
-    toast.success("Permiso actualizado");
-    qc.invalidateQueries({ queryKey: ["user-overrides", ctx.userId, ctx.teamId ?? "club"] });
+    return error;
   }
 
   async function resetOverride(moduleKey: string) {
@@ -578,11 +598,50 @@ function OverridesDialog({
       .eq("user_id", ctx.userId)
       .eq("module_key", moduleKey);
     q = ctx.teamId ? q.eq("team_id", ctx.teamId) : q.is("team_id", null);
-    const { error } = await q;
-    if (error) return toast.error(error.message);
+    return (await q).error;
+  }
+
+  async function handleSetOne(moduleKey: string, level: AccessLevel) {
+    const err = await setOverride(moduleKey, level);
+    if (err) return toast.error(err.message);
+    toast.success("Permiso actualizado");
+    qc.invalidateQueries({ queryKey: ["user-overrides", ctx.userId, ctx.teamId ?? "club"] });
+  }
+
+  async function handleResetOne(moduleKey: string) {
+    const err = await resetOverride(moduleKey);
+    if (err) return toast.error(err.message);
     toast.success("Restablecido al rol");
     qc.invalidateQueries({ queryKey: ["user-overrides", ctx.userId, ctx.teamId ?? "club"] });
   }
+
+  async function togglePage(modules: ModuleKey[], on: boolean) {
+    const errors: string[] = [];
+    for (const mk of modules) {
+      if (on) {
+        if (effectiveLevel(mk) === "none") {
+          const err = await setOverride(mk, "read");
+          if (err) errors.push(err.message);
+        }
+      } else {
+        if (effectiveLevel(mk) !== "none") {
+          const err = await setOverride(mk, "none");
+          if (err) errors.push(err.message);
+        }
+      }
+    }
+    qc.invalidateQueries({ queryKey: ["user-overrides", ctx.userId, ctx.teamId ?? "club"] });
+    if (errors.length) toast.error(errors[0]);
+    else toast.success(on ? "Página activada" : "Página desactivada");
+  }
+
+  async function handleResetPage(modules: ModuleKey[]) {
+    for (const mk of modules) await resetOverride(mk);
+    qc.invalidateQueries({ queryKey: ["user-overrides", ctx.userId, ctx.teamId ?? "club"] });
+    toast.success("Página restablecida al rol");
+  }
+
+  const loading = rolePermsQ.isLoading || overridesQ.isLoading || roleQ.isLoading;
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
@@ -591,55 +650,92 @@ function OverridesDialog({
           <DialogTitle>Permisos personalizados</DialogTitle>
           <DialogDescription>{ctx.label} — los cambios solo afectan a este usuario en este contexto.</DialogDescription>
         </DialogHeader>
-        {rolePermsQ.isLoading || overridesQ.isLoading ? (
+        {loading ? (
           <LoadingState />
         ) : (
-          <div className="max-h-[60vh] overflow-y-auto divide-y divide-border/50">
-            {MODULES.map((m) => {
-              const Icon = m.icon;
-              const roleLvl: AccessLevel = roleMap[m.key] ?? "none";
-              const overrideLvl: AccessLevel | undefined = overrideMap[m.key];
-              const effective: AccessLevel = overrideLvl ?? roleLvl;
+          <div className="max-h-[60vh] overflow-y-auto space-y-3">
+            {pageGroups.map(({ page, modules }) => {
+              const PageIcon = page.icon;
+              const activeCount = modules.filter((mk) => effectiveLevel(mk) !== "none").length;
+              const isActive = activeCount > 0;
+              const hasOverride = modules.some((mk) => overrideMap[mk] !== undefined);
               return (
-                <div
-                  key={m.key}
-                  className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 py-2.5 sm:grid-cols-[auto_minmax(0,1fr)_auto_auto]"
-                >
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/5">
-                    <Icon className="h-4 w-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">{m.label}</p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      Rol: {LEVELS.find((l) => l.value === roleLvl)?.label}
-                      {overrideLvl ? " · Personalizado" : ""}
-                    </p>
-                  </div>
-                  <div className="col-span-2 flex items-center gap-2 sm:col-span-1">
-                    <Select
-                      value={effective}
-                      onValueChange={(v) => setOverride(m.key as ModuleKey, v as AccessLevel)}
-                      disabled={!canEdit}
-                    >
-                      <SelectTrigger
-                        className={cn("flex-1 sm:w-[140px] sm:flex-none", overrideLvl && "border-primary/60")}
-                      >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {LEVELS.map((l) => (
-                          <SelectItem key={l.value} value={l.value}>
-                            {l.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {canEdit && overrideLvl ? (
-                      <Button size="sm" variant="ghost" onClick={() => resetOverride(m.key)}>
+                <div key={page.key + page.label} className="glass rounded-lg overflow-hidden">
+                  <div className="flex items-center gap-3 px-3 py-2.5">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white/5">
+                      <PageIcon className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold">{page.label}</p>
+                      <p className="truncate text-[11px] text-muted-foreground">
+                        {isActive ? `${activeCount} de ${modules.length} activos` : "Página desactivada"}
+                      </p>
+                    </div>
+                    {canEdit && hasOverride ? (
+                      <Button size="sm" variant="ghost" onClick={() => handleResetPage(modules)}>
                         Restablecer
                       </Button>
                     ) : null}
+                    <Switch
+                      checked={isActive}
+                      disabled={!canEdit}
+                      onCheckedChange={(on) => togglePage(modules, on)}
+                    />
                   </div>
+                  {isActive ? (
+                    <div className="divide-y divide-border/50 border-t border-border/50 px-3">
+                      {modules.map((mk) => {
+                        const m = MODULE_MAP[mk];
+                        if (!m) return null;
+                        const Icon = m.icon;
+                        const roleLvl: AccessLevel = roleMap[mk] ?? "none";
+                        const overrideLvl: AccessLevel | undefined = overrideMap[mk];
+                        const effective: AccessLevel = overrideLvl ?? roleLvl;
+                        return (
+                          <div
+                            key={mk}
+                            className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 py-2.5 sm:grid-cols-[auto_minmax(0,1fr)_auto_auto]"
+                          >
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white/5">
+                              <Icon className="h-4 w-4" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-medium">{m.label}</p>
+                              <p className="truncate text-xs text-muted-foreground">
+                                Rol: {LEVELS.find((l) => l.value === roleLvl)?.label}
+                                {overrideLvl ? " · Personalizado" : ""}
+                              </p>
+                            </div>
+                            <div className="col-span-2 flex items-center gap-2 sm:col-span-1">
+                              <Select
+                                value={effective}
+                                onValueChange={(v) => handleSetOne(mk, v as AccessLevel)}
+                                disabled={!canEdit}
+                              >
+                                <SelectTrigger
+                                  className={cn("flex-1 sm:w-[140px] sm:flex-none", overrideLvl && "border-primary/60")}
+                                >
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {LEVELS.map((l) => (
+                                    <SelectItem key={l.value} value={l.value}>
+                                      {l.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              {canEdit && overrideLvl ? (
+                                <Button size="sm" variant="ghost" onClick={() => handleResetOne(mk)}>
+                                  Restablecer
+                                </Button>
+                              ) : null}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : null}
                 </div>
               );
             })}
