@@ -125,7 +125,6 @@ function CoordinacionPage() {
             isLoading={meetingsQ.isLoading}
             userId={user.id}
             canEdit={canEdit}
-            viewMode={viewMode}
             onEdit={(m) => { setEditingMeeting(m); setMeetingDialog(true); }}
             onCreate={canEdit ? () => { setEditingMeeting(null); setMeetingDialog(true); } : undefined}
             clubId={clubId}
