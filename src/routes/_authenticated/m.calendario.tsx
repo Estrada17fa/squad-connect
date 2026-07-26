@@ -130,9 +130,23 @@ function CalendarPage() {
         subtitle={activeTeam?.name ?? "Todo el club"}
         action={
           canEdit ? (
-            <Button onClick={() => openCreate()} className="glow-primary">
-              <Plus className="mr-2 h-4 w-4" /> Nuevo evento
-            </Button>
+            <div className="flex items-center gap-2">
+              {viewsAllClub && clubTeams.length > 0 ? (
+                <select
+                  value={createTeamId ?? ""}
+                  onChange={(e) => setCreateTeamId(e.target.value)}
+                  className="rounded-md border border-border/60 bg-background/60 px-2 py-1.5 text-sm text-foreground"
+                  aria-label="Categoría para nuevo evento"
+                >
+                  {clubTeams.map((t) => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
+              ) : null}
+              <Button onClick={() => openCreate()} className="glow-primary" disabled={!createTeamId}>
+                <Plus className="mr-2 h-4 w-4" /> Nuevo evento
+              </Button>
+            </div>
           ) : null
         }
       />
