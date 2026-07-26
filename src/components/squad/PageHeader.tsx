@@ -15,23 +15,22 @@ export function PageHeader({
   hideTitle?: boolean;
   className?: string;
 }) {
-  const showText = !hideTitle || subtitle;
+  if (hideTitle) {
+    if (!action) return null;
+    return (
+      <div className={cn("flex flex-wrap items-center justify-end gap-3 pb-2", className)}>
+        <div className="shrink-0">{action}</div>
+      </div>
+    );
+  }
   return (
     <div className={cn("flex flex-wrap items-end justify-between gap-3 pb-2", className)}>
-      {showText ? (
-        <div className="min-w-0">
-          {!hideTitle ? (
-            <h1 className="font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-              {title}
-            </h1>
-          ) : null}
-          {subtitle ? (
-            <p className={cn("text-sm text-muted-foreground", !hideTitle && "mt-1")}>{subtitle}</p>
-          ) : null}
-        </div>
-      ) : (
-        <div className="min-w-0" />
-      )}
+      <div className="min-w-0">
+        <h1 className="font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+          {title}
+        </h1>
+        {subtitle ? <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p> : null}
+      </div>
       {action ? <div className="shrink-0">{action}</div> : null}
     </div>
   );
