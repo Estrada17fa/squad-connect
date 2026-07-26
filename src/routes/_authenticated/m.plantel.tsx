@@ -58,8 +58,13 @@ function PlantelPage() {
 
   const clubId = profile?.club_id ?? null;
   const { data: members, isLoading } = useRoster(clubId, activeTeam?.id ?? null);
+  const initialRole = useRouterState({
+    select: (s) => (s.location.search as { role?: string } | undefined)?.role,
+  });
   const [dialogOpen, setDialogOpen] = React.useState(false);
-  const [roleFilter, setRoleFilter] = React.useState<BaseRole | "all">("all");
+  const [roleFilter, setRoleFilter] = React.useState<BaseRole | "all">(
+    (initialRole as BaseRole | undefined) ?? "all",
+  );
   const [search, setSearch] = React.useState("");
 
   const [playerClubId, setPlayerClubId] = React.useState<string | null>(null);
