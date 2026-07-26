@@ -216,7 +216,7 @@ function TasksList({
     });
   }, [tasks, filter, userId]);
 
-  if (isLoading) return <LoadingState />;
+  if (isLoading && tasks.length === 0) return <CardGridSkeleton variant={viewMode === "list" ? "list" : "grid"} count={4} />;
   if (filtered.length === 0) {
     return (
       <EmptyState
@@ -360,7 +360,7 @@ function MeetingsList({
   onCreate?: () => void;
   clubId: string;
 }) {
-  if (isLoading) return <LoadingState />;
+  if (isLoading && meetings.length === 0) return <CardGridSkeleton variant={viewMode === "list" ? "list" : "grid"} count={3} />;
   if (meetings.length === 0) {
     return (
       <EmptyState
