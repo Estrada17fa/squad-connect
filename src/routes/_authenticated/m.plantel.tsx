@@ -97,7 +97,6 @@ function PlantelPage() {
         hideTitle
         title="Plantel"
         subtitle={viewsAllClub ? "Todo el club" : activeTeam?.name ?? ""}
-        action={<ViewToggle value={viewMode} onChange={setViewMode} />}
       />
 
       <div className="space-y-2">
