@@ -93,6 +93,8 @@ function CoordinacionPage() {
           ) : null
         }
       />
+      <ModuleTabs activeKey="coordinacion_interna" />
+
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as any)} className="w-full">
         <TabsList>
