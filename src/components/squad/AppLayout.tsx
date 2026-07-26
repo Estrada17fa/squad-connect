@@ -33,6 +33,10 @@ interface AppCtx {
   clubName: string | null;
   isSuperAdmin: boolean;
   profile: { full_name: string | null; email: string | null; club_id: string | null } | null;
+  /** Rol base derivado del equipo activo (para el mapping de páginas). */
+  activeBaseRole: BaseRole;
+  /** Páginas visibles con los módulos que caen dentro de cada una. */
+  visiblePages: ResolvedPage[];
 }
 
 
@@ -103,6 +107,20 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
     );
   }
 
+  const activeBaseRole: BaseRole =
+    (activeTeam?.baseRole as BaseRole | null | undefined) ??
+    inferBaseRole(activeTeam?.roleName ?? null);
+
+  // Super admin ve todas las páginas como Admin.
+  const effectiveBaseRole: BaseRole = data.isSuperAdmin ? "admin" : activeBaseRole;
+  const effectiveModules = data.isSuperAdmin
+    ? MODULES.map((m) => m.key)
+    : accessibleModules;
+  const visiblePages = React.useMemo(
+    () => resolvePagesForUser(effectiveBaseRole, effectiveModules),
+    [effectiveBaseRole, effectiveModules],
+  );
+
   const ctx: AppCtx = {
     user: { id: user.id },
     accessibleModules,
@@ -114,9 +132,9 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
     clubName: data.clubName,
     isSuperAdmin: data.isSuperAdmin,
     profile: data.profile,
+    activeBaseRole: effectiveBaseRole,
+    visiblePages,
   };
-
-
 
   return (
     <AppContext.Provider value={ctx}>
@@ -133,7 +151,7 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
         <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6">
           <Outlet />
         </main>
-        <BottomNav accessibleModules={accessibleModules} />
+        <BottomNav pages={visiblePages} />
         <FAB />
       </div>
     </AppContext.Provider>
