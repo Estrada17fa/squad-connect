@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
-import { ChevronDown, LogOut } from "lucide-react";
+import { ChevronDown, LogOut, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccess, hasAccess, type TeamOption, type AccessLevel } from "@/hooks/useAccess";
 import { MODULES, MODULE_MAP, moduleFromPath, type ModuleKey } from "@/lib/modules";
@@ -230,14 +230,21 @@ function Header({
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel className="truncate">{userName || "Cuenta"}</DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link to="/mi-perfil">
+                  <User className="mr-2 h-4 w-4" />
+                  Ver mi perfil
+                </Link>
+              </DropdownMenuItem>
               {isSuperAdmin ? (
                 <>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link to="/admin/clubs">Administrar clubes</Link>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
                 </>
               ) : null}
+              <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={onSignOut}>
                 <LogOut className="mr-2 h-4 w-4" />
                 Cerrar sesión
