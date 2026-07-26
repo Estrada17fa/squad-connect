@@ -82,6 +82,9 @@ export function ModuleTabs({ activeKey, hubKey, extraActiveKey }: ModuleTabsProp
               params={{ module: key }}
               role="tab"
               aria-current={active ? "page" : undefined}
+              onMouseEnter={() => prefetchModule(qc, key, prefetchCtx)}
+              onFocus={() => prefetchModule(qc, key, prefetchCtx)}
+              onTouchStart={() => prefetchModule(qc, key, prefetchCtx)}
               className={cn(
                 "relative flex shrink-0 items-center gap-2 whitespace-nowrap px-3 py-3 text-sm font-medium transition-colors",
                 active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
