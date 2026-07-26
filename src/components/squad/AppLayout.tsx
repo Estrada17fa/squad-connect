@@ -267,7 +267,7 @@ function BottomNav({ pages }: { pages: ResolvedPage[] }) {
           return (
             <Link
               key={rp.page.key}
-              to={rp.page.to}
+              to={rp.page.to as any}
               className={cn(
                 "flex flex-1 flex-col items-center gap-0.5 rounded-lg px-2 py-1.5 text-[11px] transition-colors",
                 active ? "text-primary" : "text-muted-foreground hover:text-foreground",
@@ -280,5 +280,39 @@ function BottomNav({ pages }: { pages: ResolvedPage[] }) {
         })}
       </div>
     </nav>
+  );
+}
+
+function DesktopNav({ pages }: { pages: ResolvedPage[] }) {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isActive = (to: string) => {
+    if (to === "/") return pathname === "/";
+    return pathname === to || pathname.startsWith(to + "/");
+  };
+  return (
+    <div className="hidden border-b border-border/40 bg-background/40 sm:block">
+      <div className="mx-auto flex max-w-6xl items-center gap-1 px-4 py-2 sm:px-6">
+        {pages.map((rp) => {
+          const active = isActive(rp.page.to);
+          const Icon = rp.page.icon;
+          const label = rp.labelOverride ?? rp.page.label;
+          return (
+            <Link
+              key={rp.page.key}
+              to={rp.page.to as any}
+              className={cn(
+                "inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
+                active
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:bg-white/[0.04] hover:text-foreground",
+              )}
+            >
+              <Icon className="h-4 w-4" />
+              <span>{label}</span>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
   );
 }
