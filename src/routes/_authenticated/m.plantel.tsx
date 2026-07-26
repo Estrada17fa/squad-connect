@@ -106,6 +106,8 @@ function PlantelPage() {
           ) : null
         }
       />
+      <ModuleTabs activeKey="plantel" />
+
 
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <Input placeholder="Buscar miembro…" value={search} onChange={(e) => setSearch(e.target.value)} />
