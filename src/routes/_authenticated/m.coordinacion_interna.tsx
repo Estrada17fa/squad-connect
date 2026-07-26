@@ -113,7 +113,6 @@ function CoordinacionPage() {
             userId={user.id}
             filter={filter}
             canEdit={canEdit}
-            viewMode={viewMode}
             onEdit={(t) => { setEditingTask(t); setTaskDialog(true); }}
             onCreate={canEdit ? () => { setEditingTask(null); setTaskDialog(true); } : undefined}
             clubId={clubId}
