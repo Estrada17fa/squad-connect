@@ -99,6 +99,20 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
     [clubPerms, activePermissions],
   );
 
+  const activeBaseRole: BaseRole =
+    (activeTeam?.baseRole as BaseRole | null | undefined) ??
+    inferBaseRole(activeTeam?.roleName ?? null);
+
+  const effectiveBaseRole: BaseRole = data?.isSuperAdmin ? "admin" : activeBaseRole;
+  const effectiveModules = React.useMemo<ModuleKey[]>(
+    () => (data?.isSuperAdmin ? MODULES.map((m) => m.key) : accessibleModules),
+    [data?.isSuperAdmin, accessibleModules],
+  );
+  const visiblePages = React.useMemo(
+    () => resolvePagesForUser(effectiveBaseRole, effectiveModules),
+    [effectiveBaseRole, effectiveModules],
+  );
+
   if (isLoading || !data) {
     return (
       <div className="min-h-screen bg-background">
@@ -107,19 +121,6 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
     );
   }
 
-  const activeBaseRole: BaseRole =
-    (activeTeam?.baseRole as BaseRole | null | undefined) ??
-    inferBaseRole(activeTeam?.roleName ?? null);
-
-  // Super admin ve todas las páginas como Admin.
-  const effectiveBaseRole: BaseRole = data.isSuperAdmin ? "admin" : activeBaseRole;
-  const effectiveModules = data.isSuperAdmin
-    ? MODULES.map((m) => m.key)
-    : accessibleModules;
-  const visiblePages = React.useMemo(
-    () => resolvePagesForUser(effectiveBaseRole, effectiveModules),
-    [effectiveBaseRole, effectiveModules],
-  );
 
   const ctx: AppCtx = {
     user: { id: user.id },
