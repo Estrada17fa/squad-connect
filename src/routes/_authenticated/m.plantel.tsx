@@ -50,30 +50,30 @@ function formatBirthday(iso: string | null): string | null {
 
 function PlantelPage() {
   const navigate = useNavigate();
-  const { activeTeam, getModuleAccess, user, isSuperAdmin, profile } = useApp();
-  const canEdit = isSuperAdmin || getModuleAccess("plantel") === "editor" || getModuleAccess("plantel") === "approver";
+  const { activeTeam, user, profile } = useApp();
 
   const clubId = profile?.club_id ?? null;
   const { data: members, isLoading } = useRoster(clubId, activeTeam?.id ?? null);
   const initialRole = useRouterState({
     select: (s) => (s.location.search as { role?: string } | undefined)?.role,
   });
-  const [dialogOpen, setDialogOpen] = React.useState(false);
-  const [roleFilter, setRoleFilter] = React.useState<BaseRole | "all">(
-    (initialRole as BaseRole | undefined) ?? "all",
-  );
+  const [roleFilter, setRoleFilter] = React.useState<Set<BaseRole>>(() => {
+    const r = initialRole as BaseRole | undefined;
+    return r ? new Set([r]) : new Set();
+  });
   const [search, setSearch] = React.useState("");
   const [viewMode, setViewMode] = useViewMode("plantel", "grid");
 
-  const [playerClubId, setPlayerClubId] = React.useState<string | null>(null);
-  React.useEffect(() => {
-    if (!activeTeam?.id) return;
-    supabase.from("teams").select("club_id").eq("id", activeTeam.id).maybeSingle()
-      .then(({ data }) => setPlayerClubId(data?.club_id ?? null));
-  }, [activeTeam?.id]);
+  const toggleRole = (r: BaseRole) => {
+    setRoleFilter((prev) => {
+      const next = new Set(prev);
+      if (next.has(r)) next.delete(r); else next.add(r);
+      return next;
+    });
+  };
 
   const filtered = (members ?? []).filter((m) => {
-    if (roleFilter !== "all" && m.baseRole !== roleFilter) return false;
+    if (roleFilter.size > 0 && (!m.baseRole || !roleFilter.has(m.baseRole as BaseRole))) return false;
     if (search && !(m.fullName ?? "").toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
@@ -92,34 +92,48 @@ function PlantelPage() {
 
   return (
     <div className="space-y-6">
+      <ModuleTabs activeKey="plantel" />
       <PageHeader
         hideTitle
         title="Plantel"
         subtitle={activeTeam.name}
-        action={
-          <div className="flex items-center gap-2">
-            <ViewToggle value={viewMode} onChange={setViewMode} />
-            {canEdit ? (
-              <Button onClick={() => setDialogOpen(true)} className="glow-primary">
-                <Plus className="mr-2 h-4 w-4" /> Agregar jugador
-              </Button>
-            ) : null}
-          </div>
-        }
+        action={<ViewToggle value={viewMode} onChange={setViewMode} />}
       />
-      <ModuleTabs activeKey="plantel" />
 
-
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+      <div className="space-y-2">
         <Input placeholder="Buscar miembro…" value={search} onChange={(e) => setSearch(e.target.value)} />
-        <Select value={roleFilter} onValueChange={(v) => setRoleFilter(v as BaseRole | "all")}>
-          <SelectTrigger><SelectValue placeholder="Rol" /></SelectTrigger>
-          <SelectContent>
-            {ROLE_FILTERS.map((r) => (
-              <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+          <button
+            type="button"
+            onClick={() => setRoleFilter(new Set())}
+            className={cn(
+              "shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+              roleFilter.size === 0
+                ? "border-primary bg-primary/15 text-primary"
+                : "border-border/50 text-muted-foreground hover:border-white/20 hover:text-foreground",
+            )}
+          >
+            Todos
+          </button>
+          {ROLE_FILTERS.map((r) => {
+            const active = roleFilter.has(r.value);
+            return (
+              <button
+                key={r.value}
+                type="button"
+                onClick={() => toggleRole(r.value)}
+                className={cn(
+                  "shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                  active
+                    ? "border-primary bg-primary/15 text-primary"
+                    : "border-border/50 text-muted-foreground hover:border-white/20 hover:text-foreground",
+                )}
+              >
+                {r.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {isLoading && !members ? (
@@ -201,15 +215,7 @@ function PlantelPage() {
           })}
         </div>
       )}
-
-      {playerClubId && activeTeam?.id ? (
-        <PlayerFormDialog
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-          clubId={playerClubId}
-          teamId={activeTeam.id}
-        />
-      ) : null}
     </div>
   );
 }
+
