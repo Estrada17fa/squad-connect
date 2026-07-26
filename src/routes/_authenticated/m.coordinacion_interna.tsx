@@ -82,22 +82,7 @@ function CoordinacionPage() {
         hideTitle
         title="Coordinación"
         subtitle="Ámbito club · staff sin importar equipo"
-        action={
-          canEdit ? (
-            <Button
-              onClick={() => {
-                if (tab === "tareas") { setEditingTask(null); setTaskDialog(true); }
-                else { setEditingMeeting(null); setMeetingDialog(true); }
-              }}
-              className="glow-primary"
-            >
-              <Plus className="mr-2 h-4 w-4" /> {tab === "tareas" ? "Nueva tarea" : "Nueva junta"}
-            </Button>
-          ) : null
-        }
       />
-
-
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as any)} className="w-full">
         <TabsList>
@@ -106,6 +91,14 @@ function CoordinacionPage() {
         </TabsList>
 
         <TabsContent value="tareas" className="mt-4 space-y-4">
+          {canEdit ? (
+            <Button
+              onClick={() => { setEditingTask(null); setTaskDialog(true); }}
+              className="w-full glow-primary"
+            >
+              <Plus className="mr-2 h-4 w-4" /> Nueva tarea
+            </Button>
+          ) : null}
           <FilterChips filter={filter} setFilter={setFilter} />
           <TasksList
             tasks={tasksQ.data ?? []}
@@ -120,6 +113,15 @@ function CoordinacionPage() {
         </TabsContent>
 
         <TabsContent value="juntas" className="mt-4 space-y-4">
+          {canEdit ? (
+            <Button
+              onClick={() => { setEditingMeeting(null); setMeetingDialog(true); }}
+              className="w-full glow-primary"
+            >
+              <Plus className="mr-2 h-4 w-4" /> Nueva junta
+            </Button>
+          ) : null}
+
           <MeetingsList
             meetings={meetingsQ.data ?? []}
             isLoading={meetingsQ.isLoading}
