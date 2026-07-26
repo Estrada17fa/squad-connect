@@ -62,7 +62,7 @@ function PlantelPage() {
     return r ? new Set([r]) : new Set();
   });
   const [search, setSearch] = React.useState("");
-  const [viewMode, setViewMode] = useViewMode("plantel", "grid");
+  
 
   const toggleRole = (r: BaseRole) => {
     setRoleFilter((prev) => {
