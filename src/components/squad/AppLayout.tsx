@@ -191,6 +191,7 @@ function Header({
   setActiveTeamId,
   userName,
   isSuperAdmin,
+  viewsAllClub,
   onSignOut,
 }: {
   clubName: string | null;
@@ -199,14 +200,16 @@ function Header({
   setActiveTeamId: (id: string | null) => void;
   userName: string;
   isSuperAdmin: boolean;
+  viewsAllClub: boolean;
   onSignOut: () => void;
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const activeModule = moduleFromPath(pathname);
   const activeScope = activeModule ? MODULE_MAP[activeModule].scope : null;
-  // Ocultar selector cuando estamos en un módulo estrictamente de club.
-  const showTeamSelector = activeScope !== "club" && teams.length > 1;
-  const showClubName = activeScope === "club" || teams.length <= 1;
+  // No-jugadores y super admin ven todo el club: nunca mostramos selector de equipo.
+  // Jugadores solo lo ven cuando pertenecen a varios equipos y el módulo no es de club.
+  const showTeamSelector = !viewsAllClub && activeScope !== "club" && teams.length > 1;
+  const showClubName = !showTeamSelector;
 
   return (
     <header className="sticky top-0 z-30 border-b border-border/60 bg-background/70 backdrop-blur-xl">
