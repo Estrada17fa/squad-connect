@@ -307,6 +307,23 @@ function PermissionsMatrix({
     }
   }
 
+  const pageGroups = React.useMemo(
+    () => groupModulesByPage(role.base_role as BaseRole | null, MODULES.map((m) => m.key)),
+    [role.base_role],
+  );
+
+  function togglePage(modules: ModuleKey[], on: boolean) {
+    setDraft((d) => {
+      const next = { ...d };
+      if (on) {
+        for (const mk of modules) if (!next[mk] || next[mk] === "none") next[mk] = "read";
+      } else {
+        for (const mk of modules) next[mk] = "none";
+      }
+      return next;
+    });
+  }
+
   return (
     <div className="glass p-4 space-y-4">
       <div className="flex items-center justify-between gap-3">
