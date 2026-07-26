@@ -38,6 +38,7 @@ export interface DocumentRow {
   updated_at: string;
   related_user?: { id: string; full_name: string | null; avatar_url: string | null } | null;
   team?: { id: string; name: string; category: string | null } | null;
+  uploader?: { id: string; full_name: string | null; avatar_url: string | null } | null;
 }
 
 export interface DocumentFilters {
