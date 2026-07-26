@@ -136,7 +136,7 @@ function PlantelPage() {
       </div>
 
       {isLoading && !members ? (
-        <CardGridSkeleton variant={viewMode === "list" ? "list" : "grid"} count={6} />
+        <CardGridSkeleton count={6} />
       ) : filtered.length === 0 ? (
         <EmptyState
           icon={Users}
@@ -148,32 +148,20 @@ function PlantelPage() {
           }
         />
       ) : (
-        <div
-          className={cn(
-            viewMode === "grid"
-              ? "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
-              : "flex flex-col divide-y divide-border/50 overflow-hidden rounded-xl border border-border/50",
-          )}
-        >
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((m, i) => {
             const meta = m.availability ? AVAILABILITY_META[m.availability] : null;
             const birthday = formatBirthday(m.birthdate);
             const isJugador = m.baseRole === "jugador";
-            const isList = viewMode === "list";
             return (
               <button
                 type="button"
                 key={m.userId}
                 onClick={() => onCardClick(m)}
-                className={cn(
-                  "animate-card-in flex items-center gap-3 text-left transition-all",
-                  isList
-                    ? "bg-white/[0.02] p-3 hover:bg-white/[0.05] active:scale-[0.995]"
-                    : "glass p-4 hover:border-white/15 hover:bg-white/[0.06] active:scale-[0.99]",
-                )}
+                className="animate-card-in glass flex items-center gap-3 p-4 text-left transition-all hover:border-white/15 hover:bg-white/[0.06] active:scale-[0.99]"
                 style={{ animationDelay: `${i * 25}ms` }}
               >
-                <Avatar className={cn("shrink-0", isList ? "h-10 w-10" : "h-12 w-12")}>
+                <Avatar className="h-12 w-12 shrink-0">
                   <AvatarImage src={m.avatarUrl ?? undefined} />
                   <AvatarFallback>{(m.fullName ?? "?").slice(0, 1).toUpperCase()}</AvatarFallback>
                 </Avatar>
@@ -192,23 +180,13 @@ function PlantelPage() {
                       ? m.position ? ` · ${m.position}` : ""
                       : m.jobTitle ? ` · ${m.jobTitle}` : m.roleName ? ` · ${m.roleName}` : ""}
                   </div>
-                  {!isList ? (
-                    <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-                      {birthday ? <span>🎂 {birthday}</span> : null}
-                      {isJugador && meta ? (
-                        <StatusBadge variant={meta.variant}>{meta.label}</StatusBadge>
-                      ) : null}
-                    </div>
-                  ) : null}
-                </div>
-                {isList ? (
-                  <div className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
-                    {birthday ? <span className="hidden sm:inline">🎂 {birthday}</span> : null}
+                  <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                    {birthday ? <span>🎂 {birthday}</span> : null}
                     {isJugador && meta ? (
                       <StatusBadge variant={meta.variant}>{meta.label}</StatusBadge>
                     ) : null}
                   </div>
-                ) : null}
+                </div>
               </button>
             );
           })}
