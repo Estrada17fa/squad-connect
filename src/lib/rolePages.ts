@@ -153,3 +153,14 @@ export function inferBaseRole(roleName: string | null | undefined): BaseRole {
 
 export const ALL_MODULE_KEYS: ModuleKey[] = MODULES.map((m) => m.key);
 export { MODULE_MAP };
+
+/**
+ * Devuelve el hub (Mi Club, Coordinación, Admin, ...) al que pertenece un módulo
+ * dentro de la navegación del usuario actual, junto con sus módulos hermanos.
+ */
+export function findHubForModule(
+  visiblePages: ResolvedPage[],
+  moduleKey: ModuleKey,
+): ResolvedPage | null {
+  return visiblePages.find((p) => p.modules.includes(moduleKey)) ?? null;
+}

@@ -7,6 +7,7 @@ import { CategoriesTab } from "@/components/usuarios/CategoriesTab";
 
 import { toast } from "sonner";
 import { PageHeader } from "@/components/squad/PageHeader";
+import { ModuleTabs } from "@/components/squad/ModuleTabs";
 import { EmptyState } from "@/components/squad/EmptyState";
 import { LoadingState } from "@/components/squad/LoadingState";
 import { StandardCard } from "@/components/squad/StandardCard";
@@ -71,6 +72,7 @@ function UsuariosPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Usuarios" subtitle="Miembros del club, roles y permisos" />
+      <ModuleTabs activeKey="usuarios" />
       <Tabs defaultValue="roles" className="space-y-4">
         <TabsList className="glass w-full sm:w-auto">
           <TabsTrigger value="roles" className="flex-1 sm:flex-none">Roles</TabsTrigger>

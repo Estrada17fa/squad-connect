@@ -1,6 +1,7 @@
-import { createFileRoute, notFound, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { EmptyState } from "@/components/squad/EmptyState";
+import { ModuleTabs } from "@/components/squad/ModuleTabs";
 import { MODULE_MAP, type ModuleKey } from "@/lib/modules";
 import { useApp } from "@/components/squad/AppLayout";
 
@@ -23,7 +24,6 @@ export const Route = createFileRoute("/_authenticated/m/$module")({
 
 function ModulePage() {
   const { module } = Route.useParams();
-  const navigate = useNavigate();
   const { accessibleModules } = useApp();
   const def = MODULE_MAP[module as ModuleKey];
 
@@ -34,6 +34,7 @@ function ModulePage() {
   return (
     <div className="space-y-6">
       <PageHeader title={def.label} subtitle={def.description} />
+      <ModuleTabs activeKey={def.key} />
       {!canAccess ? (
         <EmptyState
           icon={def.icon}
