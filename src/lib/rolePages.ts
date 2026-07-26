@@ -78,6 +78,7 @@ const DEFAULT_PAGE_FOR_MODULE: Record<ModuleKey, PageKey> = {
   comunicados: "club",
   multimedia: "club",
   uniformes: "club",
+  nutricion: "club",
   coordinacion_interna: "coordinacion",
   solicitudes: "coordinacion",
   inventario: "coordinacion",
