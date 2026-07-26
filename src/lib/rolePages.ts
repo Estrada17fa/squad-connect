@@ -122,16 +122,18 @@ export function resolvePagesForUser(
       continue;
     }
     if (p.key === "admin") {
-      if (role === "admin") out.push({ page: p, modules: perPage.admin });
+      if (role === "admin" && perPage.admin.length > 0) out.push({ page: p, modules: perPage.admin });
       continue;
     }
     if (p.key === "coordinacion" && role === "jugador") {
-      out.push({
-        page: p,
-        modules: perPage.coordinacion,
-        labelOverride: "Mis Solicitudes",
-        variant: "jugador-solicitudes",
-      });
+      if (perPage.coordinacion.length > 0) {
+        out.push({
+          page: p,
+          modules: perPage.coordinacion,
+          labelOverride: "Mis Solicitudes",
+          variant: "jugador-solicitudes",
+        });
+      }
       continue;
     }
     if (perPage[p.key].length > 0) {
