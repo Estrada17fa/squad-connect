@@ -263,12 +263,12 @@ function CalendarPage() {
         onSelect={(e) => (canEdit ? openEdit(e) : null)}
       />
 
-      {clubId && activeTeam?.id ? (
+      {clubId && (editing?.team_id ?? createTeamId) ? (
         <EventFormDialog
           open={dialogOpen}
           onOpenChange={setDialogOpen}
           clubId={clubId}
-          teamId={activeTeam.id}
+          teamId={(editing?.team_id ?? createTeamId)!}
           userId={user.id}
           defaultDate={selectedDay ?? undefined}
           event={editing}
