@@ -3,13 +3,13 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
+  EntitySheet,
+  EntitySheetBody,
+  EntitySheetDescription,
+  EntitySheetFooter,
+  EntitySheetHeader,
+  EntitySheetTitle,
+} from "@/components/squad/EntitySheet";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -54,7 +54,6 @@ export function EventFormDialog({ open, onOpenChange, clubId, teamId, userId, de
 
   React.useEffect(() => {
     if (!open) return;
-    // Reset when reopened for creating.
     if (!isEdit) {
       setStep("type");
       setEventType("entrenamiento");
@@ -76,7 +75,6 @@ export function EventFormDialog({ open, onOpenChange, clubId, teamId, userId, de
     }
   }, [open, isEdit, event, defaultDate]);
 
-  // Load existing attendees when editing.
   React.useEffect(() => {
     if (!isEdit || !event) return;
     supabase
@@ -116,7 +114,6 @@ export function EventFormDialog({ open, onOpenChange, clubId, teamId, userId, de
         eventId = data.id;
       }
       if (!eventId) return;
-      // Sync attendees.
       const { data: existing } = await supabase
         .from("event_attendees")
         .select("user_id")
@@ -176,17 +173,17 @@ export function EventFormDialog({ open, onOpenChange, clubId, teamId, userId, de
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="font-display">
-            {isEdit ? "Editar evento" : step === "type" ? "Nuevo evento" : "Detalles del evento"}
-          </DialogTitle>
-          <DialogDescription>
-            {step === "type" ? "Selecciona el tipo de evento." : "Completa la información y los asistentes."}
-          </DialogDescription>
-        </DialogHeader>
+    <EntitySheet open={open} onOpenChange={onOpenChange}>
+      <EntitySheetHeader>
+        <EntitySheetTitle>
+          {isEdit ? "Editar evento" : step === "type" ? "Nuevo evento" : "Detalles del evento"}
+        </EntitySheetTitle>
+        <EntitySheetDescription>
+          {step === "type" ? "Selecciona el tipo de evento." : "Completa la información y los asistentes."}
+        </EntitySheetDescription>
+      </EntitySheetHeader>
 
+      <EntitySheetBody>
         {step === "type" && !isEdit ? (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {EVENT_TYPES.map((t) => (
@@ -210,7 +207,7 @@ export function EventFormDialog({ open, onOpenChange, clubId, teamId, userId, de
             ))}
           </div>
         ) : (
-          <div className="space-y-4">
+          <>
             <div className="flex items-center gap-2">
               <span
                 className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium"
@@ -295,36 +292,32 @@ export function EventFormDialog({ open, onOpenChange, clubId, teamId, userId, de
                 )}
               </div>
             </div>
-          </div>
+          </>
         )}
+      </EntitySheetBody>
 
-        {step === "form" || isEdit ? (
-          <DialogFooter className="flex-col-reverse gap-2 sm:flex-row sm:justify-between">
-            {isEdit ? (
-              <Button
-                type="button"
-                variant="ghost"
-                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                onClick={() => deleteMutation.mutate()}
-                disabled={deleteMutation.isPending}
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Eliminar
-              </Button>
-            ) : (
-              <span />
-            )}
-            <div className="flex gap-2">
-              <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-                Cancelar
-              </Button>
-              <Button type="button" onClick={() => mutation.mutate()} disabled={mutation.isPending}>
-                {isEdit ? "Guardar cambios" : "Crear evento"}
-              </Button>
-            </div>
-          </DialogFooter>
-        ) : null}
-      </DialogContent>
-    </Dialog>
+      {step === "form" || isEdit ? (
+        <EntitySheetFooter>
+          {isEdit ? (
+            <Button
+              type="button"
+              variant="ghost"
+              className="text-destructive hover:bg-destructive/10 hover:text-destructive sm:mr-auto"
+              onClick={() => deleteMutation.mutate()}
+              disabled={deleteMutation.isPending}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Eliminar
+            </Button>
+          ) : null}
+          <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+            Cancelar
+          </Button>
+          <Button type="button" onClick={() => mutation.mutate()} disabled={mutation.isPending}>
+            {isEdit ? "Guardar cambios" : "Crear evento"}
+          </Button>
+        </EntitySheetFooter>
+      ) : null}
+    </EntitySheet>
   );
 }

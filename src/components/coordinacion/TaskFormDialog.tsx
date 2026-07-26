@@ -3,8 +3,13 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
-} from "@/components/ui/dialog";
+  EntitySheet,
+  EntitySheetBody,
+  EntitySheetDescription,
+  EntitySheetFooter,
+  EntitySheetHeader,
+  EntitySheetTitle,
+} from "@/components/squad/EntitySheet";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -47,7 +52,6 @@ export function TaskFormDialog({ open, onOpenChange, clubId, userId, task, onSav
     setDescription(task?.description ?? "");
     setDueAt(task?.due_at ? toLocalInputValue(task.due_at) : "");
     setPriority(task?.priority ?? "media");
-    // For new tasks, auto-assign the creator by default
     setAssignees(new Set(task ? (task.assignees ?? []).map((a) => a.id) : [userId]));
     setSearch("");
   }, [open, task, userId]);
@@ -135,103 +139,99 @@ export function TaskFormDialog({ open, onOpenChange, clubId, userId, task, onSav
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="font-display">{isEdit ? "Editar tarea" : "Nueva tarea"}</DialogTitle>
-          <DialogDescription>Coordina al staff del club.</DialogDescription>
-        </DialogHeader>
+    <EntitySheet open={open} onOpenChange={onOpenChange}>
+      <EntitySheetHeader>
+        <EntitySheetTitle>{isEdit ? "Editar tarea" : "Nueva tarea"}</EntitySheetTitle>
+        <EntitySheetDescription>Coordina al staff del club.</EntitySheetDescription>
+      </EntitySheetHeader>
 
-        <div className="space-y-4">
+      <EntitySheetBody>
+        <div className="space-y-1.5">
+          <Label htmlFor="task-title">Título</Label>
+          <Input id="task-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="p.ej. Preparar informe médico" />
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="task-desc">Descripción</Label>
+          <Textarea id="task-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
-            <Label htmlFor="task-title">Título</Label>
-            <Input id="task-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="p.ej. Preparar informe médico" />
+            <Label htmlFor="task-due">Fecha límite (opcional)</Label>
+            <Input id="task-due" type="datetime-local" value={dueAt} onChange={(e) => setDueAt(e.target.value)} />
           </div>
-
           <div className="space-y-1.5">
-            <Label htmlFor="task-desc">Descripción</Label>
-            <Textarea id="task-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
-          </div>
-
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="task-due">Fecha límite (opcional)</Label>
-              <Input id="task-due" type="datetime-local" value={dueAt} onChange={(e) => setDueAt(e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Prioridad</Label>
-              <div className="flex gap-2">
-                {PRIORITIES.map((p) => (
-                  <button
-                    key={p.key}
-                    type="button"
-                    onClick={() => setPriority(p.key)}
-                    className={cn(
-                      "flex-1 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
-                      priority === p.key
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border/60 text-muted-foreground hover:bg-white/[0.04]",
-                    )}
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label>Asignados ({assignees.size})</Label>
-            <Input placeholder="Buscar staff…" value={search} onChange={(e) => setSearch(e.target.value)} />
-            <div className="max-h-48 overflow-y-auto rounded-lg border border-border/60">
-              {filtered.length === 0 ? (
-                <div className="p-3 text-sm text-muted-foreground">Sin miembros</div>
-              ) : (
-                filtered.map((m) => {
-                  const selected = assignees.has(m.id);
-                  return (
-                    <button
-                      type="button"
-                      key={m.id}
-                      onClick={() => toggle(m.id)}
-                      className={cn(
-                        "flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-white/[0.04]",
-                        selected && "bg-white/[0.06]",
-                      )}
-                    >
-                      <span className="truncate">
-                        <span className="text-foreground">{m.full_name ?? m.email ?? "—"}</span>
-                        {m.role_name ? <span className="ml-2 text-xs text-muted-foreground">{m.role_name}</span> : null}
-                      </span>
-                      <span className={cn("h-4 w-4 shrink-0 rounded border", selected ? "border-primary bg-primary" : "border-border")} />
-                    </button>
-                  );
-                })
-              )}
+            <Label>Prioridad</Label>
+            <div className="flex gap-2">
+              {PRIORITIES.map((p) => (
+                <button
+                  key={p.key}
+                  type="button"
+                  onClick={() => setPriority(p.key)}
+                  className={cn(
+                    "flex-1 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                    priority === p.key
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border/60 text-muted-foreground hover:bg-white/[0.04]",
+                  )}
+                >
+                  {p.label}
+                </button>
+              ))}
             </div>
           </div>
         </div>
 
-        <DialogFooter className="flex-col-reverse gap-2 sm:flex-row sm:justify-between">
-          {isEdit ? (
-            <Button
-              type="button"
-              variant="ghost"
-              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-              onClick={() => deleteMutation.mutate()}
-              disabled={deleteMutation.isPending}
-            >
-              <Trash2 className="mr-2 h-4 w-4" /> Eliminar
-            </Button>
-          ) : <span />}
-          <div className="flex gap-2">
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button type="button" onClick={() => mutation.mutate()} disabled={mutation.isPending}>
-              {isEdit ? "Guardar cambios" : "Crear tarea"}
-            </Button>
+        <div className="space-y-1.5">
+          <Label>Asignados ({assignees.size})</Label>
+          <Input placeholder="Buscar staff…" value={search} onChange={(e) => setSearch(e.target.value)} />
+          <div className="max-h-48 overflow-y-auto rounded-lg border border-border/60">
+            {filtered.length === 0 ? (
+              <div className="p-3 text-sm text-muted-foreground">Sin miembros</div>
+            ) : (
+              filtered.map((m) => {
+                const selected = assignees.has(m.id);
+                return (
+                  <button
+                    type="button"
+                    key={m.id}
+                    onClick={() => toggle(m.id)}
+                    className={cn(
+                      "flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-white/[0.04]",
+                      selected && "bg-white/[0.06]",
+                    )}
+                  >
+                    <span className="truncate">
+                      <span className="text-foreground">{m.full_name ?? m.email ?? "—"}</span>
+                      {m.role_name ? <span className="ml-2 text-xs text-muted-foreground">{m.role_name}</span> : null}
+                    </span>
+                    <span className={cn("h-4 w-4 shrink-0 rounded border", selected ? "border-primary bg-primary" : "border-border")} />
+                  </button>
+                );
+              })
+            )}
           </div>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </EntitySheetBody>
+
+      <EntitySheetFooter>
+        {isEdit ? (
+          <Button
+            type="button"
+            variant="ghost"
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive sm:mr-auto"
+            onClick={() => deleteMutation.mutate()}
+            disabled={deleteMutation.isPending}
+          >
+            <Trash2 className="mr-2 h-4 w-4" /> Eliminar
+          </Button>
+        ) : null}
+        <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
+        <Button type="button" onClick={() => mutation.mutate()} disabled={mutation.isPending}>
+          {isEdit ? "Guardar cambios" : "Crear tarea"}
+        </Button>
+      </EntitySheetFooter>
+    </EntitySheet>
   );
 }
