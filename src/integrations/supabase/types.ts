@@ -310,6 +310,39 @@ export type Database = {
           },
         ]
       }
+      membership_audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          club_id: string | null
+          created_at: string
+          id: string
+          role_id: string | null
+          target_user_id: string
+          team_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          club_id?: string | null
+          created_at?: string
+          id?: string
+          role_id?: string | null
+          target_user_id: string
+          team_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          club_id?: string | null
+          created_at?: string
+          id?: string
+          role_id?: string | null
+          target_user_id?: string
+          team_id?: string | null
+        }
+        Relationships: []
+      }
       player_profiles: {
         Row: {
           availability_status: Database["public"]["Enums"]["availability_status"]
