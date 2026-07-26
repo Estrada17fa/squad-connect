@@ -72,7 +72,7 @@ export function CreateMemberDialog({
   clubId: string;
   roles: RoleOpt[];
   teams: TeamOpt[];
-  onCreated: (userId: string) => void;
+  onCreated: (userId: string, dominantRoleName: string | null) => void;
 }) {
   const qc = useQueryClient();
   const createFn = useServerFn(createClubMember);
@@ -174,7 +174,7 @@ export function CreateMemberDialog({
       const res = await createFn({ data: payload });
       toast.success("Miembro creado");
       qc.invalidateQueries({ queryKey: ["club-members", clubId] });
-      onCreated(res.userId);
+      onCreated(res.userId, dominantRoleName(memberships, roles));
       onOpenChange(false);
     } catch (e: any) {
       toast.error(e?.message ?? "No se pudo crear el miembro");

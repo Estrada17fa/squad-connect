@@ -1,9 +1,11 @@
 import * as React from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Settings2, Sliders, Trash2, User as UserIcon, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { MODULES, type ModuleKey } from "@/lib/modules";
+import { inferBaseRole } from "@/lib/rolePages";
 import type { AccessLevel } from "@/hooks/useAccess";
 import { EmptyState } from "@/components/squad/EmptyState";
 import { LoadingState } from "@/components/squad/LoadingState";
@@ -78,6 +80,7 @@ interface MembershipRow {
 
 export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boolean }) {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [selectedUserId, setSelectedUserId] = React.useState<string | null>(null);
   const [search, setSearch] = React.useState("");
   const [addOpen, setAddOpen] = React.useState(false);
@@ -349,7 +352,11 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
         clubId={clubId}
         roles={rolesQ.data ?? []}
         teams={teamsQ.data ?? []}
-        onCreated={(id) => setSelectedUserId(id)}
+        onCreated={(id, dominant) => {
+          setSelectedUserId(id);
+          const base = inferBaseRole(dominant);
+          navigate({ to: "/m/plantel", search: { role: base } as any });
+        }}
       />
     </div>
   );
