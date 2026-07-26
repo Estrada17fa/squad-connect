@@ -123,8 +123,17 @@ export function CreateMemberDialog({
   const dominant = dominantRoleName(memberships, roles);
   const isPlayer = dominant === "Jugador";
 
+  // Un jugador SIEMPRE requiere categoría específica. Los demás roles son club-wide.
   const membershipsOk =
-    memberships.length > 0 && memberships.every((m) => !!m.role_id && !!m.team_id);
+    memberships.length > 0 &&
+    memberships.every((m) => {
+      if (!m.role_id) return false;
+      const r = roles.find((x) => x.id === m.role_id);
+      if (r?.name === "Jugador") {
+        return !!m.team_id && m.team_id !== "__club__";
+      }
+      return true; // no-jugador: club-wide implícito
+    });
 
   const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
   const passOk = password.length >= 8;
@@ -139,7 +148,9 @@ export function CreateMemberDialog({
         const next = { ...m, ...patch };
         if (patch.role_id) {
           const r = roles.find((x) => x.id === patch.role_id);
-          if (next.team_id === "__club__" && !r?.allows_club_wide) next.team_id = "";
+          // Rol distinto de Jugador => forzar club-wide.
+          if (r && r.name !== "Jugador") next.team_id = "__club__";
+          else if (next.team_id === "__club__") next.team_id = "";
         }
         return next;
       }),
