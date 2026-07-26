@@ -31,7 +31,7 @@ export const Route = createFileRoute("/_authenticated/m/calendario")({
 const WEEKDAYS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
 function CalendarPage() {
-  const { activeTeam, getModuleAccess, user, isSuperAdmin } = useApp();
+  const { activeTeam, getModuleAccess, user, isSuperAdmin, viewsAllClub, profile } = useApp();
   const canEdit = isSuperAdmin || getModuleAccess("calendario") === "editor" || getModuleAccess("calendario") === "approver";
 
 
@@ -39,9 +39,13 @@ function CalendarPage() {
   const [selectedDay, setSelectedDay] = React.useState<Date | null>(null);
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<CalendarEventRow | null>(null);
-  const [clubId, setClubId] = React.useState<string | null>(null);
+  const [clubId, setClubId] = React.useState<string | null>(profile?.club_id ?? null);
 
-  const { data: events, isLoading } = useCalendarEvents(activeTeam?.id ?? null);
+  const { data: events, isLoading } = useCalendarEvents(
+    viewsAllClub
+      ? { mode: "club", clubId: profile?.club_id ?? null }
+      : { mode: "team", teamId: activeTeam?.id ?? null },
+  );
 
   React.useEffect(() => {
     if (!activeTeam?.id) {
