@@ -170,10 +170,11 @@ function RolesTab({ clubId, canEdit }: { clubId: string | null; canEdit: boolean
     <div className="grid gap-4 lg:grid-cols-[minmax(0,280px)_minmax(0,1fr)]">
       <div className="space-y-3">
         {canEdit ? (
-          <Button onClick={() => setCreateOpen(true)} className="w-full" variant="secondary">
+          <Button onClick={() => setCreateOpen(true)} className="w-full glow-primary">
             <Plus className="mr-2 h-4 w-4" /> Nuevo rol
           </Button>
         ) : null}
+
         <div className="grid gap-2">
           {roles.map((r) => (
             <StandardCard
