@@ -342,18 +342,17 @@ function AvatarStack({ people }: { people: { id: string; full_name: string | nul
 }
 
 function MeetingsList({
-  meetings, isLoading, userId, canEdit, viewMode, onEdit, onCreate, clubId,
+  meetings, isLoading, userId, canEdit, onEdit, onCreate, clubId,
 }: {
   meetings: MeetingRow[];
   isLoading: boolean;
   userId: string;
   canEdit: boolean;
-  viewMode: ViewMode;
   onEdit: (m: MeetingRow) => void;
   onCreate?: () => void;
   clubId: string;
 }) {
-  if (isLoading && meetings.length === 0) return <CardGridSkeleton variant={viewMode === "list" ? "list" : "grid"} count={3} />;
+  if (isLoading && meetings.length === 0) return <CardGridSkeleton count={3} />;
   if (meetings.length === 0) {
     return (
       <EmptyState
@@ -375,20 +374,19 @@ function MeetingsList({
 
   return (
     <div className="space-y-6">
-      <Section title="Próximas" items={upcoming} userId={userId} canEdit={canEdit} viewMode={viewMode} onEdit={onEdit} clubId={clubId} />
-      <Section title="Pasadas" items={past} userId={userId} canEdit={canEdit} viewMode={viewMode} onEdit={onEdit} clubId={clubId} isPast />
+      <Section title="Próximas" items={upcoming} userId={userId} canEdit={canEdit} onEdit={onEdit} clubId={clubId} />
+      <Section title="Pasadas" items={past} userId={userId} canEdit={canEdit} onEdit={onEdit} clubId={clubId} isPast />
     </div>
   );
 }
 
 function Section({
-  title, items, userId, canEdit, viewMode, onEdit, clubId, isPast,
+  title, items, userId, canEdit, onEdit, clubId, isPast,
 }: {
   title: string;
   items: MeetingRow[];
   userId: string;
   canEdit: boolean;
-  viewMode: ViewMode;
   onEdit: (m: MeetingRow) => void;
   clubId: string;
   isPast?: boolean;
@@ -399,7 +397,7 @@ function Section({
       <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
         {title} <span className="text-foreground/60">· {items.length}</span>
       </h3>
-      <div className={cn(viewMode === "grid" ? "grid grid-cols-1 gap-3 sm:grid-cols-2" : "flex flex-col gap-2")}>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {items.map((m, i) => (
           <div key={m.id} className="animate-card-in" style={{ animationDelay: `${i * 30}ms` }}>
             <MeetingCard meeting={m} userId={userId} canEdit={canEdit} onEdit={onEdit} clubId={clubId} isPast={!!isPast} />
