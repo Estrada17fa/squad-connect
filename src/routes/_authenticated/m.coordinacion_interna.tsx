@@ -83,20 +83,17 @@ function CoordinacionPage() {
         title="Coordinación"
         subtitle="Ámbito club · staff sin importar equipo"
         action={
-          <div className="flex items-center gap-2">
-            <ViewToggle value={viewMode} onChange={setViewMode} />
-            {canEdit ? (
-              <Button
-                onClick={() => {
-                  if (tab === "tareas") { setEditingTask(null); setTaskDialog(true); }
-                  else { setEditingMeeting(null); setMeetingDialog(true); }
-                }}
-                className="glow-primary"
-              >
-                <Plus className="mr-2 h-4 w-4" /> {tab === "tareas" ? "Nueva tarea" : "Nueva junta"}
-              </Button>
-            ) : null}
-          </div>
+          canEdit ? (
+            <Button
+              onClick={() => {
+                if (tab === "tareas") { setEditingTask(null); setTaskDialog(true); }
+                else { setEditingMeeting(null); setMeetingDialog(true); }
+              }}
+              className="glow-primary"
+            >
+              <Plus className="mr-2 h-4 w-4" /> {tab === "tareas" ? "Nueva tarea" : "Nueva junta"}
+            </Button>
+          ) : null
         }
       />
 
