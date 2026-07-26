@@ -170,6 +170,7 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
           setActiveTeamId={setActiveTeamId}
           userName={data.profile?.full_name ?? user.email ?? ""}
           isSuperAdmin={data.isSuperAdmin}
+          viewsAllClub={viewsAllClub}
           onSignOut={signOut}
         />
         <DesktopNav pages={visiblePages} />
