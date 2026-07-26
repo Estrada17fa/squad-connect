@@ -23,7 +23,8 @@ export function prefetchModule(
   const { clubId, teamId } = ctx;
   switch (moduleKey) {
     case "calendario":
-      if (teamId) qc.prefetchQuery(calendarEventsQueryOptions(teamId));
+      if (teamId) qc.prefetchQuery(calendarEventsQueryOptions({ mode: "team", teamId }));
+      else if (clubId) qc.prefetchQuery(calendarEventsQueryOptions({ mode: "club", clubId }));
       return;
     case "plantel":
       if (clubId) qc.prefetchQuery(rosterQueryOptions(clubId, teamId));
