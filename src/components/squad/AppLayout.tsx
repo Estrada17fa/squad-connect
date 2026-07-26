@@ -148,6 +148,7 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
           isSuperAdmin={data.isSuperAdmin}
           onSignOut={signOut}
         />
+        <DesktopNav pages={visiblePages} />
         <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6">
           <Outlet />
         </main>
