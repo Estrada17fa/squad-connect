@@ -210,7 +210,7 @@ function TasksList({
     });
   }, [tasks, filter, userId]);
 
-  if (isLoading && tasks.length === 0) return <CardGridSkeleton variant={viewMode === "list" ? "list" : "grid"} count={4} />;
+  if (isLoading && tasks.length === 0) return <CardGridSkeleton count={4} />;
   if (filtered.length === 0) {
     return (
       <EmptyState
