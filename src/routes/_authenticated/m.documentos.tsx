@@ -94,21 +94,14 @@ function DocumentosPage() {
         <EmptyState icon={FileText} title="Sin acceso" message="Tu rol actual no tiene permisos para ver documentos." />
       ) : (
         <>
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="relative flex-1 min-w-[220px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Buscar por título, persona, etiqueta…"
-                className="pl-9"
-              />
-            </div>
-            {canEdit ? (
-              <Button onClick={openNew}>
-                <Plus className="h-4 w-4 mr-2" /> Subir documento
-              </Button>
-            ) : null}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar por título, persona, etiqueta…"
+              className="pl-9"
+            />
           </div>
 
           <div className="-mx-1 overflow-x-auto no-scrollbar">
@@ -142,6 +135,13 @@ function DocumentosPage() {
               ) : null}
             </div>
           </div>
+
+          {canEdit ? (
+            <Button onClick={openNew} className="w-full glow-primary">
+              <Plus className="h-4 w-4 mr-2" /> Subir documento
+            </Button>
+          ) : null}
+
 
           {isLoading ? (
             <CardGridSkeleton count={6} />
