@@ -98,7 +98,7 @@ function PlantelPage() {
       <PageHeader
         hideTitle
         title="Plantel"
-        subtitle={activeTeam.name}
+        subtitle={viewsAllClub ? "Todo el club" : activeTeam?.name ?? ""}
         action={<ViewToggle value={viewMode} onChange={setViewMode} />}
       />
 
