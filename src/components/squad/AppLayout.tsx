@@ -279,13 +279,10 @@ function BottomNav({ pages }: { pages: ResolvedPage[] }) {
               className={cn(
                 "relative flex flex-1 flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 text-[11px] transition-colors",
                 active
-                  ? "bg-primary/15 text-primary"
+                  ? "text-primary"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
-              {active ? (
-                <span className="pointer-events-none absolute inset-x-4 -top-px h-[2px] rounded-full bg-primary shadow-[0_0_8px_hsl(150_100%_50%/0.8)]" />
-              ) : null}
               <Icon
                 className={cn(
                   "h-5 w-5",
@@ -321,7 +318,7 @@ function DesktopNav({ pages }: { pages: ResolvedPage[] }) {
               className={cn(
                 "inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
                 active
-                  ? "bg-primary/15 text-primary ring-1 ring-primary/40 shadow-[var(--glow-primary)]"
+                  ? "text-primary font-semibold [&_svg]:drop-shadow-[0_0_8px_hsl(150_100%_50%/0.85)]"
                   : "text-muted-foreground hover:bg-white/[0.04] hover:text-foreground",
               )}
             >
