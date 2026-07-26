@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Copy, Check, Mail, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/squad/PageHeader";
+import { ModuleTabs } from "@/components/squad/ModuleTabs";
 import { EmptyState } from "@/components/squad/EmptyState";
 import { LoadingState } from "@/components/squad/LoadingState";
 import { StatusBadge } from "@/components/squad/StatusBadge";
