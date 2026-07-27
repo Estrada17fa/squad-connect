@@ -84,8 +84,8 @@ export const requestsQueryOptions = (clubId: string | null | undefined) =>
           `id, club_id, type, status, requester_id, title, description, details, amount, currency,
            needed_at, decided_at, decided_by, decision_note,
            related_item_id, related_event_id, related_loan_id, created_at, updated_at,
-           requester:profiles!requests_requester_id_fkey(id, full_name, email, avatar_url),
-           decider:profiles!requests_decided_by_fkey(id, full_name, email, avatar_url),
+           requester:profiles!requests_requester_id_profiles_fkey(id, full_name, email, avatar_url),
+           decider:profiles!requests_decided_by_profiles_fkey(id, full_name, email, avatar_url),
            item:inventory_items(id, name, unit, image_path),
            event:calendar_events(id, title, starts_at)`,
         )
