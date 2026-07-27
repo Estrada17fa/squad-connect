@@ -125,13 +125,22 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
     : ((activeTeam?.baseRole as BaseRole | null | undefined) ?? inferBaseRole(activeTeam?.roleName ?? null));
 
   const effectiveBaseRole: BaseRole = data?.isSuperAdmin ? "admin" : activeBaseRole;
-  const effectiveModules = React.useMemo<ModuleKey[]>(
-    () => (data?.isSuperAdmin ? MODULES.map((m) => m.key) : accessibleModules),
-    [data?.isSuperAdmin, accessibleModules],
+
+  // Fuente de verdad única: predicado de accesibilidad basado en el nivel efectivo
+  // del módulo según el contexto activo (respeta scope, overrides y team activo).
+  // Se reutiliza tal cual para construir la navbar Y los chips de módulos, de
+  // modo que la navegación nunca oculta elementos con display:none — los que no
+  // pasan el predicado simplemente no se incluyen en el array renderizado.
+  const isModuleAccessible = React.useCallback(
+    (key: ModuleKey) => {
+      if (data?.isSuperAdmin) return true;
+      return getModuleAccess(key) !== "none";
+    },
+    [data?.isSuperAdmin, getModuleAccess],
   );
   const visiblePages = React.useMemo(
-    () => resolvePagesForUser(effectiveBaseRole, effectiveModules),
-    [effectiveBaseRole, effectiveModules],
+    () => resolvePagesForUser(effectiveBaseRole, isModuleAccessible),
+    [effectiveBaseRole, isModuleAccessible],
   );
 
   if (isLoading || !data) {
