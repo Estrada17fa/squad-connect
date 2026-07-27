@@ -3,7 +3,8 @@ import { queryOptions, useQuery, useQueryClient, keepPreviousData } from "@tanst
 import { supabase } from "@/integrations/supabase/client";
 
 export type TaskPriority = "baja" | "media" | "alta";
-export type TaskStatus = "pendiente" | "en_progreso" | "completada";
+export type TaskStatus = "pendiente" | "en_progreso" | "en_pausa" | "completada";
+export type MeetingStatus = "programada" | "en_curso" | "en_pausa" | "finalizada" | "cancelada";
 export type AttendanceStatus = "invitado" | "confirmado" | "rechazado";
 
 export interface AssigneeProfile {
@@ -33,6 +34,9 @@ export interface MeetingRow {
   title: string;
   starts_at: string;
   ends_at: string | null;
+  status: MeetingStatus;
+  started_at: string | null;
+  ended_at_actual: string | null;
   location: string | null;
   agenda: string | null;
   notes: string | null;
@@ -99,7 +103,7 @@ export const meetingsQueryOptions = (clubId: string | null | undefined) =>
       const { data, error } = await supabase
         .from("meetings")
         .select(
-          "id, club_id, title, starts_at, ends_at, location, agenda, notes, created_by, created_at, meeting_attendees(user_id, attendance_status, profile:profiles!meeting_attendees_user_id_profiles_fkey(id, full_name, email, avatar_url))",
+          "id, club_id, title, starts_at, ends_at, status, started_at, ended_at_actual, location, agenda, notes, created_by, created_at, meeting_attendees(user_id, attendance_status, profile:profiles!meeting_attendees_user_id_profiles_fkey(id, full_name, email, avatar_url))",
         )
         .eq("club_id", clubId!)
         .order("starts_at", { ascending: true });
