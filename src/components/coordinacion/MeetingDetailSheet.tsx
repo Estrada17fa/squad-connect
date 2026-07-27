@@ -1,7 +1,8 @@
 import * as React from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Trash2, Pencil, Check, X as XIcon, MapPin, CalendarClock } from "lucide-react";
+import { Trash2, Pencil, Check, X as XIcon, MapPin, CalendarClock, Video, ExternalLink } from "lucide-react";
+import { isMeetingUrl } from "./MeetingFormDialog";
 import {
   EntitySheet,
   EntitySheetBody,
