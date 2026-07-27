@@ -352,11 +352,14 @@ export type Database = {
           club_id: string
           created_at: string
           created_by: string | null
+          ended_at_actual: string | null
           ends_at: string | null
           id: string
           location: string | null
           notes: string | null
+          started_at: string | null
           starts_at: string
+          status: string
           title: string
           updated_at: string
         }
@@ -365,11 +368,14 @@ export type Database = {
           club_id: string
           created_at?: string
           created_by?: string | null
+          ended_at_actual?: string | null
           ends_at?: string | null
           id?: string
           location?: string | null
           notes?: string | null
+          started_at?: string | null
           starts_at: string
+          status?: string
           title: string
           updated_at?: string
         }
@@ -378,11 +384,14 @@ export type Database = {
           club_id?: string
           created_at?: string
           created_by?: string | null
+          ended_at_actual?: string | null
           ends_at?: string | null
           id?: string
           location?: string | null
           notes?: string | null
+          started_at?: string | null
           starts_at?: string
+          status?: string
           title?: string
           updated_at?: string
         }
@@ -943,7 +952,7 @@ export type Database = {
         | "junta"
         | "evento_especial"
       task_priority: "baja" | "media" | "alta"
-      task_status: "pendiente" | "en_progreso" | "completada"
+      task_status: "pendiente" | "en_progreso" | "completada" | "en_pausa"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1091,7 +1100,7 @@ export const Constants = {
         "evento_especial",
       ],
       task_priority: ["baja", "media", "alta"],
-      task_status: ["pendiente", "en_progreso", "completada"],
+      task_status: ["pendiente", "en_progreso", "completada", "en_pausa"],
     },
   },
 } as const
