@@ -1,7 +1,8 @@
 import * as React from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Trash2, Pencil, Check, X as XIcon, MapPin, CalendarClock } from "lucide-react";
+import { Trash2, Pencil, Check, X as XIcon, MapPin, CalendarClock, Video, ExternalLink } from "lucide-react";
+import { isMeetingUrl } from "./MeetingFormDialog";
 import {
   EntitySheet,
   EntitySheetBody,
@@ -167,8 +168,20 @@ export function MeetingDetailSheet({ open, onOpenChange, meeting, userId, clubId
         </Field>
 
         {meeting.location ? (
-          <Field label="Ubicación" icon={MapPin}>
-            <span className="text-foreground">{meeting.location}</span>
+          <Field label="Ubicación" icon={isMeetingUrl(meeting.location) ? Video : MapPin}>
+            {isMeetingUrl(meeting.location) ? (
+              <a
+                href={meeting.location}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-primary underline-offset-4 hover:underline break-all"
+              >
+                <span className="break-all">{meeting.location}</span>
+                <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+              </a>
+            ) : (
+              <span className="text-foreground">{meeting.location}</span>
+            )}
           </Field>
         ) : null}
 

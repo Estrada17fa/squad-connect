@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
+import { Trash2, MapPin, Video } from "lucide-react";
 import {
   EntitySheet,
   EntitySheetBody,
@@ -36,6 +36,7 @@ export function MeetingFormDialog({ open, onOpenChange, clubId, userId, meeting 
   const [title, setTitle] = React.useState("");
   const [startsAt, setStartsAt] = React.useState("");
   const [endsAt, setEndsAt] = React.useState("");
+  const [locationType, setLocationType] = React.useState<"presencial" | "videollamada">("presencial");
   const [location, setLocation] = React.useState("");
   const [agenda, setAgenda] = React.useState("");
   const [notes, setNotes] = React.useState("");
@@ -49,7 +50,9 @@ export function MeetingFormDialog({ open, onOpenChange, clubId, userId, meeting 
     setTitle(meeting?.title ?? "");
     setStartsAt(meeting?.starts_at ? toLocalInputValue(meeting.starts_at) : "");
     setEndsAt(meeting?.ends_at ? toLocalInputValue(meeting.ends_at) : "");
-    setLocation(meeting?.location ?? "");
+    const loc = meeting?.location ?? "";
+    setLocationType(isMeetingUrl(loc) ? "videollamada" : "presencial");
+    setLocation(loc);
     setAgenda(meeting?.agenda ?? "");
     setNotes(meeting?.notes ?? "");
     setInvitees(new Set((meeting?.attendees ?? []).map((a) => a.user_id)));
@@ -169,8 +172,40 @@ export function MeetingFormDialog({ open, onOpenChange, clubId, userId, meeting 
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="m-loc">Ubicación</Label>
-          <Input id="m-loc" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Sala, oficina, videollamada…" />
+          <Label>Ubicación</Label>
+          <div className="flex gap-1.5">
+            <button
+              type="button"
+              onClick={() => setLocationType("presencial")}
+              className={cn(
+                "flex-1 flex items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors",
+                locationType === "presencial"
+                  ? "border-primary bg-primary/15 text-primary"
+                  : "border-border/60 text-muted-foreground hover:bg-white/[0.04]",
+              )}
+            >
+              <MapPin className="h-3.5 w-3.5" /> Presencial
+            </button>
+            <button
+              type="button"
+              onClick={() => setLocationType("videollamada")}
+              className={cn(
+                "flex-1 flex items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors",
+                locationType === "videollamada"
+                  ? "border-primary bg-primary/15 text-primary"
+                  : "border-border/60 text-muted-foreground hover:bg-white/[0.04]",
+              )}
+            >
+              <Video className="h-3.5 w-3.5" /> Videollamada
+            </button>
+          </div>
+          <Input
+            id="m-loc"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            placeholder={locationType === "videollamada" ? "https://zoom.us/… o link de Teams/Meet" : "Sala, oficina, dirección…"}
+            type={locationType === "videollamada" ? "url" : "text"}
+          />
         </div>
 
         <div className="space-y-1.5">
@@ -236,4 +271,9 @@ export function MeetingFormDialog({ open, onOpenChange, clubId, userId, meeting 
       </EntitySheetFooter>
     </EntitySheet>
   );
+}
+
+export function isMeetingUrl(s: string | null | undefined): boolean {
+  if (!s) return false;
+  return /^(https?:\/\/|zoommtg:|msteams:|tel:)/i.test(s.trim());
 }
