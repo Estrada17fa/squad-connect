@@ -3,7 +3,8 @@ import { queryOptions, useQuery, useQueryClient, keepPreviousData } from "@tanst
 import { supabase } from "@/integrations/supabase/client";
 
 export type TaskPriority = "baja" | "media" | "alta";
-export type TaskStatus = "pendiente" | "en_progreso" | "completada";
+export type TaskStatus = "pendiente" | "en_progreso" | "en_pausa" | "completada";
+export type MeetingStatus = "programada" | "en_curso" | "en_pausa" | "finalizada" | "cancelada";
 export type AttendanceStatus = "invitado" | "confirmado" | "rechazado";
 
 export interface AssigneeProfile {
