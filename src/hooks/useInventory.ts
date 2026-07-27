@@ -108,7 +108,7 @@ export const inventoryLoansQueryOptions = (clubId: string | null | undefined) =>
           `id, club_id, item_id, borrower_user_id, team_id, event_id, request_id,
            quantity, returned_quantity, expected_return_at, returned_at, notes,
            created_by, created_at, updated_at,
-           item:inventory_items(id, name, unit),
+           item:inventory_items(id, name, unit, image_path),
            borrower:profiles!inventory_loans_borrower_user_id_profiles_fkey(id, full_name, email, avatar_url),
            team:teams(id, name, category),
            event:calendar_events(id, title, starts_at)`,
