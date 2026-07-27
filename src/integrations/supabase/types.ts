@@ -754,6 +754,13 @@ export type Database = {
             referencedRelation: "requests"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "request_comments_user_id_profiles_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       requests: {
@@ -829,6 +836,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "requests_decided_by_profiles_fkey"
+            columns: ["decided_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "requests_related_event_id_fkey"
             columns: ["related_event_id"]
             isOneToOne: false
@@ -847,6 +861,13 @@ export type Database = {
             columns: ["related_loan_id"]
             isOneToOne: false
             referencedRelation: "inventory_loans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "requests_requester_id_profiles_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
