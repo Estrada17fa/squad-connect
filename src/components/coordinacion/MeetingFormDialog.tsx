@@ -50,7 +50,9 @@ export function MeetingFormDialog({ open, onOpenChange, clubId, userId, meeting 
     setTitle(meeting?.title ?? "");
     setStartsAt(meeting?.starts_at ? toLocalInputValue(meeting.starts_at) : "");
     setEndsAt(meeting?.ends_at ? toLocalInputValue(meeting.ends_at) : "");
-    setLocation(meeting?.location ?? "");
+    const loc = meeting?.location ?? "";
+    setLocationType(isMeetingUrl(loc) ? "videollamada" : "presencial");
+    setLocation(loc);
     setAgenda(meeting?.agenda ?? "");
     setNotes(meeting?.notes ?? "");
     setInvitees(new Set((meeting?.attendees ?? []).map((a) => a.user_id)));
