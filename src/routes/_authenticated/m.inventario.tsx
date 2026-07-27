@@ -166,7 +166,7 @@ function InventarioPage() {
                     item={it}
                     available={itemAvailability(it, outstanding)}
                     canEdit={canEdit}
-                    onEdit={() => { setEditingItem(it); setItemDialog(true); }}
+                    onOpen={() => setDetailItem(it)}
                     onLoan={() => openNewLoan(it.id)}
                   />
                 </div>
