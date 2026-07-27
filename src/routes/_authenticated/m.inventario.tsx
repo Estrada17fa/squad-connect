@@ -324,6 +324,11 @@ function InventarioPage() {
           setDetailRequest(null);
           setEditingLoan(null);
           setLoanInitialItem(r.related_item_id ?? null);
+          const q = Number(r.details?.quantity);
+          setLoanInitialQuantity(Number.isFinite(q) && q > 0 ? q : null);
+          setLoanInitialExpectedReturn(
+            (r.details?.expected_return_at as string | undefined) ?? r.needed_at ?? null,
+          );
           setLoanDialog(true);
         }}
       />
