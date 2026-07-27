@@ -34,6 +34,9 @@ export interface MeetingRow {
   title: string;
   starts_at: string;
   ends_at: string | null;
+  status: MeetingStatus;
+  started_at: string | null;
+  ended_at_actual: string | null;
   location: string | null;
   agenda: string | null;
   notes: string | null;
