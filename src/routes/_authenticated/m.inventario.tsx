@@ -54,10 +54,12 @@ function InventarioPage() {
 
   const [itemDialog, setItemDialog] = React.useState(false);
   const [editingItem, setEditingItem] = React.useState<InventoryItem | null>(null);
+  const [detailItem, setDetailItem] = React.useState<InventoryItem | null>(null);
   const [loanDialog, setLoanDialog] = React.useState(false);
   const [editingLoan, setEditingLoan] = React.useState<InventoryLoan | null>(null);
   const [loanInitialItem, setLoanInitialItem] = React.useState<string | null>(null);
   const [returnLoan, setReturnLoan] = React.useState<InventoryLoan | null>(null);
+  const [detailLoan, setDetailLoan] = React.useState<InventoryLoan | null>(null);
 
   if (!canAccess) {
     return (
