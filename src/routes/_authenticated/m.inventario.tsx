@@ -196,7 +196,7 @@ function InventarioPage() {
               loans={loansFilter === "activos" ? activeLoans : returnedLoans}
               variant={loansFilter}
               canEdit={canEdit}
-              onEdit={(l) => { setEditingLoan(l); setLoanInitialItem(null); setLoanDialog(true); }}
+              onOpen={(l) => setDetailLoan(l)}
               onReturn={(l) => setReturnLoan(l)}
               onCreate={canEdit ? () => openNewLoan() : undefined}
               hasItems={items.length > 0}
