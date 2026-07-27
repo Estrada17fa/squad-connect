@@ -10,6 +10,7 @@ import { EVENT_TYPES, EVENT_TYPE_MAP } from "@/lib/eventTypes";
 import { addMonths, isSameDay, monthGrid, monthLabel, startOfDay } from "@/lib/calendar-utils";
 import { EventFormDialog } from "@/components/calendar/EventFormDialog";
 import { DaySheet } from "@/components/calendar/DaySheet";
+import { ModuleTabs } from "@/components/squad/ModuleTabs";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 
