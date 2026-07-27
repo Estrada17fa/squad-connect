@@ -16,9 +16,13 @@ export const Route = createFileRoute("/_authenticated/agenda")({
 
 function AgendaPage() {
   const { accessibleModules } = useApp();
-  if (accessibleModules.includes("calendario")) {
-    // Reutiliza el módulo Calendario existente como contenido de la página Agenda.
-    return <Navigate to="/m/$module" params={{ module: "calendario" }} replace />;
+  const target = accessibleModules.includes("agenda")
+    ? "agenda"
+    : accessibleModules.includes("mes")
+      ? "mes"
+      : null;
+  if (target) {
+    return <Navigate to="/m/$module" params={{ module: target }} replace />;
   }
   return (
     <div className="space-y-6">
@@ -26,7 +30,7 @@ function AgendaPage() {
       <EmptyState
         icon={Calendar}
         title="Sin acceso a la agenda"
-        message="Tu rol actual no tiene acceso al calendario del club."
+        message="Tu rol actual no tiene acceso a los módulos de la agenda."
       />
     </div>
   );

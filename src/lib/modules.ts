@@ -1,5 +1,6 @@
 import {
   Calendar,
+  CalendarClock,
   Users,
   Plane,
   Package,
@@ -19,7 +20,8 @@ import {
 } from "lucide-react";
 
 export type ModuleKey =
-  | "calendario"
+  | "agenda"
+  | "mes"
   | "plantel"
   | "viajes"
   | "inventario"
@@ -52,7 +54,8 @@ export interface ModuleDef {
 }
 
 export const MODULES: ModuleDef[] = [
-  { key: "calendario", label: "Calendario", icon: Calendar, description: "Partidos, entrenamientos y eventos", scope: "mixed" },
+  { key: "agenda", label: "Agenda", icon: CalendarClock, description: "Próximos eventos en lista", scope: "mixed" },
+  { key: "mes", label: "Mes", icon: Calendar, description: "Vista mensual de eventos", scope: "mixed" },
   { key: "plantel", label: "Plantel", icon: Users, description: "Jugadores y cuerpo técnico", scope: "team" },
   { key: "viajes", label: "Viajes", icon: Plane, description: "Logística de traslados y hospedajes", scope: "mixed" },
   { key: "inventario", label: "Inventario", icon: Package, description: "Material deportivo y equipamiento", scope: "mixed" },
@@ -67,7 +70,6 @@ export const MODULES: ModuleDef[] = [
   { key: "salud", label: "Salud", icon: HeartPulse, description: "Parte médico y lesiones", scope: "team" },
   { key: "desarrollo", label: "Desarrollo", icon: TrendingUp, description: "Evaluaciones y progresos", scope: "team" },
   { key: "nutricion", label: "Nutrición", icon: Apple, description: "Planes alimenticios", scope: "team" },
-  
 ];
 
 export const MODULE_MAP: Record<ModuleKey, ModuleDef> = Object.fromEntries(
