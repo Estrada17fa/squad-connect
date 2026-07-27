@@ -40,6 +40,8 @@ export function ItemFormDialog({ open, onOpenChange, clubId, userId, item, outst
   const [file, setFile] = React.useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
   const [removeExisting, setRemoveExisting] = React.useState(false);
+  const cameraInputRef = React.useRef<HTMLInputElement>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const existingUrlQ = useInventoryImageUrl(!removeExisting ? item?.image_path : null);
 
