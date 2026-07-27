@@ -282,6 +282,8 @@ function InventarioPage() {
         items={items}
         outstanding={outstanding}
         initialItemId={loanInitialItem}
+        initialExpectedReturn={loanInitialExpectedReturn}
+        initialQuantity={loanInitialQuantity}
       />
       <ReturnLoanDialog
         open={!!returnLoan}
