@@ -201,8 +201,26 @@ export function RequestFormDialog({
                   ))}
                 </SelectContent>
               </Select>
+              <ItemPreview item={(itemsQ.data ?? []).find((it) => it.id === relItem) ?? null} />
             </div>
             <NumberField label="Cantidad" value={details.quantity ?? ""} onChange={(v) => setDetails({ ...details, quantity: v })} min={1} />
+            <div className="space-y-1.5">
+              <Label htmlFor="r-return">Devolución estimada (opcional)</Label>
+              <Input
+                id="r-return"
+                type="datetime-local"
+                value={details.expected_return_at ? toLocalInputValue(details.expected_return_at) : ""}
+                onChange={(e) =>
+                  setDetails({
+                    ...details,
+                    expected_return_at: e.target.value ? fromLocalInputValue(e.target.value) : null,
+                  })
+                }
+              />
+              <p className="text-xs text-muted-foreground">
+                Se copia automáticamente al préstamo cuando se apruebe.
+              </p>
+            </div>
           </>
         ) : null}
 
