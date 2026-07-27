@@ -181,8 +181,9 @@ export function findHubForModule(
 }
 
 /**
- * Agrupa módulos por página según el mapa fijo de `base_role`.
- * Los módulos que no encajen en ninguna página del rol se devuelven en un grupo "Otros".
+ * Agrupa módulos por página. Usa el mapa del `base_role` como fuente principal
+ * y, para cualquier módulo no listado en ese rol, cae al `DEFAULT_PAGE_FOR_MODULE`.
+ * Nunca produce un grupo "Otros": si un módulo no tiene página por defecto, se omite.
  */
 export function groupModulesByPage(
   baseRole: BaseRole | null | undefined,
@@ -191,19 +192,30 @@ export function groupModulesByPage(
   const role: BaseRole = baseRole ?? "staff";
   const roleMap = ROLE_PAGES[role];
   const set = new Set(moduleKeys);
-  const used = new Set<ModuleKey>();
+  const perPage: Record<PageKey, ModuleKey[]> = {
+    home: [], agenda: [], club: [], coordinacion: [], admin: [],
+  };
+  const placed = new Set<ModuleKey>();
+
+  for (const p of PAGES) {
+    for (const mk of roleMap[p.key]) {
+      if (set.has(mk) && !placed.has(mk)) {
+        perPage[p.key].push(mk);
+        placed.add(mk);
+      }
+    }
+  }
+  for (const mk of moduleKeys) {
+    if (placed.has(mk)) continue;
+    const dest = DEFAULT_PAGE_FOR_MODULE[mk];
+    if (!dest || dest === "home") continue;
+    perPage[dest].push(mk);
+    placed.add(mk);
+  }
+
   const out: Array<{ page: PageDef; modules: ModuleKey[] }> = [];
   for (const p of PAGES) {
-    const mods = roleMap[p.key].filter((mk) => set.has(mk));
-    for (const mk of mods) used.add(mk);
-    if (mods.length > 0) out.push({ page: p, modules: mods });
-  }
-  const others = moduleKeys.filter((mk) => !used.has(mk));
-  if (others.length > 0) {
-    out.push({
-      page: { key: "home", label: "Otros", icon: PAGE_MAP.home.icon, to: "/" },
-      modules: others,
-    });
+    if (perPage[p.key].length > 0) out.push({ page: p, modules: perPage[p.key] });
   }
   return out;
 }
