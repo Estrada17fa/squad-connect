@@ -142,8 +142,11 @@ function CoordinacionPage() {
             clubId={clubId}
             userId={user.id}
             task={editingTask}
-            onSaved={({ isEdit, assigneeIds }) => {
-              if (!isEdit && filter === "mias" && !assigneeIds.includes(user.id)) {
+            onSaved={({ isEdit, assigneeIds, priority }) => {
+              if (isEdit) return;
+              const hiddenByMine = filter === "mias" && !assigneeIds.includes(user.id);
+              const hiddenByPriority = (filter === "alta" || filter === "media" || filter === "baja") && filter !== priority;
+              if (hiddenByMine || hiddenByPriority) {
                 setFilter("todas");
                 toast.info("Mostrando todas las tareas para que veas la que acabas de crear");
               }
