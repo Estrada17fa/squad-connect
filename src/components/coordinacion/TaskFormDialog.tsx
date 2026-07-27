@@ -25,7 +25,7 @@ interface Props {
   clubId: string;
   userId: string;
   task?: TaskRow | null;
-  onSaved?: (info: { isEdit: boolean; assigneeIds: string[] }) => void;
+  onSaved?: (info: { isEdit: boolean; assigneeIds: string[]; priority: TaskPriority }) => void;
 }
 
 const PRIORITIES: { key: TaskPriority; label: string }[] = [
