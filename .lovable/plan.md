@@ -1,34 +1,37 @@
 ## Objetivo
-Que la navbar (inferior en móvil y superior en desktop) solo muestre las páginas que tienen al menos un módulo activo para el usuario. Si desactivas todos los módulos de "Coordinación" o "Admin", esa página desaparece del navbar y las restantes se recorren para ocupar el espacio (el `flex justify-around` ya reparte el ancho automáticamente).
+Que cualquier página del navbar (excepto Home) desaparezca cuando no tenga módulos activos para el usuario, y que las restantes se distribuyan uniformemente en el ancho — tanto en móvil como en desktop.
 
 ## Diagnóstico
-`src/components/squad/AppLayout.tsx` construye `visiblePages` con `resolvePagesForUser(effectiveBaseRole, effectiveModules)` y lo pasa a `BottomNav` y `DesktopNav`. El filtrado real vive en `src/lib/rolePages.ts`:
 
-- **Home**: se agrega siempre (línea 119) — correcto, es el dashboard.
-- **Agenda**: solo si el usuario tiene `calendario` — correcto.
-- **Club / Coordinación**: solo si `perPage[key].length > 0` — correcto.
-- **Admin**: se agrega cuando `role === "admin"` **sin importar si tiene módulos** (línea 124-127). Este es el bug principal: un admin al que le desactivan `usuarios` y `documentos` sigue viendo "Admin" en la navbar.
+En `src/lib/rolePages.ts` → `resolvePagesForUser`:
+- `Agenda` solo aparece si el usuario tiene `calendario` ✅
+- `Club` / `Coordinación` (no-jugador) filtran por `perPage[key].length > 0` ✅
+- `Admin` y `Coordinación (jugador)` ya se corrigieron en el turno anterior ✅
 
-Además, el caso `coordinacion` para `jugador` (línea 128-136) siempre empuja la página aunque `perPage.coordinacion` esté vacío. Mismo problema si se le desactivan `solicitudes` al jugador.
+Es decir, el filtrado ya funciona para todos los roles. Lo que falla es la distribución visual:
+
+En `src/components/squad/AppLayout.tsx`:
+- `BottomNav` (móvil) usa `flex justify-around` + `flex-1` → sí reparte espacio uniforme. ✅
+- `DesktopNav` usa `flex items-center gap-1` sin `flex-1` en los Links → los ítems quedan pegados a la izquierda en vez de repartirse en el ancho del contenedor. ❌
+
+Ese es el motivo por el que en desktop "no se recorren para llenar el espacio".
 
 ## Cambios
 
-### `src/lib/rolePages.ts` — `resolvePagesForUser`
-- **Admin**: cambiar `if (role === "admin") out.push(...)` por `if (role === "admin" && perPage.admin.length > 0) out.push(...)`.
-- **Coordinación (jugador)**: solo empujar la página cuando `perPage.coordinacion.length > 0`; si está vacío, no aparece "Mis Solicitudes".
+### `src/components/squad/AppLayout.tsx` — `DesktopNav`
+- Cambiar el contenedor a `flex items-stretch justify-around gap-1` (mantener `max-w-6xl`).
+- Agregar `flex-1 justify-center` a cada `<Link>` para que cada página tome una fracción igual del ancho.
+- Conservar iconos, label y estado activo actuales.
 
-Nada más. `Club` y `Coordinación` (no-jugador) ya respetan el filtro. `Agenda` ya depende de `calendario`. `Home` se conserva siempre.
-
-### Nada que tocar en AppLayout / BottomNav / DesktopNav
-El renderizado ya itera sobre `visiblePages` con `flex justify-around` (móvil) y `flex gap-1` (desktop), así que las páginas restantes se recorren solas.
+### `src/lib/rolePages.ts`
+Sin cambios — el filtrado por página ya cumple la regla "desaparece si no hay módulos activos, Home siempre queda".
 
 ## Verificación
-1. Como admin, desactivar `usuarios` y `documentos` en overrides → "Admin" desaparece del navbar y quedan 4 ítems repartidos.
-2. Como jugador, desactivar `solicitudes` → "Mis Solicitudes" desaparece.
-3. Desactivar todo `Mi Club` → "Mi Club" desaparece (ya funcionaba, revalidar).
-4. Reactivar cualquier módulo → la página reaparece en su posición fija.
+1. Como Técnico, desactivar todos los módulos de `Mi Club` → desaparece "Mi Club"; Home + Agenda + Coordinación se reparten en 3 columnas iguales tanto en móvil como en desktop.
+2. Desactivar además Coordinación → quedan Home + Agenda repartidos al 50/50.
+3. Como Admin con todo activo → 5 columnas iguales.
+4. Como Jugador sin `solicitudes` → sin "Mis Solicitudes"; las demás se distribuyen.
 
 ## Fuera de alcance
-- No se toca el cálculo de permisos (`useAccess`) ni el esquema.
-- No se cambia el orden fijo de páginas (Home → Agenda → Club → Coordinación → Admin).
-- Home no se oculta aunque esté "vacío" (siempre es el landing).
+- No se toca lógica de permisos ni el orden fijo de páginas.
+- Home sigue siempre visible (es el landing).
