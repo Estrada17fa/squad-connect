@@ -107,8 +107,10 @@ export const createClubMember = createServerFn({ method: "POST" })
     for (const m of data.memberships) {
       if (m.team_id === null) {
         const r = rolesById.get(m.role_id);
-        if (!r?.allows_club_wide) {
-          throw new Error("Un rol sin alcance de club no puede asignarse a 'Todo el club'");
+        // Jugador is the only role that requires a specific team; all other
+        // roles are club-wide by design regardless of the allows_club_wide flag.
+        if (r?.name === "Jugador") {
+          throw new Error("El rol Jugador requiere una categoría específica");
         }
       }
     }
