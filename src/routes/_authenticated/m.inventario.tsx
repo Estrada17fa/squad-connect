@@ -305,6 +305,21 @@ function InventarioPage() {
         onEdit={() => { if (detailLoan) { setEditingLoan(detailLoan); setLoanInitialItem(null); setDetailLoan(null); setLoanDialog(true); } }}
         onReturn={() => { if (detailLoan) { const l = detailLoan; setDetailLoan(null); setReturnLoan(l); } }}
       />
+      <RequestDetailSheet
+        open={!!detailRequest}
+        onOpenChange={(o) => { if (!o) setDetailRequest(null); }}
+        request={detailRequest}
+        clubId={clubId}
+        userId={user.id}
+        canEditModule={canEditSolicitudes}
+        canApprove={canApproveSolicitudes}
+        onEdit={() => { /* editing requests handled from Solicitudes module */ }}
+        onConvertToLoan={(r) => {
+          setDetailRequest(null);
+          setEditingLoan(null);
+          setLoanInitialItem(r.related_item_id ?? null);
+          setLoanDialog(true);
+        }}
     </div>
   );
 }
