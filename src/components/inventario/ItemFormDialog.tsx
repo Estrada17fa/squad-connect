@@ -158,13 +158,27 @@ export function ItemFormDialog({ open, onOpenChange, clubId, userId, item, outst
         <div className="space-y-1.5">
           <Label>Foto del artículo</Label>
           <div className="flex items-start gap-3">
-            <label className="relative flex h-24 w-24 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg border border-dashed border-border/60 bg-white/[0.02] hover:bg-white/[0.04]">
+            <div className="relative flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-dashed border-border/60 bg-white/[0.02]">
               {displayedImage ? (
                 <img src={displayedImage} alt="preview" className="h-full w-full object-cover" />
               ) : (
                 <ImagePlus className="h-6 w-6 text-muted-foreground" />
               )}
               <input
+                ref={cameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0] ?? null;
+                  setFile(f);
+                  if (f) setRemoveExisting(false);
+                  e.target.value = "";
+                }}
+              />
+              <input
+                ref={fileInputRef}
                 type="file"
                 accept="image/*"
                 className="hidden"
@@ -172,23 +186,45 @@ export function ItemFormDialog({ open, onOpenChange, clubId, userId, item, outst
                   const f = e.target.files?.[0] ?? null;
                   setFile(f);
                   if (f) setRemoveExisting(false);
+                  e.target.value = "";
                 }}
               />
-            </label>
-            <div className="flex flex-col gap-1.5 text-xs text-muted-foreground">
+            </div>
+            <div className="flex flex-1 flex-col gap-2 text-xs text-muted-foreground">
               <span>JPG, PNG o WebP. Se muestra en la miniatura y el detalle.</span>
-              {displayedImage ? (
-                <button
+              <div className="flex flex-wrap gap-2">
+                <Button
                   type="button"
-                  onClick={() => { setFile(null); setRemoveExisting(true); }}
-                  className="inline-flex w-fit items-center gap-1 rounded-md border border-border/60 px-2 py-1 text-xs text-destructive hover:bg-destructive/10"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => cameraInputRef.current?.click()}
+                  className="h-8"
                 >
-                  <X className="h-3 w-3" /> Quitar foto
-                </button>
-              ) : null}
+                  <Camera className="mr-1.5 h-3.5 w-3.5" /> Tomar foto
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="h-8"
+                >
+                  <Upload className="mr-1.5 h-3.5 w-3.5" /> Subir foto
+                </Button>
+                {displayedImage ? (
+                  <button
+                    type="button"
+                    onClick={() => { setFile(null); setRemoveExisting(true); }}
+                    className="inline-flex items-center gap-1 rounded-md border border-border/60 px-2 py-1 text-xs text-destructive hover:bg-destructive/10"
+                  >
+                    <X className="h-3 w-3" /> Quitar
+                  </button>
+                ) : null}
+              </div>
             </div>
           </div>
         </div>
+
 
         <div className="space-y-1.5">
           <Label htmlFor="i-name">Nombre</Label>
