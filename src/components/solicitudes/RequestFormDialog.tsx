@@ -33,7 +33,7 @@ interface Props {
   initialType?: RequestType;
 }
 
-type ItemLite = { id: string; name: string; unit: string | null };
+type ItemLite = { id: string; name: string; unit: string | null; image_path: string | null };
 type EventLite = { id: string; title: string; starts_at: string; event_type: string };
 type MemberLite = { id: string; full_name: string | null; email: string | null };
 
