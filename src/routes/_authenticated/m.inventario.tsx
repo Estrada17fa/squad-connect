@@ -125,6 +125,8 @@ function InventarioPage() {
   function openNewLoan(itemId?: string) {
     setEditingLoan(null);
     setLoanInitialItem(itemId ?? null);
+    setLoanInitialExpectedReturn(null);
+    setLoanInitialQuantity(null);
     setLoanDialog(true);
   }
 
