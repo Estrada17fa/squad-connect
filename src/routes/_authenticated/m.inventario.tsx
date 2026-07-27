@@ -539,10 +539,10 @@ function LoanCard({
         : { label: `Activo · ${pending}`, variant: "info" };
 
   const borrowerName = loan.borrower?.full_name ?? loan.borrower?.email ?? "Miembro";
-  const dueLabel = loan.expected_return_at
-    ? `Devolver ${formatDateTime(loan.expected_return_at)}`
-    : loan.returned_at
-      ? `Devuelto ${formatDateTime(loan.returned_at)}`
+  const dueLabel = !active && loan.returned_at
+    ? `Devuelto ${formatDateTime(loan.returned_at)}`
+    : loan.expected_return_at
+      ? `Devolver ${formatDateTime(loan.expected_return_at)}`
       : "Sin fecha de devolución";
 
   return (
