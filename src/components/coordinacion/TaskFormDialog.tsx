@@ -25,7 +25,7 @@ interface Props {
   clubId: string;
   userId: string;
   task?: TaskRow | null;
-  onSaved?: (info: { isEdit: boolean; assigneeIds: string[] }) => void;
+  onSaved?: (info: { isEdit: boolean; assigneeIds: string[]; priority: TaskPriority }) => void;
 }
 
 const PRIORITIES: { key: TaskPriority; label: string }[] = [
@@ -105,7 +105,7 @@ export function TaskFormDialog({ open, onOpenChange, clubId, userId, task, onSav
     onSuccess: () => {
       toast.success(isEdit ? "Tarea actualizada" : "Tarea creada");
       qc.invalidateQueries({ queryKey: ["coord-tasks", clubId] });
-      onSaved?.({ isEdit, assigneeIds: [...assignees] });
+      onSaved?.({ isEdit, assigneeIds: [...assignees], priority });
       onOpenChange(false);
     },
     onError: (e: any) => toast.error(e.message ?? "No se pudo guardar"),
