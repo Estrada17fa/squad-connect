@@ -22,7 +22,8 @@ export function prefetchModule(
 ): void {
   const { clubId, teamId } = ctx;
   switch (moduleKey) {
-    case "calendario":
+    case "agenda":
+    case "mes":
       if (teamId) qc.prefetchQuery(calendarEventsQueryOptions({ mode: "team", teamId }));
       else if (clubId) qc.prefetchQuery(calendarEventsQueryOptions({ mode: "club", clubId }));
       return;

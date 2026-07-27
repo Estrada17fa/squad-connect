@@ -87,9 +87,10 @@ function Home() {
   });
 
   const others = accessibleModules.filter(
-    (k) => k !== "calendario" && k !== "plantel" && k !== "coordinacion_interna",
+    (k) => k !== "agenda" && k !== "mes" && k !== "plantel" && k !== "coordinacion_interna",
   );
-  const hasCal = accessibleModules.includes("calendario");
+  const hasCal = accessibleModules.includes("agenda") || accessibleModules.includes("mes");
+  const calTarget: "agenda" | "mes" = accessibleModules.includes("agenda") ? "agenda" : "mes";
   const hasPlantel = accessibleModules.includes("plantel");
   const hasCoord = accessibleModules.includes("coordinacion_interna");
 
@@ -112,7 +113,7 @@ function Home() {
               <div className="animate-card-in">
                 <StandardCard
                   interactive
-                  onClick={() => navigate({ to: "/m/$module", params: { module: "calendario" } })}
+                  onClick={() => navigate({ to: "/m/$module", params: { module: calTarget } })}
                   icon={Calendar}
                   title="Calendario"
                   subtitle={

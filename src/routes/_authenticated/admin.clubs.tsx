@@ -258,7 +258,7 @@ function CreateClubDialog({
       if (adminId) {
         // Admin: editor en todos los módulos
         const moduleKeys = [
-          "calendario","plantel","viajes","inventario","coordinacion_interna","solicitudes",
+          "agenda","mes","plantel","viajes","inventario","coordinacion_interna","solicitudes",
           "documentos","usuarios","comunicados","multimedia","torneo","tacticas","salud",
           "desarrollo","nutricion",
         ];

@@ -26,35 +26,35 @@ export const PAGE_MAP: Record<PageKey, PageDef> = Object.fromEntries(
 const ROLE_PAGES: Record<BaseRole, Record<PageKey, ModuleKey[]>> = {
   admin: {
     home: [],
-    agenda: ["calendario"],
+    agenda: ["agenda", "mes"],
     club: ["plantel", "salud", "desarrollo", "nutricion", "tacticas", "torneo", "comunicados", "multimedia"],
     coordinacion: ["coordinacion_interna", "solicitudes", "inventario", "viajes"],
     admin: ["usuarios", "documentos"],
   },
   tecnico: {
     home: [],
-    agenda: ["calendario"],
+    agenda: ["agenda", "mes"],
     club: ["plantel", "desarrollo", "nutricion", "tacticas", "torneo", "comunicados", "multimedia"],
     coordinacion: ["coordinacion_interna", "solicitudes", "viajes"],
     admin: [],
   },
   medico: {
     home: [],
-    agenda: ["calendario"],
+    agenda: ["agenda", "mes"],
     club: ["plantel", "salud", "nutricion", "comunicados", "multimedia"],
     coordinacion: ["coordinacion_interna", "solicitudes"],
     admin: [],
   },
   staff: {
     home: [],
-    agenda: ["calendario"],
+    agenda: ["agenda", "mes"],
     club: ["plantel", "comunicados", "multimedia"],
     coordinacion: ["coordinacion_interna", "solicitudes", "inventario", "viajes"],
     admin: [],
   },
   jugador: {
     home: [],
-    agenda: ["calendario"],
+    agenda: ["agenda", "mes"],
     club: ["plantel", "desarrollo", "nutricion", "torneo", "comunicados", "multimedia"],
     coordinacion: ["solicitudes"],
     admin: [],
@@ -62,7 +62,8 @@ const ROLE_PAGES: Record<BaseRole, Record<PageKey, ModuleKey[]>> = {
 };
 
 const DEFAULT_PAGE_FOR_MODULE: Record<ModuleKey, PageKey> = {
-  calendario: "agenda",
+  agenda: "agenda",
+  mes: "agenda",
   plantel: "club",
   salud: "club",
   desarrollo: "club",
@@ -70,7 +71,6 @@ const DEFAULT_PAGE_FOR_MODULE: Record<ModuleKey, PageKey> = {
   torneo: "club",
   comunicados: "club",
   multimedia: "club",
-  
   nutricion: "club",
   coordinacion_interna: "coordinacion",
   solicitudes: "coordinacion",
@@ -130,10 +130,6 @@ export function resolvePagesForUser(
   const out: ResolvedPage[] = [];
   for (const p of PAGES) {
     if (p.key === "home") { out.push({ page: p, modules: [] }); continue; }
-    if (p.key === "agenda") {
-      if (isAccessible("calendario")) out.push({ page: p, modules: ["calendario"] });
-      continue;
-    }
     if (p.key === "admin") {
       if (role === "admin" && perPage.admin.length > 0) out.push({ page: p, modules: perPage.admin });
       continue;
