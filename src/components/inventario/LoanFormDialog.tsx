@@ -28,8 +28,6 @@ interface Props {
   items: InventoryItem[];
   outstanding: Record<string, number>;
   initialItemId?: string | null;
-  initialExpectedReturn?: string | null;
-  initialQuantity?: number | null;
 }
 
 interface RosterMember {
@@ -103,7 +101,6 @@ function useUpcomingEvents(clubId: string) {
 
 export function LoanFormDialog({
   open, onOpenChange, clubId, userId, loan, items, outstanding, initialItemId,
-  initialExpectedReturn, initialQuantity,
 }: Props) {
   const isEdit = !!loan;
   const qc = useQueryClient();
@@ -125,18 +122,12 @@ export function LoanFormDialog({
     setItemId(loan?.item_id ?? initialItemId ?? items[0]?.id ?? "");
     setBorrower(loan?.borrower_user_id ?? userId);
     setBorrowerSearch("");
-    setQuantity(String(loan?.quantity ?? initialQuantity ?? 1));
+    setQuantity(String(loan?.quantity ?? 1));
     setTeamId(loan?.team_id ?? "");
     setEventId(loan?.event_id ?? "");
-    setExpectedReturn(
-      loan?.expected_return_at
-        ? toLocalInputValue(loan.expected_return_at)
-        : initialExpectedReturn
-          ? toLocalInputValue(initialExpectedReturn)
-          : "",
-    );
+    setExpectedReturn(loan?.expected_return_at ? toLocalInputValue(loan.expected_return_at) : "");
     setNotes(loan?.notes ?? "");
-  }, [open, loan, initialItemId, initialExpectedReturn, initialQuantity, userId, items]);
+  }, [open, loan, initialItemId, userId, items]);
 
   const selectedItem = items.find((i) => i.id === itemId) ?? null;
   const availableForItem = selectedItem
