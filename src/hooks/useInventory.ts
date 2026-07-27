@@ -48,7 +48,7 @@ export interface InventoryLoan {
   created_by: string | null;
   created_at: string;
   updated_at: string;
-  item?: Pick<InventoryItem, "id" | "name" | "unit"> | null;
+  item?: Pick<InventoryItem, "id" | "name" | "unit" | "image_path"> | null;
   borrower?: AssigneeProfile | null;
   team?: { id: string; name: string; category: string | null } | null;
   event?: { id: string; title: string; starts_at: string } | null;
