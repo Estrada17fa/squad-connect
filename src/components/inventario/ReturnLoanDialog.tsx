@@ -39,16 +39,21 @@ export function ReturnLoanDialog({ open, onOpenChange, clubId, loan }: Props) {
       if (!Number.isFinite(n) || n <= 0) throw new Error("Cantidad inválida");
       if (n > pending) throw new Error(`Solo faltan ${pending} por devolver`);
       const newReturned = loan.returned_quantity + n;
+      const fully = newReturned >= loan.quantity;
       const { error } = await supabase
         .from("inventory_loans")
-        .update({ returned_quantity: newReturned })
+        .update({
+          returned_quantity: newReturned,
+          returned_at: fully ? new Date().toISOString() : null,
+        })
         .eq("id", loan.id);
       if (error) throw error;
-      return newReturned >= loan.quantity;
+      return fully;
     },
     onSuccess: (fullyReturned) => {
       toast.success(fullyReturned ? "Préstamo cerrado" : "Devolución parcial registrada");
       qc.invalidateQueries({ queryKey: ["inv-loans", clubId] });
+      qc.invalidateQueries({ queryKey: ["inv-items", clubId] });
       onOpenChange(false);
     },
     onError: (e: any) => toast.error(e.message ?? "No se pudo registrar"),
