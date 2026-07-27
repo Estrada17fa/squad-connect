@@ -320,6 +320,7 @@ function InventarioPage() {
           setLoanInitialItem(r.related_item_id ?? null);
           setLoanDialog(true);
         }}
+      />
     </div>
   );
 }
