@@ -28,6 +28,8 @@ interface Props {
   items: InventoryItem[];
   outstanding: Record<string, number>;
   initialItemId?: string | null;
+  initialExpectedReturn?: string | null;
+  initialQuantity?: number | null;
 }
 
 interface RosterMember {
