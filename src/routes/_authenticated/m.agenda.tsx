@@ -92,6 +92,7 @@ function AgendaModulePage() {
   return (
     <div className="space-y-6">
       <PageHeader hideTitle title="Agenda" subtitle={activeTeam?.name ?? "Todo el club"} />
+      <ModuleTabs activeKey="agenda" />
 
       {canEdit ? (
         <div className="flex items-center gap-2">
