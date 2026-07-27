@@ -59,7 +59,7 @@ export function MeetingDetailSheet({ open, onOpenChange, meeting, userId, clubId
 
   const setStatus = useMutation({
     mutationFn: async (status: MeetingStatus) => {
-      const patch: Record<string, any> = { status };
+      const patch: { status: MeetingStatus; started_at?: string; ended_at_actual?: string } = { status };
       if (status === "en_curso" && !meeting.started_at) patch.started_at = new Date().toISOString();
       if (status === "finalizada" && !meeting.ended_at_actual) patch.ended_at_actual = new Date().toISOString();
       const { error } = await supabase.from("meetings").update(patch).eq("id", meeting.id);
