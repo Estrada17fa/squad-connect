@@ -286,10 +286,16 @@ function TypeSpecificFields({ request }: { request: RequestRow }) {
   switch (request.type) {
     case "material":
       return (
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Artículo"><span className="text-foreground">{request.item?.name ?? "—"}</span></Field>
-          <Field label="Cantidad"><span className="text-foreground">{d.quantity ?? "—"}{request.item?.unit ? ` ${request.item.unit}` : ""}</span></Field>
-        </div>
+        <>
+          <MaterialThumb request={request} />
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Artículo"><span className="text-foreground">{request.item?.name ?? "—"}</span></Field>
+            <Field label="Cantidad"><span className="text-foreground">{d.quantity ?? "—"}{request.item?.unit ? ` ${request.item.unit}` : ""}</span></Field>
+          </div>
+          {d.expected_return_at ? (
+            <Field label="Devolución estimada"><span className="text-foreground">{formatDateTime(d.expected_return_at)}</span></Field>
+          ) : null}
+        </>
       );
     case "compra":
       return (
