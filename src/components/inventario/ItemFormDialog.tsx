@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
+import { Trash2, ImagePlus, X } from "lucide-react";
 import {
   EntitySheet,
   EntitySheetBody,
@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import type { InventoryItem } from "@/hooks/useInventory";
+import { useInventoryImageUrl, type InventoryItem } from "@/hooks/useInventory";
 
 interface Props {
   open: boolean;
@@ -37,6 +37,11 @@ export function ItemFormDialog({ open, onOpenChange, clubId, userId, item, outst
   const [unit, setUnit] = React.useState("");
   const [total, setTotal] = React.useState<string>("0");
   const [min, setMin] = React.useState<string>("0");
+  const [file, setFile] = React.useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
+  const [removeExisting, setRemoveExisting] = React.useState(false);
+
+  const existingUrlQ = useInventoryImageUrl(!removeExisting ? item?.image_path : null);
 
   React.useEffect(() => {
     if (!open) return;
@@ -46,7 +51,19 @@ export function ItemFormDialog({ open, onOpenChange, clubId, userId, item, outst
     setUnit(item?.unit ?? "");
     setTotal(String(item?.total_quantity ?? 0));
     setMin(String(item?.min_quantity ?? 0));
+    setFile(null);
+    setPreviewUrl(null);
+    setRemoveExisting(false);
   }, [open, item]);
+
+  React.useEffect(() => {
+    if (!file) { setPreviewUrl(null); return; }
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+
+  const displayedImage = previewUrl ?? (!removeExisting ? existingUrlQ.data ?? null : null);
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -58,7 +75,27 @@ export function ItemFormDialog({ open, onOpenChange, clubId, userId, item, outst
       if (isEdit && t < outstandingForItem) {
         throw new Error(`Ya hay ${outstandingForItem} prestados; la cantidad total no puede ser menor`);
       }
-      const payload = {
+
+      let image_path: string | null | undefined = undefined;
+
+      if (file) {
+        const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+        const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const path = `${clubId}/${crypto.randomUUID()}-${safe}`;
+        const { error: upErr } = await supabase.storage
+          .from("inventory")
+          .upload(path, file, { upsert: false, contentType: file.type || `image/${ext}` });
+        if (upErr) throw upErr;
+        image_path = path;
+        if (isEdit && item?.image_path) {
+          await supabase.storage.from("inventory").remove([item.image_path]);
+        }
+      } else if (isEdit && removeExisting && item?.image_path) {
+        await supabase.storage.from("inventory").remove([item.image_path]);
+        image_path = null;
+      }
+
+      const payload: any = {
         club_id: clubId,
         name: name.trim(),
         category: category.trim() || null,
@@ -67,6 +104,8 @@ export function ItemFormDialog({ open, onOpenChange, clubId, userId, item, outst
         total_quantity: t,
         min_quantity: m,
       };
+      if (image_path !== undefined) payload.image_path = image_path;
+
       if (isEdit && item) {
         const { error } = await supabase.from("inventory_items").update(payload).eq("id", item.id);
         if (error) throw error;
@@ -91,6 +130,9 @@ export function ItemFormDialog({ open, onOpenChange, clubId, userId, item, outst
       if (outstandingForItem > 0) {
         throw new Error("No puedes eliminar un artículo con préstamos activos");
       }
+      if (item.image_path) {
+        await supabase.storage.from("inventory").remove([item.image_path]);
+      }
       const { error } = await supabase.from("inventory_items").delete().eq("id", item.id);
       if (error) throw error;
     },
@@ -113,6 +155,41 @@ export function ItemFormDialog({ open, onOpenChange, clubId, userId, item, outst
       </EntitySheetHeader>
 
       <EntitySheetBody>
+        <div className="space-y-1.5">
+          <Label>Foto del artículo</Label>
+          <div className="flex items-start gap-3">
+            <label className="relative flex h-24 w-24 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg border border-dashed border-border/60 bg-white/[0.02] hover:bg-white/[0.04]">
+              {displayedImage ? (
+                <img src={displayedImage} alt="preview" className="h-full w-full object-cover" />
+              ) : (
+                <ImagePlus className="h-6 w-6 text-muted-foreground" />
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0] ?? null;
+                  setFile(f);
+                  if (f) setRemoveExisting(false);
+                }}
+              />
+            </label>
+            <div className="flex flex-col gap-1.5 text-xs text-muted-foreground">
+              <span>JPG, PNG o WebP. Se muestra en la miniatura y el detalle.</span>
+              {displayedImage ? (
+                <button
+                  type="button"
+                  onClick={() => { setFile(null); setRemoveExisting(true); }}
+                  className="inline-flex w-fit items-center gap-1 rounded-md border border-border/60 px-2 py-1 text-xs text-destructive hover:bg-destructive/10"
+                >
+                  <X className="h-3 w-3" /> Quitar foto
+                </button>
+              ) : null}
+            </div>
+          </div>
+        </div>
+
         <div className="space-y-1.5">
           <Label htmlFor="i-name">Nombre</Label>
           <Input id="i-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="p.ej. Balones de entrenamiento" />
