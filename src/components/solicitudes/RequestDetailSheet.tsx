@@ -22,6 +22,7 @@ import {
   type RequestRow, type RequestStatus,
 } from "@/hooks/useRequests";
 import { formatDateTime } from "@/lib/calendar-utils";
+import { useInventoryImageUrl } from "@/hooks/useInventory";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -285,10 +286,16 @@ function TypeSpecificFields({ request }: { request: RequestRow }) {
   switch (request.type) {
     case "material":
       return (
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Artículo"><span className="text-foreground">{request.item?.name ?? "—"}</span></Field>
-          <Field label="Cantidad"><span className="text-foreground">{d.quantity ?? "—"}{request.item?.unit ? ` ${request.item.unit}` : ""}</span></Field>
-        </div>
+        <>
+          <MaterialThumb request={request} />
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Artículo"><span className="text-foreground">{request.item?.name ?? "—"}</span></Field>
+            <Field label="Cantidad"><span className="text-foreground">{d.quantity ?? "—"}{request.item?.unit ? ` ${request.item.unit}` : ""}</span></Field>
+          </div>
+          {d.expected_return_at ? (
+            <Field label="Devolución estimada"><span className="text-foreground">{formatDateTime(d.expected_return_at)}</span></Field>
+          ) : null}
+        </>
       );
     case "compra":
       return (
@@ -361,6 +368,26 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     <div className="space-y-1.5">
       <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</div>
       <div>{children}</div>
+    </div>
+  );
+}
+
+function MaterialThumb({ request }: { request: RequestRow }) {
+  const { data: url } = useInventoryImageUrl(request.item?.image_path ?? null);
+  if (!request.item) return null;
+  return (
+    <div className="flex items-center gap-3 rounded-lg border border-border/60 bg-white/[0.02] p-2">
+      <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border/60 bg-background">
+        {url ? (
+          <img src={url} alt={request.item.name} className="h-full w-full object-cover" />
+        ) : (
+          <Package className="h-6 w-6 text-muted-foreground" />
+        )}
+      </div>
+      <div className="min-w-0">
+        <div className="truncate text-sm text-foreground">{request.item.name}</div>
+        {request.item.unit ? <div className="text-xs text-muted-foreground">Unidad: {request.item.unit}</div> : null}
+      </div>
     </div>
   );
 }

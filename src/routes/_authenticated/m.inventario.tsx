@@ -66,6 +66,8 @@ function InventarioPage() {
   const [loanDialog, setLoanDialog] = React.useState(false);
   const [editingLoan, setEditingLoan] = React.useState<InventoryLoan | null>(null);
   const [loanInitialItem, setLoanInitialItem] = React.useState<string | null>(null);
+  const [loanInitialExpectedReturn, setLoanInitialExpectedReturn] = React.useState<string | null>(null);
+  const [loanInitialQuantity, setLoanInitialQuantity] = React.useState<number | null>(null);
   const [returnLoan, setReturnLoan] = React.useState<InventoryLoan | null>(null);
   const [detailLoan, setDetailLoan] = React.useState<InventoryLoan | null>(null);
   const [detailRequest, setDetailRequest] = React.useState<RequestRow | null>(null);
@@ -123,6 +125,8 @@ function InventarioPage() {
   function openNewLoan(itemId?: string) {
     setEditingLoan(null);
     setLoanInitialItem(itemId ?? null);
+    setLoanInitialExpectedReturn(null);
+    setLoanInitialQuantity(null);
     setLoanDialog(true);
   }
 
@@ -278,6 +282,8 @@ function InventarioPage() {
         items={items}
         outstanding={outstanding}
         initialItemId={loanInitialItem}
+        initialExpectedReturn={loanInitialExpectedReturn}
+        initialQuantity={loanInitialQuantity}
       />
       <ReturnLoanDialog
         open={!!returnLoan}
@@ -318,6 +324,11 @@ function InventarioPage() {
           setDetailRequest(null);
           setEditingLoan(null);
           setLoanInitialItem(r.related_item_id ?? null);
+          const q = Number(r.details?.quantity);
+          setLoanInitialQuantity(Number.isFinite(q) && q > 0 ? q : null);
+          setLoanInitialExpectedReturn(
+            (r.details?.expected_return_at as string | undefined) ?? r.needed_at ?? null,
+          );
           setLoanDialog(true);
         }}
       />

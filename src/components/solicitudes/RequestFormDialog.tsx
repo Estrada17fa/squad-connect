@@ -20,6 +20,8 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   REQUEST_TYPE_LABEL, type RequestRow, type RequestType,
 } from "@/hooks/useRequests";
+import { useInventoryImageUrl } from "@/hooks/useInventory";
+import { Package as PackageIcon } from "lucide-react";
 import { toLocalInputValue, fromLocalInputValue } from "@/lib/calendar-utils";
 
 interface Props {
@@ -31,7 +33,7 @@ interface Props {
   initialType?: RequestType;
 }
 
-type ItemLite = { id: string; name: string; unit: string | null };
+type ItemLite = { id: string; name: string; unit: string | null; image_path: string | null };
 type EventLite = { id: string; title: string; starts_at: string; event_type: string };
 type MemberLite = { id: string; full_name: string | null; email: string | null };
 
@@ -69,7 +71,7 @@ export function RequestFormDialog({
     enabled: open && (type === "material"),
     queryFn: async (): Promise<ItemLite[]> => {
       const { data, error } = await supabase
-        .from("inventory_items").select("id, name, unit")
+        .from("inventory_items").select("id, name, unit, image_path")
         .eq("club_id", clubId).order("name");
       if (error) throw error;
       return (data ?? []) as ItemLite[];
@@ -199,8 +201,26 @@ export function RequestFormDialog({
                   ))}
                 </SelectContent>
               </Select>
+              <ItemPreview item={(itemsQ.data ?? []).find((it) => it.id === relItem) ?? null} />
             </div>
             <NumberField label="Cantidad" value={details.quantity ?? ""} onChange={(v) => setDetails({ ...details, quantity: v })} min={1} />
+            <div className="space-y-1.5">
+              <Label htmlFor="r-return">Devolución estimada (opcional)</Label>
+              <Input
+                id="r-return"
+                type="datetime-local"
+                value={details.expected_return_at ? toLocalInputValue(details.expected_return_at) : ""}
+                onChange={(e) =>
+                  setDetails({
+                    ...details,
+                    expected_return_at: e.target.value ? fromLocalInputValue(e.target.value) : null,
+                  })
+                }
+              />
+              <p className="text-xs text-muted-foreground">
+                Se copia automáticamente al préstamo cuando se apruebe.
+              </p>
+            </div>
           </>
         ) : null}
 
@@ -382,6 +402,26 @@ function UrgencySelect({ value, onChange }: { value: string; onChange: (v: strin
           <SelectItem value="urgente">Urgente</SelectItem>
         </SelectContent>
       </Select>
+    </div>
+  );
+}
+
+function ItemPreview({ item }: { item: ItemLite | null }) {
+  const { data: url } = useInventoryImageUrl(item?.image_path);
+  if (!item) return null;
+  return (
+    <div className="flex items-center gap-3 rounded-lg border border-border/60 bg-white/[0.02] p-2">
+      <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border/60 bg-background">
+        {url ? (
+          <img src={url} alt={item.name} className="h-full w-full object-cover" />
+        ) : (
+          <PackageIcon className="h-6 w-6 text-muted-foreground" />
+        )}
+      </div>
+      <div className="min-w-0">
+        <div className="truncate text-sm text-foreground">{item.name}</div>
+        {item.unit ? <div className="text-xs text-muted-foreground">Unidad: {item.unit}</div> : null}
+      </div>
     </div>
   );
 }
