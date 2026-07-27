@@ -1,37 +1,31 @@
-## Objetivo
-Que cualquier página del navbar (excepto Home) desaparezca cuando no tenga módulos activos para el usuario, y que las restantes se distribuyan uniformemente en el ancho — tanto en móvil como en desktop.
+## Problema
 
-## Diagnóstico
+En el diálogo de permisos/membresías, los módulos aparecen agrupados por página, pero `Calendario` y `Nutrición` caen en un grupo residual llamado **"Otros"** en lugar de aparecer bajo su página real:
 
-En `src/lib/rolePages.ts` → `resolvePagesForUser`:
-- `Agenda` solo aparece si el usuario tiene `calendario` ✅
-- `Club` / `Coordinación` (no-jugador) filtran por `perPage[key].length > 0` ✅
-- `Admin` y `Coordinación (jugador)` ya se corrigieron en el turno anterior ✅
+- `Calendario` debe vivir bajo la página **Agenda**.
+- `Nutrición` debe vivir bajo la página **Mi Club**.
 
-Es decir, el filtrado ya funciona para todos los roles. Lo que falla es la distribución visual:
+Causa: `groupModulesByPage` (en `src/lib/rolePages.ts`) solo mira `ROLE_PAGES[role]`, donde `agenda` está vacío y `nutricion` no está listada en ningún rol. Todo lo que no encuentre hogar ahí termina en "Otros".
 
-En `src/components/squad/AppLayout.tsx`:
-- `BottomNav` (móvil) usa `flex justify-around` + `flex-1` → sí reparte espacio uniforme. ✅
-- `DesktopNav` usa `flex items-center gap-1` sin `flex-1` en los Links → los ítems quedan pegados a la izquierda en vez de repartirse en el ancho del contenedor. ❌
-
-Ese es el motivo por el que en desktop "no se recorren para llenar el espacio".
+Además en `src/lib/modules.ts` la unión de tipos `ModuleKey` tiene `"nutricion" | "nutricion"` duplicado (el módulo en el array `MODULES` sí es único).
 
 ## Cambios
 
-### `src/components/squad/AppLayout.tsx` — `DesktopNav`
-- Cambiar el contenedor a `flex items-stretch justify-around gap-1` (mantener `max-w-6xl`).
-- Agregar `flex-1 justify-center` a cada `<Link>` para que cada página tome una fracción igual del ancho.
-- Conservar iconos, label y estado activo actuales.
+### 1. `src/lib/modules.ts`
+- Quitar el `"nutricion"` duplicado del tipo `ModuleKey`.
 
-### `src/lib/rolePages.ts`
-Sin cambios — el filtrado por página ya cumple la regla "desaparece si no hay módulos activos, Home siempre queda".
+### 2. `src/lib/rolePages.ts`
+- En `groupModulesByPage`, cuando un módulo no esté en el mapa del rol, colocarlo en su página por defecto usando `DEFAULT_PAGE_FOR_MODULE` (p. ej. `calendario → agenda`, `nutricion → club`), en vez de mandarlo a un grupo "Otros".
+- Eliminar por completo el grupo "Otros": ningún módulo debe caer ahí. Si por alguna razón un módulo no tiene página por defecto, simplemente no se muestra (equivale a "no asignable").
+- Añadir `nutricion` al mapa `ROLE_PAGES` en la sección `club` de los roles que corresponda (admin, técnico, médico, staff, jugador) para que aparezca de forma natural en Mi Club, no solo por el fallback.
+
+### 3. Página Agenda en el agrupador de permisos
+- Confirmar que `calendario` aparece bajo la sección **Agenda** en `PermissionsMatrix` (roles) y `OverridesDialog` (miembros), con su switch maestro de página.
 
 ## Verificación
-1. Como Técnico, desactivar todos los módulos de `Mi Club` → desaparece "Mi Club"; Home + Agenda + Coordinación se reparten en 3 columnas iguales tanto en móvil como en desktop.
-2. Desactivar además Coordinación → quedan Home + Agenda repartidos al 50/50.
-3. Como Admin con todo activo → 5 columnas iguales.
-4. Como Jugador sin `solicitudes` → sin "Mis Solicitudes"; las demás se distribuyen.
+- Abrir `/m/usuarios` → Roles → editar cualquier rol: ya no aparece "Otros"; `Calendario` está bajo Agenda y `Nutrición` bajo Mi Club.
+- Abrir overrides de un miembro: misma estructura.
+- La navbar y los chips siguen recorriéndose sin huecos (comportamiento actual, no se toca).
 
-## Fuera de alcance
-- No se toca lógica de permisos ni el orden fijo de páginas.
-- Home sigue siempre visible (es el landing).
+## Nota
+No se tocan permisos existentes en BD ni el navbar; es solo cómo se agrupan los módulos en los diálogos de permisos y limpieza del tipo duplicado.

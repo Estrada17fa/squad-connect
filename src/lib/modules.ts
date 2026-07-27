@@ -33,7 +33,6 @@ export type ModuleKey =
   | "tacticas"
   | "salud"
   | "desarrollo"
-  | "nutricion"
   | "nutricion";
 
 /**
