@@ -20,6 +20,8 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   REQUEST_TYPE_LABEL, type RequestRow, type RequestType,
 } from "@/hooks/useRequests";
+import { useInventoryImageUrl } from "@/hooks/useInventory";
+import { Package as PackageIcon } from "lucide-react";
 import { toLocalInputValue, fromLocalInputValue } from "@/lib/calendar-utils";
 
 interface Props {
