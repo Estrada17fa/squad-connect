@@ -17,14 +17,17 @@ import {
   useInventoryItems, useInventoryLoans, computeOutstanding, itemAvailability,
   type InventoryItem, type InventoryLoan,
 } from "@/hooks/useInventory";
+import { useRequests, type RequestRow } from "@/hooks/useRequests";
 import { formatDateTime } from "@/lib/calendar-utils";
 import { ItemFormDialog } from "@/components/inventario/ItemFormDialog";
 import { LoanFormDialog } from "@/components/inventario/LoanFormDialog";
 import { ReturnLoanDialog } from "@/components/inventario/ReturnLoanDialog";
 import { ItemDetailSheet } from "@/components/inventario/ItemDetailSheet";
 import { LoanDetailSheet } from "@/components/inventario/LoanDetailSheet";
+import { RequestDetailSheet } from "@/components/solicitudes/RequestDetailSheet";
 import { useInventoryImageUrl } from "@/hooks/useInventory";
 import { cn } from "@/lib/utils";
+import { ClipboardList } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/m/inventario")({
   head: () => ({
