@@ -22,6 +22,7 @@ import {
   type RequestRow, type RequestStatus,
 } from "@/hooks/useRequests";
 import { formatDateTime } from "@/lib/calendar-utils";
+import { useInventoryImageUrl } from "@/hooks/useInventory";
 import { cn } from "@/lib/utils";
 
 interface Props {
