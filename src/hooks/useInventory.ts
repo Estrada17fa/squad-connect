@@ -12,9 +12,24 @@ export interface InventoryItem {
   unit: string | null;
   total_quantity: number;
   min_quantity: number;
+  image_path: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export function useInventoryImageUrl(path: string | null | undefined) {
+  return useQuery({
+    queryKey: ["inv-image", path ?? "none"] as const,
+    enabled: !!path,
+    staleTime: 55 * 60_000,
+    queryFn: async (): Promise<string | null> => {
+      if (!path) return null;
+      const { data, error } = await supabase.storage.from("inventory").createSignedUrl(path, 3600);
+      if (error) return null;
+      return data?.signedUrl ?? null;
+    },
+  });
 }
 
 export interface InventoryLoan {
