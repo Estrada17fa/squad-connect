@@ -115,6 +115,7 @@ function MesModulePage() {
   return (
     <div className="space-y-6">
       <PageHeader hideTitle title="Mes" subtitle={activeTeam?.name ?? "Todo el club"} />
+      <ModuleTabs activeKey="mes" />
 
       {canEdit ? (
         <div className="flex items-center gap-2">
