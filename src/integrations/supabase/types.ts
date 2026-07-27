@@ -307,6 +307,146 @@ export type Database = {
           },
         ]
       }
+      inventory_items: {
+        Row: {
+          category: string | null
+          club_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          min_quantity: number
+          name: string
+          total_quantity: number
+          unit: string | null
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          club_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          min_quantity?: number
+          name: string
+          total_quantity?: number
+          unit?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          club_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          min_quantity?: number
+          name?: string
+          total_quantity?: number
+          unit?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_items_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_loans: {
+        Row: {
+          borrower_user_id: string
+          club_id: string
+          created_at: string
+          created_by: string | null
+          event_id: string | null
+          expected_return_at: string | null
+          id: string
+          item_id: string
+          notes: string | null
+          quantity: number
+          request_id: string | null
+          returned_at: string | null
+          returned_quantity: number
+          team_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          borrower_user_id: string
+          club_id: string
+          created_at?: string
+          created_by?: string | null
+          event_id?: string | null
+          expected_return_at?: string | null
+          id?: string
+          item_id: string
+          notes?: string | null
+          quantity: number
+          request_id?: string | null
+          returned_at?: string | null
+          returned_quantity?: number
+          team_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          borrower_user_id?: string
+          club_id?: string
+          created_at?: string
+          created_by?: string | null
+          event_id?: string | null
+          expected_return_at?: string | null
+          id?: string
+          item_id?: string
+          notes?: string | null
+          quantity?: number
+          request_id?: string | null
+          returned_at?: string | null
+          returned_quantity?: number
+          team_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_loans_borrower_user_id_profiles_fkey"
+            columns: ["borrower_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_loans_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_loans_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "calendar_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_loans_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_loans_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meeting_attendees: {
         Row: {
           attendance_status: Database["public"]["Enums"]["attendance_status"]
