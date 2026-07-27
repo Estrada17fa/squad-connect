@@ -208,9 +208,43 @@ function InventarioPage() {
             </Button>
           ) : null}
 
-          <LoanFilterChips value={loansFilter} onChange={setLoansFilter} activeCount={activeLoans.length} returnedCount={returnedLoans.length} />
+          <LoanFilterChips
+            value={loansFilter}
+            onChange={setLoansFilter}
+            activeCount={activeLoans.length}
+            returnedCount={returnedLoans.length}
+            pendingCount={pendingRequests.length}
+          />
 
-          {loansQ.isLoading && loans.length === 0 ? (
+          {loansFilter !== "pendientes" ? (
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={loanSearch}
+                onChange={(e) => setLoanSearch(e.target.value)}
+                placeholder="Buscar por artículo o persona…"
+                className="pl-8"
+              />
+            </div>
+          ) : null}
+
+          {loansFilter === "pendientes" ? (
+            pendingRequests.length === 0 ? (
+              <EmptyState
+                icon={ClipboardList}
+                title="Sin solicitudes pendientes"
+                message="Cuando alguien pida material aparecerá aquí para aprobar o rechazar."
+              />
+            ) : (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {pendingRequests.map((r, i) => (
+                  <div key={r.id} className="animate-card-in" style={{ animationDelay: `${i * 25}ms` }}>
+                    <PendingRequestCard request={r} onOpen={() => setDetailRequest(r)} />
+                  </div>
+                ))}
+              </div>
+            )
+          ) : loansQ.isLoading && loans.length === 0 ? (
             <CardGridSkeleton count={3} />
           ) : (
             <LoansList
