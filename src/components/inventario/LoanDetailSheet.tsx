@@ -29,6 +29,8 @@ interface Props {
 
 export function LoanDetailSheet({ open, onOpenChange, loan, clubId, canEdit, onEdit, onReturn }: Props) {
   const qc = useQueryClient();
+  const imageQ = useInventoryImageUrl(loan?.item?.image_path);
+
 
   const del = useMutation({
     mutationFn: async () => {
