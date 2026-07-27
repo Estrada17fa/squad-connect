@@ -39,21 +39,26 @@ export const Route = createFileRoute("/_authenticated/m/inventario")({
   component: InventarioPage,
 });
 
-type LoansFilter = "activos" | "devueltos";
+type LoansFilter = "activos" | "devueltos" | "pendientes";
 
 function InventarioPage() {
   const { permissions, isSuperAdmin, user, accessibleModules, profile } = useApp();
   const clubId = profile?.club_id ?? null;
   const canEdit = isSuperAdmin || permissions.inventario === "editor" || permissions.inventario === "approver";
+  const canApprove = isSuperAdmin || permissions.inventario === "approver" || permissions.inventario === "editor";
+  const canEditSolicitudes = isSuperAdmin || permissions.solicitudes === "editor";
+  const canApproveSolicitudes = isSuperAdmin || permissions.solicitudes === "approver" || permissions.solicitudes === "editor";
   const canAccess = isSuperAdmin || accessibleModules.includes("inventario");
 
   const itemsQ = useInventoryItems(clubId);
   const loansQ = useInventoryLoans(clubId);
+  const requestsQ = useRequests(clubId);
 
   const [tab, setTab] = React.useState<"catalogo" | "prestamos">("catalogo");
   const [search, setSearch] = React.useState("");
   const [categoryFilter, setCategoryFilter] = React.useState<string>("all");
   const [loansFilter, setLoansFilter] = React.useState<LoansFilter>("activos");
+  const [loanSearch, setLoanSearch] = React.useState("");
 
   const [itemDialog, setItemDialog] = React.useState(false);
   const [editingItem, setEditingItem] = React.useState<InventoryItem | null>(null);
@@ -63,6 +68,7 @@ function InventarioPage() {
   const [loanInitialItem, setLoanInitialItem] = React.useState<string | null>(null);
   const [returnLoan, setReturnLoan] = React.useState<InventoryLoan | null>(null);
   const [detailLoan, setDetailLoan] = React.useState<InventoryLoan | null>(null);
+  const [detailRequest, setDetailRequest] = React.useState<RequestRow | null>(null);
 
   if (!canAccess) {
     return (
