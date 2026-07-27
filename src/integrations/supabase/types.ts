@@ -411,6 +411,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "inventory_loans_borrower_user_id_profiles_fkey"
+            columns: ["borrower_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "inventory_loans_club_id_fkey"
             columns: ["club_id"]
             isOneToOne: false
