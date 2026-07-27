@@ -103,7 +103,7 @@ export const meetingsQueryOptions = (clubId: string | null | undefined) =>
       const { data, error } = await supabase
         .from("meetings")
         .select(
-          "id, club_id, title, starts_at, ends_at, location, agenda, notes, created_by, created_at, meeting_attendees(user_id, attendance_status, profile:profiles!meeting_attendees_user_id_profiles_fkey(id, full_name, email, avatar_url))",
+          "id, club_id, title, starts_at, ends_at, status, started_at, ended_at_actual, location, agenda, notes, created_by, created_at, meeting_attendees(user_id, attendance_status, profile:profiles!meeting_attendees_user_id_profiles_fkey(id, full_name, email, avatar_url))",
         )
         .eq("club_id", clubId!)
         .order("starts_at", { ascending: true });
