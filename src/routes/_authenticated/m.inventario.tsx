@@ -343,15 +343,37 @@ function CategoryChips({
 }
 
 function LoanFilterChips({
-  value, onChange, activeCount, returnedCount,
+  value, onChange, activeCount, returnedCount, pendingCount,
 }: {
-  value: LoansFilter; onChange: (v: LoansFilter) => void; activeCount: number; returnedCount: number;
+  value: LoansFilter; onChange: (v: LoansFilter) => void;
+  activeCount: number; returnedCount: number; pendingCount: number;
 }) {
   return (
-    <div className="flex gap-2">
+    <div className="flex flex-wrap gap-2">
       <Chip active={value === "activos"} onClick={() => onChange("activos")}>Activos · {activeCount}</Chip>
+      <Chip active={value === "pendientes"} onClick={() => onChange("pendientes")}>Pendientes · {pendingCount}</Chip>
       <Chip active={value === "devueltos"} onClick={() => onChange("devueltos")}>Devueltos · {returnedCount}</Chip>
     </div>
+  );
+}
+
+function PendingRequestCard({ request, onOpen }: { request: RequestRow; onOpen: () => void }) {
+  const qty = request.details?.quantity ?? "?";
+  const requester = request.requester?.full_name ?? request.requester?.email ?? "Miembro";
+  return (
+    <StandardCard
+      interactive
+      onClick={onOpen}
+      icon={ClipboardList}
+      title={request.item?.name ?? request.title}
+      subtitle={`${qty}${request.item?.unit ? ` ${request.item.unit}` : ""} · ${requester}`}
+      status={{ label: "Pendiente", variant: "pending" }}
+      className="ring-1 ring-status-pending/30"
+    >
+      <div className="text-xs text-muted-foreground">
+        {request.needed_at ? `Necesario ${formatDateTime(request.needed_at)}` : `Solicitado ${formatDateTime(request.created_at)}`}
+      </div>
+    </StandardCard>
   );
 }
 
