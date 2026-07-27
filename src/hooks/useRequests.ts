@@ -128,7 +128,7 @@ export function useRequestComments(requestId: string | null | undefined) {
       const { data, error } = await supabase
         .from("request_comments")
         .select(`id, request_id, user_id, body, kind, created_at,
-                 author:profiles!request_comments_user_id_fkey(id, full_name, email, avatar_url)`)
+                 author:profiles!request_comments_user_id_profiles_fkey(id, full_name, email, avatar_url)`)
         .eq("request_id", requestId!)
         .order("created_at", { ascending: true });
       if (error) throw error;
