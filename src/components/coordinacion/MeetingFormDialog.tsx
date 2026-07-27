@@ -36,6 +36,7 @@ export function MeetingFormDialog({ open, onOpenChange, clubId, userId, meeting 
   const [title, setTitle] = React.useState("");
   const [startsAt, setStartsAt] = React.useState("");
   const [endsAt, setEndsAt] = React.useState("");
+  const [locationType, setLocationType] = React.useState<"presencial" | "videollamada">("presencial");
   const [location, setLocation] = React.useState("");
   const [agenda, setAgenda] = React.useState("");
   const [notes, setNotes] = React.useState("");
