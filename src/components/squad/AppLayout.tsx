@@ -365,7 +365,7 @@ function DesktopNav({ pages }: { pages: ResolvedPage[] }) {
   const prefetchHub = useHubPrefetch();
   return (
     <div className="hidden border-b border-border/40 bg-background/40 sm:block">
-      <div className="mx-auto flex max-w-6xl items-center gap-1 px-4 py-2 sm:px-6">
+      <div className="mx-auto flex max-w-6xl items-stretch justify-around gap-1 px-4 py-2 sm:px-6">
         {pages.map((rp) => {
           const active = rp.page.key === activeKey;
           const Icon = rp.page.icon;
@@ -377,7 +377,7 @@ function DesktopNav({ pages }: { pages: ResolvedPage[] }) {
               onMouseEnter={() => prefetchHub(rp)}
               onFocus={() => prefetchHub(rp)}
               className={cn(
-                "inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
+                "inline-flex flex-1 items-center justify-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
                 active
                   ? "text-primary font-semibold [&_svg]:drop-shadow-[0_0_8px_hsl(150_100%_50%/0.85)]"
                   : "text-muted-foreground hover:bg-white/[0.04] hover:text-foreground",
@@ -390,6 +390,7 @@ function DesktopNav({ pages }: { pages: ResolvedPage[] }) {
         })}
       </div>
     </div>
+
   );
 }
 
