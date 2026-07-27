@@ -71,7 +71,7 @@ export function RequestFormDialog({
     enabled: open && (type === "material"),
     queryFn: async (): Promise<ItemLite[]> => {
       const { data, error } = await supabase
-        .from("inventory_items").select("id, name, unit")
+        .from("inventory_items").select("id, name, unit, image_path")
         .eq("club_id", clubId).order("name");
       if (error) throw error;
       return (data ?? []) as ItemLite[];
