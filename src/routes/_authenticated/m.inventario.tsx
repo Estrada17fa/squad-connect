@@ -104,8 +104,20 @@ function InventarioPage() {
     });
   }, [items, search, categoryFilter]);
 
-  const activeLoans = loans.filter((l) => !l.returned_at);
-  const returnedLoans = loans.filter((l) => !!l.returned_at);
+  const pendingRequests = React.useMemo(
+    () => (requestsQ.data ?? []).filter((r) => r.type === "material" && r.status === "pendiente"),
+    [requestsQ.data],
+  );
+
+  const loanQuery = loanSearch.trim().toLowerCase();
+  const matchesLoan = (l: InventoryLoan) => {
+    if (!loanQuery) return true;
+    const item = (l.item?.name ?? "").toLowerCase();
+    const person = ((l.borrower?.full_name ?? "") + " " + (l.borrower?.email ?? "")).toLowerCase();
+    return item.includes(loanQuery) || person.includes(loanQuery);
+  };
+  const activeLoans = loans.filter((l) => !l.returned_at).filter(matchesLoan);
+  const returnedLoans = loans.filter((l) => !!l.returned_at).filter(matchesLoan);
 
   function openNewItem() { setEditingItem(null); setItemDialog(true); }
   function openNewLoan(itemId?: string) {
