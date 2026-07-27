@@ -84,16 +84,55 @@ export function RequestDetailSheet({
       const { error } = await supabase.from("requests").update(payload).eq("id", request.id);
       if (error) throw error;
 
+      // Auto-crear préstamo al aprobar una solicitud de material
+      let autoLoanCreated = false;
+      if (
+        newStatus === "aprobada" &&
+        request.type === "material" &&
+        request.related_item_id &&
+        !request.related_loan_id
+      ) {
+        const qty = Number(request.details?.quantity);
+        const quantity = Number.isFinite(qty) && qty > 0 ? qty : 1;
+        const expectedReturn =
+          (request.details?.expected_return_at as string | undefined) ?? request.needed_at ?? null;
+
+        const { data: loanRow, error: loanErr } = await supabase
+          .from("inventory_loans")
+          .insert({
+            club_id: request.club_id,
+            item_id: request.related_item_id,
+            borrower_user_id: request.requester_id,
+            quantity,
+            returned_quantity: 0,
+            expected_return_at: expectedReturn,
+            request_id: request.id,
+            created_by: userId,
+            notes: request.title,
+          })
+          .select("id")
+          .single();
+        if (loanErr) throw loanErr;
+
+        if (loanRow?.id) {
+          await supabase.from("requests").update({ related_loan_id: loanRow.id }).eq("id", request.id);
+          autoLoanCreated = true;
+        }
+      }
+
       await supabase.from("request_comments").insert({
         request_id: request.id,
         user_id: userId,
         kind: "system",
-        body: `Solicitud ${REQUEST_STATUS_LABEL[newStatus].toLowerCase()}${decisionNote.trim() ? ` — ${decisionNote.trim()}` : ""}`,
+        body: `Solicitud ${REQUEST_STATUS_LABEL[newStatus].toLowerCase()}${
+          autoLoanCreated ? " · préstamo activo creado" : ""
+        }${decisionNote.trim() ? ` — ${decisionNote.trim()}` : ""}`,
       });
     },
     onSuccess: (_d, status) => {
       toast.success(`Solicitud ${REQUEST_STATUS_LABEL[status as RequestStatus].toLowerCase()}`);
       qc.invalidateQueries({ queryKey: ["requests", clubId] });
+      qc.invalidateQueries({ queryKey: ["inv-loans", clubId] });
     },
     onError: (e: any) => toast.error(e.message ?? "No se pudo actualizar"),
   });
