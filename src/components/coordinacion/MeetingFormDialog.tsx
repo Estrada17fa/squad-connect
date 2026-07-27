@@ -272,3 +272,8 @@ export function MeetingFormDialog({ open, onOpenChange, clubId, userId, meeting 
     </EntitySheet>
   );
 }
+
+export function isMeetingUrl(s: string | null | undefined): boolean {
+  if (!s) return false;
+  return /^(https?:\/\/|zoommtg:|msteams:|tel:)/i.test(s.trim());
+}
