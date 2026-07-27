@@ -21,6 +21,9 @@ import { formatDateTime } from "@/lib/calendar-utils";
 import { ItemFormDialog } from "@/components/inventario/ItemFormDialog";
 import { LoanFormDialog } from "@/components/inventario/LoanFormDialog";
 import { ReturnLoanDialog } from "@/components/inventario/ReturnLoanDialog";
+import { ItemDetailSheet } from "@/components/inventario/ItemDetailSheet";
+import { LoanDetailSheet } from "@/components/inventario/LoanDetailSheet";
+import { useInventoryImageUrl } from "@/hooks/useInventory";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/m/inventario")({
