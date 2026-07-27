@@ -302,12 +302,12 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
 }
 
 function ItemCard({
-  item, available, canEdit, onEdit, onLoan,
+  item, available, canEdit, onOpen, onLoan,
 }: {
   item: InventoryItem;
   available: number;
   canEdit: boolean;
-  onEdit: () => void;
+  onOpen: () => void;
   onLoan: () => void;
 }) {
   const low = item.min_quantity > 0 && available <= item.min_quantity;
@@ -318,20 +318,39 @@ function ItemCard({
       ? { label: "Bajo stock", variant: "pending" }
       : { label: `${available} disp.`, variant: "approved" };
 
+  const imageQ = useInventoryImageUrl(item.image_path);
+
   return (
-    <StandardCard
-      interactive={canEdit}
-      onClick={canEdit ? onEdit : undefined}
-      icon={Package}
-      title={item.name}
-      subtitle={
-        `${item.category ?? "Sin categoría"} · Total ${item.total_quantity}${item.unit ? ` ${item.unit}` : ""}`
-      }
-      status={status}
-      className={cn((low || out) && "ring-1 ring-status-pending/40")}
+    <div
+      onClick={onOpen}
+      className={cn(
+        "glass p-4 flex flex-col gap-3 transition-all cursor-pointer",
+        "hover:border-white/15 hover:bg-white/[0.06] active:scale-[0.99]",
+        (low || out) && "ring-1 ring-status-pending/40",
+      )}
     >
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="text-xs text-muted-foreground">
+      <div className="flex items-start gap-3">
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white/5 text-foreground">
+          {imageQ.data ? (
+            <img src={imageQ.data} alt={item.name} className="h-full w-full object-cover" />
+          ) : (
+            <Package className="h-5 w-5" />
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="font-display text-base font-semibold leading-tight text-foreground truncate">
+              {item.name}
+            </h3>
+            <StatusBadge variant={status.variant}>{status.label}</StatusBadge>
+          </div>
+          <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
+            {item.category ?? "Sin categoría"} · Total {item.total_quantity}{item.unit ? ` ${item.unit}` : ""}
+          </p>
+        </div>
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
+        <span className="text-xs">
           {item.min_quantity > 0 ? `Mínimo ${item.min_quantity}` : "Sin alerta de stock"}
         </span>
         {canEdit ? (
@@ -347,17 +366,17 @@ function ItemCard({
           </Button>
         ) : null}
       </div>
-    </StandardCard>
+    </div>
   );
 }
 
 function LoansList({
-  loans, variant, canEdit, onEdit, onReturn, onCreate, hasItems,
+  loans, variant, canEdit, onOpen, onReturn, onCreate, hasItems,
 }: {
   loans: InventoryLoan[];
   variant: LoansFilter;
   canEdit: boolean;
-  onEdit: (l: InventoryLoan) => void;
+  onOpen: (l: InventoryLoan) => void;
   onReturn: (l: InventoryLoan) => void;
   onCreate?: () => void;
   hasItems: boolean;
@@ -387,7 +406,7 @@ function LoansList({
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       {loans.map((l, i) => (
         <div key={l.id} className="animate-card-in" style={{ animationDelay: `${i * 25}ms` }}>
-          <LoanCard loan={l} canEdit={canEdit} onEdit={onEdit} onReturn={onReturn} />
+          <LoanCard loan={l} canEdit={canEdit} onOpen={onOpen} onReturn={onReturn} />
         </div>
       ))}
     </div>
@@ -395,11 +414,11 @@ function LoansList({
 }
 
 function LoanCard({
-  loan, canEdit, onEdit, onReturn,
+  loan, canEdit, onOpen, onReturn,
 }: {
   loan: InventoryLoan;
   canEdit: boolean;
-  onEdit: (l: InventoryLoan) => void;
+  onOpen: (l: InventoryLoan) => void;
   onReturn: (l: InventoryLoan) => void;
 }) {
   const pending = loan.quantity - loan.returned_quantity;
@@ -424,8 +443,8 @@ function LoanCard({
 
   return (
     <StandardCard
-      interactive={canEdit}
-      onClick={canEdit ? () => onEdit(loan) : undefined}
+      interactive
+      onClick={() => onOpen(loan)}
       icon={ArrowLeftRight}
       title={loan.item?.name ?? "Artículo"}
       subtitle={`${loan.quantity}${loan.item?.unit ? ` ${loan.item.unit}` : ""} · ${dueLabel}`}
@@ -469,3 +488,4 @@ function LoanCard({
     </StandardCard>
   );
 }
+
