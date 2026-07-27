@@ -1,67 +1,113 @@
-# Coordinación: detalle, filtros y estados tipo Monday/Notion
+## Alcance
 
-Cambios acotados a Tareas y Juntas del módulo Coordinación. No se toca el sistema de diseño ni los tokens existentes (glass, StandardCard, StatusBadge, chips, sheets).
+1. Arreglar visibilidad de fotos de inventario (miniatura + detalle).
+2. Módulo **Solicitudes** completo (8 tipos) con permisos ver / editar / aprobar y ámbito personal.
+3. Integración préstamos ⇄ solicitudes de material: nueva pestaña "Pendientes" en Préstamos.
+4. Mostrar foto del artículo en el detalle del préstamo.
+5. Filtro de búsqueda por usuario o artículo en Préstamos.
 
-## 1. Filtros de tareas en dos capas
+---
 
-Reemplazo del pill único actual por dos controles independientes arriba de la lista:
+## 1. Fotos de inventario
 
-- **Segmento principal** (mismo estilo pill que hoy): `Mis tareas` · `Todas`. Default `Mis tareas`.
-- **Filtro de prioridad** (segundo control, a la derecha en desktop / debajo en móvil): selector con `Todas las prioridades`, `Alta`, `Media`, `Baja`. Se combina con el segmento principal (AND).
+Diagnóstico: en la base no hay ningún objeto en el bucket `inventory` ni `image_path` en los artículos, así que la subida no se está completando (probablemente el `<input type="file">` oculto no dispara el `onChange` en desktop porque el `Button` que lo debería abrir no llama a `ref.current.click()` — sólo lo hace en móvil vía `capture`). Revisaré `ItemFormDialog` para:
 
-Ajustes:
-- `TaskFilter` pasa a ser `{ scope: 'mias'|'todas'; priority: 'all'|'alta'|'media'|'baja' }`.
-- La lógica de auto-cambio al crear una tarea (para que no "desaparezca") se adapta: si el scope la esconde → `todas`; si la prioridad la esconde → `all`. Un solo toast informativo.
+- Conectar explícitamente los botones "Tomar foto" / "Subir foto" a `cameraInputRef.current?.click()` y `fileInputRef.current?.click()`.
+- Añadir toasts si `upload()` falla y no persistir el artículo sin la imagen cuando el archivo se seleccionó.
+- Validar el `content-type` y usar `upsert: true` para reintentos.
 
-## 2. Nuevo estado "En pausa" para tareas
+La lectura ya usa `useInventoryImageUrl` (signed URL) y las políticas de storage permiten SELECT autenticado, así que en cuanto `image_path` se guarde, miniatura y detalle se verán solas.
 
-Estilo Monday: los estados pasan a ser `Pendiente → En progreso → En pausa → Completada`, con transiciones libres (no un único "next").
+## 2. Módulo Solicitudes
 
-- Migración: ampliar el CHECK / enum de `tasks.status` para incluir `en_pausa`. Mantener default `pendiente`. Trigger existente de `completed_at` sigue disparando solo al pasar a `completada`.
-- Agrupación en la lista: se añade sección "En pausa" entre "En progreso" y "Completada".
-- `StatusBadge` variants: pendiente=info, en_progreso=pending, en_pausa=info (atenuado), completada=approved.
+### Datos
+Nuevo módulo `solicitudes` en `src/lib/modules.ts` (bajo la página "Coordinación"). Nuevas tablas:
 
-## 3. Tarjeta de detalle (Tarea y Junta)
+- `request_types` enum: `material`, `compra`, `pago_proveedor`, `permiso`, `cortesias`, `reembolso`, `medica`, `otro`.
+- `request_status` enum: `pendiente`, `aprobada`, `rechazada`, `cancelada`, `completada`.
+- `requests`: `id, club_id, type, status, requester_id, title, description, details jsonb, amount numeric, currency, needed_at, decided_at, decided_by, decision_note, related_item_id, related_event_id, related_loan_id, created_at, updated_at`.
+- `request_comments` (para "recordar al aprobador"): `id, request_id, user_id, body, kind ('comment'|'reminder'), created_at`.
 
-Hoy, al tocar una tarjeta con permiso editor se abre directo el formulario. Nuevo comportamiento:
+`details jsonb` guarda los campos específicos por tipo (proveedor, banco, fechas de permiso, número de boletos, monto de reembolso, tipo de estudio médico, etc.).
 
-- Tocar cualquier tarjeta (con permiso de acceso, no solo editor) abre un **sheet de detalle** de solo lectura, usando el `EntitySheet` existente.
-- Header del sheet: título de la entidad + fila de acciones sticky arriba, visible solo para `editor`: `Editar` (abre el form actual) y `Eliminar` (con confirmación). Para no-editor no aparecen.
-- Body organizado en secciones limpias (labels sobrios + valores en `text-foreground`), sin cambiar tokens:
-  - **Tarea**: Estado (control interactivo, ver §4), Prioridad (badge), Fecha límite (con indicador "Vencida"), Descripción, Asignados (lista con avatar + nombre + rol), Creado por / Creado el, Completada el (si aplica).
-  - **Junta**: Estado próxima/pasada, Inicio y Fin, Ubicación, Agenda, Invitados con su estado de asistencia (chips por persona), Minuta (solo lectura; si es editor y la junta ya pasó, botón "Editar minuta" abre el form). Si soy invitado y es futura, controles Confirmar/Rechazar dentro del detalle.
+### RLS
+- SELECT: cualquier miembro del club (`get_user_club_id`) — todos ven todas.
+- INSERT: cualquier miembro autenticado del club, `requester_id = auth.uid()`.
+- UPDATE:
+  - `requester_id = auth.uid()` mientras `status='pendiente'` (editar/cancelar la propia).
+  - `has_module_editor(auth.uid(), NULL, 'solicitudes')` (editor total).
+  - Aprobar/rechazar: `has_module_approver(auth.uid(), 'solicitudes')` — nueva función helper que revisa `access_level = 'approver'`. Sólo cambia `status`, `decided_by`, `decided_at`, `decision_note`.
+- DELETE: propio en pendiente, o editor.
+- `request_comments`: INSERT por autor del comentario si tiene acceso a la solicitud; SELECT igual que la solicitud.
 
-Flujo: `Detalle → Editar` abre el `TaskFormDialog` / `MeetingFormDialog` ya existentes sin cambios de diseño. Cerrar el form regresa al detalle actualizado.
+Realtime habilitado en ambas tablas.
 
-## 4. Progreso de tareas tipo Monday dentro del detalle
+### UI
+Nueva ruta `src/routes/_authenticated/m.solicitudes.tsx`:
 
-Dentro del sheet de detalle de tarea, el campo Estado es un **selector de segmentos** (pill group) con las 4 opciones. Cualquier asignado o editor puede cambiarlo libremente en cualquier dirección (no solo avanzar). Cambio optimista + toast.
+- Pestañas: **Mis solicitudes** · **Todas** · **Por aprobar** (sólo si tiene approver).
+- Filtros por tipo y estado.
+- `Nuevo` (botón verde ancho estándar) → `RequestFormDialog` con `Select` de tipo que renderiza los campos correspondientes:
+  - Material: selector de artículo (de `inventory_items`), cantidad, fecha necesitada, notas.
+  - Compra: descripción, categoría, monto estimado, urgencia.
+  - Pago a proveedor: proveedor, concepto, monto, moneda, fecha límite, adjuntar factura (link/documento).
+  - Permiso: tipo (vacaciones / personal / médico), fecha inicio, fecha fin, motivo.
+  - Cortesías: partido (selector de `calendar_events` tipo `partido`), cantidad de boletos, para quién.
+  - Reembolso: concepto, monto, fecha del gasto, método de pago, adjuntar comprobante.
+  - Médica: paciente (miembro), tipo (estudio/consulta/tratamiento), especialidad, urgencia.
+  - Otro: título + descripción libre.
+- `RequestDetailSheet` (estilo estándar):
+  - Header: título + `StatusBadge`. Acciones arriba según permisos:
+    - Aprobador + pendiente: **Aprobar** / **Rechazar** (pide nota).
+    - Editor: Editar / Eliminar.
+    - Autor: Editar / Cancelar / **Recordar aprobador** (crea comment `kind='reminder'`).
+  - Cuerpo: campos específicos, historial de comentarios, quién decidió y cuándo.
 
-En la tarjeta (grid), el botón rápido "Iniciar / Completar" actual se sustituye por un menú pequeño (`⋯` o click en el badge) con las 4 transiciones, para asignados/editor. Sin cambios visuales fuera del menú.
+Hook `useRequests.ts` con `queryOptions` + realtime channel filtrado por `club_id`.
 
-## 5. Progreso de juntas tipo Monday
+### Notificaciones
+Recordatorios se guardan como filas en `request_comments` y aparecen inmediatamente vía realtime. **Push nativas quedan fuera de este entregable** (requieren service worker + VAPID / Firebase); lo dejo anotado y añado sólo indicador visual (badge con conteo de "por aprobar" en la pestaña).
 
-Añadir campo `meetings.status` con valores `programada | en_curso | en_pausa | finalizada | cancelada` (default `programada`, timestamptz `started_at` y `ended_at_actual` opcionales para timeline).
+## 3. Puente Solicitudes → Préstamos
 
-- En el detalle, editores ven un selector de estado equivalente al de tareas.
-- La sección "Próximas / Pasadas" sigue calculándose por `starts_at`, pero el badge de la tarjeta refleja `status` cuando difiere (ej. `En curso` sobre una próxima, `Cancelada`).
-- Sin campos nuevos en el form de creación (default `programada`); el estado se maneja desde el detalle, igual que en Monday/Notion donde se crea y luego se avanza el pipeline.
+- Al aprobar una solicitud tipo `material`, el flujo:
+  - El aprobador ve la solicitud en la pestaña **Pendientes** de Préstamos (nuevo tab en `m.inventario.tsx`).
+  - Botón "Aprobar y crear préstamo" abre `LoanFormDialog` prellenado con `borrower_user_id = requester_id`, `item_id`, `quantity` y `request_id` de la solicitud.
+  - Al guardar el préstamo con `request_id`, marca la solicitud como `completada` (server-side vía función `approve_material_request(request_id, loan_id)` para atomicidad, o simplemente dos writes en un mutate).
+  - Rechazar: cambia status a `rechazada`.
+- Pestaña **Pendientes** lista solicitudes `type='material' AND status='pendiente'` (para quien tenga acceso a Solicitudes; acciones de aprobar sólo con `approver` en `prestamos` — según indicaste el permiso vive en préstamos, así que usaré `has_module_approver(user, 'inventario')` para las acciones aquí).
 
-## 6. Alcance de permisos aplicado a todo Coordinación
+## 4. Detalle de préstamo con foto
 
-Mismo patrón "detalle primero, editar como acción explícita" queda listo para replicarse en los futuros módulos (viajes, solicitudes, etc.) reutilizando el `EntitySheet` de detalle. Este plan solo lo implementa en Tareas y Juntas.
+`LoanDetailSheet` obtiene el `image_path` vía el item embebido en la consulta (`inventory_loans → item`). Ampliar el `select` en `inventoryLoansQueryOptions` para incluir `image_path`, y renderizar la miniatura arriba del detalle usando `useInventoryImageUrl`.
+
+## 5. Filtro en Préstamos
+
+En la pestaña Préstamos de `m.inventario.tsx`:
+- Añadir un `Input` de búsqueda (mismo patrón que Catálogo) que filtra por: nombre del artículo, nombre/email del borrower.
+- Se aplica sobre las tres sub-pestañas (Activos / Devueltos / Pendientes).
+
+---
 
 ## Archivos afectados
 
-- Migración SQL: enum/CHECK de `tasks.status` (+ `en_pausa`), nueva columna `meetings.status` + `started_at` + `ended_at_actual`, políticas RLS ya cubren estos updates.
-- `src/hooks/useCoordinacion.ts`: tipos `TaskStatus`, `MeetingStatus`, campos nuevos.
-- `src/routes/_authenticated/m.coordinacion_interna.tsx`: filtros en dos capas, agrupación por 4 estados, tarjetas abren detalle en lugar del form.
-- `src/components/coordinacion/TaskDetailSheet.tsx` (nuevo): detalle + acciones editor + cambio de estado.
-- `src/components/coordinacion/MeetingDetailSheet.tsx` (nuevo): detalle + asistencia propia + estado + acceso a editar/minuta.
-- `TaskFormDialog.tsx` / `MeetingFormDialog.tsx`: sin cambios visuales; solo se invocan desde el detalle.
+**Nuevos:**
+- `supabase/migrations/*_requests.sql` (enums, tablas, RLS, grants, triggers, realtime, `has_module_approver`).
+- `src/hooks/useRequests.ts`.
+- `src/routes/_authenticated/m.solicitudes.tsx`.
+- `src/components/solicitudes/RequestFormDialog.tsx` (con subformularios por tipo).
+- `src/components/solicitudes/RequestDetailSheet.tsx`.
+- `src/components/solicitudes/PendingMaterialList.tsx` (usado en Inventario).
 
-## Detalles técnicos
+**Modificados:**
+- `src/lib/modules.ts` — registrar `solicitudes` en la página Coordinación.
+- `src/lib/rolePages.ts` — asegurar que aparece para todos los roles base.
+- `src/components/inventario/ItemFormDialog.tsx` — arreglar botones de cámara/subida.
+- `src/hooks/useInventory.ts` — incluir `image_path` en `item` embebido del préstamo.
+- `src/components/inventario/LoanDetailSheet.tsx` — miniatura + link a solicitud si aplica.
+- `src/routes/_authenticated/m.inventario.tsx` — pestaña "Pendientes" en Préstamos + filtro de búsqueda.
 
-- Realtime existente ya invalida `coord-tasks` / `coord-meetings`; los detalles leen del cache y se actualizan solos.
-- `completed_at`: el trigger actual llena al entrar a `completada` y limpia al salir; se mantiene y cubre volver de `completada` a `en_pausa`.
-- Confirmación de eliminar reutiliza el patrón actual de `Trash2` del form, movido al header del detalle.
+## Fuera de alcance (lo aviso, no lo implemento)
+
+- Push notifications nativas (requieren service worker + claves VAPID).
+- Módulos Compras/Facturas destino: por ahora las solicitudes de compra/pago quedan como registros aprobados/rechazados; cuando construyamos Compras las enlazamos con `related_purchase_id`.

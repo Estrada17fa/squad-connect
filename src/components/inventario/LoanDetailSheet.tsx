@@ -14,7 +14,8 @@ import { StatusBadge, type StatusVariant } from "@/components/squad/StatusBadge"
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDateTime } from "@/lib/calendar-utils";
-import type { InventoryLoan } from "@/hooks/useInventory";
+import { useInventoryImageUrl, type InventoryLoan } from "@/hooks/useInventory";
+import { Package } from "lucide-react";
 
 interface Props {
   open: boolean;
@@ -28,6 +29,8 @@ interface Props {
 
 export function LoanDetailSheet({ open, onOpenChange, loan, clubId, canEdit, onEdit, onReturn }: Props) {
   const qc = useQueryClient();
+  const imageQ = useInventoryImageUrl(loan?.item?.image_path);
+
 
   const del = useMutation({
     mutationFn: async () => {
@@ -90,6 +93,14 @@ export function LoanDetailSheet({ open, onOpenChange, loan, clubId, canEdit, onE
       </EntitySheetHeader>
 
       <EntitySheetBody>
+        <div className="flex h-40 w-full items-center justify-center overflow-hidden rounded-xl bg-white/5">
+          {imageQ.data ? (
+            <img src={imageQ.data} alt={loan.item?.name ?? "Artículo"} className="h-full w-full object-cover" />
+          ) : (
+            <Package className="h-8 w-8 text-muted-foreground" />
+          )}
+        </div>
+
         <Field label="Estado">
           <div className="flex items-center gap-2">
             <StatusBadge variant={status.variant}>{status.label}</StatusBadge>

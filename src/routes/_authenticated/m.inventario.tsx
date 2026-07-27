@@ -17,14 +17,17 @@ import {
   useInventoryItems, useInventoryLoans, computeOutstanding, itemAvailability,
   type InventoryItem, type InventoryLoan,
 } from "@/hooks/useInventory";
+import { useRequests, type RequestRow } from "@/hooks/useRequests";
 import { formatDateTime } from "@/lib/calendar-utils";
 import { ItemFormDialog } from "@/components/inventario/ItemFormDialog";
 import { LoanFormDialog } from "@/components/inventario/LoanFormDialog";
 import { ReturnLoanDialog } from "@/components/inventario/ReturnLoanDialog";
 import { ItemDetailSheet } from "@/components/inventario/ItemDetailSheet";
 import { LoanDetailSheet } from "@/components/inventario/LoanDetailSheet";
+import { RequestDetailSheet } from "@/components/solicitudes/RequestDetailSheet";
 import { useInventoryImageUrl } from "@/hooks/useInventory";
 import { cn } from "@/lib/utils";
+import { ClipboardList } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/m/inventario")({
   head: () => ({
@@ -36,21 +39,26 @@ export const Route = createFileRoute("/_authenticated/m/inventario")({
   component: InventarioPage,
 });
 
-type LoansFilter = "activos" | "devueltos";
+type LoansFilter = "activos" | "devueltos" | "pendientes";
 
 function InventarioPage() {
   const { permissions, isSuperAdmin, user, accessibleModules, profile } = useApp();
   const clubId = profile?.club_id ?? null;
   const canEdit = isSuperAdmin || permissions.inventario === "editor" || permissions.inventario === "approver";
+  const canApprove = isSuperAdmin || permissions.inventario === "approver" || permissions.inventario === "editor";
+  const canEditSolicitudes = isSuperAdmin || permissions.solicitudes === "editor";
+  const canApproveSolicitudes = isSuperAdmin || permissions.solicitudes === "approver" || permissions.solicitudes === "editor";
   const canAccess = isSuperAdmin || accessibleModules.includes("inventario");
 
   const itemsQ = useInventoryItems(clubId);
   const loansQ = useInventoryLoans(clubId);
+  const requestsQ = useRequests(clubId);
 
   const [tab, setTab] = React.useState<"catalogo" | "prestamos">("catalogo");
   const [search, setSearch] = React.useState("");
   const [categoryFilter, setCategoryFilter] = React.useState<string>("all");
   const [loansFilter, setLoansFilter] = React.useState<LoansFilter>("activos");
+  const [loanSearch, setLoanSearch] = React.useState("");
 
   const [itemDialog, setItemDialog] = React.useState(false);
   const [editingItem, setEditingItem] = React.useState<InventoryItem | null>(null);
@@ -60,6 +68,7 @@ function InventarioPage() {
   const [loanInitialItem, setLoanInitialItem] = React.useState<string | null>(null);
   const [returnLoan, setReturnLoan] = React.useState<InventoryLoan | null>(null);
   const [detailLoan, setDetailLoan] = React.useState<InventoryLoan | null>(null);
+  const [detailRequest, setDetailRequest] = React.useState<RequestRow | null>(null);
 
   if (!canAccess) {
     return (
@@ -95,8 +104,20 @@ function InventarioPage() {
     });
   }, [items, search, categoryFilter]);
 
-  const activeLoans = loans.filter((l) => !l.returned_at);
-  const returnedLoans = loans.filter((l) => !!l.returned_at);
+  const pendingRequests = React.useMemo(
+    () => (requestsQ.data ?? []).filter((r) => r.type === "material" && r.status === "pendiente"),
+    [requestsQ.data],
+  );
+
+  const loanQuery = loanSearch.trim().toLowerCase();
+  const matchesLoan = (l: InventoryLoan) => {
+    if (!loanQuery) return true;
+    const item = (l.item?.name ?? "").toLowerCase();
+    const person = ((l.borrower?.full_name ?? "") + " " + (l.borrower?.email ?? "")).toLowerCase();
+    return item.includes(loanQuery) || person.includes(loanQuery);
+  };
+  const activeLoans = loans.filter((l) => !l.returned_at).filter(matchesLoan);
+  const returnedLoans = loans.filter((l) => !!l.returned_at).filter(matchesLoan);
 
   function openNewItem() { setEditingItem(null); setItemDialog(true); }
   function openNewLoan(itemId?: string) {
@@ -187,9 +208,43 @@ function InventarioPage() {
             </Button>
           ) : null}
 
-          <LoanFilterChips value={loansFilter} onChange={setLoansFilter} activeCount={activeLoans.length} returnedCount={returnedLoans.length} />
+          <LoanFilterChips
+            value={loansFilter}
+            onChange={setLoansFilter}
+            activeCount={activeLoans.length}
+            returnedCount={returnedLoans.length}
+            pendingCount={pendingRequests.length}
+          />
 
-          {loansQ.isLoading && loans.length === 0 ? (
+          {loansFilter !== "pendientes" ? (
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={loanSearch}
+                onChange={(e) => setLoanSearch(e.target.value)}
+                placeholder="Buscar por artículo o persona…"
+                className="pl-8"
+              />
+            </div>
+          ) : null}
+
+          {loansFilter === "pendientes" ? (
+            pendingRequests.length === 0 ? (
+              <EmptyState
+                icon={ClipboardList}
+                title="Sin solicitudes pendientes"
+                message="Cuando alguien pida material aparecerá aquí para aprobar o rechazar."
+              />
+            ) : (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {pendingRequests.map((r, i) => (
+                  <div key={r.id} className="animate-card-in" style={{ animationDelay: `${i * 25}ms` }}>
+                    <PendingRequestCard request={r} onOpen={() => setDetailRequest(r)} />
+                  </div>
+                ))}
+              </div>
+            )
+          ) : loansQ.isLoading && loans.length === 0 ? (
             <CardGridSkeleton count={3} />
           ) : (
             <LoansList
@@ -250,6 +305,22 @@ function InventarioPage() {
         onEdit={() => { if (detailLoan) { setEditingLoan(detailLoan); setLoanInitialItem(null); setDetailLoan(null); setLoanDialog(true); } }}
         onReturn={() => { if (detailLoan) { const l = detailLoan; setDetailLoan(null); setReturnLoan(l); } }}
       />
+      <RequestDetailSheet
+        open={!!detailRequest}
+        onOpenChange={(o) => { if (!o) setDetailRequest(null); }}
+        request={detailRequest}
+        clubId={clubId}
+        userId={user.id}
+        canEditModule={canEditSolicitudes}
+        canApprove={canApproveSolicitudes}
+        onEdit={() => { /* editing requests handled from Solicitudes module */ }}
+        onConvertToLoan={(r) => {
+          setDetailRequest(null);
+          setEditingLoan(null);
+          setLoanInitialItem(r.related_item_id ?? null);
+          setLoanDialog(true);
+        }}
+      />
     </div>
   );
 }
@@ -272,15 +343,37 @@ function CategoryChips({
 }
 
 function LoanFilterChips({
-  value, onChange, activeCount, returnedCount,
+  value, onChange, activeCount, returnedCount, pendingCount,
 }: {
-  value: LoansFilter; onChange: (v: LoansFilter) => void; activeCount: number; returnedCount: number;
+  value: LoansFilter; onChange: (v: LoansFilter) => void;
+  activeCount: number; returnedCount: number; pendingCount: number;
 }) {
   return (
-    <div className="flex gap-2">
+    <div className="flex flex-wrap gap-2">
       <Chip active={value === "activos"} onClick={() => onChange("activos")}>Activos · {activeCount}</Chip>
+      <Chip active={value === "pendientes"} onClick={() => onChange("pendientes")}>Pendientes · {pendingCount}</Chip>
       <Chip active={value === "devueltos"} onClick={() => onChange("devueltos")}>Devueltos · {returnedCount}</Chip>
     </div>
+  );
+}
+
+function PendingRequestCard({ request, onOpen }: { request: RequestRow; onOpen: () => void }) {
+  const qty = request.details?.quantity ?? "?";
+  const requester = request.requester?.full_name ?? request.requester?.email ?? "Miembro";
+  return (
+    <StandardCard
+      interactive
+      onClick={onOpen}
+      icon={ClipboardList}
+      title={request.item?.name ?? request.title}
+      subtitle={`${qty}${request.item?.unit ? ` ${request.item.unit}` : ""} · ${requester}`}
+      status={{ label: "Pendiente", variant: "pending" }}
+      className="ring-1 ring-status-pending/30"
+    >
+      <div className="text-xs text-muted-foreground">
+        {request.needed_at ? `Necesario ${formatDateTime(request.needed_at)}` : `Solicitado ${formatDateTime(request.created_at)}`}
+      </div>
+    </StandardCard>
   );
 }
 
