@@ -230,6 +230,26 @@ function InventarioPage() {
         clubId={clubId}
         loan={returnLoan}
       />
+      <ItemDetailSheet
+        open={!!detailItem}
+        onOpenChange={(o) => { if (!o) setDetailItem(null); }}
+        item={detailItem}
+        available={detailItem ? itemAvailability(detailItem, outstanding) : 0}
+        outstanding={detailItem ? outstanding[detailItem.id] ?? 0 : 0}
+        clubId={clubId}
+        canEdit={canEdit}
+        onEdit={() => { if (detailItem) { setEditingItem(detailItem); setDetailItem(null); setItemDialog(true); } }}
+        onLoan={() => { if (detailItem) { const id = detailItem.id; setDetailItem(null); openNewLoan(id); } }}
+      />
+      <LoanDetailSheet
+        open={!!detailLoan}
+        onOpenChange={(o) => { if (!o) setDetailLoan(null); }}
+        loan={detailLoan}
+        clubId={clubId}
+        canEdit={canEdit}
+        onEdit={() => { if (detailLoan) { setEditingLoan(detailLoan); setLoanInitialItem(null); setDetailLoan(null); setLoanDialog(true); } }}
+        onReturn={() => { if (detailLoan) { const l = detailLoan; setDetailLoan(null); setReturnLoan(l); } }}
+      />
     </div>
   );
 }
