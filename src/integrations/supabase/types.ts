@@ -315,6 +315,7 @@ export type Database = {
           created_by: string | null
           description: string | null
           id: string
+          image_path: string | null
           min_quantity: number
           name: string
           total_quantity: number
@@ -328,6 +329,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           id?: string
+          image_path?: string | null
           min_quantity?: number
           name: string
           total_quantity?: number
@@ -341,6 +343,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           id?: string
+          image_path?: string | null
           min_quantity?: number
           name?: string
           total_quantity?: number
@@ -1044,6 +1047,10 @@ export type Database = {
       get_user_club_id: { Args: { _user_id: string }; Returns: string }
       has_club_access: {
         Args: { _club_id: string; _user_id: string }
+        Returns: boolean
+      }
+      has_event_access: {
+        Args: { _event_id: string; _user_id: string }
         Returns: boolean
       }
       has_module_access: {
