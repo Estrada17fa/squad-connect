@@ -405,3 +405,23 @@ function UrgencySelect({ value, onChange }: { value: string; onChange: (v: strin
     </div>
   );
 }
+
+function ItemPreview({ item }: { item: ItemLite | null }) {
+  const { data: url } = useInventoryImageUrl(item?.image_path);
+  if (!item) return null;
+  return (
+    <div className="flex items-center gap-3 rounded-lg border border-border/60 bg-white/[0.02] p-2">
+      <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border/60 bg-background">
+        {url ? (
+          <img src={url} alt={item.name} className="h-full w-full object-cover" />
+        ) : (
+          <PackageIcon className="h-6 w-6 text-muted-foreground" />
+        )}
+      </div>
+      <div className="min-w-0">
+        <div className="truncate text-sm text-foreground">{item.name}</div>
+        {item.unit ? <div className="text-xs text-muted-foreground">Unidad: {item.unit}</div> : null}
+      </div>
+    </div>
+  );
+}
