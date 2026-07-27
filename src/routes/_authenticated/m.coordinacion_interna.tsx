@@ -1,8 +1,7 @@
 import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plus, CalendarDays, MapPin, Check, X as XIcon, AlertTriangle, MessagesSquare, ClipboardList } from "lucide-react";
+import { Plus, CalendarDays, AlertTriangle, MessagesSquare, ClipboardList } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { ModuleTabs } from "@/components/squad/ModuleTabs";
 import { EmptyState } from "@/components/squad/EmptyState";
@@ -12,13 +11,14 @@ import { StatusBadge, type StatusVariant } from "@/components/squad/StatusBadge"
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useApp } from "@/components/squad/AppLayout";
-import { supabase } from "@/integrations/supabase/client";
 import {
-  useTasks, useMeetings, type TaskRow, type TaskStatus, type TaskPriority, type MeetingRow, type AttendanceStatus,
+  useTasks, useMeetings, type TaskRow, type TaskStatus, type TaskPriority, type MeetingRow, type MeetingStatus,
 } from "@/hooks/useCoordinacion";
 import { formatDateTime } from "@/lib/calendar-utils";
 import { TaskFormDialog } from "@/components/coordinacion/TaskFormDialog";
 import { MeetingFormDialog } from "@/components/coordinacion/MeetingFormDialog";
+import { TaskDetailSheet } from "@/components/coordinacion/TaskDetailSheet";
+import { MeetingDetailSheet } from "@/components/coordinacion/MeetingDetailSheet";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/m/coordinacion_interna")({
@@ -36,16 +36,27 @@ const PRIORITY_VARIANT: Record<TaskPriority, StatusVariant> = { alta: "rejected"
 const STATUS_LABEL: Record<TaskStatus, string> = {
   pendiente: "Pendiente",
   en_progreso: "En progreso",
+  en_pausa: "En pausa",
   completada: "Completada",
 };
-const STATUS_ORDER: TaskStatus[] = ["pendiente", "en_progreso", "completada"];
-const NEXT_STATUS: Record<TaskStatus, TaskStatus | null> = {
-  pendiente: "en_progreso",
-  en_progreso: "completada",
-  completada: null,
+const STATUS_ORDER: TaskStatus[] = ["pendiente", "en_progreso", "en_pausa", "completada"];
+const MEETING_STATUS_LABEL: Record<MeetingStatus, string> = {
+  programada: "Programada",
+  en_curso: "En curso",
+  en_pausa: "En pausa",
+  finalizada: "Finalizada",
+  cancelada: "Cancelada",
+};
+const MEETING_STATUS_VARIANT: Record<MeetingStatus, StatusVariant> = {
+  programada: "info",
+  en_curso: "pending",
+  en_pausa: "info",
+  finalizada: "approved",
+  cancelada: "rejected",
 };
 
-type TaskFilter = "mias" | "todas" | "alta" | "media" | "baja";
+type ScopeFilter = "mias" | "todas";
+type PriorityFilter = "all" | TaskPriority;
 
 function CoordinacionPage() {
   const { permissions, isSuperAdmin, user, accessibleModules, profile } = useApp();
@@ -58,11 +69,13 @@ function CoordinacionPage() {
 
   const [taskDialog, setTaskDialog] = React.useState(false);
   const [editingTask, setEditingTask] = React.useState<TaskRow | null>(null);
+  const [detailTaskId, setDetailTaskId] = React.useState<string | null>(null);
   const [meetingDialog, setMeetingDialog] = React.useState(false);
   const [editingMeeting, setEditingMeeting] = React.useState<MeetingRow | null>(null);
-  const [filter, setFilter] = React.useState<TaskFilter>("mias");
+  const [detailMeetingId, setDetailMeetingId] = React.useState<string | null>(null);
+  const [scope, setScope] = React.useState<ScopeFilter>("mias");
+  const [priority, setPriority] = React.useState<PriorityFilter>("all");
   const [tab, setTab] = React.useState<"tareas" | "juntas">("tareas");
-  
 
   if (!canAccess) {
     return (
@@ -75,14 +88,13 @@ function CoordinacionPage() {
 
   if (!clubId) return <LoadingState />;
 
+  const detailTask = detailTaskId ? (tasksQ.data ?? []).find((t) => t.id === detailTaskId) ?? null : null;
+  const detailMeeting = detailMeetingId ? (meetingsQ.data ?? []).find((m) => m.id === detailMeetingId) ?? null : null;
+
   return (
     <div className="space-y-6">
       <ModuleTabs activeKey="coordinacion_interna" />
-      <PageHeader
-        hideTitle
-        title="Coordinación"
-        subtitle="Ámbito club · staff sin importar equipo"
-      />
+      <PageHeader hideTitle title="Coordinación" subtitle="Ámbito club · staff sin importar equipo" />
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as any)} className="w-full">
         <TabsList>
@@ -99,16 +111,21 @@ function CoordinacionPage() {
               <Plus className="mr-2 h-4 w-4" /> Nueva tarea
             </Button>
           ) : null}
-          <FilterChips filter={filter} setFilter={setFilter} />
+
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <ScopeChips scope={scope} setScope={setScope} />
+            <PriorityChips priority={priority} setPriority={setPriority} />
+          </div>
+
           <TasksList
             tasks={tasksQ.data ?? []}
             isLoading={tasksQ.isLoading}
             userId={user.id}
-            filter={filter}
+            scope={scope}
+            priority={priority}
             canEdit={canEdit}
-            onEdit={(t) => { setEditingTask(t); setTaskDialog(true); }}
+            onOpen={(t) => setDetailTaskId(t.id)}
             onCreate={canEdit ? () => { setEditingTask(null); setTaskDialog(true); } : undefined}
-            clubId={clubId}
           />
         </TabsContent>
 
@@ -127,9 +144,8 @@ function CoordinacionPage() {
             isLoading={meetingsQ.isLoading}
             userId={user.id}
             canEdit={canEdit}
-            onEdit={(m) => { setEditingMeeting(m); setMeetingDialog(true); }}
+            onOpen={(m) => setDetailMeetingId(m.id)}
             onCreate={canEdit ? () => { setEditingMeeting(null); setMeetingDialog(true); } : undefined}
-            clubId={clubId}
           />
         </TabsContent>
       </Tabs>
@@ -142,13 +158,14 @@ function CoordinacionPage() {
             clubId={clubId}
             userId={user.id}
             task={editingTask}
-            onSaved={({ isEdit, assigneeIds, priority }) => {
+            onSaved={({ isEdit, assigneeIds, priority: p }) => {
               if (isEdit) return;
-              const hiddenByMine = filter === "mias" && !assigneeIds.includes(user.id);
-              const hiddenByPriority = (filter === "alta" || filter === "media" || filter === "baja") && filter !== priority;
+              const hiddenByMine = scope === "mias" && !assigneeIds.includes(user.id);
+              const hiddenByPriority = priority !== "all" && priority !== p;
               if (hiddenByMine || hiddenByPriority) {
-                setFilter("todas");
-                toast.info("Mostrando todas las tareas para que veas la que acabas de crear");
+                if (hiddenByMine) setScope("todas");
+                if (hiddenByPriority) setPriority("all");
+                toast.info("Ajusté los filtros para que veas la tarea que acabas de crear");
               }
             }}
           />
@@ -159,17 +176,70 @@ function CoordinacionPage() {
             userId={user.id}
             meeting={editingMeeting}
           />
+          <TaskDetailSheet
+            open={!!detailTask}
+            onOpenChange={(o) => { if (!o) setDetailTaskId(null); }}
+            task={detailTask}
+            userId={user.id}
+            clubId={clubId}
+            canEdit={canEdit}
+            onEdit={() => {
+              if (!detailTask) return;
+              setEditingTask(detailTask);
+              setDetailTaskId(null);
+              setTaskDialog(true);
+            }}
+          />
+          <MeetingDetailSheet
+            open={!!detailMeeting}
+            onOpenChange={(o) => { if (!o) setDetailMeetingId(null); }}
+            meeting={detailMeeting}
+            userId={user.id}
+            clubId={clubId}
+            canEdit={canEdit}
+            onEdit={() => {
+              if (!detailMeeting) return;
+              setEditingMeeting(detailMeeting);
+              setDetailMeetingId(null);
+              setMeetingDialog(true);
+            }}
+          />
         </>
       ) : null}
     </div>
   );
 }
 
-function FilterChips({ filter, setFilter }: { filter: TaskFilter; setFilter: (f: TaskFilter) => void }) {
-  const chips: { key: TaskFilter; label: string }[] = [
+function ScopeChips({ scope, setScope }: { scope: ScopeFilter; setScope: (s: ScopeFilter) => void }) {
+  const chips: { key: ScopeFilter; label: string }[] = [
     { key: "mias", label: "Mis tareas" },
     { key: "todas", label: "Todas" },
-    { key: "alta", label: "Prioridad alta" },
+  ];
+  return (
+    <div className="flex gap-2">
+      {chips.map((c) => (
+        <button
+          key={c.key}
+          type="button"
+          onClick={() => setScope(c.key)}
+          className={cn(
+            "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+            scope === c.key
+              ? "border-primary bg-primary/10 text-primary"
+              : "border-border/60 text-muted-foreground hover:bg-white/[0.04]",
+          )}
+        >
+          {c.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function PriorityChips({ priority, setPriority }: { priority: PriorityFilter; setPriority: (p: PriorityFilter) => void }) {
+  const chips: { key: PriorityFilter; label: string }[] = [
+    { key: "all", label: "Todas las prioridades" },
+    { key: "alta", label: "Alta" },
     { key: "media", label: "Media" },
     { key: "baja", label: "Baja" },
   ];
@@ -179,10 +249,10 @@ function FilterChips({ filter, setFilter }: { filter: TaskFilter; setFilter: (f:
         <button
           key={c.key}
           type="button"
-          onClick={() => setFilter(c.key)}
+          onClick={() => setPriority(c.key)}
           className={cn(
-            "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
-            filter === c.key
+            "rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors",
+            priority === c.key
               ? "border-primary bg-primary/10 text-primary"
               : "border-border/60 text-muted-foreground hover:bg-white/[0.04]",
           )}
@@ -195,31 +265,31 @@ function FilterChips({ filter, setFilter }: { filter: TaskFilter; setFilter: (f:
 }
 
 function TasksList({
-  tasks, isLoading, userId, filter, canEdit, onEdit, onCreate, clubId,
+  tasks, isLoading, userId, scope, priority, canEdit, onOpen, onCreate,
 }: {
   tasks: TaskRow[];
   isLoading: boolean;
   userId: string;
-  filter: TaskFilter;
+  scope: ScopeFilter;
+  priority: PriorityFilter;
   canEdit: boolean;
-  onEdit: (t: TaskRow) => void;
+  onOpen: (t: TaskRow) => void;
   onCreate?: () => void;
-  clubId: string;
 }) {
   const filtered = React.useMemo(() => {
     return tasks.filter((t) => {
-      if (filter === "mias") return t.assignees.some((a) => a.id === userId);
-      if (filter === "alta" || filter === "media" || filter === "baja") return t.priority === filter;
+      if (scope === "mias" && !t.assignees.some((a) => a.id === userId)) return false;
+      if (priority !== "all" && t.priority !== priority) return false;
       return true;
     });
-  }, [tasks, filter, userId]);
+  }, [tasks, scope, priority, userId]);
 
   if (isLoading && tasks.length === 0) return <CardGridSkeleton count={4} />;
   if (filtered.length === 0) {
     return (
       <EmptyState
         icon={ClipboardList}
-        title={filter === "mias" ? "Sin tareas asignadas" : "Sin tareas"}
+        title={scope === "mias" ? "Sin tareas asignadas" : "Sin tareas"}
         message={canEdit ? "Crea la primera tarea del staff." : "Aún no hay tareas registradas."}
         action={
           canEdit && onCreate ? (
@@ -243,7 +313,7 @@ function TasksList({
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {group.map((t, i) => (
                 <div key={t.id} className="animate-card-in" style={{ animationDelay: `${i * 30}ms` }}>
-                  <TaskCard task={t} userId={userId} canEdit={canEdit} onEdit={onEdit} clubId={clubId} />
+                  <TaskCard task={t} onOpen={onOpen} />
                 </div>
               ))}
             </div>
@@ -254,65 +324,23 @@ function TasksList({
   );
 }
 
-function TaskCard({
-  task, userId, canEdit, onEdit, clubId,
-}: {
-  task: TaskRow;
-  userId: string;
-  canEdit: boolean;
-  onEdit: (t: TaskRow) => void;
-  clubId: string;
-}) {
-  const qc = useQueryClient();
-  const isMine = task.assignees.some((a) => a.id === userId);
+function TaskCard({ task, onOpen }: { task: TaskRow; onOpen: (t: TaskRow) => void }) {
   const overdue = !!task.due_at && task.status !== "completada" && new Date(task.due_at) < new Date();
-  const next = NEXT_STATUS[task.status];
-
-  const setStatus = useMutation({
-    mutationFn: async (status: TaskStatus) => {
-      const { error } = await supabase.from("tasks").update({ status }).eq("id", task.id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["coord-tasks", clubId] });
-      qc.invalidateQueries({ queryKey: ["home-my-tasks"] });
-    },
-    onError: (e: any) => toast.error(e.message ?? "No se pudo actualizar"),
-  });
-
-  const canChangeStatus = canEdit || isMine;
-  const canOpen = canEdit;
-
   return (
     <StandardCard
-      interactive={canOpen}
-      onClick={canOpen ? () => onEdit(task) : undefined}
+      interactive
+      onClick={() => onOpen(task)}
       title={task.title}
       subtitle={task.due_at ? `Vence ${formatDateTime(task.due_at)}` : "Sin fecha límite"}
       status={{ label: PRIORITY_LABEL[task.priority], variant: PRIORITY_VARIANT[task.priority] }}
       className={cn(overdue && "ring-1 ring-destructive/60")}
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <AvatarStack people={task.assignees} />
-          {overdue ? (
-            <span className="inline-flex items-center gap-1 text-xs text-destructive">
-              <AlertTriangle className="h-3.5 w-3.5" /> Vencida
-            </span>
-          ) : null}
-        </div>
-        {canChangeStatus && next ? (
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            className="h-7 px-2 text-xs"
-            onClick={(e) => { e.stopPropagation(); setStatus.mutate(next); }}
-            disabled={setStatus.isPending}
-          >
-            <Check className="mr-1 h-3.5 w-3.5" />
-            {next === "en_progreso" ? "Iniciar" : "Completar"}
-          </Button>
+        <AvatarStack people={task.assignees} />
+        {overdue ? (
+          <span className="inline-flex items-center gap-1 text-xs text-destructive">
+            <AlertTriangle className="h-3.5 w-3.5" /> Vencida
+          </span>
         ) : null}
       </div>
     </StandardCard>
@@ -347,15 +375,14 @@ function AvatarStack({ people }: { people: { id: string; full_name: string | nul
 }
 
 function MeetingsList({
-  meetings, isLoading, userId, canEdit, onEdit, onCreate, clubId,
+  meetings, isLoading, userId, canEdit, onOpen, onCreate,
 }: {
   meetings: MeetingRow[];
   isLoading: boolean;
   userId: string;
   canEdit: boolean;
-  onEdit: (m: MeetingRow) => void;
+  onOpen: (m: MeetingRow) => void;
   onCreate?: () => void;
-  clubId: string;
 }) {
   if (isLoading && meetings.length === 0) return <CardGridSkeleton count={3} />;
   if (meetings.length === 0) {
@@ -374,26 +401,24 @@ function MeetingsList({
   }
 
   const now = Date.now();
-  const upcoming = meetings.filter((m) => new Date(m.starts_at).getTime() >= now);
-  const past = meetings.filter((m) => new Date(m.starts_at).getTime() < now).reverse();
+  const upcoming = meetings.filter((m) => new Date(m.starts_at).getTime() >= now && m.status !== "finalizada" && m.status !== "cancelada");
+  const past = meetings.filter((m) => !(new Date(m.starts_at).getTime() >= now && m.status !== "finalizada" && m.status !== "cancelada")).reverse();
 
   return (
     <div className="space-y-6">
-      <Section title="Próximas" items={upcoming} userId={userId} canEdit={canEdit} onEdit={onEdit} clubId={clubId} />
-      <Section title="Pasadas" items={past} userId={userId} canEdit={canEdit} onEdit={onEdit} clubId={clubId} isPast />
+      <Section title="Próximas" items={upcoming} userId={userId} onOpen={onOpen} />
+      <Section title="Pasadas" items={past} userId={userId} onOpen={onOpen} isPast />
     </div>
   );
 }
 
 function Section({
-  title, items, userId, canEdit, onEdit, clubId, isPast,
+  title, items, userId, onOpen, isPast,
 }: {
   title: string;
   items: MeetingRow[];
   userId: string;
-  canEdit: boolean;
-  onEdit: (m: MeetingRow) => void;
-  clubId: string;
+  onOpen: (m: MeetingRow) => void;
   isPast?: boolean;
 }) {
   if (items.length === 0) return null;
@@ -405,7 +430,7 @@ function Section({
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {items.map((m, i) => (
           <div key={m.id} className="animate-card-in" style={{ animationDelay: `${i * 30}ms` }}>
-            <MeetingCard meeting={m} userId={userId} canEdit={canEdit} onEdit={onEdit} clubId={clubId} isPast={!!isPast} />
+            <MeetingCard meeting={m} userId={userId} onOpen={onOpen} isPast={!!isPast} />
           </div>
         ))}
       </div>
@@ -414,95 +439,47 @@ function Section({
 }
 
 function MeetingCard({
-  meeting, userId, canEdit, onEdit, clubId, isPast,
+  meeting, userId, onOpen, isPast,
 }: {
   meeting: MeetingRow;
   userId: string;
-  canEdit: boolean;
-  onEdit: (m: MeetingRow) => void;
-  clubId: string;
+  onOpen: (m: MeetingRow) => void;
   isPast: boolean;
 }) {
-  const qc = useQueryClient();
   const me = meeting.attendees.find((a) => a.user_id === userId);
-  const canOpen = canEdit;
-
-  const setStatus = useMutation({
-    mutationFn: async (status: AttendanceStatus) => {
-      const { error } = await supabase
-        .from("meeting_attendees")
-        .update({ attendance_status: status })
-        .eq("meeting_id", meeting.id)
-        .eq("user_id", userId);
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["coord-meetings", clubId] }),
-    onError: (e: any) => toast.error(e.message ?? "No se pudo actualizar"),
-  });
-
   const confirmed = meeting.attendees.filter((a) => a.attendance_status === "confirmado").length;
+
+  const status = meeting.status && meeting.status !== "programada"
+    ? { label: MEETING_STATUS_LABEL[meeting.status], variant: MEETING_STATUS_VARIANT[meeting.status] }
+    : isPast
+      ? { label: meeting.notes ? "Con minuta" : "Pasada", variant: (meeting.notes ? "approved" : "info") as StatusVariant }
+      : me
+        ? {
+            label:
+              me.attendance_status === "confirmado" ? "Confirmado"
+              : me.attendance_status === "rechazado" ? "Rechazado"
+              : "Invitado",
+            variant: (
+              me.attendance_status === "confirmado" ? "approved"
+              : me.attendance_status === "rechazado" ? "rejected"
+              : "pending"
+            ) as StatusVariant,
+          }
+        : undefined;
 
   return (
     <StandardCard
-      interactive={canOpen}
-      onClick={canOpen ? () => onEdit(meeting) : undefined}
+      interactive
+      onClick={() => onOpen(meeting)}
       icon={CalendarDays}
       title={meeting.title}
       subtitle={`${formatDateTime(meeting.starts_at)}${meeting.location ? ` · ${meeting.location}` : ""}`}
-      status={
-        isPast
-          ? { label: meeting.notes ? "Con minuta" : "Pasada", variant: meeting.notes ? "approved" : "info" }
-          : me
-            ? {
-                label:
-                  me.attendance_status === "confirmado" ? "Confirmado"
-                  : me.attendance_status === "rechazado" ? "Rechazado"
-                  : "Invitado",
-                variant:
-                  me.attendance_status === "confirmado" ? "approved"
-                  : me.attendance_status === "rechazado" ? "rejected"
-                  : "pending",
-              }
-            : undefined
-      }
+      status={status}
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <AvatarStack people={meeting.attendees.map((a) => a.profile)} />
-          <span className="text-xs text-muted-foreground">{confirmed}/{meeting.attendees.length} confirmados</span>
-        </div>
-        {!isPast && me ? (
-          <div className="flex gap-1">
-            <Button
-              type="button" size="sm" variant="ghost"
-              className={cn("h-7 px-2 text-xs", me.attendance_status === "confirmado" && "text-status-approved-foreground")}
-              onClick={(e) => { e.stopPropagation(); setStatus.mutate("confirmado"); }}
-              disabled={setStatus.isPending}
-            >
-              <Check className="mr-1 h-3.5 w-3.5" /> Confirmar
-            </Button>
-            <Button
-              type="button" size="sm" variant="ghost"
-              className={cn("h-7 px-2 text-xs", me.attendance_status === "rechazado" && "text-destructive")}
-              onClick={(e) => { e.stopPropagation(); setStatus.mutate("rechazado"); }}
-              disabled={setStatus.isPending}
-            >
-              <XIcon className="mr-1 h-3.5 w-3.5" /> Rechazar
-            </Button>
-          </div>
-        ) : null}
+        <AvatarStack people={meeting.attendees.map((a) => a.profile)} />
+        <span className="text-xs text-muted-foreground">{confirmed}/{meeting.attendees.length} confirmados</span>
       </div>
-      {isPast && meeting.notes ? (
-        <div className="mt-2 rounded-lg border border-border/60 bg-white/[0.02] p-3 text-sm text-foreground/80">
-          <p className="whitespace-pre-wrap">{meeting.notes}</p>
-        </div>
-      ) : null}
-      {meeting.agenda && !isPast ? (
-        <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-          <MapPin className="mr-1 inline h-3 w-3" />
-          {meeting.agenda}
-        </p>
-      ) : null}
     </StandardCard>
   );
 }
