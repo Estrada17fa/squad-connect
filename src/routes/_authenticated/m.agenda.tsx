@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/squad/PageHeader";
 import { EmptyState } from "@/components/squad/EmptyState";
 import { AgendaSkeleton } from "@/components/squad/LoadingState";
 import { StandardCard } from "@/components/squad/StandardCard";
+import { ModuleTabs } from "@/components/squad/ModuleTabs";
 import { Button } from "@/components/ui/button";
 import { useApp } from "@/components/squad/AppLayout";
 import { useCalendarEvents, type CalendarEventRow } from "@/hooks/useCalendarEvents";
@@ -91,6 +92,7 @@ function AgendaModulePage() {
   return (
     <div className="space-y-6">
       <PageHeader hideTitle title="Agenda" subtitle={activeTeam?.name ?? "Todo el club"} />
+      <ModuleTabs activeKey="agenda" />
 
       {canEdit ? (
         <div className="flex items-center gap-2">

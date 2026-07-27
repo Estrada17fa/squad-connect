@@ -10,6 +10,7 @@ import { EVENT_TYPES, EVENT_TYPE_MAP } from "@/lib/eventTypes";
 import { addMonths, isSameDay, monthGrid, monthLabel, startOfDay } from "@/lib/calendar-utils";
 import { EventFormDialog } from "@/components/calendar/EventFormDialog";
 import { DaySheet } from "@/components/calendar/DaySheet";
+import { ModuleTabs } from "@/components/squad/ModuleTabs";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -114,6 +115,7 @@ function MesModulePage() {
   return (
     <div className="space-y-6">
       <PageHeader hideTitle title="Mes" subtitle={activeTeam?.name ?? "Todo el club"} />
+      <ModuleTabs activeKey="mes" />
 
       {canEdit ? (
         <div className="flex items-center gap-2">
