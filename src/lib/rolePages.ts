@@ -89,24 +89,35 @@ export interface ResolvedPage {
 
 export function resolvePagesForUser(
   baseRole: BaseRole | null,
-  accessibleModules: ModuleKey[],
+  accessibleModules: ModuleKey[] | ((key: ModuleKey) => boolean),
 ): ResolvedPage[] {
   const role = baseRole ?? "staff";
   const roleMap = ROLE_PAGES[role];
-  const accessible = new Set<ModuleKey>(accessibleModules);
+
+  // Fuente de verdad única: un predicado `isAccessible(module)` que se aplica
+  // idénticamente al construir la navbar y los chips de módulos.
+  const isAccessible: (k: ModuleKey) => boolean = typeof accessibleModules === "function"
+    ? accessibleModules
+    : ((set) => (k: ModuleKey) => set.has(k))(new Set(accessibleModules));
+
+  const extraModules = Array.isArray(accessibleModules)
+    ? accessibleModules
+    : ALL_MODULE_KEYS.filter(isAccessible);
 
   const perPage: Record<PageKey, ModuleKey[]> = {
     home: [], agenda: [], club: [], coordinacion: [], admin: [],
   };
 
+  // 1) Módulos mapeados explícitamente al rol.
   for (const p of PAGES) {
     for (const mk of roleMap[p.key]) {
-      if (accessible.has(mk) && !perPage[p.key].includes(mk)) perPage[p.key].push(mk);
+      if (isAccessible(mk) && !perPage[p.key].includes(mk)) perPage[p.key].push(mk);
     }
   }
 
+  // 2) Cualquier módulo accesible que no esté ya colocado se envía a su página por defecto.
   const placed = new Set<ModuleKey>(Object.values(perPage).flat());
-  for (const mk of accessibleModules) {
+  for (const mk of extraModules) {
     if (placed.has(mk)) continue;
     const dest = DEFAULT_PAGE_FOR_MODULE[mk];
     if (dest && dest !== "home" && dest !== "agenda") {
@@ -114,11 +125,13 @@ export function resolvePagesForUser(
     }
   }
 
+  // 3) Construye la lista final SOLO con páginas que tienen módulos visibles.
+  //    Home siempre presente. Cero display:none: si no está en el array, no se renderiza.
   const out: ResolvedPage[] = [];
   for (const p of PAGES) {
     if (p.key === "home") { out.push({ page: p, modules: [] }); continue; }
     if (p.key === "agenda") {
-      if (accessible.has("calendario")) out.push({ page: p, modules: ["calendario"] });
+      if (isAccessible("calendario")) out.push({ page: p, modules: ["calendario"] });
       continue;
     }
     if (p.key === "admin") {
