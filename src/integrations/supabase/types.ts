@@ -307,6 +307,149 @@ export type Database = {
           },
         ]
       }
+      inventory_items: {
+        Row: {
+          category: string | null
+          club_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          image_path: string | null
+          min_quantity: number
+          name: string
+          total_quantity: number
+          unit: string | null
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          club_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          image_path?: string | null
+          min_quantity?: number
+          name: string
+          total_quantity?: number
+          unit?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          club_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          image_path?: string | null
+          min_quantity?: number
+          name?: string
+          total_quantity?: number
+          unit?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_items_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_loans: {
+        Row: {
+          borrower_user_id: string
+          club_id: string
+          created_at: string
+          created_by: string | null
+          event_id: string | null
+          expected_return_at: string | null
+          id: string
+          item_id: string
+          notes: string | null
+          quantity: number
+          request_id: string | null
+          returned_at: string | null
+          returned_quantity: number
+          team_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          borrower_user_id: string
+          club_id: string
+          created_at?: string
+          created_by?: string | null
+          event_id?: string | null
+          expected_return_at?: string | null
+          id?: string
+          item_id: string
+          notes?: string | null
+          quantity: number
+          request_id?: string | null
+          returned_at?: string | null
+          returned_quantity?: number
+          team_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          borrower_user_id?: string
+          club_id?: string
+          created_at?: string
+          created_by?: string | null
+          event_id?: string | null
+          expected_return_at?: string | null
+          id?: string
+          item_id?: string
+          notes?: string | null
+          quantity?: number
+          request_id?: string | null
+          returned_at?: string | null
+          returned_quantity?: number
+          team_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_loans_borrower_user_id_profiles_fkey"
+            columns: ["borrower_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_loans_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_loans_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "calendar_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_loans_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_loans_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meeting_attendees: {
         Row: {
           attendance_status: Database["public"]["Enums"]["attendance_status"]
@@ -574,6 +717,157 @@ export type Database = {
             columns: ["club_id"]
             isOneToOne: false
             referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      request_comments: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          kind: string
+          request_id: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          request_id: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          request_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "request_comments_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "request_comments_user_id_profiles_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      requests: {
+        Row: {
+          amount: number | null
+          club_id: string
+          created_at: string
+          currency: string | null
+          decided_at: string | null
+          decided_by: string | null
+          decision_note: string | null
+          description: string | null
+          details: Json
+          id: string
+          needed_at: string | null
+          related_event_id: string | null
+          related_item_id: string | null
+          related_loan_id: string | null
+          requester_id: string
+          status: Database["public"]["Enums"]["request_status"]
+          title: string
+          type: Database["public"]["Enums"]["request_type"]
+          updated_at: string
+        }
+        Insert: {
+          amount?: number | null
+          club_id: string
+          created_at?: string
+          currency?: string | null
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          description?: string | null
+          details?: Json
+          id?: string
+          needed_at?: string | null
+          related_event_id?: string | null
+          related_item_id?: string | null
+          related_loan_id?: string | null
+          requester_id: string
+          status?: Database["public"]["Enums"]["request_status"]
+          title: string
+          type: Database["public"]["Enums"]["request_type"]
+          updated_at?: string
+        }
+        Update: {
+          amount?: number | null
+          club_id?: string
+          created_at?: string
+          currency?: string | null
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          description?: string | null
+          details?: Json
+          id?: string
+          needed_at?: string | null
+          related_event_id?: string | null
+          related_item_id?: string | null
+          related_loan_id?: string | null
+          requester_id?: string
+          status?: Database["public"]["Enums"]["request_status"]
+          title?: string
+          type?: Database["public"]["Enums"]["request_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "requests_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "requests_decided_by_profiles_fkey"
+            columns: ["decided_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "requests_related_event_id_fkey"
+            columns: ["related_event_id"]
+            isOneToOne: false
+            referencedRelation: "calendar_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "requests_related_item_id_fkey"
+            columns: ["related_item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "requests_related_loan_id_fkey"
+            columns: ["related_loan_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_loans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "requests_requester_id_profiles_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -906,7 +1200,15 @@ export type Database = {
         Args: { _club_id: string; _user_id: string }
         Returns: boolean
       }
+      has_event_access: {
+        Args: { _event_id: string; _user_id: string }
+        Returns: boolean
+      }
       has_module_access: {
+        Args: { _module_key: string; _user_id: string }
+        Returns: boolean
+      }
+      has_module_approver_any: {
         Args: { _module_key: string; _user_id: string }
         Returns: boolean
       }
@@ -951,6 +1253,21 @@ export type Database = {
         | "viaje"
         | "junta"
         | "evento_especial"
+      request_status:
+        | "pendiente"
+        | "aprobada"
+        | "rechazada"
+        | "cancelada"
+        | "completada"
+      request_type:
+        | "material"
+        | "compra"
+        | "pago_proveedor"
+        | "permiso"
+        | "cortesias"
+        | "reembolso"
+        | "medica"
+        | "otro"
       task_priority: "baja" | "media" | "alta"
       task_status: "pendiente" | "en_progreso" | "completada" | "en_pausa"
     }
@@ -1098,6 +1415,23 @@ export const Constants = {
         "viaje",
         "junta",
         "evento_especial",
+      ],
+      request_status: [
+        "pendiente",
+        "aprobada",
+        "rechazada",
+        "cancelada",
+        "completada",
+      ],
+      request_type: [
+        "material",
+        "compra",
+        "pago_proveedor",
+        "permiso",
+        "cortesias",
+        "reembolso",
+        "medica",
+        "otro",
       ],
       task_priority: ["baja", "media", "alta"],
       task_status: ["pendiente", "en_progreso", "completada", "en_pausa"],
