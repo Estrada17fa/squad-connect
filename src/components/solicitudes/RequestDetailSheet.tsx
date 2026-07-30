@@ -35,6 +35,7 @@ import {
   STATUS_EXTRA_CLASS,
   formatMoney,
   type RequestStatus,
+  requestSummary,
 } from "@/lib/requestTypes";
 import { useRequestHistory, type RequestRow } from "@/hooks/useRequests";
 import { useRequestTypeApprovers } from "@/hooks/useRequestApprovers";
