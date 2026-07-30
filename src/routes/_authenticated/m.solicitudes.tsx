@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useApp } from "@/components/squad/AppLayout";
 import { useRequests, type RequestRow } from "@/hooks/useRequests";
+import { useMyApproverTypes } from "@/hooks/useRequestApprovers";
 import {
   REQUEST_TYPES,
   REQUEST_TYPE_MAP,
@@ -45,12 +46,10 @@ function SolicitudesPage() {
 
   const level = getModuleAccess("solicitudes");
   const canManage = isSuperAdmin || level === "editor" || level === "approver";
+  const myApproverTypes = useMyApproverTypes(clubId, user.id, isSuperAdmin);
   const isApproverOf = React.useCallback(
-    (type: RequestType) => {
-      if (isSuperAdmin) return true;
-      return getModuleAccess(REQUEST_TYPE_MAP[type].approverModule) === "approver";
-    },
-    [isSuperAdmin, getModuleAccess],
+    (type: RequestType) => myApproverTypes.has(type),
+    [myApproverTypes],
   );
   const approvesSomething = REQUEST_TYPES.some((t) => isApproverOf(t.key));
   const canAccess = isSuperAdmin || level !== "none" || approvesSomething;
