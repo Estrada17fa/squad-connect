@@ -283,41 +283,32 @@ function RequestList({
       {requests.map((r) => {
         const def = REQUEST_TYPE_MAP[r.type];
         const money = formatMoney(r.amount, r.currency);
+        const who = r.requester?.full_name ?? r.requester?.email ?? "—";
         return (
           <StandardCard
             key={r.id}
             interactive
             icon={def.icon}
-            title={r.title}
-            subtitle={`${def.label} · ${r.requester?.full_name ?? r.requester?.email ?? "—"}`}
+            title={def.label}
+            subtitle={requestSummary(r)}
             status={{ label: STATUS_LABEL[r.status], variant: STATUS_VARIANT[r.status] }}
             onClick={() => onOpen(r)}
             className={cn(highlighted.has(r.id) && "border-primary/40 ring-1 ring-primary/25")}
           >
-            <div className="space-y-1">
-              {def.fields.map((f) => {
-                if (f.type === "image") return null;
-                const v = r.details?.[f.key];
-                if (v === undefined || v === null || v === "") return null;
-                return (
-                  <div key={f.key} className="flex items-start justify-between gap-3">
-                    <span className="text-xs text-muted-foreground">{f.label}</span>
-                    <span className="truncate text-right text-xs text-foreground">
-                      {f.type === "money"
-                        ? formatMoney(Number(v), r.currency)
-                        : f.type === "datetime"
-                          ? formatDateTime(String(v))
-                          : f.type === "url"
-                            ? "Link de referencia"
-                            : String(v)}
-                    </span>
-                  </div>
-                );
-              })}
-              <div className="flex items-center justify-between gap-3 pt-1 text-xs text-muted-foreground">
+            <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+              <span className="flex min-w-0 items-center gap-2">
+                <Avatar className="h-6 w-6">
+                  <AvatarImage src={r.requester?.avatar_url ?? undefined} alt={who} />
+                  <AvatarFallback className="text-[10px]">
+                    {who.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="truncate text-foreground">{who}</span>
+              </span>
+              <span className="flex shrink-0 items-center gap-3">
                 <span>{formatDateTime(r.created_at)}</span>
                 {money ? <span className="text-foreground">{money}</span> : null}
-              </div>
+              </span>
             </div>
           </StandardCard>
         );
