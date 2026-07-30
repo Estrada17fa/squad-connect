@@ -219,7 +219,15 @@ export function RequestDetailSheet({
             <div key={f.key} className="flex items-start justify-between gap-4 border-b border-border/40 pb-2">
               <span className="text-xs uppercase tracking-wide text-muted-foreground">{f.label}</span>
               <span className="text-right text-sm text-foreground">
-                {fieldDisplay(request.details?.[f.key], f.type, request.currency)}
+                {f.type === "item" ? (
+                  <ItemValue name={request.details?.articulo} itemId={request.details?.item_id} />
+                ) : f.type === "url" ? (
+                  <LinkValue url={request.details?.[f.key]} />
+                ) : f.type === "image" ? (
+                  <PhotoValue path={request.details?.[f.key]} />
+                ) : (
+                  fieldDisplay(request.details?.[f.key], f.type, request.currency)
+                )}
               </span>
             </div>
           ))}
