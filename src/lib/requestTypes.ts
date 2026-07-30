@@ -23,7 +23,20 @@ export type RequestType =
 
 export type RequestStatus = "pendiente" | "aprobada" | "rechazada" | "cancelada" | "completada";
 
-export type FieldType = "text" | "textarea" | "number" | "money" | "date" | "datetime" | "select";
+export type FieldType =
+  | "text"
+  | "textarea"
+  | "number"
+  | "money"
+  | "date"
+  | "datetime"
+  | "select"
+  /** Selector de artículo del catálogo de inventario (guarda nombre + details.item_id). */
+  | "item"
+  /** Link de referencia (validado como URL). */
+  | "url"
+  /** Imagen de referencia subida al bucket privado request-attachments. */
+  | "image";
 
 export interface RequestFieldDef {
   key: string;
