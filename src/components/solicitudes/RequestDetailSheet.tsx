@@ -314,3 +314,67 @@ export function RequestDetailSheet({
     </EntitySheet>
   );
 }
+
+/** Artículo del inventario: miniatura (o ícono de categoría) + nombre. */
+function ItemValue({ name, itemId }: { name?: string; itemId?: string }) {
+  const { clubId } = React.useContext(RequestDetailCtx);
+  const catalogQ = useInventoryCatalog(clubId);
+  const item = (catalogQ.data ?? []).find((i) => i.id === itemId) ?? null;
+  const thumbsQ = useInventoryThumbnails([item?.image_path]);
+  const thumb = item?.image_path ? thumbsQ.data?.[item.image_path] : undefined;
+  const Icon = categoryIcon(item?.category);
+  const label = item?.name ?? name;
+  if (!label) return <>—</>;
+  return (
+    <span className="inline-flex items-center gap-2">
+      {thumb ? (
+        <img src={thumb} alt="" className="h-8 w-8 rounded-lg object-cover" />
+      ) : (
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 text-primary">
+          <Icon className="h-4 w-4" />
+        </span>
+      )}
+      <span>{label}</span>
+    </span>
+  );
+}
+
+function LinkValue({ url }: { url?: string }) {
+  if (!url) return <>—</>;
+  let host = url;
+  try {
+    host = new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    /* noop */
+  }
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-1 text-primary underline underline-offset-2"
+    >
+      <LinkIcon className="h-3.5 w-3.5" /> {host}
+    </a>
+  );
+}
+
+function PhotoValue({ path }: { path?: string }) {
+  const urlQ = useRequestAttachmentUrl(path ?? null);
+  const [zoom, setZoom] = React.useState(false);
+  if (!path) return <>—</>;
+  if (!urlQ.data) return <span className="text-muted-foreground">Cargando…</span>;
+  return (
+    <>
+      <button type="button" onClick={() => setZoom(true)}>
+        <img src={urlQ.data} alt="Foto de referencia" className="h-16 w-16 rounded-lg object-cover" />
+      </button>
+      <Dialog open={zoom} onOpenChange={setZoom}>
+        <DialogContent className="max-w-3xl border-border/60 bg-background/95 p-2">
+          <img src={urlQ.data} alt="Foto de referencia" className="max-h-[80vh] w-full rounded-lg object-contain" />
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
