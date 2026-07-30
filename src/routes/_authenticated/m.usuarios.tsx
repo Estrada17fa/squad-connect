@@ -271,13 +271,17 @@ function RolesTab({ clubId, canEdit }: { clubId: string | null; canEdit: boolean
 }
 
 function PermissionsMatrix({
+  clubId,
   role,
   perms,
+  approvalTypes,
   canEdit,
   onSaved,
 }: {
+  clubId: string;
   role: RoleRow;
   perms: PermRow[];
+  approvalTypes: RequestType[];
   canEdit: boolean;
   onSaved: () => void;
 }) {
@@ -288,14 +292,27 @@ function PermissionsMatrix({
     return map;
   }, [perms]);
 
+  const initialApprovals = React.useMemo(
+    () => [...approvalTypes].sort().join(","),
+    [approvalTypes],
+  );
+
   const [draft, setDraft] = React.useState<Record<string, AccessLevel>>(initial);
+  const [approvalDraft, setApprovalDraft] = React.useState<RequestType[]>(approvalTypes);
   const [saving, setSaving] = React.useState(false);
+  const saveApprovals = useSaveRoleApprovals(clubId);
 
   React.useEffect(() => setDraft(initial), [initial]);
+  React.useEffect(() => setApprovalDraft(approvalTypes), [initialApprovals]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const approvalsDirty = React.useMemo(
+    () => [...approvalDraft].sort().join(",") !== initialApprovals,
+    [approvalDraft, initialApprovals],
+  );
 
   const dirty = React.useMemo(
-    () => MODULES.some((m) => draft[m.key] !== initial[m.key]),
-    [draft, initial],
+    () => MODULES.some((m) => draft[m.key] !== initial[m.key]) || approvalsDirty,
+    [draft, initial, approvalsDirty],
   );
 
   async function handleSave() {
@@ -310,6 +327,9 @@ function PermissionsMatrix({
         .from("role_permissions")
         .upsert(rows, { onConflict: "role_id,module_key" });
       if (error) throw error;
+      if (approvalsDirty) {
+        await saveApprovals.mutateAsync({ roleId: role.id, types: approvalDraft });
+      }
       toast.success("Permisos actualizados");
       onSaved();
     } catch (e: any) {
@@ -318,6 +338,7 @@ function PermissionsMatrix({
       setSaving(false);
     }
   }
+
 
   const pageGroups = React.useMemo(
     () => groupModulesByPage(role.base_role as BaseRole | null, MODULES.map((m) => m.key)),
