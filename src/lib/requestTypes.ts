@@ -253,3 +253,25 @@ export function formatMoney(amount: number | null | undefined, currency?: string
     return `$${amount}`;
   }
 }
+
+/**
+ * Borrador de préstamo a partir de una solicitud de material aprobada:
+ * hereda artículo, cantidad y la fecha comprometida de devolución.
+ */
+export function loanDraftFromRequest(req: {
+  id: string;
+  club_id: string;
+  requester_id: string;
+  details?: Record<string, any> | null;
+}) {
+  const d = req.details ?? {};
+  const fecha = d.fecha_devolucion ? new Date(`${d.fecha_devolucion}T12:00:00`) : null;
+  return {
+    club_id: req.club_id,
+    request_id: req.id,
+    item_id: (d.item_id as string) ?? null,
+    borrower_user_id: req.requester_id,
+    quantity: Number(d.cantidad ?? 1),
+    expected_return_at: fecha && !Number.isNaN(fecha.getTime()) ? fecha.toISOString() : null,
+  };
+}
