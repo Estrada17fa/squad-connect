@@ -64,7 +64,12 @@ export function RequestDetailSheet({
 }: Props) {
   const qc = useQueryClient();
   const historyQ = useRequestHistory(open && request ? request.id : null);
+  const approversQ = useRequestTypeApprovers(
+    open && request ? clubId : null,
+    open && request ? request.type : null,
+  );
   const [note, setNote] = React.useState("");
+
 
   React.useEffect(() => {
     if (open) setNote("");
