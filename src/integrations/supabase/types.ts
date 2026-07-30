@@ -763,6 +763,44 @@ export type Database = {
           },
         ]
       }
+      request_status_history: {
+        Row: {
+          changed_by: string | null
+          created_at: string
+          from_status: Database["public"]["Enums"]["request_status"] | null
+          id: string
+          note: string | null
+          request_id: string
+          to_status: Database["public"]["Enums"]["request_status"]
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string
+          from_status?: Database["public"]["Enums"]["request_status"] | null
+          id?: string
+          note?: string | null
+          request_id: string
+          to_status: Database["public"]["Enums"]["request_status"]
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string
+          from_status?: Database["public"]["Enums"]["request_status"] | null
+          id?: string
+          note?: string | null
+          request_id?: string
+          to_status?: Database["public"]["Enums"]["request_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "request_status_history_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       requests: {
         Row: {
           amount: number | null
@@ -1182,6 +1220,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_approve_request_type: {
+        Args: {
+          _requester_id: string
+          _type: Database["public"]["Enums"]["request_type"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      can_view_request: {
+        Args: { _request_id: string; _user_id: string }
+        Returns: boolean
+      }
       get_invitation_by_token: {
         Args: { _token: string }
         Returns: {
@@ -1230,6 +1280,10 @@ export type Database = {
       }
       is_player_only: { Args: { _user_id: string }; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      request_approver_module: {
+        Args: { _type: Database["public"]["Enums"]["request_type"] }
+        Returns: string
+      }
       user_sees_all_club: {
         Args: { _club_id: string; _user_id: string }
         Returns: boolean

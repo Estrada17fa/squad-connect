@@ -28,7 +28,7 @@ const ROLE_PAGES: Record<BaseRole, Record<PageKey, ModuleKey[]>> = {
     home: [],
     agenda: ["agenda", "mes"],
     club: ["plantel", "salud", "desarrollo", "nutricion", "tacticas", "torneo", "comunicados", "multimedia"],
-    coordinacion: ["coordinacion_interna", "solicitudes", "inventario", "viajes"],
+    coordinacion: ["coordinacion_interna", "solicitudes", "compras_facturas", "inventario", "viajes"],
     admin: ["usuarios", "documentos"],
   },
   tecnico: {
@@ -74,6 +74,7 @@ const DEFAULT_PAGE_FOR_MODULE: Record<ModuleKey, PageKey> = {
   nutricion: "club",
   coordinacion_interna: "coordinacion",
   solicitudes: "coordinacion",
+  compras_facturas: "coordinacion",
   inventario: "coordinacion",
   viajes: "coordinacion",
   usuarios: "admin",
