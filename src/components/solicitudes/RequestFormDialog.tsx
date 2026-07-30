@@ -139,7 +139,7 @@ export function RequestFormDialog({ open, onOpenChange, clubId, userId, type, re
       const payload = {
         club_id: clubId,
         type,
-        title: title.trim(),
+        title: requestSummary({ type, details, amount, currency: amount !== null ? "MXN" : null }),
         description: description.trim() || null,
         details,
         amount,
