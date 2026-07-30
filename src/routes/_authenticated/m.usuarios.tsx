@@ -141,6 +141,9 @@ function RolesTab({ clubId, canEdit }: { clubId: string | null; canEdit: boolean
     },
   });
 
+  const approvalsQ = useRoleApprovals(clubId);
+
+
   React.useEffect(() => {
     if (rolesQ.data && rolesQ.data.length > 0) {
       qc.invalidateQueries({ queryKey: ["club-role-permissions", clubId] });
