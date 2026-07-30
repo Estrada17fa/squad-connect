@@ -233,11 +233,16 @@ function RolesTab({ clubId, canEdit }: { clubId: string | null; canEdit: boolean
         {selected ? (
           <PermissionsMatrix
             key={selected.id}
+            clubId={clubId}
             role={selected}
             perms={perms.filter((p) => p.role_id === selected.id)}
+            approvalTypes={(approvalsQ.data ?? [])
+              .filter((a) => a.role_id === selected.id)
+              .map((a) => a.request_type)}
             canEdit={canEdit}
             onSaved={() => qc.invalidateQueries({ queryKey: ["club-role-permissions", clubId] })}
           />
+
         ) : (
           <EmptyState
             icon={ShieldCheck}
