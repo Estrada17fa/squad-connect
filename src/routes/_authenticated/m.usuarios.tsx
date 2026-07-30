@@ -37,6 +37,10 @@ import { MODULES, MODULE_MAP, type ModuleKey } from "@/lib/modules";
 import { groupModulesByPage, type BaseRole } from "@/lib/rolePages";
 import { cn } from "@/lib/utils";
 import type { AccessLevel } from "@/hooks/useAccess";
+import { REQUEST_TYPES, type RequestType } from "@/lib/requestTypes";
+import { useRoleApprovals, useSaveRoleApprovals } from "@/hooks/useRequestApprovers";
+import { Checkbox } from "@/components/ui/checkbox";
+
 
 export const Route = createFileRoute("/_authenticated/m/usuarios")({
   head: () => ({
