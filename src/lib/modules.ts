@@ -15,6 +15,7 @@ import {
   HeartPulse,
   TrendingUp,
   Apple,
+  Receipt,
   Home,
   type LucideIcon,
 } from "lucide-react";
@@ -27,6 +28,7 @@ export type ModuleKey =
   | "inventario"
   | "coordinacion_interna"
   | "solicitudes"
+  | "compras_facturas"
   | "documentos"
   | "usuarios"
   | "comunicados"
@@ -61,6 +63,7 @@ export const MODULES: ModuleDef[] = [
   { key: "inventario", label: "Inventario", icon: Package, description: "Material deportivo y equipamiento", scope: "mixed" },
   { key: "coordinacion_interna", label: "Coordinación", icon: MessagesSquare, description: "Comunicación interna del staff", scope: "club" },
   { key: "solicitudes", label: "Solicitudes", icon: ClipboardList, description: "Aprobaciones y peticiones", scope: "club" },
+  { key: "compras_facturas", label: "Compras y facturas", icon: Receipt, description: "Compras, pagos a proveedores y reembolsos", scope: "club" },
   { key: "documentos", label: "Documentos", icon: FileText, description: "Contratos y archivos del club", scope: "club" },
   { key: "usuarios", label: "Usuarios", icon: UserCog, description: "Miembros, roles y permisos", scope: "club" },
   { key: "comunicados", label: "Comunicados", icon: Megaphone, description: "Avisos oficiales del club", scope: "club" },
