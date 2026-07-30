@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Check, X as XIcon, Pencil, Trash2, Ban, PackageCheck, History } from "lucide-react";
+import { Check, X as XIcon, Pencil, Trash2, Ban, PackageCheck, History, AlertTriangle } from "lucide-react";
 import {
   EntitySheet,
   EntitySheetBody,
@@ -24,6 +24,8 @@ import {
   type RequestStatus,
 } from "@/lib/requestTypes";
 import { useRequestHistory, type RequestRow } from "@/hooks/useRequests";
+import { useRequestTypeApprovers } from "@/hooks/useRequestApprovers";
+
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -64,7 +66,12 @@ export function RequestDetailSheet({
 }: Props) {
   const qc = useQueryClient();
   const historyQ = useRequestHistory(open && request ? request.id : null);
+  const approversQ = useRequestTypeApprovers(
+    open && request ? clubId : null,
+    open && request ? request.type : null,
+  );
   const [note, setNote] = React.useState("");
+
 
   React.useEffect(() => {
     if (open) setNote("");
@@ -185,6 +192,26 @@ export function RequestDetailSheet({
             {STATUS_LABEL[request.status]}
           </StatusBadge>
         </div>
+
+        {approversQ.isLoading ? null : (approversQ.data ?? []).filter((a) => a.id !== request.requester_id).length === 0 ? (
+          <div className="flex items-start gap-2 rounded-lg border border-amber-400/40 bg-amber-400/10 p-3 text-xs text-amber-200">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>
+              Nadie puede aprobar esta solicitud ahora mismo. Asigna a alguien como aprobador de
+              “{def.label}” en Usuarios (por rol o de forma individual).
+            </span>
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            <span className="uppercase tracking-wide">Aprueban:</span>{" "}
+            {(approversQ.data ?? [])
+              .filter((a) => a.id !== request.requester_id)
+              .map((a) => a.name)
+              .join(", ")}
+          </p>
+        )}
+
+
 
         <div className="space-y-2">
           {def.fields.map((f) => (

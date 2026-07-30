@@ -32,6 +32,9 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { CreateMemberDialog } from "./CreateMemberDialog";
+import { REQUEST_TYPE_MAP, type RequestType } from "@/lib/requestTypes";
+import { useMemberApprovals, useSetApproverOverride } from "@/hooks/useRequestApprovers";
+
 
 const LEVELS: { value: AccessLevel; label: string }[] = [
   { value: "none", label: "Sin acceso" },
@@ -318,7 +321,10 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
                 </div>
               )}
             </div>
+
+            <MemberApproverSection clubId={clubId} userId={selected.id} canEdit={canEdit} />
           </div>
+
         ) : (
           <EmptyState
             icon={Settings2}
@@ -362,6 +368,119 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
     </div>
   );
 }
+
+function MemberApproverSection({
+  clubId,
+  userId,
+  canEdit,
+}: {
+  clubId: string;
+  userId: string;
+  canEdit: boolean;
+}) {
+  const { rows, isLoading } = useMemberApprovals(clubId, userId);
+  const setOverride = useSetApproverOverride(clubId);
+
+  function apply(type: RequestType, mode: "grant" | "revoke" | null, msg: string) {
+    setOverride.mutate(
+      { userId, type, mode },
+      {
+        onSuccess: () => toast.success(msg),
+        onError: (e: any) => toast.error(e.message ?? "No se pudo actualizar"),
+      },
+    );
+  }
+
+  if (!canEdit) return null;
+
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h4 className="text-xs uppercase tracking-wide text-muted-foreground">
+          Aprobador de solicitudes
+        </h4>
+        <p className="text-[11px] text-muted-foreground">
+          El rol define el default; aquí ajustas solo a esta persona.
+        </p>
+      </div>
+      {isLoading ? (
+        <LoadingState />
+      ) : (
+        <div className="grid gap-2">
+          {rows.map((r) => {
+            const def = REQUEST_TYPE_MAP[r.type];
+            const TIcon = def.icon;
+            return (
+              <div
+                key={r.type}
+                className="glass rounded-lg p-3 space-y-2 sm:flex sm:items-center sm:gap-3 sm:space-y-0"
+              >
+                <div className="flex min-w-0 flex-1 items-center gap-3">
+                  <span
+                    className={cn(
+                      "flex h-8 w-8 shrink-0 items-center justify-center rounded-md",
+                      r.effective ? "bg-primary/15 text-primary" : "bg-white/5 text-muted-foreground",
+                    )}
+                  >
+                    <TIcon className="h-4 w-4" />
+                  </span>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="truncate text-sm font-medium">{def.label}</p>
+                      {r.override ? (
+                        <StatusBadge variant="pending">Ajustado manualmente</StatusBadge>
+                      ) : null}
+                    </div>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {r.override === "grant"
+                        ? "Aprueba (asignado a esta persona)"
+                        : r.override === "revoke"
+                          ? "No aprueba (quitado a esta persona)"
+                          : r.byRole
+                            ? "Aprueba (por su rol)"
+                            : "No aprueba (su rol no lo cubre)"}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex shrink-0 gap-2">
+                  {r.override ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={setOverride.isPending}
+                      onClick={() => apply(r.type, null, "Se restauró el comportamiento por rol")}
+                    >
+                      Volver al rol
+                    </Button>
+                  ) : r.effective ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={setOverride.isPending}
+                      onClick={() => apply(r.type, "revoke", "Se le quitó este tipo")}
+                    >
+                      Quitar a esta persona
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      disabled={setOverride.isPending}
+                      onClick={() => apply(r.type, "grant", "Se le asignó este tipo")}
+                    >
+                      Dar a esta persona
+                    </Button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 
 function AddMembershipDialog({
   open,

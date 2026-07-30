@@ -37,6 +37,10 @@ import { MODULES, MODULE_MAP, type ModuleKey } from "@/lib/modules";
 import { groupModulesByPage, type BaseRole } from "@/lib/rolePages";
 import { cn } from "@/lib/utils";
 import type { AccessLevel } from "@/hooks/useAccess";
+import { REQUEST_TYPES, type RequestType } from "@/lib/requestTypes";
+import { useRoleApprovals, useSaveRoleApprovals } from "@/hooks/useRequestApprovers";
+import { Checkbox } from "@/components/ui/checkbox";
+
 
 export const Route = createFileRoute("/_authenticated/m/usuarios")({
   head: () => ({
@@ -141,6 +145,9 @@ function RolesTab({ clubId, canEdit }: { clubId: string | null; canEdit: boolean
     },
   });
 
+  const approvalsQ = useRoleApprovals(clubId);
+
+
   React.useEffect(() => {
     if (rolesQ.data && rolesQ.data.length > 0) {
       qc.invalidateQueries({ queryKey: ["club-role-permissions", clubId] });
@@ -226,11 +233,16 @@ function RolesTab({ clubId, canEdit }: { clubId: string | null; canEdit: boolean
         {selected ? (
           <PermissionsMatrix
             key={selected.id}
+            clubId={clubId}
             role={selected}
             perms={perms.filter((p) => p.role_id === selected.id)}
+            approvalTypes={(approvalsQ.data ?? [])
+              .filter((a) => a.role_id === selected.id)
+              .map((a) => a.request_type)}
             canEdit={canEdit}
             onSaved={() => qc.invalidateQueries({ queryKey: ["club-role-permissions", clubId] })}
           />
+
         ) : (
           <EmptyState
             icon={ShieldCheck}
@@ -259,13 +271,17 @@ function RolesTab({ clubId, canEdit }: { clubId: string | null; canEdit: boolean
 }
 
 function PermissionsMatrix({
+  clubId,
   role,
   perms,
+  approvalTypes,
   canEdit,
   onSaved,
 }: {
+  clubId: string;
   role: RoleRow;
   perms: PermRow[];
+  approvalTypes: RequestType[];
   canEdit: boolean;
   onSaved: () => void;
 }) {
@@ -276,14 +292,27 @@ function PermissionsMatrix({
     return map;
   }, [perms]);
 
+  const initialApprovals = React.useMemo(
+    () => [...approvalTypes].sort().join(","),
+    [approvalTypes],
+  );
+
   const [draft, setDraft] = React.useState<Record<string, AccessLevel>>(initial);
+  const [approvalDraft, setApprovalDraft] = React.useState<RequestType[]>(approvalTypes);
   const [saving, setSaving] = React.useState(false);
+  const saveApprovals = useSaveRoleApprovals(clubId);
 
   React.useEffect(() => setDraft(initial), [initial]);
+  React.useEffect(() => setApprovalDraft(approvalTypes), [initialApprovals]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const approvalsDirty = React.useMemo(
+    () => [...approvalDraft].sort().join(",") !== initialApprovals,
+    [approvalDraft, initialApprovals],
+  );
 
   const dirty = React.useMemo(
-    () => MODULES.some((m) => draft[m.key] !== initial[m.key]),
-    [draft, initial],
+    () => MODULES.some((m) => draft[m.key] !== initial[m.key]) || approvalsDirty,
+    [draft, initial, approvalsDirty],
   );
 
   async function handleSave() {
@@ -298,6 +327,9 @@ function PermissionsMatrix({
         .from("role_permissions")
         .upsert(rows, { onConflict: "role_id,module_key" });
       if (error) throw error;
+      if (approvalsDirty) {
+        await saveApprovals.mutateAsync({ roleId: role.id, types: approvalDraft });
+      }
       toast.success("Permisos actualizados");
       onSaved();
     } catch (e: any) {
@@ -306,6 +338,7 @@ function PermissionsMatrix({
       setSaving(false);
     }
   }
+
 
   const pageGroups = React.useMemo(
     () => groupModulesByPage(role.base_role as BaseRole | null, MODULES.map((m) => m.key)),
@@ -413,9 +446,49 @@ function PermissionsMatrix({
           <p className="text-xs text-muted-foreground">Este rol no tiene páginas configurables.</p>
         ) : null}
       </div>
+
+      <div className="glass rounded-lg p-3 space-y-3">
+        <div>
+          <p className="text-sm font-semibold">Aprueba solicitudes de</p>
+          <p className="text-[11px] text-muted-foreground">
+            Default del rol. En la ficha de cada miembro puedes darle o quitarle tipos sin afectar a
+            los demás. Nadie aprueba su propia solicitud.
+          </p>
+        </div>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {REQUEST_TYPES.map((t) => {
+            const TIcon = t.icon;
+            const checked = approvalDraft.includes(t.key);
+            return (
+              <label
+                key={t.key}
+                className={cn(
+                  "flex items-center gap-3 rounded-lg border px-3 py-2 transition-colors",
+                  checked ? "border-primary/50 bg-primary/5" : "border-border/60",
+                  canEdit ? "cursor-pointer hover:bg-white/[0.04]" : "opacity-80",
+                )}
+              >
+                <Checkbox
+                  checked={checked}
+                  disabled={!canEdit}
+                  onCheckedChange={(v) =>
+                    setApprovalDraft((prev) =>
+                      v ? [...prev, t.key] : prev.filter((k) => k !== t.key),
+                    )
+                  }
+                />
+                <TIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <span className="min-w-0 truncate text-sm">{t.label}</span>
+              </label>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
+
+
 
 function CreateRoleDialog({
   open,
