@@ -146,7 +146,7 @@ export function RequestDetailSheet({
   return (
     <EntitySheet open={open} onOpenChange={onOpenChange}>
       <EntitySheetHeader>
-        <EntitySheetTitle>{request.title}</EntitySheetTitle>
+        <EntitySheetTitle>{requestSummary(request)}</EntitySheetTitle>
         <EntitySheetDescription>
           {def.label} · Solicitada por {request.requester?.full_name ?? request.requester?.email ?? "—"}
         </EntitySheetDescription>
