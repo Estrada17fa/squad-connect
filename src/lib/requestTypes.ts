@@ -254,6 +254,103 @@ export function formatMoney(amount: number | null | undefined, currency?: string
   }
 }
 
+/** Une solo las partes con contenido, sin dejar separadores sueltos. */
+function joinParts(parts: Array<string | null | undefined>, sep = " · ") {
+  return parts
+    .map((p) => (typeof p === "string" ? p.trim() : ""))
+    .filter((p) => p.length > 0)
+    .join(sep);
+}
+
+function str(v: unknown): string {
+  if (v === null || v === undefined) return "";
+  const s = String(v).trim();
+  return s === "NaN" ? "" : s;
+}
+
+function num(v: unknown): number | null {
+  const s = str(v);
+  if (!s) return null;
+  const n = Number(s);
+  return Number.isFinite(n) ? n : null;
+}
+
+function truncate(v: string, max = 60) {
+  if (v.length <= max) return v;
+  return `${v.slice(0, max - 1).trimEnd()}…`;
+}
+
+function shortDate(v: unknown): string {
+  const s = str(v);
+  if (!s) return "";
+  const iso = /^\d{4}-\d{2}-\d{2}$/.test(s) ? `${s}T12:00:00` : s;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return new Intl.DateTimeFormat("es-MX", { day: "numeric", month: "short" }).format(d);
+}
+
+function firstWords(v: unknown, words = 8) {
+  const s = str(v).replace(/\s+/g, " ");
+  if (!s) return "";
+  const parts = s.split(" ");
+  return parts.length <= words ? s : `${parts.slice(0, words).join(" ")}…`;
+}
+
+/**
+ * Resumen automático de una solicitud, generado a partir de sus propios campos.
+ * Se usa en la tarjeta, el detalle y en cualquier lugar que necesite nombrarla.
+ * El título guardado en la base de datos es siempre este texto.
+ */
+export function requestSummary(input: {
+  type: RequestType;
+  details?: Record<string, any> | null;
+  amount?: number | null;
+  currency?: string | null;
+}): string {
+  const d = input.details ?? {};
+  const def = REQUEST_TYPE_MAP[input.type];
+  const money = (v: unknown) => {
+    const n = num(v);
+    return n === null ? "" : (formatMoney(n, input.currency) ?? "");
+  };
+
+  let summary = "";
+  switch (input.type) {
+    case "material": {
+      const cantidad = num(d.cantidad);
+      summary = joinParts([str(d.articulo), cantidad !== null ? `×${cantidad}` : ""], " ");
+      break;
+    }
+    case "compra":
+      summary = truncate(str(d.que_comprar));
+      break;
+    case "pago_proveedor":
+      summary = joinParts([str(d.proveedor), money(d.monto)]);
+      break;
+    case "reembolso":
+      summary = joinParts([str(d.concepto), money(d.monto)]);
+      break;
+    case "medica":
+      summary = joinParts([str(d.tipo_atencion), str(d.jugador) || str(d.para_quien)]);
+      break;
+    case "permiso": {
+      const rango = joinParts([shortDate(d.fecha_inicio), shortDate(d.fecha_fin)], "–");
+      summary = joinParts([str(d.tipo_ausencia), rango]);
+      break;
+    }
+    case "cortesias": {
+      const n = num(d.cantidad_boletos);
+      summary = joinParts([n !== null ? `${n} boleto${n === 1 ? "" : "s"}` : "", str(d.partido)]);
+      break;
+    }
+    case "otro":
+      summary = firstWords(d.detalle);
+      break;
+  }
+
+  return summary.trim() || def.label;
+}
+
 /**
  * Borrador de préstamo a partir de una solicitud de material aprobada:
  * hereda artículo, cantidad y la fecha comprometida de devolución.
