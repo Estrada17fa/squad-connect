@@ -193,6 +193,26 @@ export function RequestDetailSheet({
           </StatusBadge>
         </div>
 
+        {approversQ.isLoading ? null : (approversQ.data ?? []).filter((a) => a.id !== request.requester_id).length === 0 ? (
+          <div className="flex items-start gap-2 rounded-lg border border-amber-400/40 bg-amber-400/10 p-3 text-xs text-amber-200">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>
+              Nadie puede aprobar esta solicitud ahora mismo. Asigna a alguien como aprobador de
+              “{def.label}” en Usuarios (por rol o de forma individual).
+            </span>
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            <span className="uppercase tracking-wide">Aprueban:</span>{" "}
+            {(approversQ.data ?? [])
+              .filter((a) => a.id !== request.requester_id)
+              .map((a) => a.name)
+              .join(", ")}
+          </p>
+        )}
+
+
+
         <div className="space-y-2">
           {def.fields.map((f) => (
             <div key={f.key} className="flex items-start justify-between gap-4 border-b border-border/40 pb-2">
