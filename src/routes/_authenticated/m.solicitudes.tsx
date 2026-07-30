@@ -296,17 +296,20 @@ function RequestList({
           >
             <div className="space-y-1">
               {def.fields.map((f) => {
+                if (f.type === "image") return null;
                 const v = r.details?.[f.key];
                 if (v === undefined || v === null || v === "") return null;
                 return (
                   <div key={f.key} className="flex items-start justify-between gap-3">
                     <span className="text-xs text-muted-foreground">{f.label}</span>
-                    <span className="text-right text-xs text-foreground">
+                    <span className="truncate text-right text-xs text-foreground">
                       {f.type === "money"
                         ? formatMoney(Number(v), r.currency)
                         : f.type === "datetime"
                           ? formatDateTime(String(v))
-                          : String(v)}
+                          : f.type === "url"
+                            ? "Link de referencia"
+                            : String(v)}
                     </span>
                   </div>
                 );

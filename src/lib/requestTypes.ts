@@ -23,7 +23,20 @@ export type RequestType =
 
 export type RequestStatus = "pendiente" | "aprobada" | "rechazada" | "cancelada" | "completada";
 
-export type FieldType = "text" | "textarea" | "number" | "money" | "date" | "datetime" | "select";
+export type FieldType =
+  | "text"
+  | "textarea"
+  | "number"
+  | "money"
+  | "date"
+  | "datetime"
+  | "select"
+  /** Selector de artículo del catálogo de inventario (guarda nombre + details.item_id). */
+  | "item"
+  /** Link de referencia (validado como URL). */
+  | "url"
+  /** Imagen de referencia subida al bucket privado request-attachments. */
+  | "image";
 
 export interface RequestFieldDef {
   key: string;
@@ -65,8 +78,14 @@ export const REQUEST_TYPES: RequestTypeDef[] = [
     playerAllowed: false,
     completable: true,
     fields: [
-      { key: "articulo", label: "Artículo", type: "text", required: true, placeholder: "p.ej. Balones de entrenamiento" },
+      { key: "articulo", label: "Artículo", type: "item", required: true },
       { key: "cantidad", label: "Cantidad", type: "number", required: true },
+      {
+        key: "fecha_devolucion",
+        label: "¿Cuándo lo devolverá?",
+        type: "date",
+        required: true,
+      },
     ],
   },
   {
@@ -82,6 +101,13 @@ export const REQUEST_TYPES: RequestTypeDef[] = [
       { key: "que_comprar", label: "Qué comprar", type: "text", required: true },
       { key: "costo_estimado", label: "Costo estimado", type: "money", required: true },
       { key: "justificacion", label: "Justificación", type: "textarea", required: true },
+      {
+        key: "referencia_url",
+        label: "Link de referencia",
+        type: "url",
+        placeholder: "https://…",
+      },
+      { key: "referencia_foto", label: "Foto de referencia", type: "image" },
     ],
   },
   {
@@ -226,4 +252,26 @@ export function formatMoney(amount: number | null | undefined, currency?: string
   } catch {
     return `$${amount}`;
   }
+}
+
+/**
+ * Borrador de préstamo a partir de una solicitud de material aprobada:
+ * hereda artículo, cantidad y la fecha comprometida de devolución.
+ */
+export function loanDraftFromRequest(req: {
+  id: string;
+  club_id: string;
+  requester_id: string;
+  details?: Record<string, any> | null;
+}) {
+  const d = req.details ?? {};
+  const fecha = d.fecha_devolucion ? new Date(`${d.fecha_devolucion}T12:00:00`) : null;
+  return {
+    club_id: req.club_id,
+    request_id: req.id,
+    item_id: (d.item_id as string) ?? null,
+    borrower_user_id: req.requester_id,
+    quantity: Number(d.cantidad ?? 1),
+    expected_return_at: fecha && !Number.isNaN(fecha.getTime()) ? fecha.toISOString() : null,
+  };
 }

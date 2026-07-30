@@ -1348,6 +1348,18 @@ export type Database = {
         Args: { _team_id: string; _user_id: string }
         Returns: boolean
       }
+      inventory_catalog: {
+        Args: { _club_id: string }
+        Returns: {
+          available_quantity: number
+          category: string
+          id: string
+          image_path: string
+          name: string
+          total_quantity: number
+          unit: string
+        }[]
+      }
       is_player_only: { Args: { _user_id: string }; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
       request_approver_module: {

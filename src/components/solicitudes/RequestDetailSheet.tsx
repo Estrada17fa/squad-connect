@@ -1,7 +1,20 @@
 import * as React from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Check, X as XIcon, Pencil, Trash2, Ban, PackageCheck, History, AlertTriangle } from "lucide-react";
+import {
+  Check,
+  X as XIcon,
+  Pencil,
+  Trash2,
+  Ban,
+  PackageCheck,
+  History,
+  AlertTriangle,
+  Link as LinkIcon,
+} from "lucide-react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useInventoryCatalog, useInventoryThumbnails, useRequestAttachmentUrl } from "@/hooks/useInventory";
+import { categoryIcon } from "./InventoryItemPicker";
 import {
   EntitySheet,
   EntitySheetBody,
@@ -219,7 +232,15 @@ export function RequestDetailSheet({
             <div key={f.key} className="flex items-start justify-between gap-4 border-b border-border/40 pb-2">
               <span className="text-xs uppercase tracking-wide text-muted-foreground">{f.label}</span>
               <span className="text-right text-sm text-foreground">
-                {fieldDisplay(request.details?.[f.key], f.type, request.currency)}
+                {f.type === "item" ? (
+                  <ItemValue name={request.details?.articulo} itemId={request.details?.item_id} clubId={clubId} />
+                ) : f.type === "url" ? (
+                  <LinkValue url={request.details?.[f.key]} />
+                ) : f.type === "image" ? (
+                  <PhotoValue path={request.details?.[f.key]} />
+                ) : (
+                  fieldDisplay(request.details?.[f.key], f.type, request.currency)
+                )}
               </span>
             </div>
           ))}
@@ -306,3 +327,66 @@ export function RequestDetailSheet({
     </EntitySheet>
   );
 }
+
+/** Artículo del inventario: miniatura (o ícono de categoría) + nombre. */
+function ItemValue({ name, itemId, clubId }: { name?: string; itemId?: string; clubId: string }) {
+  const catalogQ = useInventoryCatalog(clubId);
+  const item = (catalogQ.data ?? []).find((i) => i.id === itemId) ?? null;
+  const thumbsQ = useInventoryThumbnails([item?.image_path]);
+  const thumb = item?.image_path ? thumbsQ.data?.[item.image_path] : undefined;
+  const Icon = categoryIcon(item?.category);
+  const label = item?.name ?? name;
+  if (!label) return <>—</>;
+  return (
+    <span className="inline-flex items-center gap-2">
+      {thumb ? (
+        <img src={thumb} alt="" className="h-8 w-8 rounded-lg object-cover" />
+      ) : (
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 text-primary">
+          <Icon className="h-4 w-4" />
+        </span>
+      )}
+      <span>{label}</span>
+    </span>
+  );
+}
+
+function LinkValue({ url }: { url?: string }) {
+  if (!url) return <>—</>;
+  let host = url;
+  try {
+    host = new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    /* noop */
+  }
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-1 text-primary underline underline-offset-2"
+    >
+      <LinkIcon className="h-3.5 w-3.5" /> {host}
+    </a>
+  );
+}
+
+function PhotoValue({ path }: { path?: string }) {
+  const urlQ = useRequestAttachmentUrl(path ?? null);
+  const [zoom, setZoom] = React.useState(false);
+  if (!path) return <>—</>;
+  if (!urlQ.data) return <span className="text-muted-foreground">Cargando…</span>;
+  return (
+    <>
+      <button type="button" onClick={() => setZoom(true)}>
+        <img src={urlQ.data} alt="Foto de referencia" className="h-16 w-16 rounded-lg object-cover" />
+      </button>
+      <Dialog open={zoom} onOpenChange={setZoom}>
+        <DialogContent className="max-w-3xl border-border/60 bg-background/95 p-2">
+          <img src={urlQ.data} alt="Foto de referencia" className="max-h-[80vh] w-full rounded-lg object-contain" />
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
