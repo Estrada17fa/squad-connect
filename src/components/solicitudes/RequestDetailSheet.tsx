@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Check, X as XIcon, Pencil, Trash2, Ban, PackageCheck, History } from "lucide-react";
+import { Check, X as XIcon, Pencil, Trash2, Ban, PackageCheck, History, AlertTriangle } from "lucide-react";
 import {
   EntitySheet,
   EntitySheetBody,
