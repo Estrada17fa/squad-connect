@@ -54,7 +54,6 @@ export function RequestFormDialog({ open, onOpenChange, clubId, userId, type, re
   const def = REQUEST_TYPE_MAP[type];
   const qc = useQueryClient();
 
-  const [title, setTitle] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [values, setValues] = React.useState<Record<string, string>>({});
   const [itemId, setItemId] = React.useState<string | null>(null);
@@ -64,7 +63,6 @@ export function RequestFormDialog({ open, onOpenChange, clubId, userId, type, re
 
   React.useEffect(() => {
     if (!open) return;
-    setTitle(request?.title ?? "");
     setDescription(request?.description ?? "");
     setValues(emptyValues(def, request));
     setItemId((request?.details?.item_id as string) ?? null);
