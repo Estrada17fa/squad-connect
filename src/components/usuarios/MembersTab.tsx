@@ -318,7 +318,10 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
                 </div>
               )}
             </div>
+
+            <MemberApproverSection clubId={clubId} userId={selected.id} canEdit={canEdit} />
           </div>
+
         ) : (
           <EmptyState
             icon={Settings2}
