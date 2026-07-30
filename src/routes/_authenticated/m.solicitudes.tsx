@@ -12,6 +12,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useApp } from "@/components/squad/AppLayout";
 import { useRequests, type RequestRow } from "@/hooks/useRequests";
 import { useMyApproverTypes } from "@/hooks/useRequestApprovers";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   REQUEST_TYPES,
   REQUEST_TYPE_MAP,
@@ -19,6 +20,7 @@ import {
   STATUS_VARIANT,
   STATUS_ORDER,
   formatMoney,
+  requestSummary,
   type RequestStatus,
   type RequestType,
 } from "@/lib/requestTypes";
