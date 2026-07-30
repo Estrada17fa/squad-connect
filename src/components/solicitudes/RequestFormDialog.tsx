@@ -83,7 +83,6 @@ export function RequestFormDialog({ open, onOpenChange, clubId, userId, type, re
 
   const mutation = useMutation({
     mutationFn: async () => {
-      if (!title.trim()) throw new Error("El título es obligatorio");
       const details: Record<string, any> = {};
       for (const f of def.fields) {
         if (f.type === "image") continue;
