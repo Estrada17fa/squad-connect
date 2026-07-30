@@ -40,7 +40,8 @@ export interface RequestTypeDef {
   icon: LucideIcon;
   description: string;
   /**
-   * Módulo cuyo permiso 'approver' habilita aprobar/rechazar este tipo.
+   * Módulo del área al que pertenece el tipo. Solo informativo/agrupador: quién
+   * aprueba se define en role_request_approvals + request_type_user_overrides.
    * ESTE es el único lugar donde vive el mapeo en el cliente; el servidor lo
    * replica en la función SQL public.request_approver_module().
    */
