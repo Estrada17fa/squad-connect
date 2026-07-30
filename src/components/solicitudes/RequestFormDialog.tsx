@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toLocalInputValue, fromLocalInputValue } from "@/lib/calendar-utils";
 import {
   REQUEST_TYPE_MAP,
+  requestSummary,
   type RequestType,
   type RequestTypeDef,
   type RequestFieldDef,
