@@ -801,6 +801,47 @@ export type Database = {
           },
         ]
       }
+      request_type_user_overrides: {
+        Row: {
+          assigned_by: string | null
+          club_id: string
+          created_at: string
+          id: string
+          mode: Database["public"]["Enums"]["approver_override_mode"]
+          request_type: Database["public"]["Enums"]["request_type"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assigned_by?: string | null
+          club_id: string
+          created_at?: string
+          id?: string
+          mode: Database["public"]["Enums"]["approver_override_mode"]
+          request_type: Database["public"]["Enums"]["request_type"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assigned_by?: string | null
+          club_id?: string
+          created_at?: string
+          id?: string
+          mode?: Database["public"]["Enums"]["approver_override_mode"]
+          request_type?: Database["public"]["Enums"]["request_type"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "request_type_user_overrides_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       requests: {
         Row: {
           amount: number | null
@@ -932,6 +973,35 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "role_permissions_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      role_request_approvals: {
+        Row: {
+          created_at: string
+          id: string
+          request_type: Database["public"]["Enums"]["request_type"]
+          role_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          request_type: Database["public"]["Enums"]["request_type"]
+          role_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          request_type?: Database["public"]["Enums"]["request_type"]
+          role_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_request_approvals_role_id_fkey"
             columns: ["role_id"]
             isOneToOne: false
             referencedRelation: "roles"
@@ -1284,6 +1354,15 @@ export type Database = {
         Args: { _type: Database["public"]["Enums"]["request_type"] }
         Returns: string
       }
+      request_type_approver_ids: {
+        Args: {
+          _club_id: string
+          _type: Database["public"]["Enums"]["request_type"]
+        }
+        Returns: {
+          user_id: string
+        }[]
+      }
       user_sees_all_club: {
         Args: { _club_id: string; _user_id: string }
         Returns: boolean
@@ -1291,6 +1370,7 @@ export type Database = {
     }
     Enums: {
       access_level: "none" | "read" | "editor" | "approver"
+      approver_override_mode: "grant" | "revoke"
       attendance_status: "invitado" | "confirmado" | "rechazado"
       availability_status: "apto" | "lesionado" | "en_duda"
       document_category:
@@ -1452,6 +1532,7 @@ export const Constants = {
   public: {
     Enums: {
       access_level: ["none", "read", "editor", "approver"],
+      approver_override_mode: ["grant", "revoke"],
       attendance_status: ["invitado", "confirmado", "rechazado"],
       availability_status: ["apto", "lesionado", "en_duda"],
       document_category: [
