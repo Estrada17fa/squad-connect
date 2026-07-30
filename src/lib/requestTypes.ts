@@ -78,8 +78,14 @@ export const REQUEST_TYPES: RequestTypeDef[] = [
     playerAllowed: false,
     completable: true,
     fields: [
-      { key: "articulo", label: "Artículo", type: "text", required: true, placeholder: "p.ej. Balones de entrenamiento" },
+      { key: "articulo", label: "Artículo", type: "item", required: true },
       { key: "cantidad", label: "Cantidad", type: "number", required: true },
+      {
+        key: "fecha_devolucion",
+        label: "¿Cuándo lo devolverá?",
+        type: "date",
+        required: true,
+      },
     ],
   },
   {
@@ -95,6 +101,13 @@ export const REQUEST_TYPES: RequestTypeDef[] = [
       { key: "que_comprar", label: "Qué comprar", type: "text", required: true },
       { key: "costo_estimado", label: "Costo estimado", type: "money", required: true },
       { key: "justificacion", label: "Justificación", type: "textarea", required: true },
+      {
+        key: "referencia_url",
+        label: "Link de referencia",
+        type: "url",
+        placeholder: "https://…",
+      },
+      { key: "referencia_foto", label: "Foto de referencia", type: "image" },
     ],
   },
   {
