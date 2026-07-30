@@ -488,8 +488,7 @@ function PermissionsMatrix({
   );
 }
 
-  );
-}
+
 
 function CreateRoleDialog({
   open,
