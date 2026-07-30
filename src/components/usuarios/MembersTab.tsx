@@ -32,6 +32,9 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { CreateMemberDialog } from "./CreateMemberDialog";
+import { REQUEST_TYPE_MAP, type RequestType } from "@/lib/requestTypes";
+import { useMemberApprovals, useSetApproverOverride } from "@/hooks/useRequestApprovers";
+
 
 const LEVELS: { value: AccessLevel; label: string }[] = [
   { value: "none", label: "Sin acceso" },
