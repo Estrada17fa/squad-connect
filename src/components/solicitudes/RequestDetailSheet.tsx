@@ -24,6 +24,8 @@ import {
   type RequestStatus,
 } from "@/lib/requestTypes";
 import { useRequestHistory, type RequestRow } from "@/hooks/useRequests";
+import { useRequestTypeApprovers } from "@/hooks/useRequestApprovers";
+
 import { cn } from "@/lib/utils";
 
 interface Props {
