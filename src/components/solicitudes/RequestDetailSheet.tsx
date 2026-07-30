@@ -1,7 +1,20 @@
 import * as React from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Check, X as XIcon, Pencil, Trash2, Ban, PackageCheck, History, AlertTriangle } from "lucide-react";
+import {
+  Check,
+  X as XIcon,
+  Pencil,
+  Trash2,
+  Ban,
+  PackageCheck,
+  History,
+  AlertTriangle,
+  Link as LinkIcon,
+} from "lucide-react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useInventoryCatalog, useInventoryThumbnails, useRequestAttachmentUrl } from "@/hooks/useInventory";
+import { categoryIcon } from "./InventoryItemPicker";
 import {
   EntitySheet,
   EntitySheetBody,
@@ -220,7 +233,7 @@ export function RequestDetailSheet({
               <span className="text-xs uppercase tracking-wide text-muted-foreground">{f.label}</span>
               <span className="text-right text-sm text-foreground">
                 {f.type === "item" ? (
-                  <ItemValue name={request.details?.articulo} itemId={request.details?.item_id} />
+                  <ItemValue name={request.details?.articulo} itemId={request.details?.item_id} clubId={clubId} />
                 ) : f.type === "url" ? (
                   <LinkValue url={request.details?.[f.key]} />
                 ) : f.type === "image" ? (
@@ -316,8 +329,7 @@ export function RequestDetailSheet({
 }
 
 /** Artículo del inventario: miniatura (o ícono de categoría) + nombre. */
-function ItemValue({ name, itemId }: { name?: string; itemId?: string }) {
-  const { clubId } = React.useContext(RequestDetailCtx);
+function ItemValue({ name, itemId, clubId }: { name?: string; itemId?: string; clubId: string }) {
   const catalogQ = useInventoryCatalog(clubId);
   const item = (catalogQ.data ?? []).find((i) => i.id === itemId) ?? null;
   const thumbsQ = useInventoryThumbnails([item?.image_path]);
