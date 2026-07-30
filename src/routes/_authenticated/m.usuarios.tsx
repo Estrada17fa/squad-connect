@@ -446,7 +446,48 @@ function PermissionsMatrix({
           <p className="text-xs text-muted-foreground">Este rol no tiene páginas configurables.</p>
         ) : null}
       </div>
+
+      <div className="glass rounded-lg p-3 space-y-3">
+        <div>
+          <p className="text-sm font-semibold">Aprueba solicitudes de</p>
+          <p className="text-[11px] text-muted-foreground">
+            Default del rol. En la ficha de cada miembro puedes darle o quitarle tipos sin afectar a
+            los demás. Nadie aprueba su propia solicitud.
+          </p>
+        </div>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {REQUEST_TYPES.map((t) => {
+            const TIcon = t.icon;
+            const checked = approvalDraft.includes(t.key);
+            return (
+              <label
+                key={t.key}
+                className={cn(
+                  "flex items-center gap-3 rounded-lg border px-3 py-2 transition-colors",
+                  checked ? "border-primary/50 bg-primary/5" : "border-border/60",
+                  canEdit ? "cursor-pointer hover:bg-white/[0.04]" : "opacity-80",
+                )}
+              >
+                <Checkbox
+                  checked={checked}
+                  disabled={!canEdit}
+                  onCheckedChange={(v) =>
+                    setApprovalDraft((prev) =>
+                      v ? [...prev, t.key] : prev.filter((k) => k !== t.key),
+                    )
+                  }
+                />
+                <TIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <span className="min-w-0 truncate text-sm">{t.label}</span>
+              </label>
+            );
+          })}
+        </div>
+      </div>
     </div>
+  );
+}
+
   );
 }
 
