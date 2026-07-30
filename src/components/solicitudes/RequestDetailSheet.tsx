@@ -35,6 +35,7 @@ import {
   STATUS_EXTRA_CLASS,
   formatMoney,
   type RequestStatus,
+  requestSummary,
 } from "@/lib/requestTypes";
 import { useRequestHistory, type RequestRow } from "@/hooks/useRequests";
 import { useRequestTypeApprovers } from "@/hooks/useRequestApprovers";
@@ -146,7 +147,7 @@ export function RequestDetailSheet({
   return (
     <EntitySheet open={open} onOpenChange={onOpenChange}>
       <EntitySheetHeader>
-        <EntitySheetTitle>{request.title}</EntitySheetTitle>
+        <EntitySheetTitle>{requestSummary(request)}</EntitySheetTitle>
         <EntitySheetDescription>
           {def.label} · Solicitada por {request.requester?.full_name ?? request.requester?.email ?? "—"}
         </EntitySheetDescription>

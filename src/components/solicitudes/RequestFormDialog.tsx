@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toLocalInputValue, fromLocalInputValue } from "@/lib/calendar-utils";
 import {
   REQUEST_TYPE_MAP,
+  requestSummary,
   type RequestType,
   type RequestTypeDef,
   type RequestFieldDef,
@@ -54,7 +55,6 @@ export function RequestFormDialog({ open, onOpenChange, clubId, userId, type, re
   const def = REQUEST_TYPE_MAP[type];
   const qc = useQueryClient();
 
-  const [title, setTitle] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [values, setValues] = React.useState<Record<string, string>>({});
   const [itemId, setItemId] = React.useState<string | null>(null);
@@ -64,7 +64,6 @@ export function RequestFormDialog({ open, onOpenChange, clubId, userId, type, re
 
   React.useEffect(() => {
     if (!open) return;
-    setTitle(request?.title ?? "");
     setDescription(request?.description ?? "");
     setValues(emptyValues(def, request));
     setItemId((request?.details?.item_id as string) ?? null);
@@ -85,7 +84,6 @@ export function RequestFormDialog({ open, onOpenChange, clubId, userId, type, re
 
   const mutation = useMutation({
     mutationFn: async () => {
-      if (!title.trim()) throw new Error("El título es obligatorio");
       const details: Record<string, any> = {};
       for (const f of def.fields) {
         if (f.type === "image") continue;
@@ -142,7 +140,7 @@ export function RequestFormDialog({ open, onOpenChange, clubId, userId, type, re
       const payload = {
         club_id: clubId,
         type,
-        title: title.trim(),
+        title: requestSummary({ type, details, amount, currency: amount !== null ? "MXN" : null }),
         description: description.trim() || null,
         details,
         amount,
@@ -179,15 +177,6 @@ export function RequestFormDialog({ open, onOpenChange, clubId, userId, type, re
       </EntitySheetHeader>
 
       <EntitySheetBody>
-        <div className="space-y-1.5">
-          <Label htmlFor="req-title">Título</Label>
-          <Input
-            id="req-title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Resumen corto de la solicitud"
-          />
-        </div>
 
         {def.fields.map((f: RequestFieldDef) => (
           <div key={f.key} className="space-y-1.5">
