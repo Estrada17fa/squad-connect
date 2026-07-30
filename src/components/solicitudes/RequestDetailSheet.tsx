@@ -77,18 +77,6 @@ export function RequestDetailSheet({
     if (open) setNote("");
   }, [open, request?.id]);
 
-  if (!request) return null;
-
-  const def = REQUEST_TYPE_MAP[request.type];
-  const Icon = def.icon;
-  const isOwner = request.requester_id === userId;
-  const isPending = request.status === "pendiente";
-  // Regla infranqueable: nadie decide su propia solicitud (también forzado en el servidor).
-  const showDecision = canDecide && isPending && !isOwner;
-  const canCancel = isOwner && isPending;
-  const canComplete = canManage && def.completable && request.status === "aprobada";
-  const canEditRow = isOwner && isPending;
-
   const setStatus = useMutation({
     mutationFn: async (next: RequestStatus) => {
       const patch: Record<string, any> = { status: next };
@@ -97,7 +85,7 @@ export function RequestDetailSheet({
         patch.decided_at = new Date().toISOString();
         patch.decision_note = note.trim() || null;
       }
-      const { error } = await supabase.from("requests").update(patch as never).eq("id", request.id);
+      const { error } = await supabase.from("requests").update(patch as never).eq("id", request!.id);
       if (error) throw error;
       return next;
     },
@@ -110,7 +98,7 @@ export function RequestDetailSheet({
       };
       toast.success(msg[next] ?? "Solicitud actualizada");
       qc.invalidateQueries({ queryKey: ["requests", clubId] });
-      qc.invalidateQueries({ queryKey: ["request-history", request.id] });
+      qc.invalidateQueries({ queryKey: ["request-history", request!.id] });
       setNote("");
     },
     onError: (e: any) => toast.error(e.message ?? "No se pudo actualizar"),
@@ -118,7 +106,7 @@ export function RequestDetailSheet({
 
   const remove = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("requests").delete().eq("id", request.id);
+      const { error } = await supabase.from("requests").delete().eq("id", request!.id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -128,6 +116,19 @@ export function RequestDetailSheet({
     },
     onError: (e: any) => toast.error(e.message ?? "No se pudo eliminar"),
   });
+
+
+  if (!request) return null;
+
+  const def = REQUEST_TYPE_MAP[request.type];
+  const Icon = def.icon;
+  const isOwner = request.requester_id === userId;
+  const isPending = request.status === "pendiente";
+  // Regla infranqueable: nadie decide su propia solicitud (también forzado en el servidor).
+  const showDecision = canDecide && isPending && !isOwner;
+  const canCancel = isOwner && isPending;
+  const canComplete = canManage && def.completable && request.status === "aprobada";
+  const canEditRow = isOwner && isPending;
 
   return (
     <EntitySheet open={open} onOpenChange={onOpenChange}>
