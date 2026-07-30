@@ -177,15 +177,6 @@ export function RequestFormDialog({ open, onOpenChange, clubId, userId, type, re
       </EntitySheetHeader>
 
       <EntitySheetBody>
-        <div className="space-y-1.5">
-          <Label htmlFor="req-title">Título</Label>
-          <Input
-            id="req-title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Resumen corto de la solicitud"
-          />
-        </div>
 
         {def.fields.map((f: RequestFieldDef) => (
           <div key={f.key} className="space-y-1.5">
