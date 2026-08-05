@@ -4,6 +4,14 @@ import { Plus, Receipt, Search, Building2, TrendingUp } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { ModuleTabs } from "@/components/squad/ModuleTabs";
 import { EmptyState } from "@/components/squad/EmptyState";
+import {
+  EntitySheet,
+  EntitySheetBody,
+  EntitySheetDescription,
+  EntitySheetHeader,
+  EntitySheetTitle,
+} from "@/components/squad/EntitySheet";
+
 import { CardGridSkeleton } from "@/components/squad/LoadingState";
 import { StandardCard } from "@/components/squad/StandardCard";
 import { Button } from "@/components/ui/button";
