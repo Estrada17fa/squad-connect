@@ -204,11 +204,22 @@ export function RequestDetailSheet({
                 <Ban className="mr-2 h-4 w-4" /> Cancelar solicitud
               </Button>
             ) : null}
+            {showLoanButton ? (
+              <Button
+                type="button"
+                size="sm"
+                className="glow-primary"
+                onClick={() => setLoanOpen(true)}
+              >
+                <PackageCheck className="mr-2 h-4 w-4" /> Generar préstamo
+              </Button>
+            ) : null}
             {canComplete ? (
               <Button type="button" size="sm" onClick={() => setStatus.mutate("completada")} disabled={setStatus.isPending}>
                 <PackageCheck className="mr-2 h-4 w-4" /> Marcar completada
               </Button>
             ) : null}
+
             {canManage ? (
               <Button
                 type="button"
