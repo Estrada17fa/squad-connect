@@ -30,7 +30,7 @@ Chip **Compras y facturas** dentro de Coordinación, con tres sub-vistas:
 
 - **Gastos**: lista con tarjeta estándar (concepto, monto, proveedor, categoría, fecha, badge de pago — pendiente ámbar, pagado azul). Filtros por categoría, estado de pago y rango de fecha, más buscador por concepto/proveedor. FAB (+) registra gasto. Detalle en panel lateral con todo lo capturado, comprobante visible/descargable, acción "Marcar como pagado" (guarda la fecha), editar y eliminar para editores.
 - **Proveedores**: lista simple, crear/editar/eliminar (editor). Al abrir uno, se ven sus gastos asociados y el total.
-- **Reportes**: selector de periodo (este mes / mes pasado / rango custom), total gastado, desglose por categoría con barras simples, y total pendiente vs pagado.
+- **Reportes**: selector de periodo (este mes / mes pasado / rango custom), total gastado, desglose por categoría con barras simples, y total pendiente vs pagado. Los totales se calculan **en la base de datos** con una función SQL agregada (`expense_report(club_id, desde, hasta)`) que devuelve ya sumados el total del periodo, el desglose por categoría y pendiente vs pagado; el cliente nunca descarga todos los gastos para sumarlos.
 
 En el formulario de gasto el proveedor es opcional: se elige del catálogo o se escribe libre, con casilla "Guardar en catálogo" cuando es nuevo.
 
