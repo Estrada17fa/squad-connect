@@ -37,8 +37,9 @@ export function useNotifications(userId: string | null | undefined) {
 
   React.useEffect(() => {
     if (!userId) return;
+    // Nombre único por montaje: evita reutilizar un canal ya suscrito (StrictMode / remount).
     const channel = supabase
-      .channel(`notifications-${userId}`)
+      .channel(`notifications-${userId}-${Math.random().toString(36).slice(2)}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` },
