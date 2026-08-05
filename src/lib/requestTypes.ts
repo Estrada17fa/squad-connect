@@ -33,10 +33,13 @@ export type FieldType =
   | "select"
   /** Selector de artículo del catálogo de inventario (guarda nombre + details.item_id). */
   | "item"
+  /** Selector de equipo del club (guarda el id del equipo). */
+  | "team"
   /** Link de referencia (validado como URL). */
   | "url"
   /** Imagen de referencia subida al bucket privado request-attachments. */
   | "image";
+
 
 export interface RequestFieldDef {
   key: string;
