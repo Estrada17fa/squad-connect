@@ -140,7 +140,27 @@ export function useInventoryLoans(clubId: string | null | undefined) {
   return query;
 }
 
-/** Equipos (categorías) del club, para asignar un préstamo. */
+/** Préstamo generado desde una solicitud de material (o null si aún no existe). */
+export function useRequestLoan(requestId: string | null | undefined) {
+  return useQuery({
+    queryKey: ["request-loan", requestId ?? "none"] as const,
+    enabled: !!requestId,
+    staleTime: 15_000,
+    queryFn: async (): Promise<LoanRow | null> => {
+      const { data, error } = await supabase
+        .from("inventory_loans")
+        .select(
+          "id, club_id, item_id, borrower_user_id, team_id, request_id, quantity, returned_quantity, expected_return_at, returned_at, notes, created_at, created_by, item:inventory_items(id, name, category, unit, image_path), borrower:profiles!inventory_loans_borrower_user_id_profiles_fkey(id, full_name, email, avatar_url), team:teams(id, name, category)",
+        )
+        .eq("request_id", requestId!)
+        .maybeSingle();
+      if (error) throw error;
+      return (data ?? null) as unknown as LoanRow | null;
+    },
+  });
+}
+
+
 export function useClubTeams(clubId: string | null | undefined) {
   return useQuery({
     queryKey: ["club-teams", clubId ?? "none"] as const,
