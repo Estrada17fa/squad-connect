@@ -22,6 +22,7 @@ import { Route as AuthenticatedMUsuariosRouteImport } from './routes/_authentica
 import { Route as AuthenticatedMSolicitudesRouteImport } from './routes/_authenticated/m.solicitudes'
 import { Route as AuthenticatedMPlantelRouteImport } from './routes/_authenticated/m.plantel'
 import { Route as AuthenticatedMMesRouteImport } from './routes/_authenticated/m.mes'
+import { Route as AuthenticatedMInventarioRouteImport } from './routes/_authenticated/m.inventario'
 import { Route as AuthenticatedMDocumentosRouteImport } from './routes/_authenticated/m.documentos'
 import { Route as AuthenticatedMCoordinacion_internaRouteImport } from './routes/_authenticated/m.coordinacion_interna'
 import { Route as AuthenticatedMAgendaRouteImport } from './routes/_authenticated/m.agenda'
@@ -95,6 +96,12 @@ const AuthenticatedMMesRoute = AuthenticatedMMesRouteImport.update({
   path: '/m/mes',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMInventarioRoute =
+  AuthenticatedMInventarioRouteImport.update({
+    id: '/m/inventario',
+    path: '/m/inventario',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMDocumentosRoute =
   AuthenticatedMDocumentosRouteImport.update({
     id: '/m/documentos',
@@ -143,6 +150,7 @@ export interface FileRoutesByFullPath {
   '/m/agenda': typeof AuthenticatedMAgendaRoute
   '/m/coordinacion_interna': typeof AuthenticatedMCoordinacion_internaRoute
   '/m/documentos': typeof AuthenticatedMDocumentosRoute
+  '/m/inventario': typeof AuthenticatedMInventarioRoute
   '/m/mes': typeof AuthenticatedMMesRoute
   '/m/plantel': typeof AuthenticatedMPlantelRouteWithChildren
   '/m/solicitudes': typeof AuthenticatedMSolicitudesRoute
@@ -163,6 +171,7 @@ export interface FileRoutesByTo {
   '/m/agenda': typeof AuthenticatedMAgendaRoute
   '/m/coordinacion_interna': typeof AuthenticatedMCoordinacion_internaRoute
   '/m/documentos': typeof AuthenticatedMDocumentosRoute
+  '/m/inventario': typeof AuthenticatedMInventarioRoute
   '/m/mes': typeof AuthenticatedMMesRoute
   '/m/plantel': typeof AuthenticatedMPlantelRouteWithChildren
   '/m/solicitudes': typeof AuthenticatedMSolicitudesRoute
@@ -185,6 +194,7 @@ export interface FileRoutesById {
   '/_authenticated/m/agenda': typeof AuthenticatedMAgendaRoute
   '/_authenticated/m/coordinacion_interna': typeof AuthenticatedMCoordinacion_internaRoute
   '/_authenticated/m/documentos': typeof AuthenticatedMDocumentosRoute
+  '/_authenticated/m/inventario': typeof AuthenticatedMInventarioRoute
   '/_authenticated/m/mes': typeof AuthenticatedMMesRoute
   '/_authenticated/m/plantel': typeof AuthenticatedMPlantelRouteWithChildren
   '/_authenticated/m/solicitudes': typeof AuthenticatedMSolicitudesRoute
@@ -207,6 +217,7 @@ export interface FileRouteTypes {
     | '/m/agenda'
     | '/m/coordinacion_interna'
     | '/m/documentos'
+    | '/m/inventario'
     | '/m/mes'
     | '/m/plantel'
     | '/m/solicitudes'
@@ -227,6 +238,7 @@ export interface FileRouteTypes {
     | '/m/agenda'
     | '/m/coordinacion_interna'
     | '/m/documentos'
+    | '/m/inventario'
     | '/m/mes'
     | '/m/plantel'
     | '/m/solicitudes'
@@ -248,6 +260,7 @@ export interface FileRouteTypes {
     | '/_authenticated/m/agenda'
     | '/_authenticated/m/coordinacion_interna'
     | '/_authenticated/m/documentos'
+    | '/_authenticated/m/inventario'
     | '/_authenticated/m/mes'
     | '/_authenticated/m/plantel'
     | '/_authenticated/m/solicitudes'
@@ -354,6 +367,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMMesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/m/inventario': {
+      id: '/_authenticated/m/inventario'
+      path: '/m/inventario'
+      fullPath: '/m/inventario'
+      preLoaderRoute: typeof AuthenticatedMInventarioRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/m/documentos': {
       id: '/_authenticated/m/documentos'
       path: '/m/documentos'
@@ -434,6 +454,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMAgendaRoute: typeof AuthenticatedMAgendaRoute
   AuthenticatedMCoordinacion_internaRoute: typeof AuthenticatedMCoordinacion_internaRoute
   AuthenticatedMDocumentosRoute: typeof AuthenticatedMDocumentosRoute
+  AuthenticatedMInventarioRoute: typeof AuthenticatedMInventarioRoute
   AuthenticatedMMesRoute: typeof AuthenticatedMMesRoute
   AuthenticatedMPlantelRoute: typeof AuthenticatedMPlantelRouteWithChildren
   AuthenticatedMSolicitudesRoute: typeof AuthenticatedMSolicitudesRoute
@@ -452,6 +473,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMCoordinacion_internaRoute:
     AuthenticatedMCoordinacion_internaRoute,
   AuthenticatedMDocumentosRoute: AuthenticatedMDocumentosRoute,
+  AuthenticatedMInventarioRoute: AuthenticatedMInventarioRoute,
   AuthenticatedMMesRoute: AuthenticatedMMesRoute,
   AuthenticatedMPlantelRoute: AuthenticatedMPlantelRouteWithChildren,
   AuthenticatedMSolicitudesRoute: AuthenticatedMSolicitudesRoute,
@@ -469,13 +491,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
