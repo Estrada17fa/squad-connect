@@ -105,7 +105,7 @@ function InventarioPage() {
     if (!loan) return;
     setView("prestamos");
     setDetailLoan(loan);
-    navigate({ to: "/m/inventario", search: {}, replace: true });
+    navigate({ to: "/m/inventario", search: () => ({}), replace: true });
   }, [openParam, loans, navigate]);
 
 

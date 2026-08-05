@@ -82,7 +82,7 @@ function SolicitudesPage() {
   React.useEffect(() => {
     if (!openParam) return;
     setDetailId(openParam);
-    navigate({ to: "/m/solicitudes", search: {}, replace: true });
+    navigate({ to: "/m/solicitudes", search: () => ({}), replace: true });
   }, [openParam, navigate]);
 
 

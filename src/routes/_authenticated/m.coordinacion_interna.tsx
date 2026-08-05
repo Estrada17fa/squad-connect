@@ -95,7 +95,7 @@ function CoordinacionPage() {
       setPriority("all");
       setDetailTaskId(openParam);
     }
-    navigate({ to: "/m/coordinacion_interna", search: {}, replace: true });
+    navigate({ to: "/m/coordinacion_interna", search: () => ({}), replace: true });
   }, [openParam, kindParam, navigate]);
 
 
