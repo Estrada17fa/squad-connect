@@ -22,6 +22,11 @@ Hoy la solicitud de material pide solo artículo, cantidad y fecha de devolució
 
 "A quién se presta" no se pide: es siempre el solicitante. Así el pre-llenado cubre todos los campos del préstamo sin capturar nada dos veces.
 
+Ambos campos se muestran en el detalle de la solicitud (regla de que todo lo capturado se ve) y el motivo entra al resumen automático cuando el artículo o la cantidad no bastan para identificarla.
+
+El pre-llenado del préstamo hereda artículo, cantidad, solicitante, fecha comprometida, **equipo y motivo**. Si el editor ajusta cualquier valor antes de registrar (por ejemplo entrega 18 de 20 porque hay material dañado), se guarda el valor final: el préstamo refleja lo realmente entregado y la solicitud conserva intacto lo que se pidió.
+
+
 ### 3. Acción desde la solicitud aprobada
 
 En el detalle de la solicitud de material aprobada aparece el botón **Generar préstamo**, visible solo para quien tenga nivel editor en el módulo `inventario` (no depende de permisos de Solicitudes). Al aprobar una solicitud de material, si quien aprueba es editor de inventario, el formulario se abre de inmediato ya pre-llenado; si no, queda disponible como acción para quien sí lo sea.
