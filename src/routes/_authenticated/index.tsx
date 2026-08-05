@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Calendar, Users, MessagesSquare } from "lucide-react";
+import { Calendar, Users, MessagesSquare, Package } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { StandardCard } from "@/components/squad/StandardCard";
 import { EmptyState } from "@/components/squad/EmptyState";
@@ -187,6 +187,33 @@ function Home() {
                     </span>
                   ) : (
                     "Sin juntas próximas."
+                  )}
+                </StandardCard>
+              </div>
+            ) : null}
+            {hasInv ? (
+              <div className="animate-card-in" style={{ animationDelay: "120ms" }}>
+                <StandardCard
+                  interactive
+                  onClick={() => navigate({ to: "/m/$module", params: { module: "inventario" } })}
+                  icon={Package}
+                  title="Inventario"
+                  subtitle={
+                    inventoryQ.data
+                      ? `${inventoryQ.data.activeLoans} préstamo${inventoryQ.data.activeLoans === 1 ? "" : "s"} activo${inventoryQ.data.activeLoans === 1 ? "" : "s"}`
+                      : "Cargando…"
+                  }
+                >
+                  {inventoryQ.data ? (
+                    inventoryQ.data.low > 0 ? (
+                      <span className="text-amber-400">
+                        {inventoryQ.data.low} artículo{inventoryQ.data.low === 1 ? "" : "s"} en stock bajo
+                      </span>
+                    ) : (
+                      "Sin artículos en stock bajo."
+                    )
+                  ) : (
+                    "Material deportivo y equipamiento."
                   )}
                 </StandardCard>
               </div>
