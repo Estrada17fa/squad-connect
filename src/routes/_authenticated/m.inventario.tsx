@@ -297,7 +297,7 @@ function InventarioPage() {
             onOpenChange={setLoanDialog}
             clubId={clubId}
             userId={user.id}
-            presetItem={presetItem}
+            initial={presetItem ? { item: presetItem } : null}
           />
           <ReturnDialog
             open={!!returnLoan}
