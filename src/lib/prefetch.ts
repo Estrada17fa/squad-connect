@@ -5,6 +5,7 @@ import { playersQueryOptions } from "@/hooks/usePlayers";
 import { rosterQueryOptions } from "@/hooks/useRoster";
 import { tasksQueryOptions, meetingsQueryOptions } from "@/hooks/useCoordinacion";
 import { inventoryCatalogQueryOptions, inventoryItemsQueryOptions, inventoryLoansQueryOptions } from "@/hooks/useInventory";
+import { expensesQueryOptions, suppliersQueryOptions } from "@/hooks/useExpenses";
 
 export interface PrefetchCtx {
   clubId: string | null;
@@ -43,6 +44,12 @@ export function prefetchModule(
         qc.prefetchQuery(inventoryCatalogQueryOptions(clubId));
         qc.prefetchQuery(inventoryItemsQueryOptions(clubId));
         qc.prefetchQuery(inventoryLoansQueryOptions(clubId));
+      }
+      return;
+    case "compras_facturas":
+      if (clubId) {
+        qc.prefetchQuery(expensesQueryOptions(clubId));
+        qc.prefetchQuery(suppliersQueryOptions(clubId));
       }
       return;
     default:
