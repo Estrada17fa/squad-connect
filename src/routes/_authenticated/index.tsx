@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Calendar, Users, MessagesSquare, Package, Receipt } from "lucide-react";
+import { Calendar, Users, MessagesSquare, Package, Receipt, Plane } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { StandardCard } from "@/components/squad/StandardCard";
 import { EmptyState } from "@/components/squad/EmptyState";
@@ -11,6 +11,7 @@ import { formatDateTime } from "@/lib/calendar-utils";
 import { EVENT_TYPE_MAP } from "@/lib/eventTypes";
 import { useExpenseSummary } from "@/hooks/useExpenses";
 import { formatMoney } from "@/lib/expenses";
+import { useMyNextTrip } from "@/hooks/useTrips";
 
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
@@ -109,6 +110,9 @@ function Home() {
   const hasCompras = accessibleModules.includes("compras_facturas");
   const expensesQ = useExpenseSummary(clubId, hasCompras);
 
+  const hasViajes = accessibleModules.includes("viajes");
+  const nextTripQ = useMyNextTrip(clubId, activeTeam?.id ?? null, user.id, hasViajes);
+
   const others = accessibleModules.filter(
     (k) =>
       k !== "agenda" &&
@@ -116,7 +120,8 @@ function Home() {
       k !== "plantel" &&
       k !== "coordinacion_interna" &&
       k !== "inventario" &&
-      k !== "compras_facturas",
+      k !== "compras_facturas" &&
+      k !== "viajes",
   );
   const hasCal = accessibleModules.includes("agenda") || accessibleModules.includes("mes");
   const calTarget: "agenda" | "mes" = accessibleModules.includes("agenda") ? "agenda" : "mes";
@@ -254,6 +259,28 @@ function Home() {
                     )
                   ) : (
                     "Gastos, comprobantes y proveedores."
+                  )}
+                </StandardCard>
+              </div>
+            ) : null}
+
+            {hasViajes ? (
+              <div className="animate-card-in" style={{ animationDelay: "200ms" }}>
+                <StandardCard
+                  interactive
+                  onClick={() => navigate({ to: "/m/$module", params: { module: "viajes" } })}
+                  icon={Plane}
+                  title="Viajes"
+                  subtitle={
+                    nextTripQ.data
+                      ? `${nextTripQ.data.destination ?? nextTripQ.data.title} · ${formatDateTime(nextTripQ.data.departure_at)}`
+                      : "Sin viajes próximos"
+                  }
+                >
+                  {nextTripQ.data ? (
+                    <span className="text-foreground">Estás convocado a este viaje.</span>
+                  ) : (
+                    "Traslados, hospedaje y logística del equipo."
                   )}
                 </StandardCard>
               </div>
