@@ -14,9 +14,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { fromLocalInputValue } from "@/lib/calendar-utils";
+import { fromLocalInputValue, toLocalInputValue } from "@/lib/calendar-utils";
 import { InventoryItemPicker } from "@/components/solicitudes/InventoryItemPicker";
-import { useClubTeams, type InventoryCatalogItem } from "@/hooks/useInventory";
+import { useClubTeams, useInventoryCatalog, type InventoryCatalogItem } from "@/hooks/useInventory";
+
 import { cn } from "@/lib/utils";
 
 /** Valores iniciales opcionales (pre-llenado desde una solicitud de material). */
