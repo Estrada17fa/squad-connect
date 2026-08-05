@@ -510,8 +510,8 @@ function ExpenseSupplierSheetShell({
   onOpenChange: (v: boolean) => void;
   children: React.ReactNode;
 }) {
-  const { EntitySheet, EntitySheetBody, EntitySheetHeader, EntitySheetTitle, EntitySheetDescription } =
-    SheetParts;
+  return (
+
   return (
     <EntitySheet open={!!supplier} onOpenChange={onOpenChange}>
       <EntitySheetHeader>
