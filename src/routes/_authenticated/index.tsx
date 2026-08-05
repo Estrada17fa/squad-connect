@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Calendar, Users, MessagesSquare } from "lucide-react";
+import { Calendar, Users, MessagesSquare, Package } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { StandardCard } from "@/components/squad/StandardCard";
 import { EmptyState } from "@/components/squad/EmptyState";
@@ -86,13 +86,32 @@ function Home() {
     },
   });
 
+  const inventoryQ = useQuery({
+    queryKey: ["home-inventory", clubId ?? "none"],
+    enabled: !!clubId && accessibleModules.includes("inventario"),
+    queryFn: async () => {
+      const [loansRes, catalogRes, itemsRes] = await Promise.all([
+        supabase.from("inventory_loans").select("id").eq("club_id", clubId!).is("returned_at", null),
+        (supabase as any).rpc("inventory_catalog", { _club_id: clubId }),
+        supabase.from("inventory_items").select("id, min_quantity").eq("club_id", clubId!),
+      ]);
+      const mins: Record<string, number> = {};
+      for (const i of itemsRes.data ?? []) mins[i.id] = i.min_quantity;
+      const low = ((catalogRes.data ?? []) as any[]).filter(
+        (i) => i.available_quantity <= (mins[i.id] ?? 0),
+      ).length;
+      return { activeLoans: (loansRes.data ?? []).length, low };
+    },
+  });
+
   const others = accessibleModules.filter(
-    (k) => k !== "agenda" && k !== "mes" && k !== "plantel" && k !== "coordinacion_interna",
+    (k) => k !== "agenda" && k !== "mes" && k !== "plantel" && k !== "coordinacion_interna" && k !== "inventario",
   );
   const hasCal = accessibleModules.includes("agenda") || accessibleModules.includes("mes");
   const calTarget: "agenda" | "mes" = accessibleModules.includes("agenda") ? "agenda" : "mes";
   const hasPlantel = accessibleModules.includes("plantel");
   const hasCoord = accessibleModules.includes("coordinacion_interna");
+  const hasInv = accessibleModules.includes("inventario");
 
   return (
     <div className="space-y-6">
@@ -168,6 +187,33 @@ function Home() {
                     </span>
                   ) : (
                     "Sin juntas próximas."
+                  )}
+                </StandardCard>
+              </div>
+            ) : null}
+            {hasInv ? (
+              <div className="animate-card-in" style={{ animationDelay: "120ms" }}>
+                <StandardCard
+                  interactive
+                  onClick={() => navigate({ to: "/m/$module", params: { module: "inventario" } })}
+                  icon={Package}
+                  title="Inventario"
+                  subtitle={
+                    inventoryQ.data
+                      ? `${inventoryQ.data.activeLoans} préstamo${inventoryQ.data.activeLoans === 1 ? "" : "s"} activo${inventoryQ.data.activeLoans === 1 ? "" : "s"}`
+                      : "Cargando…"
+                  }
+                >
+                  {inventoryQ.data ? (
+                    inventoryQ.data.low > 0 ? (
+                      <span className="text-amber-400">
+                        {inventoryQ.data.low} artículo{inventoryQ.data.low === 1 ? "" : "s"} en stock bajo
+                      </span>
+                    ) : (
+                      "Sin artículos en stock bajo."
+                    )
+                  ) : (
+                    "Material deportivo y equipamiento."
                   )}
                 </StandardCard>
               </div>

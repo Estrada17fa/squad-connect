@@ -1,34 +1,13 @@
 import * as React from "react";
-import {
-  Package,
-  Search,
-  Shirt,
-  Dumbbell,
-  HeartPulse,
-  Wrench,
-  Trophy,
-  Boxes,
-  Check,
-  type LucideIcon,
-} from "lucide-react";
+import { Search, Check, type LucideIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useInventoryCatalog, useInventoryThumbnails, type InventoryCatalogItem } from "@/hooks/useInventory";
+import { categoryIcon, SIN_CATEGORIA } from "@/lib/inventory";
 import { cn } from "@/lib/utils";
 
-const SIN_CATEGORIA = "Sin categoría";
+export { categoryIcon };
 
-/** Ícono de respaldo cuando el artículo aún no tiene foto. */
-export function categoryIcon(category: string | null | undefined): LucideIcon {
-  const c = (category ?? "").toLowerCase();
-  if (/uniforme|ropa|indument|jersey|playera/.test(c)) return Shirt;
-  if (/gym|fuerza|pesas|acondicion/.test(c)) return Dumbbell;
-  if (/medic|salud|fisio|botiqu/.test(c)) return HeartPulse;
-  if (/util|herram|manten/.test(c)) return Wrench;
-  if (/entren|balon|cancha|deport/.test(c)) return Trophy;
-  if (/general|varios|otro/.test(c)) return Boxes;
-  return Package;
-}
 
 interface Props {
   clubId: string;
