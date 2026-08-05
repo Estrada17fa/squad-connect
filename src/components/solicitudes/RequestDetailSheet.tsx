@@ -176,7 +176,9 @@ export function RequestDetailSheet({
 
 
   return (
+    <>
     <EntitySheet open={open} onOpenChange={onOpenChange}>
+
       <EntitySheetHeader>
         <EntitySheetTitle>{requestSummary(request)}</EntitySheetTitle>
         <EntitySheetDescription>
