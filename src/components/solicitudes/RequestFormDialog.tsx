@@ -25,7 +25,7 @@ import {
 } from "@/lib/requestTypes";
 import type { RequestRow } from "@/hooks/useRequests";
 import { InventoryItemPicker } from "./InventoryItemPicker";
-import { useRequestAttachmentUrl, type InventoryCatalogItem } from "@/hooks/useInventory";
+import { useClubTeams, useRequestAttachmentUrl, type InventoryCatalogItem } from "@/hooks/useInventory";
 import { cn } from "@/lib/utils";
 
 interface Props {
