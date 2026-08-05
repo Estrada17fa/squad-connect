@@ -1472,6 +1472,128 @@ export type Database = {
           },
         ]
       }
+      trip_travelers: {
+        Row: {
+          created_at: string
+          id: string
+          role_note: string | null
+          trip_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role_note?: string | null
+          trip_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role_note?: string | null
+          trip_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_travelers_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_travelers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trips: {
+        Row: {
+          club_id: string
+          created_at: string
+          created_by: string | null
+          departure_at: string
+          destination: string | null
+          id: string
+          match_event_id: string | null
+          meeting_at: string | null
+          meeting_point: string | null
+          notes: string | null
+          return_at: string | null
+          status: Database["public"]["Enums"]["trip_status"]
+          team_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          club_id: string
+          created_at?: string
+          created_by?: string | null
+          departure_at: string
+          destination?: string | null
+          id?: string
+          match_event_id?: string | null
+          meeting_at?: string | null
+          meeting_point?: string | null
+          notes?: string | null
+          return_at?: string | null
+          status?: Database["public"]["Enums"]["trip_status"]
+          team_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          club_id?: string
+          created_at?: string
+          created_by?: string | null
+          departure_at?: string
+          destination?: string | null
+          id?: string
+          match_event_id?: string | null
+          meeting_at?: string | null
+          meeting_point?: string | null
+          notes?: string | null
+          return_at?: string | null
+          status?: Database["public"]["Enums"]["trip_status"]
+          team_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trips_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trips_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trips_match_event_id_fkey"
+            columns: ["match_event_id"]
+            isOneToOne: false
+            referencedRelation: "calendar_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trips_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_permission_overrides: {
         Row: {
           access_level: Database["public"]["Enums"]["access_level"]
@@ -1705,6 +1827,7 @@ export type Database = {
         | "otro"
       task_priority: "baja" | "media" | "alta"
       task_status: "pendiente" | "en_progreso" | "completada" | "en_pausa"
+      trip_status: "planeacion" | "confirmado" | "en_curso" | "completado"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1881,6 +2004,7 @@ export const Constants = {
       ],
       task_priority: ["baja", "media", "alta"],
       task_status: ["pendiente", "en_progreso", "completada", "en_pausa"],
+      trip_status: ["planeacion", "confirmado", "en_curso", "completado"],
     },
   },
 } as const

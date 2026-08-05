@@ -18,6 +18,7 @@ import { Route as AuthenticatedMiClubRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedCoordinacionRouteImport } from './routes/_authenticated/coordinacion'
 import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedMViajesRouteImport } from './routes/_authenticated/m.viajes'
 import { Route as AuthenticatedMUsuariosRouteImport } from './routes/_authenticated/m.usuarios'
 import { Route as AuthenticatedMSolicitudesRouteImport } from './routes/_authenticated/m.solicitudes'
 import { Route as AuthenticatedMPlantelRouteImport } from './routes/_authenticated/m.plantel'
@@ -74,6 +75,11 @@ const AuthenticatedAgendaRoute = AuthenticatedAgendaRouteImport.update({
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMViajesRoute = AuthenticatedMViajesRouteImport.update({
+  id: '/m/viajes',
+  path: '/m/viajes',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedMUsuariosRoute = AuthenticatedMUsuariosRouteImport.update({
@@ -163,6 +169,7 @@ export interface FileRoutesByFullPath {
   '/m/plantel': typeof AuthenticatedMPlantelRouteWithChildren
   '/m/solicitudes': typeof AuthenticatedMSolicitudesRoute
   '/m/usuarios': typeof AuthenticatedMUsuariosRoute
+  '/m/viajes': typeof AuthenticatedMViajesRoute
   '/m/plantel/$playerId': typeof AuthenticatedMPlantelPlayerIdRoute
 }
 export interface FileRoutesByTo {
@@ -185,6 +192,7 @@ export interface FileRoutesByTo {
   '/m/plantel': typeof AuthenticatedMPlantelRouteWithChildren
   '/m/solicitudes': typeof AuthenticatedMSolicitudesRoute
   '/m/usuarios': typeof AuthenticatedMUsuariosRoute
+  '/m/viajes': typeof AuthenticatedMViajesRoute
   '/m/plantel/$playerId': typeof AuthenticatedMPlantelPlayerIdRoute
 }
 export interface FileRoutesById {
@@ -209,6 +217,7 @@ export interface FileRoutesById {
   '/_authenticated/m/plantel': typeof AuthenticatedMPlantelRouteWithChildren
   '/_authenticated/m/solicitudes': typeof AuthenticatedMSolicitudesRoute
   '/_authenticated/m/usuarios': typeof AuthenticatedMUsuariosRoute
+  '/_authenticated/m/viajes': typeof AuthenticatedMViajesRoute
   '/_authenticated/m/plantel/$playerId': typeof AuthenticatedMPlantelPlayerIdRoute
 }
 export interface FileRouteTypes {
@@ -233,6 +242,7 @@ export interface FileRouteTypes {
     | '/m/plantel'
     | '/m/solicitudes'
     | '/m/usuarios'
+    | '/m/viajes'
     | '/m/plantel/$playerId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -255,6 +265,7 @@ export interface FileRouteTypes {
     | '/m/plantel'
     | '/m/solicitudes'
     | '/m/usuarios'
+    | '/m/viajes'
     | '/m/plantel/$playerId'
   id:
     | '__root__'
@@ -278,6 +289,7 @@ export interface FileRouteTypes {
     | '/_authenticated/m/plantel'
     | '/_authenticated/m/solicitudes'
     | '/_authenticated/m/usuarios'
+    | '/_authenticated/m/viajes'
     | '/_authenticated/m/plantel/$playerId'
   fileRoutesById: FileRoutesById
 }
@@ -350,6 +362,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/m/viajes': {
+      id: '/_authenticated/m/viajes'
+      path: '/m/viajes'
+      fullPath: '/m/viajes'
+      preLoaderRoute: typeof AuthenticatedMViajesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/m/usuarios': {
@@ -480,6 +499,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMPlantelRoute: typeof AuthenticatedMPlantelRouteWithChildren
   AuthenticatedMSolicitudesRoute: typeof AuthenticatedMSolicitudesRoute
   AuthenticatedMUsuariosRoute: typeof AuthenticatedMUsuariosRoute
+  AuthenticatedMViajesRoute: typeof AuthenticatedMViajesRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -500,6 +520,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMPlantelRoute: AuthenticatedMPlantelRouteWithChildren,
   AuthenticatedMSolicitudesRoute: AuthenticatedMSolicitudesRoute,
   AuthenticatedMUsuariosRoute: AuthenticatedMUsuariosRoute,
+  AuthenticatedMViajesRoute: AuthenticatedMViajesRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -513,13 +534,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
