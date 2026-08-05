@@ -160,8 +160,9 @@ export function useRequestLoan(requestId: string | null | undefined) {
   });
 }
 
-
+/** Equipos (categorías) del club, para asignar un préstamo. */
 export function useClubTeams(clubId: string | null | undefined) {
+
   return useQuery({
     queryKey: ["club-teams", clubId ?? "none"] as const,
     enabled: !!clubId,
