@@ -369,9 +369,50 @@ export function RequestDetailSheet({
             </ol>
           )}
         </div>
+
+        {linkedLoan ? (
+          <div className="glass space-y-1 p-3 text-sm">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Préstamo generado</p>
+            <p className="text-foreground">
+              {linkedLoan.item?.name ?? "Artículo"} ×{linkedLoan.quantity}
+              {linkedLoan.team?.name ? ` · ${linkedLoan.team.name}` : ""}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {loanOutstanding(linkedLoan) > 0
+                ? `Pendiente de devolver: ${loanOutstanding(linkedLoan)}`
+                : "Devuelto por completo"}
+              {linkedLoan.expected_return_at
+                ? ` · Devolución: ${formatDateTime(linkedLoan.expected_return_at)}`
+                : ""}
+            </p>
+          </div>
+        ) : null}
       </EntitySheetBody>
     </EntitySheet>
+
+    {isMaterial && canCreateLoan ? (
+      <LoanFormDialog
+        open={loanOpen}
+        onOpenChange={setLoanOpen}
+        clubId={clubId}
+        userId={userId}
+        requestId={request.id}
+        initial={(() => {
+          const d = loanDraftFromRequest(request as any);
+          return {
+            itemId: d.item_id,
+            quantity: d.quantity,
+            borrowerUserId: d.borrower_user_id,
+            notes: d.notes,
+            teamId: d.team_id,
+            expectedReturnAt: d.expected_return_at,
+          };
+        })()}
+      />
+    ) : null}
+    </>
   );
+
 }
 
 /** Artículo del inventario: miniatura (o ícono de categoría) + nombre. */
