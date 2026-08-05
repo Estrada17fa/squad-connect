@@ -1,5 +1,5 @@
 import * as React from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Plus, CalendarDays, AlertTriangle, MessagesSquare, ClipboardList } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
@@ -22,6 +22,10 @@ import { MeetingDetailSheet } from "@/components/coordinacion/MeetingDetailSheet
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/m/coordinacion_interna")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    open: typeof search.open === "string" ? search.open : undefined,
+    kind: search.kind === "junta" ? ("junta" as const) : search.kind === "tarea" ? ("tarea" as const) : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Squad — Coordinación" },
@@ -76,6 +80,25 @@ function CoordinacionPage() {
   const [scope, setScope] = React.useState<ScopeFilter>("mias");
   const [priority, setPriority] = React.useState<PriorityFilter>("all");
   const [tab, setTab] = React.useState<"tareas" | "juntas">("tareas");
+
+  // Deep-link desde el centro de notificaciones: ?open=<id>&kind=tarea|junta
+  const { open: openParam, kind: kindParam } = Route.useSearch();
+  const navigate = useNavigate();
+  React.useEffect(() => {
+    if (!openParam) return;
+    if (kindParam === "junta") {
+      setTab("juntas");
+      setDetailMeetingId(openParam);
+    } else {
+      setTab("tareas");
+      setScope("todas");
+      setPriority("all");
+      setDetailTaskId(openParam);
+    }
+    navigate({ to: "/m/coordinacion_interna", search: {}, replace: true });
+  }, [openParam, kindParam, navigate]);
+
+
 
   if (!canAccess) {
     return (

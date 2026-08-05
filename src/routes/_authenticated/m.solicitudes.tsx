@@ -1,5 +1,5 @@
 import * as React from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Plus, ClipboardList, BellRing } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
@@ -31,6 +31,9 @@ import { RequestDetailSheet } from "@/components/solicitudes/RequestDetailSheet"
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/m/solicitudes")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    open: typeof search.open === "string" ? search.open : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Squad — Solicitudes" },
@@ -72,6 +75,17 @@ function SolicitudesPage() {
   const [detailId, setDetailId] = React.useState<string | null>(null);
   const [typeFilter, setTypeFilter] = React.useState<"all" | RequestType>("all");
   const [statusFilter, setStatusFilter] = React.useState<"all" | RequestStatus>("all");
+
+  // Deep-link desde el centro de notificaciones: /m/solicitudes?open=<id>
+  const { open: openParam } = Route.useSearch();
+  const navigate = useNavigate();
+  React.useEffect(() => {
+    if (!openParam) return;
+    setDetailId(openParam);
+    navigate({ to: "/m/solicitudes", search: {}, replace: true });
+  }, [openParam, navigate]);
+
+
 
   if (!canAccess) {
     return (
