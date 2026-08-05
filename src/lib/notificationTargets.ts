@@ -24,6 +24,12 @@ export function notificationTarget(n: NotificationRow): NotificationTarget | nul
         to: "/m/coordinacion_interna",
         search: { open: n.related_id, kind: n.type === "junta_invitacion" ? "junta" : "tarea" },
       };
+    case "compras_facturas":
+      return {
+        module: "compras_facturas",
+        to: "/m/compras_facturas",
+        search: { open: n.related_id },
+      };
     case "inventario":
       return { module: "inventario", to: "/m/inventario", search: { open: n.related_id } };
     default:

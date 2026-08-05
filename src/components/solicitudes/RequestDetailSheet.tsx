@@ -11,6 +11,7 @@ import {
   History,
   AlertTriangle,
   Link as LinkIcon,
+  Receipt,
 } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
@@ -22,6 +23,9 @@ import {
   loanOutstanding,
 } from "@/hooks/useInventory";
 import { LoanFormDialog } from "@/components/inventario/LoanFormDialog";
+import { ExpenseFormDialog } from "@/components/compras/ExpenseFormDialog";
+import { useRequestExpense } from "@/hooks/useExpenses";
+import { expenseDraftFromRequest, formatMoney as formatExpenseMoney } from "@/lib/expenses";
 import { useApp } from "@/components/squad/AppLayout";
 import { loanDraftFromRequest } from "@/lib/requestTypes";
 import { categoryIcon } from "./InventoryItemPicker";
@@ -97,6 +101,7 @@ export function RequestDetailSheet({
   );
   const [note, setNote] = React.useState("");
   const [loanOpen, setLoanOpen] = React.useState(false);
+  const [expenseOpen, setExpenseOpen] = React.useState(false);
   const teamsQ = useClubTeams(open && request ? clubId : null);
 
 
@@ -109,9 +114,20 @@ export function RequestDetailSheet({
   const loanQ = useRequestLoan(open && request && isMaterial ? request.id : null);
   const linkedLoan = loanQ.data ?? null;
 
+  // Compras y facturas: el gasto lo registra a mano quien maneja finanzas.
+  const isFinancial =
+    request?.type === "compra" || request?.type === "pago_proveedor" || request?.type === "reembolso";
+  const expLevel = permissions.compras_facturas;
+  const canCreateExpense = isSuperAdmin || expLevel === "editor" || expLevel === "approver";
+  const expenseQ = useRequestExpense(open && request && isFinancial ? request.id : null);
+  const linkedExpense = expenseQ.data ?? null;
+
   React.useEffect(() => {
     if (open) setNote("");
-    if (!open) setLoanOpen(false);
+    if (!open) {
+      setLoanOpen(false);
+      setExpenseOpen(false);
+    }
   }, [open, request?.id]);
 
 
@@ -140,6 +156,7 @@ export function RequestDetailSheet({
       setNote("");
       // Aprobar material abre de inmediato el formulario de préstamo pre-llenado.
       if (next === "aprobada" && isMaterial && canCreateLoan && !linkedLoan) setLoanOpen(true);
+      if (next === "aprobada" && isFinancial && canCreateExpense && !linkedExpense) setExpenseOpen(true);
 
     },
     onError: (e: any) => toast.error(e.message ?? "No se pudo actualizar"),
@@ -171,7 +188,9 @@ export function RequestDetailSheet({
   const isApproved = request.status === "aprobada";
   // El material se completa registrando el préstamo real, no a mano.
   const showLoanButton = isMaterial && isApproved && !linkedLoan && canCreateLoan;
-  const canComplete = canManage && def.completable && isApproved && !isMaterial;
+  // El gasto es la forma de completar compras, pagos a proveedor y reembolsos.
+  const showExpenseButton = isFinancial && isApproved && !linkedExpense && canCreateExpense;
+  const canComplete = canManage && def.completable && isApproved && !isMaterial && !isFinancial;
   const canEditRow = isOwner && isPending;
 
 
@@ -188,7 +207,7 @@ export function RequestDetailSheet({
 
       <EntitySheetBody>
         {/* Acciones arriba */}
-        {(canEditRow || canManage || canCancel || showLoanButton) && (
+        {(canEditRow || canManage || canCancel || showLoanButton || showExpenseButton) && (
           <div className="flex flex-wrap gap-2">
             {canEditRow ? (
               <Button type="button" variant="outline" size="sm" onClick={onEdit}>
@@ -214,6 +233,11 @@ export function RequestDetailSheet({
                 onClick={() => setLoanOpen(true)}
               >
                 <PackageCheck className="mr-2 h-4 w-4" /> Generar préstamo
+              </Button>
+            ) : null}
+            {showExpenseButton ? (
+              <Button type="button" size="sm" className="glow-primary" onClick={() => setExpenseOpen(true)}>
+                <Receipt className="mr-2 h-4 w-4" /> Registrar gasto
               </Button>
             ) : null}
             {canComplete ? (
@@ -389,6 +413,20 @@ export function RequestDetailSheet({
             </p>
           </div>
         ) : null}
+        {linkedExpense ? (
+          <div className="glass space-y-1 p-3 text-sm">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Gasto registrado</p>
+            <p className="text-foreground">
+              {linkedExpense.concept} · {formatExpenseMoney(linkedExpense.amount, linkedExpense.currency)}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {linkedExpense.payment_status === "pagado" ? "Pagado" : "Pendiente de pago"}
+              {linkedExpense.supplier?.name || linkedExpense.supplier_name
+                ? ` · ${linkedExpense.supplier?.name ?? linkedExpense.supplier_name}`
+                : ""}
+            </p>
+          </div>
+        ) : null}
       </EntitySheetBody>
     </EntitySheet>
 
@@ -408,6 +446,29 @@ export function RequestDetailSheet({
             notes: d.notes,
             teamId: d.team_id,
             expectedReturnAt: d.expected_return_at,
+          };
+        })()}
+      />
+    ) : null}
+
+    {isFinancial && canCreateExpense ? (
+      <ExpenseFormDialog
+        open={expenseOpen}
+        onOpenChange={setExpenseOpen}
+        clubId={clubId}
+        userId={userId}
+        requestId={request.id}
+        initial={(() => {
+          const d = expenseDraftFromRequest(request as any);
+          return {
+            concept: d.concept,
+            amount: d.amount,
+            currency: d.currency,
+            category: d.category,
+            supplierName: d.supplierName,
+            expenseDate: d.expenseDate,
+            notes: d.notes,
+            requestPhotoPath: d.requestPhotoPath,
           };
         })()}
       />

@@ -307,6 +307,95 @@ export type Database = {
           },
         ]
       }
+      expenses: {
+        Row: {
+          amount: number
+          category: Database["public"]["Enums"]["expense_category"]
+          club_id: string
+          concept: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          expense_date: string
+          id: string
+          notes: string | null
+          paid_at: string | null
+          payment_status: Database["public"]["Enums"]["payment_status"]
+          receipt_path: string | null
+          request_id: string | null
+          supplier_id: string | null
+          supplier_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          category?: Database["public"]["Enums"]["expense_category"]
+          club_id: string
+          concept: string
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          expense_date?: string
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          payment_status?: Database["public"]["Enums"]["payment_status"]
+          receipt_path?: string | null
+          request_id?: string | null
+          supplier_id?: string | null
+          supplier_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          category?: Database["public"]["Enums"]["expense_category"]
+          club_id?: string
+          concept?: string
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          expense_date?: string
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          payment_status?: Database["public"]["Enums"]["payment_status"]
+          receipt_path?: string | null
+          request_id?: string | null
+          supplier_id?: string | null
+          supplier_name?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_items: {
         Row: {
           category: string | null
@@ -1162,6 +1251,60 @@ export type Database = {
           },
         ]
       }
+      suppliers: {
+        Row: {
+          club_id: string
+          contact: string | null
+          created_at: string
+          created_by: string | null
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          club_id: string
+          contact?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          club_id?: string
+          contact?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "suppliers_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "suppliers_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       task_assignees: {
         Row: {
           created_at: string
@@ -1391,6 +1534,24 @@ export type Database = {
         Args: { _request_id: string; _user_id: string }
         Returns: boolean
       }
+      expense_report: {
+        Args: { _club_id: string; _from: string; _to: string }
+        Returns: {
+          category: Database["public"]["Enums"]["expense_category"]
+          expense_count: number
+          paid_total: number
+          pending_total: number
+          total: number
+        }[]
+      }
+      expense_summary: {
+        Args: { _club_id: string }
+        Returns: {
+          month_total: number
+          pending_count: number
+          pending_total: number
+        }[]
+      }
       get_invitation_by_token: {
         Args: { _token: string }
         Returns: {
@@ -1518,6 +1679,15 @@ export type Database = {
         | "viaje"
         | "junta"
         | "evento_especial"
+      expense_category:
+        | "material"
+        | "servicios"
+        | "nomina"
+        | "viajes"
+        | "mantenimiento"
+        | "proveedores"
+        | "otro"
+      payment_status: "pendiente" | "pagado"
       request_status:
         | "pendiente"
         | "aprobada"
@@ -1682,6 +1852,16 @@ export const Constants = {
         "junta",
         "evento_especial",
       ],
+      expense_category: [
+        "material",
+        "servicios",
+        "nomina",
+        "viajes",
+        "mantenimiento",
+        "proveedores",
+        "otro",
+      ],
+      payment_status: ["pendiente", "pagado"],
       request_status: [
         "pendiente",
         "aprobada",
