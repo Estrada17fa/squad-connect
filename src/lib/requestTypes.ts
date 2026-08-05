@@ -89,7 +89,15 @@ export const REQUEST_TYPES: RequestTypeDef[] = [
         type: "date",
         required: true,
       },
+      {
+        key: "motivo",
+        label: "Motivo del préstamo",
+        type: "textarea",
+        placeholder: "p.ej. Gira a Hermosillo",
+      },
+      { key: "equipo_id", label: "Equipo", type: "team" },
     ],
+
   },
   {
     key: "compra",
