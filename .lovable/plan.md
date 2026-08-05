@@ -29,15 +29,29 @@ Base reutilizable por todos los módulos: una sola tabla, triggers en el servido
 
 Los textos van en español y reutilizan el título/resumen ya guardado en cada registro (ej. "Tu solicitud de Balones ×5 fue aprobada", "Se te asignó la tarea: Preparar utilería").
 
-**Préstamos por vencer**: requiere ejecución programada. Se deja lista una función `notify_due_loans()` (evita duplicados por préstamo y día) que puede correr diariamente; queda documentada y activable, sin depender de ella para el resto del sistema.
+**Préstamos por vencer — respuesta al punto 1: se hace completo, con job programado.** No queda "preparado". Se crea la función `notify_due_loans()` (avisa cuando la fecha esperada de devolución cae dentro de las próximas 24 h o ya venció y el préstamo sigue abierto, con control anti-duplicados por préstamo y día) y se programa un job diario en la propia base de datos que la ejecuta a las 9:00. Es SQL puro, sin edge functions ni servicios externos, así que funciona desde el primer día.
 
-## Interfaz
+## Interfaz — respuesta al punto 2: sí, se construye en este mismo paso
+
+El centro de notificaciones in-app es parte de esta entrega, no de una posterior:
 
 - Campana en el header (junto al avatar) con badge de no leídas.
-- Panel lateral estilo glass: más nuevas arriba, no leídas resaltadas, agrupadas por fecha relativa.
-- Al tocar una notificación: se marca como leída y navega al objeto según módulo + id (solicitud, tarea, junta, préstamo), abriendo su detalle.
+- Panel lateral estilo glass: más nuevas arriba, no leídas resaltadas, agrupadas por fecha relativa, con estado vacío y de carga del sistema de diseño.
+- Al tocar una notificación: se marca como leída y navega al objeto relacionado.
 - Botón "Marcar todas como leídas".
-- Realtime: llegan al instante y el badge se actualiza solo.
+- Realtime: llegan al instante y el badge se actualiza solo, sin recargar.
+
+## Navegación al objeto — respuesta al punto 3: cobertura completa
+
+Cada notificación guarda `related_module` + `related_id`, y cada combinación tiene destino garantizado:
+
+- Solicitud → `/m/solicitudes` con su detalle abierto.
+- Tarea → `/m/coordinacion_interna` con el detalle de la tarea abierto.
+- Junta → `/m/coordinacion_interna` con el detalle de la junta abierto.
+- Préstamo → `/m/inventario` con el detalle del préstamo abierto.
+
+Regla de diseño: ninguna notificación se crea sin un destino válido. Si el usuario ya no tiene acceso a ese módulo o el objeto fue borrado, se marca como leída y se muestra un aviso claro en lugar de dejar un tap muerto.
+
 
 ## Notas técnicas
 
