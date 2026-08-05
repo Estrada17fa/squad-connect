@@ -62,6 +62,11 @@ Trigger AFTER INSERT en `trip_travelers` → `notify_users(club, [user], 'viaje_
 - Home: tarjeta de Viajes con el próximo viaje del equipo activo donde el usuario está convocado (destino + fecha de salida).
 - `?open=<trip_id>` abre el detalle (mismo patrón que los otros módulos).
 
+## Dónde vive Viajes
+
+- **Coordinación → Viajes** (esta parte 1): gestión completa — crear/editar viaje y convocatoria. Es lo único que se construye ahora.
+- **Agenda → pestaña "Viajes"** (prompt posterior): consulta de solo lectura del viaje ya planeado. No se construye todavía. Para dejarlo encaminado, `TripDetailSheet` recibe una prop `readOnly` y no asume la ruta de Coordinación: sin permisos de editor no renderiza ninguna acción, de modo que el mismo componente sirva luego en Agenda.
+
 ## Notas técnicas
 
 - Mapeo de estado a `StatusBadge`: planeacion → info, confirmado → approved, en_curso → pending, completado → info.
