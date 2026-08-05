@@ -19,13 +19,27 @@ import { InventoryItemPicker } from "@/components/solicitudes/InventoryItemPicke
 import { useClubTeams, type InventoryCatalogItem } from "@/hooks/useInventory";
 import { cn } from "@/lib/utils";
 
+/** Valores iniciales opcionales (pre-llenado desde una solicitud de material). */
+export interface LoanInitialValues {
+  item?: InventoryCatalogItem | null;
+  itemId?: string | null;
+  quantity?: number | null;
+  borrowerUserId?: string | null;
+  notes?: string | null;
+  teamId?: string | null;
+  expectedReturnAt?: string | null;
+}
+
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   clubId: string;
   userId: string;
-  /** Artículo preseleccionado (desde el catálogo). */
-  presetItem?: InventoryCatalogItem | null;
+  /** Pre-llenado: desde el catálogo o desde una solicitud aprobada. */
+  initial?: LoanInitialValues | null;
+  /** Solicitud de material que origina el préstamo (queda ligada y se completa). */
+  requestId?: string | null;
+  onRegistered?: () => void;
 }
 
 /** Miembros del club (cualquier perfil, incluidos jugadores). */
@@ -45,10 +59,19 @@ function useClubMembers(clubId: string) {
   });
 }
 
-export function LoanFormDialog({ open, onOpenChange, clubId, userId, presetItem }: Props) {
+export function LoanFormDialog({
+  open,
+  onOpenChange,
+  clubId,
+  userId,
+  initial,
+  requestId,
+  onRegistered,
+}: Props) {
   const qc = useQueryClient();
   const membersQ = useClubMembers(clubId);
   const teamsQ = useClubTeams(clubId);
+  const catalogQ = useInventoryCatalog(clubId);
 
   const [item, setItem] = React.useState<InventoryCatalogItem | null>(null);
   const [quantity, setQuantity] = React.useState("1");
@@ -58,16 +81,20 @@ export function LoanFormDialog({ open, onOpenChange, clubId, userId, presetItem 
   const [teamId, setTeamId] = React.useState<string>("");
   const [expected, setExpected] = React.useState("");
 
+  const catalog = catalogQ.data;
+
   React.useEffect(() => {
     if (!open) return;
-    setItem(presetItem ?? null);
-    setQuantity("1");
-    setBorrower(null);
+    const fromCatalog =
+      initial?.item ?? (initial?.itemId ? (catalog ?? []).find((i) => i.id === initial.itemId) ?? null : null);
+    setItem(fromCatalog ?? null);
+    setQuantity(initial?.quantity ? String(initial.quantity) : "1");
+    setBorrower(initial?.borrowerUserId ?? null);
     setSearch("");
-    setNotes("");
-    setTeamId("");
-    setExpected("");
-  }, [open, presetItem]);
+    setNotes(initial?.notes ?? "");
+    setTeamId(initial?.teamId ?? "");
+    setExpected(initial?.expectedReturnAt ? toLocalInputValue(initial.expectedReturnAt) : "");
+  }, [open, initial, catalog]);
 
   const available = item?.available_quantity ?? 0;
   const qtyN = Number(quantity);
@@ -78,27 +105,48 @@ export function LoanFormDialog({ open, onOpenChange, clubId, userId, presetItem 
       if (!item) throw new Error("Elige un artículo");
       if (!borrower) throw new Error("Elige a quién se presta");
       if (qtyInvalid) throw new Error(`La cantidad debe estar entre 1 y ${available}`);
-      const { error } = await supabase.from("inventory_loans").insert({
-        club_id: clubId,
-        item_id: item.id,
-        borrower_user_id: borrower,
-        team_id: teamId || null,
-        quantity: Math.round(qtyN),
-        returned_quantity: 0,
-        notes: notes.trim() || null,
-        expected_return_at: expected ? fromLocalInputValue(expected) : null,
-        created_by: userId,
-      });
+      const { data, error } = await supabase
+        .from("inventory_loans")
+        .insert({
+          club_id: clubId,
+          item_id: item.id,
+          borrower_user_id: borrower,
+          team_id: teamId || null,
+          request_id: requestId ?? null,
+          quantity: Math.round(qtyN),
+          returned_quantity: 0,
+          notes: notes.trim() || null,
+          expected_return_at: expected ? fromLocalInputValue(expected) : null,
+          created_by: userId,
+        })
+        .select("id")
+        .single();
       if (error) throw error;
+
+      // Solicitud origen: queda ligada al préstamo y pasa a completada.
+      if (requestId) {
+        const { error: reqErr } = await supabase
+          .from("requests")
+          .update({ related_loan_id: data.id, status: "completada" as const })
+          .eq("id", requestId);
+        if (reqErr) throw reqErr;
+      }
     },
     onSuccess: () => {
-      toast.success("Préstamo registrado");
+      toast.success(requestId ? "Préstamo registrado y solicitud completada" : "Préstamo registrado");
       qc.invalidateQueries({ queryKey: ["inventory-loans", clubId] });
       qc.invalidateQueries({ queryKey: ["inventory-catalog", clubId] });
+      if (requestId) {
+        qc.invalidateQueries({ queryKey: ["requests", clubId] });
+        qc.invalidateQueries({ queryKey: ["request-loan", requestId] });
+        qc.invalidateQueries({ queryKey: ["request-history", requestId] });
+      }
+      onRegistered?.();
       onOpenChange(false);
     },
     onError: (e: any) => toast.error(e.message ?? "No se pudo registrar el préstamo"),
   });
+
 
   const members = (membersQ.data ?? []).filter((m) =>
     (m.full_name ?? m.email ?? "").toLowerCase().includes(search.toLowerCase()),
