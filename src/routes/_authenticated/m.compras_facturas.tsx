@@ -512,7 +512,6 @@ function ExpenseSupplierSheetShell({
 }) {
   return (
 
-  return (
     <EntitySheet open={!!supplier} onOpenChange={onOpenChange}>
       <EntitySheetHeader>
         <EntitySheetTitle>{supplier?.name ?? "Proveedor"}</EntitySheetTitle>
