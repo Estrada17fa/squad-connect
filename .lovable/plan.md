@@ -26,12 +26,12 @@ Nueva página `/m/inventario` con las pestañas de módulo existentes y dos sub-
 - Indicador ámbar de stock bajo cuando disponible ≤ mínimo.
 - Crear / editar / eliminar artículo (solo editor) en un diálogo: nombre, categoría, unidad, descripción, cantidad total, stock mínimo y **foto** (subida al bucket privado, con vista previa y opción de quitarla).
 
-### Préstamos
-- Dos secciones: Activos y Devueltos, con los vencidos resaltados.
-- Cada préstamo muestra todo lo capturado: artículo con miniatura, cantidad (y saldo pendiente si hubo devolución parcial), a quién se prestó (nombre + avatar), motivo, equipo, fecha de préstamo, fecha esperada de devolución y estado.
-- Registrar préstamo (editor): artículo (solo con disponibilidad > 0), cantidad validada contra lo disponible, miembro con buscador, motivo opcional, equipo opcional y fecha esperada opcional.
-- Registrar devolución (editor): total o parcial; la disponibilidad sube solo por lo devuelto y el préstamo se cierra al completarse.
-- Varios préstamos activos del mismo artículo conviven sin problema.
+### Préstamos (confirmado punto por punto)
+1. **Registrar préstamo (solo editor)**: artículo elegible solo si su disponibilidad calculada es mayor a cero; cantidad validada contra lo disponible en la interfaz y también en el servidor (el disparador existente rechaza excesos); a quién se presta con buscador de miembros; motivo opcional (se guarda en el campo de notas); equipo opcional; fecha esperada de devolución opcional. Al guardarlo, la disponibilidad baja sola porque se recalcula desde `inventory_catalog`.
+2. **Devolución total o parcial (solo editor)**: se captura cuánto regresa (por ejemplo 18 de 20); solo esa cantidad vuelve a estar disponible y el préstamo conserva un **saldo pendiente visible** hasta completarse. El disparador existente cierra o reabre el préstamo según lo devuelto.
+3. **Listas separadas Activos / Devueltos**, con los vencidos (fecha esperada pasada y sin devolver) resaltados en rojo. Cada préstamo muestra **toda** su información capturada: artículo con miniatura, cantidad y saldo, a quién se prestó (nombre + avatar), motivo, equipo, fecha de registro, fecha esperada, fecha real de devolución y estado. Nada queda oculto; el detalle lateral repite todo con más espacio.
+4. **Varios préstamos activos simultáneos** del mismo artículo conviven sin problema; la disponibilidad los descuenta todos.
+
 
 ### FAB y Home
 - El botón (+) crea artículo o registra préstamo según la sub-vista activa; oculto para quien solo tiene lectura.
