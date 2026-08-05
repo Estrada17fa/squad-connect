@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Bell, BellOff, CheckCheck } from "lucide-react";
+import { Bell, BellOff, CheckCheck, Megaphone } from "lucide-react";
 import { toast } from "sonner";
 import {
   Sheet,
@@ -120,9 +120,16 @@ export function NotificationPanel({
                           {n.body ? (
                             <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{n.body}</p>
                           ) : null}
-                          <p className="mt-1 text-[11px] uppercase tracking-wide text-muted-foreground">
-                            {relativeTime(n.created_at)}
-                          </p>
+                          <div className="mt-1 flex items-center gap-2">
+                            <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                              {relativeTime(n.created_at)}
+                            </p>
+                            {n.audience === "broadcast" ? (
+                              <span className="inline-flex items-center gap-1 rounded-full border border-border/60 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+                                <Megaphone className="h-3 w-3" /> General
+                              </span>
+                            ) : null}
+                          </div>
                         </div>
                       </div>
                     </button>
