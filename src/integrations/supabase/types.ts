@@ -581,6 +581,60 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          body: string | null
+          club_id: string
+          created_at: string
+          id: string
+          read_at: string | null
+          related_id: string | null
+          related_module: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          club_id: string
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          related_id?: string | null
+          related_module?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          club_id?: string
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          related_id?: string | null
+          related_module?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       player_profiles: {
         Row: {
           availability_status: Database["public"]["Enums"]["availability_status"]
@@ -717,6 +771,38 @@ export type Database = {
             columns: ["club_id"]
             isOneToOne: false
             referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      push_subscriptions: {
+        Row: {
+          created_at: string
+          id: string
+          platform: string
+          token: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          platform: string
+          token: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          platform?: string
+          token?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1362,6 +1448,23 @@ export type Database = {
       }
       is_player_only: { Args: { _user_id: string }; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      notifications_push_hook: {
+        Args: { _notification_id: string }
+        Returns: undefined
+      }
+      notify_due_loans: { Args: never; Returns: undefined }
+      notify_users: {
+        Args: {
+          _body: string
+          _club_id: string
+          _related_id: string
+          _related_module: string
+          _title: string
+          _type: string
+          _user_ids: string[]
+        }
+        Returns: undefined
+      }
       request_approver_module: {
         Args: { _type: Database["public"]["Enums"]["request_type"] }
         Returns: string

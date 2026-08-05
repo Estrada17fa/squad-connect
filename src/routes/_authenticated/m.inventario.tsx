@@ -1,5 +1,5 @@
 import * as React from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Plus, Package, Search, AlertTriangle } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { ModuleTabs } from "@/components/squad/ModuleTabs";
@@ -32,6 +32,9 @@ import { LoanDetailSheet } from "@/components/inventario/LoanDetailSheet";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/m/inventario")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    open: typeof search.open === "string" ? search.open : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Squad — Inventario" },
@@ -92,6 +95,20 @@ function InventarioPage() {
   const loans = loansQ.data ?? [];
   const active = loans.filter((l) => !l.returned_at);
   const returned = loans.filter((l) => !!l.returned_at);
+
+  // Deep-link desde el centro de notificaciones: /m/inventario?open=<loanId>
+  const { open: openParam } = Route.useSearch();
+  const navigate = useNavigate();
+  React.useEffect(() => {
+    if (!openParam) return;
+    const loan = loans.find((l) => l.id === openParam);
+    if (!loan) return;
+    setView("prestamos");
+    setDetailLoan(loan);
+    navigate({ to: "/m/inventario", search: {}, replace: true });
+  }, [openParam, loans, navigate]);
+
+
 
   const minById = React.useMemo(() => {
     const m: Record<string, number> = {};

@@ -9,6 +9,7 @@ import { MODULES, MODULE_MAP, moduleFromPath, type ModuleKey } from "@/lib/modul
 import { resolvePagesForUser, inferBaseRole, type BaseRole, type ResolvedPage } from "@/lib/rolePages";
 import { LoadingState } from "./LoadingState";
 import { FAB } from "./FAB";
+import { NotificationBell } from "@/components/notificaciones/NotificationBell";
 import { cn } from "@/lib/utils";
 import squadLogo from "@/assets/squad-logo.png.asset.json";
 
@@ -178,8 +179,10 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
           activeTeam={activeTeam}
           setActiveTeamId={setActiveTeamId}
           userName={data.profile?.full_name ?? user.email ?? ""}
+          userId={user.id}
           isSuperAdmin={data.isSuperAdmin}
           viewsAllClub={viewsAllClub}
+          canOpenModule={(key) => isModuleAccessible(key as ModuleKey)}
           onSignOut={signOut}
         />
         <DesktopNav pages={visiblePages} />
@@ -199,8 +202,10 @@ function Header({
   activeTeam,
   setActiveTeamId,
   userName,
+  userId,
   isSuperAdmin,
   viewsAllClub,
+  canOpenModule,
   onSignOut,
 }: {
   clubName: string | null;
@@ -208,8 +213,10 @@ function Header({
   activeTeam: TeamOption | null;
   setActiveTeamId: (id: string | null) => void;
   userName: string;
+  userId: string;
   isSuperAdmin: boolean;
   viewsAllClub: boolean;
+  canOpenModule: (key: string) => boolean;
   onSignOut: () => void;
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -259,6 +266,7 @@ function Header({
           ) : showClubName && clubName ? (
             <span className="hidden text-sm text-muted-foreground sm:inline">{clubName}</span>
           ) : null}
+          <NotificationBell userId={userId} canOpenModule={canOpenModule} />
           <DropdownMenu>
             <DropdownMenuTrigger className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-sm font-medium text-foreground hover:bg-white/10">
               {(userName || "?").slice(0, 1).toUpperCase()}
