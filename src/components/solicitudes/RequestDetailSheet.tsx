@@ -136,6 +136,9 @@ export function RequestDetailSheet({
       qc.invalidateQueries({ queryKey: ["requests", clubId] });
       qc.invalidateQueries({ queryKey: ["request-history", request!.id] });
       setNote("");
+      // Aprobar material abre de inmediato el formulario de préstamo pre-llenado.
+      if (next === "aprobada" && isMaterial && canCreateLoan && !linkedLoan) setLoanOpen(true);
+
     },
     onError: (e: any) => toast.error(e.message ?? "No se pudo actualizar"),
   });
