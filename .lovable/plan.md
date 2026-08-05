@@ -30,14 +30,14 @@ Chip **Compras y facturas** dentro de Coordinación, con tres sub-vistas:
 
 - **Gastos**: lista con tarjeta estándar (concepto, monto, proveedor, categoría, fecha, badge de pago — pendiente ámbar, pagado azul). Filtros por categoría, estado de pago y rango de fecha, más buscador por concepto/proveedor. FAB (+) registra gasto. Detalle en panel lateral con todo lo capturado, comprobante visible/descargable, acción "Marcar como pagado" (guarda la fecha), editar y eliminar para editores.
 - **Proveedores**: lista simple, crear/editar/eliminar (editor). Al abrir uno, se ven sus gastos asociados y el total.
-- **Reportes**: selector de periodo (este mes / mes pasado / rango custom), total gastado, desglose por categoría con barras simples, y total pendiente vs pagado.
+- **Reportes**: selector de periodo (este mes / mes pasado / rango custom), total gastado, desglose por categoría con barras simples, y total pendiente vs pagado. Los totales se calculan **en la base de datos** con una función SQL agregada (`expense_report(club_id, desde, hasta)`) que devuelve ya sumados el total del periodo, el desglose por categoría y pendiente vs pagado; el cliente nunca descarga todos los gastos para sumarlos.
 
 En el formulario de gasto el proveedor es opcional: se elige del catálogo o se escribe libre, con casilla "Guardar en catálogo" cuando es nuevo.
 
-**Home**: tarjeta de Compras y facturas para quien tenga acceso, con total pendiente de pago y gasto del mes.
+**Home**: tarjeta de Compras y facturas para quien tenga acceso, con total pendiente de pago y gasto del mes (también con totales agregados en la base, sin traer la lista completa).
 
 ## Detalles técnicos
 
-- Migración: enums `expense_category`, `payment_status`; tablas con GRANT + RLS (lectura por club y acceso a módulo, escritura vía `has_module_editor_any(auth.uid(),'compras_facturas')`); trigger `set_updated_at`; políticas de storage para `expense-receipts`; ampliación de `requests_status_guard`; trigger de notificación al insertar un gasto con `request_id`.
+- Migración: enums `expense_category`, `payment_status`; tablas con GRANT + RLS (lectura por club y acceso a módulo, escritura vía `has_module_editor_any(auth.uid(),'compras_facturas')`); trigger `set_updated_at`; políticas de storage para `expense-receipts`; ampliación de `requests_status_guard`; trigger de notificación al insertar un gasto con `request_id`; función `expense_report` (security definer, valida acceso al club) que agrega totales por periodo, categoría y estado de pago.
 - Frontend: `src/hooks/useExpenses.ts` (gastos, proveedores, realtime como en inventario), `src/lib/expenses.ts` (categorías, iconos, formato de moneda), componentes `ExpenseFormDialog`, `ExpenseDetailSheet`, `SupplierFormDialog`, `SupplierDetailSheet`, y ruta `src/routes/_authenticated/m.compras_facturas.tsx` con soporte de deep-link `?open=`.
 - Reutiliza `StandardCard`, `StatusBadge`, `EntitySheet`, `ModuleTabs`, `PageHeader`, `EmptyState` y el botón verde de acción ya estandarizado.
