@@ -86,13 +86,32 @@ function Home() {
     },
   });
 
+  const inventoryQ = useQuery({
+    queryKey: ["home-inventory", clubId ?? "none"],
+    enabled: !!clubId && accessibleModules.includes("inventario"),
+    queryFn: async () => {
+      const [loansRes, catalogRes, itemsRes] = await Promise.all([
+        supabase.from("inventory_loans").select("id").eq("club_id", clubId!).is("returned_at", null),
+        (supabase as any).rpc("inventory_catalog", { _club_id: clubId }),
+        supabase.from("inventory_items").select("id, min_quantity").eq("club_id", clubId!),
+      ]);
+      const mins: Record<string, number> = {};
+      for (const i of itemsRes.data ?? []) mins[i.id] = i.min_quantity;
+      const low = ((catalogRes.data ?? []) as any[]).filter(
+        (i) => i.available_quantity <= (mins[i.id] ?? 0),
+      ).length;
+      return { activeLoans: (loansRes.data ?? []).length, low };
+    },
+  });
+
   const others = accessibleModules.filter(
-    (k) => k !== "agenda" && k !== "mes" && k !== "plantel" && k !== "coordinacion_interna",
+    (k) => k !== "agenda" && k !== "mes" && k !== "plantel" && k !== "coordinacion_interna" && k !== "inventario",
   );
   const hasCal = accessibleModules.includes("agenda") || accessibleModules.includes("mes");
   const calTarget: "agenda" | "mes" = accessibleModules.includes("agenda") ? "agenda" : "mes";
   const hasPlantel = accessibleModules.includes("plantel");
   const hasCoord = accessibleModules.includes("coordinacion_interna");
+  const hasInv = accessibleModules.includes("inventario");
 
   return (
     <div className="space-y-6">
