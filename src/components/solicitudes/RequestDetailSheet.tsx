@@ -96,11 +96,22 @@ export function RequestDetailSheet({
     open && request ? request.type : null,
   );
   const [note, setNote] = React.useState("");
+  const [loanOpen, setLoanOpen] = React.useState(false);
 
+  // El préstamo es una acción de Inventario: manda el permiso del módulo 'inventario'.
+  const { permissions, isSuperAdmin } = useApp();
+  const invLevel = permissions.inventario;
+  const canCreateLoan = isSuperAdmin || invLevel === "editor" || invLevel === "approver";
+
+  const isMaterial = request?.type === "material";
+  const loanQ = useRequestLoan(open && request && isMaterial ? request.id : null);
+  const linkedLoan = loanQ.data ?? null;
 
   React.useEffect(() => {
     if (open) setNote("");
+    if (!open) setLoanOpen(false);
   }, [open, request?.id]);
+
 
   const setStatus = useMutation({
     mutationFn: async (next: RequestStatus) => {
