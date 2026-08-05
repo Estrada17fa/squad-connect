@@ -186,7 +186,7 @@ export function RequestDetailSheet({
 
       <EntitySheetBody>
         {/* Acciones arriba */}
-        {(canEditRow || canManage || canCancel) && (
+        {(canEditRow || canManage || canCancel || showLoanButton) && (
           <div className="flex flex-wrap gap-2">
             {canEditRow ? (
               <Button type="button" variant="outline" size="sm" onClick={onEdit}>
