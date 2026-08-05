@@ -13,6 +13,8 @@ export interface NotificationRow {
   related_id: string | null;
   read_at: string | null;
   created_at: string;
+  /** "direct" = aviso personal, "broadcast" = comunicado general. */
+  audience: string;
 }
 
 const KEY = (userId: string) => ["notifications", userId] as const;
@@ -27,7 +29,7 @@ export function useNotifications(userId: string | null | undefined) {
     queryFn: async (): Promise<NotificationRow[]> => {
       const { data, error } = await supabase
         .from("notifications")
-        .select("id, club_id, user_id, type, title, body, related_module, related_id, read_at, created_at")
+        .select("id, club_id, user_id, type, title, body, related_module, related_id, read_at, created_at, audience")
         .order("created_at", { ascending: false })
         .limit(100);
       if (error) throw error;

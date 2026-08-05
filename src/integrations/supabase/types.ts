@@ -583,6 +583,7 @@ export type Database = {
       }
       notifications: {
         Row: {
+          audience: string
           body: string | null
           club_id: string
           created_at: string
@@ -595,6 +596,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          audience?: string
           body?: string | null
           club_id: string
           created_at?: string
@@ -607,6 +609,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          audience?: string
           body?: string | null
           club_id?: string
           created_at?: string
@@ -1453,6 +1456,19 @@ export type Database = {
         Returns: undefined
       }
       notify_due_loans: { Args: never; Returns: undefined }
+      notify_group: {
+        Args: {
+          _body: string
+          _club_id: string
+          _related_id: string
+          _related_module: string
+          _scope: string
+          _scope_id: string
+          _title: string
+          _type: string
+        }
+        Returns: number
+      }
       notify_users: {
         Args: {
           _body: string
