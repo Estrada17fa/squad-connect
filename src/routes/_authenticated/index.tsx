@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Calendar, Users, MessagesSquare, Package } from "lucide-react";
+import { Calendar, Users, MessagesSquare, Package, Receipt } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { StandardCard } from "@/components/squad/StandardCard";
 import { EmptyState } from "@/components/squad/EmptyState";
@@ -9,6 +9,8 @@ import { MODULE_MAP } from "@/lib/modules";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDateTime } from "@/lib/calendar-utils";
 import { EVENT_TYPE_MAP } from "@/lib/eventTypes";
+import { useExpenseSummary } from "@/hooks/useExpenses";
+import { formatMoney } from "@/lib/expenses";
 
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
@@ -104,8 +106,17 @@ function Home() {
     },
   });
 
+  const hasCompras = accessibleModules.includes("compras_facturas");
+  const expensesQ = useExpenseSummary(clubId, hasCompras);
+
   const others = accessibleModules.filter(
-    (k) => k !== "agenda" && k !== "mes" && k !== "plantel" && k !== "coordinacion_interna" && k !== "inventario",
+    (k) =>
+      k !== "agenda" &&
+      k !== "mes" &&
+      k !== "plantel" &&
+      k !== "coordinacion_interna" &&
+      k !== "inventario" &&
+      k !== "compras_facturas",
   );
   const hasCal = accessibleModules.includes("agenda") || accessibleModules.includes("mes");
   const calTarget: "agenda" | "mes" = accessibleModules.includes("agenda") ? "agenda" : "mes";
@@ -214,6 +225,35 @@ function Home() {
                     )
                   ) : (
                     "Material deportivo y equipamiento."
+                  )}
+                </StandardCard>
+              </div>
+            ) : null}
+
+            {hasCompras ? (
+              <div className="animate-card-in" style={{ animationDelay: "160ms" }}>
+                <StandardCard
+                  interactive
+                  onClick={() => navigate({ to: "/m/$module", params: { module: "compras_facturas" } })}
+                  icon={Receipt}
+                  title="Compras y facturas"
+                  subtitle={
+                    expensesQ.data
+                      ? `Gasto del mes: ${formatMoney(expensesQ.data.month_total)}`
+                      : "Cargando…"
+                  }
+                >
+                  {expensesQ.data ? (
+                    expensesQ.data.pending_count > 0 ? (
+                      <span className="text-amber-400">
+                        {formatMoney(expensesQ.data.pending_total)} pendiente de pago ·{" "}
+                        {expensesQ.data.pending_count} gasto{expensesQ.data.pending_count === 1 ? "" : "s"}
+                      </span>
+                    ) : (
+                      "Todo pagado, sin adeudos."
+                    )
+                  ) : (
+                    "Gastos, comprobantes y proveedores."
                   )}
                 </StandardCard>
               </div>
