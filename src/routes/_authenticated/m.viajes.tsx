@@ -39,7 +39,7 @@ export const Route = createFileRoute("/_authenticated/m/viajes")({
 function ViajesPage() {
   const { permissions, isSuperAdmin, accessibleModules, profile, user, activeTeam } = useApp();
   const clubId = profile?.club_id ?? null;
-  const teamId = activeTeam?.teamId ?? null;
+  const teamId = activeTeam?.id ?? null;
   const canAccess = isSuperAdmin || accessibleModules.includes("viajes");
   const level = permissions.viajes;
   const canEdit = isSuperAdmin || level === "editor" || level === "approver";
