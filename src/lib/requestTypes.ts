@@ -33,10 +33,13 @@ export type FieldType =
   | "select"
   /** Selector de artículo del catálogo de inventario (guarda nombre + details.item_id). */
   | "item"
+  /** Selector de equipo del club (guarda el id del equipo). */
+  | "team"
   /** Link de referencia (validado como URL). */
   | "url"
   /** Imagen de referencia subida al bucket privado request-attachments. */
   | "image";
+
 
 export interface RequestFieldDef {
   key: string;
@@ -86,7 +89,15 @@ export const REQUEST_TYPES: RequestTypeDef[] = [
         type: "date",
         required: true,
       },
+      {
+        key: "motivo",
+        label: "Motivo del préstamo",
+        type: "textarea",
+        placeholder: "p.ej. Gira a Hermosillo",
+      },
+      { key: "equipo_id", label: "Equipo", type: "team" },
     ],
+
   },
   {
     key: "compra",
@@ -319,8 +330,11 @@ export function requestSummary(input: {
     case "material": {
       const cantidad = num(d.cantidad);
       summary = joinParts([str(d.articulo), cantidad !== null ? `×${cantidad}` : ""], " ");
+      // Si no hay artículo ni cantidad, el motivo identifica la solicitud.
+      if (!summary) summary = firstWords(d.motivo);
       break;
     }
+
     case "compra":
       summary = truncate(str(d.que_comprar));
       break;
@@ -353,7 +367,9 @@ export function requestSummary(input: {
 
 /**
  * Borrador de préstamo a partir de una solicitud de material aprobada:
- * hereda artículo, cantidad y la fecha comprometida de devolución.
+ * hereda artículo, cantidad, solicitante, fecha comprometida, equipo y motivo.
+ * Es solo el pre-llenado: el editor puede ajustar cualquier valor antes de
+ * registrar, y lo que se guarda es lo realmente entregado.
  */
 export function loanDraftFromRequest(req: {
   id: string;
@@ -369,6 +385,9 @@ export function loanDraftFromRequest(req: {
     item_id: (d.item_id as string) ?? null,
     borrower_user_id: req.requester_id,
     quantity: Number(d.cantidad ?? 1),
+    notes: str(d.motivo) || "Generado desde una solicitud de material",
+    team_id: (d.equipo_id as string) || null,
     expected_return_at: fecha && !Number.isNaN(fecha.getTime()) ? fecha.toISOString() : null,
   };
 }
+

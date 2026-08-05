@@ -13,8 +13,19 @@ import {
   Link as LinkIcon,
 } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { useInventoryCatalog, useInventoryThumbnails, useRequestAttachmentUrl } from "@/hooks/useInventory";
+import {
+  useClubTeams,
+  useInventoryCatalog,
+  useInventoryThumbnails,
+  useRequestAttachmentUrl,
+  useRequestLoan,
+  loanOutstanding,
+} from "@/hooks/useInventory";
+import { LoanFormDialog } from "@/components/inventario/LoanFormDialog";
+import { useApp } from "@/components/squad/AppLayout";
+import { loanDraftFromRequest } from "@/lib/requestTypes";
 import { categoryIcon } from "./InventoryItemPicker";
+
 import {
   EntitySheet,
   EntitySheetBody,
@@ -85,11 +96,24 @@ export function RequestDetailSheet({
     open && request ? request.type : null,
   );
   const [note, setNote] = React.useState("");
+  const [loanOpen, setLoanOpen] = React.useState(false);
+  const teamsQ = useClubTeams(open && request ? clubId : null);
 
+
+  // El préstamo es una acción de Inventario: manda el permiso del módulo 'inventario'.
+  const { permissions, isSuperAdmin } = useApp();
+  const invLevel = permissions.inventario;
+  const canCreateLoan = isSuperAdmin || invLevel === "editor" || invLevel === "approver";
+
+  const isMaterial = request?.type === "material";
+  const loanQ = useRequestLoan(open && request && isMaterial ? request.id : null);
+  const linkedLoan = loanQ.data ?? null;
 
   React.useEffect(() => {
     if (open) setNote("");
+    if (!open) setLoanOpen(false);
   }, [open, request?.id]);
+
 
   const setStatus = useMutation({
     mutationFn: async (next: RequestStatus) => {
@@ -114,6 +138,9 @@ export function RequestDetailSheet({
       qc.invalidateQueries({ queryKey: ["requests", clubId] });
       qc.invalidateQueries({ queryKey: ["request-history", request!.id] });
       setNote("");
+      // Aprobar material abre de inmediato el formulario de préstamo pre-llenado.
+      if (next === "aprobada" && isMaterial && canCreateLoan && !linkedLoan) setLoanOpen(true);
+
     },
     onError: (e: any) => toast.error(e.message ?? "No se pudo actualizar"),
   });
@@ -141,11 +168,17 @@ export function RequestDetailSheet({
   // Regla infranqueable: nadie decide su propia solicitud (también forzado en el servidor).
   const showDecision = canDecide && isPending && !isOwner;
   const canCancel = isOwner && isPending;
-  const canComplete = canManage && def.completable && request.status === "aprobada";
+  const isApproved = request.status === "aprobada";
+  // El material se completa registrando el préstamo real, no a mano.
+  const showLoanButton = isMaterial && isApproved && !linkedLoan && canCreateLoan;
+  const canComplete = canManage && def.completable && isApproved && !isMaterial;
   const canEditRow = isOwner && isPending;
 
+
   return (
+    <>
     <EntitySheet open={open} onOpenChange={onOpenChange}>
+
       <EntitySheetHeader>
         <EntitySheetTitle>{requestSummary(request)}</EntitySheetTitle>
         <EntitySheetDescription>
@@ -155,7 +188,7 @@ export function RequestDetailSheet({
 
       <EntitySheetBody>
         {/* Acciones arriba */}
-        {(canEditRow || canManage || canCancel) && (
+        {(canEditRow || canManage || canCancel || showLoanButton) && (
           <div className="flex flex-wrap gap-2">
             {canEditRow ? (
               <Button type="button" variant="outline" size="sm" onClick={onEdit}>
@@ -173,11 +206,22 @@ export function RequestDetailSheet({
                 <Ban className="mr-2 h-4 w-4" /> Cancelar solicitud
               </Button>
             ) : null}
+            {showLoanButton ? (
+              <Button
+                type="button"
+                size="sm"
+                className="glow-primary"
+                onClick={() => setLoanOpen(true)}
+              >
+                <PackageCheck className="mr-2 h-4 w-4" /> Generar préstamo
+              </Button>
+            ) : null}
             {canComplete ? (
               <Button type="button" size="sm" onClick={() => setStatus.mutate("completada")} disabled={setStatus.isPending}>
                 <PackageCheck className="mr-2 h-4 w-4" /> Marcar completada
               </Button>
             ) : null}
+
             {canManage ? (
               <Button
                 type="button"
@@ -235,10 +279,13 @@ export function RequestDetailSheet({
               <span className="text-right text-sm text-foreground">
                 {f.type === "item" ? (
                   <ItemValue name={request.details?.articulo} itemId={request.details?.item_id} clubId={clubId} />
+                ) : f.type === "team" ? (
+                  <>{teamsQ.data?.find((t) => t.id === request.details?.[f.key])?.name ?? "—"}</>
                 ) : f.type === "url" ? (
                   <LinkValue url={request.details?.[f.key]} />
                 ) : f.type === "image" ? (
                   <PhotoValue path={request.details?.[f.key]} />
+
                 ) : (
                   fieldDisplay(request.details?.[f.key], f.type, request.currency)
                 )}
@@ -324,9 +371,50 @@ export function RequestDetailSheet({
             </ol>
           )}
         </div>
+
+        {linkedLoan ? (
+          <div className="glass space-y-1 p-3 text-sm">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Préstamo generado</p>
+            <p className="text-foreground">
+              {linkedLoan.item?.name ?? "Artículo"} ×{linkedLoan.quantity}
+              {linkedLoan.team?.name ? ` · ${linkedLoan.team.name}` : ""}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {loanOutstanding(linkedLoan) > 0
+                ? `Pendiente de devolver: ${loanOutstanding(linkedLoan)}`
+                : "Devuelto por completo"}
+              {linkedLoan.expected_return_at
+                ? ` · Devolución: ${formatDateTime(linkedLoan.expected_return_at)}`
+                : ""}
+            </p>
+          </div>
+        ) : null}
       </EntitySheetBody>
     </EntitySheet>
+
+    {isMaterial && canCreateLoan ? (
+      <LoanFormDialog
+        open={loanOpen}
+        onOpenChange={setLoanOpen}
+        clubId={clubId}
+        userId={userId}
+        requestId={request.id}
+        initial={(() => {
+          const d = loanDraftFromRequest(request as any);
+          return {
+            itemId: d.item_id,
+            quantity: d.quantity,
+            borrowerUserId: d.borrower_user_id,
+            notes: d.notes,
+            teamId: d.team_id,
+            expectedReturnAt: d.expected_return_at,
+          };
+        })()}
+      />
+    ) : null}
+    </>
   );
+
 }
 
 /** Artículo del inventario: miniatura (o ícono de categoría) + nombre. */

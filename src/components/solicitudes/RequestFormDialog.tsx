@@ -25,7 +25,7 @@ import {
 } from "@/lib/requestTypes";
 import type { RequestRow } from "@/hooks/useRequests";
 import { InventoryItemPicker } from "./InventoryItemPicker";
-import { useRequestAttachmentUrl, type InventoryCatalogItem } from "@/hooks/useInventory";
+import { useClubTeams, useRequestAttachmentUrl, type InventoryCatalogItem } from "@/hooks/useInventory";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -54,6 +54,8 @@ export function RequestFormDialog({ open, onOpenChange, clubId, userId, type, re
   const isEdit = !!request;
   const def = REQUEST_TYPE_MAP[type];
   const qc = useQueryClient();
+  const teamsQ = useClubTeams(clubId);
+
 
   const [description, setDescription] = React.useState("");
   const [values, setValues] = React.useState<Record<string, string>>({});
@@ -191,7 +193,38 @@ export function RequestFormDialog({ open, onOpenChange, clubId, userId, type, re
                 itemName={values[f.key] ?? ""}
                 onChange={pickItem}
               />
+            ) : f.type === "team" ? (
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setField(f.key, "")}
+                  className={cn(
+                    "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                    !values[f.key]
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border/60 text-muted-foreground hover:bg-white/[0.04]",
+                  )}
+                >
+                  Sin equipo
+                </button>
+                {(teamsQ.data ?? []).map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setField(f.key, t.id)}
+                    className={cn(
+                      "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                      values[f.key] === t.id
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border/60 text-muted-foreground hover:bg-white/[0.04]",
+                    )}
+                  >
+                    {t.name}
+                  </button>
+                ))}
+              </div>
             ) : f.type === "image" ? (
+
               <PhotoField
                 file={photoFile}
                 path={photoPath}
