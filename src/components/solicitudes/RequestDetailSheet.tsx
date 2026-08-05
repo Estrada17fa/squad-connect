@@ -168,8 +168,12 @@ export function RequestDetailSheet({
   // Regla infranqueable: nadie decide su propia solicitud (también forzado en el servidor).
   const showDecision = canDecide && isPending && !isOwner;
   const canCancel = isOwner && isPending;
-  const canComplete = canManage && def.completable && request.status === "aprobada";
+  const isApproved = request.status === "aprobada";
+  // El material se completa registrando el préstamo real, no a mano.
+  const showLoanButton = isMaterial && isApproved && !linkedLoan && canCreateLoan;
+  const canComplete = canManage && def.completable && isApproved && !isMaterial;
   const canEditRow = isOwner && isPending;
+
 
   return (
     <EntitySheet open={open} onOpenChange={onOpenChange}>
