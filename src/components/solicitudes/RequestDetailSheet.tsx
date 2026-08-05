@@ -97,6 +97,8 @@ export function RequestDetailSheet({
   );
   const [note, setNote] = React.useState("");
   const [loanOpen, setLoanOpen] = React.useState(false);
+  const teamsQ = useClubTeams(open && request ? clubId : null);
+
 
   // El préstamo es una acción de Inventario: manda el permiso del módulo 'inventario'.
   const { permissions, isSuperAdmin } = useApp();
