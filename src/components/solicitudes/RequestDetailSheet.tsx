@@ -13,8 +13,19 @@ import {
   Link as LinkIcon,
 } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { useInventoryCatalog, useInventoryThumbnails, useRequestAttachmentUrl } from "@/hooks/useInventory";
+import {
+  useClubTeams,
+  useInventoryCatalog,
+  useInventoryThumbnails,
+  useRequestAttachmentUrl,
+  useRequestLoan,
+  loanOutstanding,
+} from "@/hooks/useInventory";
+import { LoanFormDialog } from "@/components/inventario/LoanFormDialog";
+import { useApp } from "@/components/squad/AppLayout";
+import { loanDraftFromRequest } from "@/lib/requestTypes";
 import { categoryIcon } from "./InventoryItemPicker";
+
 import {
   EntitySheet,
   EntitySheetBody,
