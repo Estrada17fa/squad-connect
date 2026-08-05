@@ -29,7 +29,7 @@ Base reutilizable por todos los módulos: una sola tabla, triggers en el servido
 
 Los textos van en español y reutilizan el título/resumen ya guardado en cada registro (ej. "Tu solicitud de Balones ×5 fue aprobada", "Se te asignó la tarea: Preparar utilería").
 
-**Préstamos por vencer**: requiere ejecución programada. Se deja lista una función `notify_due_loans()` (evita duplicados por préstamo y día) que puede correr diariamente; queda documentada y activable, sin depender de ella para el resto del sistema.
+**Préstamos por vencer — respuesta al punto 1: se hace completo, con job programado.** No queda "preparado". Se crea la función `notify_due_loans()` (avisa cuando la fecha esperada de devolución cae dentro de las próximas 24 h o ya venció y el préstamo sigue abierto, con control anti-duplicados por préstamo y día) y se programa un job diario en la propia base de datos que la ejecuta a las 9:00. Es SQL puro, sin edge functions ni servicios externos, así que funciona desde el primer día.
 
 ## Interfaz
 
