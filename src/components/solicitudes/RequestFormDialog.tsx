@@ -54,6 +54,8 @@ export function RequestFormDialog({ open, onOpenChange, clubId, userId, type, re
   const isEdit = !!request;
   const def = REQUEST_TYPE_MAP[type];
   const qc = useQueryClient();
+  const teamsQ = useClubTeams(clubId);
+
 
   const [description, setDescription] = React.useState("");
   const [values, setValues] = React.useState<Record<string, string>>({});
