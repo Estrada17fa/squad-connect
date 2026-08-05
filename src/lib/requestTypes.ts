@@ -367,7 +367,9 @@ export function requestSummary(input: {
 
 /**
  * Borrador de préstamo a partir de una solicitud de material aprobada:
- * hereda artículo, cantidad y la fecha comprometida de devolución.
+ * hereda artículo, cantidad, solicitante, fecha comprometida, equipo y motivo.
+ * Es solo el pre-llenado: el editor puede ajustar cualquier valor antes de
+ * registrar, y lo que se guarda es lo realmente entregado.
  */
 export function loanDraftFromRequest(req: {
   id: string;
@@ -383,6 +385,9 @@ export function loanDraftFromRequest(req: {
     item_id: (d.item_id as string) ?? null,
     borrower_user_id: req.requester_id,
     quantity: Number(d.cantidad ?? 1),
+    notes: str(d.motivo) || "Generado desde una solicitud de material",
+    team_id: (d.equipo_id as string) || null,
     expected_return_at: fecha && !Number.isNaN(fecha.getTime()) ? fecha.toISOString() : null,
   };
 }
+
