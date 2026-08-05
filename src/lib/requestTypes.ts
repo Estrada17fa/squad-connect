@@ -330,8 +330,11 @@ export function requestSummary(input: {
     case "material": {
       const cantidad = num(d.cantidad);
       summary = joinParts([str(d.articulo), cantidad !== null ? `×${cantidad}` : ""], " ");
+      // Si no hay artículo ni cantidad, el motivo identifica la solicitud.
+      if (!summary) summary = firstWords(d.motivo);
       break;
     }
+
     case "compra":
       summary = truncate(str(d.que_comprar));
       break;
