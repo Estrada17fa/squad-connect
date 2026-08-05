@@ -48,7 +48,7 @@ export const Route = createFileRoute("/_authenticated/m/compras_facturas")({
       },
     ],
   }),
-  component: ComprasPage;
+  component: ComprasPage,
 });
 
 type SubView = "gastos" | "proveedores" | "reportes";
