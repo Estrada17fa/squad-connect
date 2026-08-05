@@ -260,10 +260,13 @@ export function RequestDetailSheet({
               <span className="text-right text-sm text-foreground">
                 {f.type === "item" ? (
                   <ItemValue name={request.details?.articulo} itemId={request.details?.item_id} clubId={clubId} />
+                ) : f.type === "team" ? (
+                  <>{teamsQ.data?.find((t) => t.id === request.details?.[f.key])?.name ?? "—"}</>
                 ) : f.type === "url" ? (
                   <LinkValue url={request.details?.[f.key]} />
                 ) : f.type === "image" ? (
                   <PhotoValue path={request.details?.[f.key]} />
+
                 ) : (
                   fieldDisplay(request.details?.[f.key], f.type, request.currency)
                 )}
