@@ -34,7 +34,7 @@ Chip **Compras y facturas** dentro de Coordinación, con tres sub-vistas:
 
 En el formulario de gasto el proveedor es opcional: se elige del catálogo o se escribe libre, con casilla "Guardar en catálogo" cuando es nuevo.
 
-**Home**: tarjeta de Compras y facturas para quien tenga acceso, con total pendiente de pago y gasto del mes.
+**Home**: tarjeta de Compras y facturas para quien tenga acceso, con total pendiente de pago y gasto del mes (también con totales agregados en la base, sin traer la lista completa).
 
 ## Detalles técnicos
 
