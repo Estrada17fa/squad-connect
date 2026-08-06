@@ -49,7 +49,7 @@ Formularios cortos, cada uno en su archivo:
 - `FlightFormDialog.tsx`, `TransportFormDialog.tsx`, `HotelFormDialog.tsx`, `RoomFormDialog.tsx`, `MealFormDialog.tsx`, `LuggageFormDialog.tsx`, `BoardingPassDialog.tsx` (subida de archivo + asignación a pasajero + asiento)
 
 Compartidos:
-- `PassengerAssignDialog.tsx` — lista buscable de la convocatoria del viaje con selección múltiple y botón "Importar del otro tramo" (o de otra unidad/vuelo), reutilizado por vuelos, transportes y cuartos.
+- `PassengerAssignDialog.tsx` — lista buscable **exclusivamente de los convocados del viaje** (`trip_travelers`), nunca del equipo completo. Selección múltiple y botón "Importar del otro tramo" (o de otra unidad/vuelo), reutilizado por vuelos, transportes y cuartos. Si alguien no está convocado no aparece ni se puede asignar; el diálogo muestra un aviso con acceso directo a la convocatoria para agregarlo primero. Igual para los pases de abordar: solo se asignan a pasajeros del vuelo.
 - `PersonChips.tsx` — muestra avatares/nombres asignados de forma compacta.
 
 `TripDetailSheet.tsx` solo compone los bloques en orden: citatorio → transporte ida → vuelo ida → hotel (con rooming) → comidas → equipaje → vuelo regreso → transporte regreso. No crece con lógica de formularios.
