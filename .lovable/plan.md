@@ -32,6 +32,17 @@ Se elimina el "equipo activo" del header. Ningún módulo vuelve a pedir "selecc
 | `src/components/squad/ModuleTabs.tsx`, `src/lib/prefetch.ts` | Prefetch sin `teamId`: precarga en modo club. |
 | `src/hooks/useAccess.ts` | Se conserva `teamOptions` (ya calcula los equipos accesibles); sin cambios de consulta. |
 
+## Selector de equipo en los formularios: solo donde se puede editar
+
+- La lista de equipos del formulario NO es la de consulta: se calcula con los equipos donde el usuario tiene nivel `editor` (o superior) **en ese módulo**. Quien ve Primera y Sub-20 pero solo edita Sub-20, al crear un evento únicamente puede elegir Sub-20.
+- Si queda un solo equipo editable: preseleccionado y mostrado fijo (píldora con el nombre, sin dropdown). Si no queda ninguno, el botón de crear no aparece.
+- RLS sigue rechazando la escritura en un equipo sin permiso de editor, así que la restricción de la interfaz es coherente con el servidor.
+- Al cambiar de equipo en el formulario se recargan las listas dependientes:
+  - Evento: invitados = miembros de ese equipo.
+  - Jugador: candidatos = miembros de ese equipo aún sin ficha en él.
+  - Viaje: convocatoria = miembros de ese equipo, y el selector de partido asociado consulta los partidos de ese equipo (la selección previa se limpia si ya no aplica).
+- Implementación: un helper compartido `useEditableTeams(moduleKey)` sobre `permissionsByTeam` de `useAccess`, usado por los tres formularios y por la visibilidad del botón/FAB de crear.
+
 ## Detalles técnicos
 
 - `useRoster(clubId, teamId)` y `calendarEventsQueryOptions` ya soportan modo club (`teamId = null` / `mode: "club"`); las páginas pasan a ese modo y el filtro por chips se aplica en memoria sobre el resultado, evitando refetch al cambiar de chip.
