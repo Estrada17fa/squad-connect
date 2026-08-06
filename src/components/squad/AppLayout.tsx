@@ -225,10 +225,8 @@ function Header({
   canOpenModule: (key: string) => boolean;
   onSignOut: () => void;
 }) {
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
   void viewsAllClub;
-  const activeModule = moduleFromPath(pathname);
-  void activeModule;
+
   // El selector siempre está disponible cuando el usuario tiene equipos:
   // dropdown con varios, píldora fija con uno solo.
   const showTeamSelector = teams.length > 1;
