@@ -13,6 +13,7 @@ import { useRoster, type RosterMember } from "@/hooks/useRoster";
 import type { AvailabilityStatus } from "@/hooks/usePlayers";
 import { cn } from "@/lib/utils";
 import type { BaseRole } from "@/lib/rolePages";
+import { TeamFilter, TeamBadge } from "@/components/squad/TeamFilter";
 
 export const Route = createFileRoute("/_authenticated/m/plantel")({
   head: () => ({
@@ -48,12 +49,17 @@ function formatBirthday(iso: string | null): string | null {
 
 function PlantelPage() {
   const navigate = useNavigate();
-  const { activeTeam, user, profile, viewsAllClub } = useApp();
+  const { user, profile, teamOptions } = useApp();
 
   const clubId = profile?.club_id ?? null;
-  // No-jugadores y super admin: cargar el plantel completo del club (todas las categorías).
-  const rosterTeamId = viewsAllClub ? null : activeTeam?.id ?? null;
-  const { data: members, isLoading } = useRoster(clubId, rosterTeamId);
+  // Sin equipo activo global: se carga todo lo accesible y se filtra localmente.
+  const { data: members, isLoading } = useRoster(clubId, null);
+  const [teamFilter, setTeamFilter] = React.useState<string | null>(null);
+  const teamNameById = React.useMemo(() => {
+    const m: Record<string, string> = {};
+    for (const t of teamOptions) if (t.id) m[t.id] = t.name;
+    return m;
+  }, [teamOptions]);
   const initialRole = useRouterState({
     select: (s) => (s.location.search as { role?: string } | undefined)?.role,
   });
@@ -72,15 +78,13 @@ function PlantelPage() {
     });
   };
 
+  const filterTeamName = teamFilter ? teamNameById[teamFilter] : null;
   const filtered = (members ?? []).filter((m) => {
+    if (filterTeamName && m.teamName !== filterTeamName) return false;
     if (roleFilter.size > 0 && (!m.baseRole || !roleFilter.has(m.baseRole as BaseRole))) return false;
     if (search && !(m.fullName ?? "").toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
-
-  if (!viewsAllClub && !activeTeam) {
-    return <EmptyState title="Sin equipo activo" message="Selecciona un equipo desde el encabezado." />;
-  }
 
   const onCardClick = (m: RosterMember) => {
     if (m.baseRole === "jugador" && m.playerId) {
@@ -96,8 +100,9 @@ function PlantelPage() {
       <PageHeader
         hideTitle
         title="Plantel"
-        subtitle={viewsAllClub ? "Todo el club" : activeTeam?.name ?? ""}
+        subtitle="Todos tus equipos"
       />
+      <TeamFilter teams={teamOptions} value={teamFilter} onChange={setTeamFilter} />
 
       <div className="space-y-2">
         <Input placeholder="Buscar miembro…" value={search} onChange={(e) => setSearch(e.target.value)} />

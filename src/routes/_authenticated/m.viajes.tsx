@@ -17,6 +17,8 @@ import {
 } from "@/hooks/useTrips";
 import { TripFormDialog } from "@/components/viajes/TripFormDialog";
 import { TripDetailSheet } from "@/components/viajes/TripDetailSheet";
+import { TeamFilter, TeamBadge } from "@/components/squad/TeamFilter";
+import { useEditableTeams } from "@/hooks/useEditableTeams";
 
 export const Route = createFileRoute("/_authenticated/m/viajes")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -37,9 +39,15 @@ export const Route = createFileRoute("/_authenticated/m/viajes")({
 });
 
 function ViajesPage() {
-  const { permissions, isSuperAdmin, accessibleModules, profile, user, activeTeam } = useApp();
+  const { permissions, isSuperAdmin, accessibleModules, profile, user, teamOptions } = useApp();
   const clubId = profile?.club_id ?? null;
-  const teamId = activeTeam?.id ?? null;
+  const editableTeams = useEditableTeams("viajes");
+  const [teamFilter, setTeamFilter] = React.useState<string | null>(null);
+  const teamNameById = React.useMemo(() => {
+    const m: Record<string, string> = {};
+    for (const t of teamOptions) if (t.id) m[t.id] = t.name;
+    return m;
+  }, [teamOptions]);
   const canAccess = isSuperAdmin || accessibleModules.includes("viajes");
   const level = permissions.viajes;
   const canEdit = isSuperAdmin || level === "editor" || level === "approver";
@@ -48,7 +56,7 @@ function ViajesPage() {
   const [editing, setEditing] = React.useState<TripRow | null>(null);
   const [detailId, setDetailId] = React.useState<string | null>(null);
 
-  const tripsQ = useTrips(canAccess ? clubId : null, canAccess ? teamId : null);
+  const tripsQ = useTrips(canAccess ? clubId : null, teamFilter);
   const trips = tripsQ.data ?? [];
   const detail = trips.find((t) => t.id === detailId) ?? null;
 
@@ -78,26 +86,13 @@ function ViajesPage() {
     );
   }
 
-  if (!teamId) {
-    return (
-      <div className="space-y-6">
-        <PageHeader hideTitle title="Viajes" subtitle="Logística de traslados y hospedajes" />
-        <ModuleTabs activeKey="viajes" />
-        <EmptyState
-          icon={Plane}
-          title="Selecciona un equipo"
-          message="Los viajes pertenecen a un equipo. Elige una categoría en el encabezado para verlos."
-        />
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
-      <PageHeader hideTitle title="Viajes" subtitle={`Viajes de ${activeTeam?.name ?? "tu equipo"}`} />
+      <PageHeader hideTitle title="Viajes" subtitle="Todos tus equipos" />
       <ModuleTabs activeKey="viajes" />
+      <TeamFilter teams={teamOptions} value={teamFilter} onChange={setTeamFilter} />
 
-      {canEdit ? (
+      {canEdit && editableTeams.length > 0 ? (
         <Button
           className="w-full glow-primary"
           onClick={() => {
@@ -119,17 +114,18 @@ function ViajesPage() {
         />
       ) : (
         <>
-          <TripSection title={`Próximos (${upcoming.length})`} trips={upcoming} onOpen={setDetailId} />
-          <TripSection title={`Pasados (${past.length})`} trips={past} onOpen={setDetailId} />
+          <TripSection title={`Próximos (${upcoming.length})`} trips={upcoming} onOpen={setDetailId} teamNames={teamNameById} />
+          <TripSection title={`Pasados (${past.length})`} trips={past} onOpen={setDetailId} teamNames={teamNameById} />
         </>
       )}
 
-      {clubId && teamId ? (
+      {clubId ? (
         <TripFormDialog
           open={formOpen}
           onOpenChange={setFormOpen}
           clubId={clubId}
-          teamId={teamId}
+          teams={editableTeams}
+          defaultTeamId={editing?.team_id ?? teamFilter ?? null}
           userId={user.id}
           trip={editing}
         />
@@ -155,10 +151,12 @@ function TripSection({
   title,
   trips,
   onOpen,
+  teamNames,
 }: {
   title: string;
   trips: TripRow[];
   onOpen: (id: string) => void;
+  teamNames: Record<string, string>;
 }) {
   return (
     <section className="space-y-3">
@@ -178,6 +176,7 @@ function TripSection({
               status={{ label: TRIP_STATUS_LABEL[t.status], variant: TRIP_STATUS_VARIANT[t.status] }}
             >
               <span className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                <TeamBadge name={teamNames[t.team_id]} />
                 {t.destination ? (
                   <span className="inline-flex items-center gap-1">
                     <MapPin className="h-3.5 w-3.5" /> {t.destination}

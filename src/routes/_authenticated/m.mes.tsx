@@ -12,7 +12,8 @@ import { EventFormDialog } from "@/components/calendar/EventFormDialog";
 import { DaySheet } from "@/components/calendar/DaySheet";
 import { ModuleTabs } from "@/components/squad/ModuleTabs";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
+import { TeamFilter } from "@/components/squad/TeamFilter";
+import { useEditableTeams } from "@/hooks/useEditableTeams";
 
 export const Route = createFileRoute("/_authenticated/m/mes")({
   head: () => ({
@@ -27,57 +28,22 @@ export const Route = createFileRoute("/_authenticated/m/mes")({
 const WEEKDAYS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
 function MesModulePage() {
-  const { activeTeam, getModuleAccess, user, isSuperAdmin, viewsAllClub, profile } = useApp();
+  const { getModuleAccess, user, isSuperAdmin, profile, teamOptions } = useApp();
   const canEdit = isSuperAdmin || getModuleAccess("mes") === "editor" || getModuleAccess("mes") === "approver";
+  const editableTeams = useEditableTeams("mes");
 
   const [anchor, setAnchor] = React.useState(() => startOfDay(new Date()));
   const [selectedDay, setSelectedDay] = React.useState<Date | null>(null);
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<CalendarEventRow | null>(null);
-  const [clubId, setClubId] = React.useState<string | null>(profile?.club_id ?? null);
-  const [clubTeams, setClubTeams] = React.useState<{ id: string; name: string }[]>([]);
-  const [createTeamId, setCreateTeamId] = React.useState<string | null>(activeTeam?.id ?? null);
+  const [teamFilter, setTeamFilter] = React.useState<string | null>(null);
+  const clubId = profile?.club_id ?? null;
 
-  const { data: events } = useCalendarEvents(
-    viewsAllClub
-      ? { mode: "club", clubId: profile?.club_id ?? null }
-      : { mode: "team", teamId: activeTeam?.id ?? null },
+  const { data: allEvents } = useCalendarEvents({ mode: "club", clubId });
+  const events = React.useMemo(
+    () => (allEvents ?? []).filter((e) => !teamFilter || e.team_id === teamFilter),
+    [allEvents, teamFilter],
   );
-
-  React.useEffect(() => {
-    if (!viewsAllClub || !profile?.club_id) return;
-    supabase
-      .from("teams")
-      .select("id, name")
-      .eq("club_id", profile.club_id)
-      .order("name")
-      .then(({ data }) => {
-        const list = (data ?? []) as { id: string; name: string }[];
-        setClubTeams(list);
-        setCreateTeamId((cur) => cur ?? list[0]?.id ?? null);
-      });
-  }, [viewsAllClub, profile?.club_id]);
-
-  React.useEffect(() => {
-    if (!viewsAllClub) setCreateTeamId(activeTeam?.id ?? null);
-  }, [viewsAllClub, activeTeam?.id]);
-
-  React.useEffect(() => {
-    if (profile?.club_id) {
-      setClubId(profile.club_id);
-      return;
-    }
-    if (!activeTeam?.id) {
-      setClubId(null);
-      return;
-    }
-    supabase
-      .from("teams")
-      .select("club_id")
-      .eq("id", activeTeam.id)
-      .maybeSingle()
-      .then(({ data }) => setClubId(data?.club_id ?? null));
-  }, [profile?.club_id, activeTeam?.id]);
 
   const eventsByDay = React.useMemo(() => {
     const map = new Map<string, CalendarEventRow[]>();
@@ -89,10 +55,6 @@ function MesModulePage() {
     }
     return map;
   }, [events]);
-
-  if (!viewsAllClub && !activeTeam) {
-    return <EmptyState title="Sin equipo activo" message="Selecciona un equipo desde el encabezado." />;
-  }
 
   const grid = monthGrid(anchor);
   const today = startOfDay(new Date());
@@ -114,31 +76,14 @@ function MesModulePage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader hideTitle title="Mes" subtitle={activeTeam?.name ?? "Todo el club"} />
+      <PageHeader hideTitle title="Mes" subtitle="Todos tus equipos" />
       <ModuleTabs activeKey="mes" />
+      <TeamFilter teams={teamOptions} value={teamFilter} onChange={setTeamFilter} />
 
-      {canEdit ? (
-        <div className="flex items-center gap-2">
-          {viewsAllClub && clubTeams.length > 0 ? (
-            <select
-              value={createTeamId ?? ""}
-              onChange={(e) => setCreateTeamId(e.target.value)}
-              className="rounded-md border border-border/60 bg-background/60 px-2 py-2 text-sm text-foreground"
-              aria-label="Categoría para nuevo evento"
-            >
-              {clubTeams.map((t) => (
-                <option key={t.id} value={t.id}>{t.name}</option>
-              ))}
-            </select>
-          ) : null}
-          <Button
-            onClick={() => openCreate()}
-            className="flex-1 glow-primary"
-            disabled={!createTeamId}
-          >
-            <Plus className="mr-2 h-4 w-4" /> Nuevo evento
-          </Button>
-        </div>
+      {canEdit && editableTeams.length > 0 ? (
+        <Button onClick={() => openCreate()} className="w-full glow-primary">
+          <Plus className="mr-2 h-4 w-4" /> Nuevo evento
+        </Button>
       ) : null}
 
       <div className="glass p-4">
@@ -211,12 +156,13 @@ function MesModulePage() {
         onSelect={(e) => (canEdit ? openEdit(e) : null)}
       />
 
-      {clubId && (editing?.team_id ?? createTeamId) ? (
+      {clubId ? (
         <EventFormDialog
           open={dialogOpen}
           onOpenChange={setDialogOpen}
           clubId={clubId}
-          teamId={(editing?.team_id ?? createTeamId)!}
+          teams={editableTeams}
+          defaultTeamId={editing?.team_id ?? teamFilter ?? null}
           userId={user.id}
           defaultDate={selectedDay ?? undefined}
           event={editing}
