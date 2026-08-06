@@ -27,17 +27,21 @@ export const Route = createFileRoute("/_authenticated/")({
 
 function Home() {
   const navigate = useNavigate();
-  const { accessibleModules, clubName, activeTeam, user, profile } = useApp();
+  const { accessibleModules, clubName, user, profile, teamOptions } = useApp();
+  const teamIds = React.useMemo(
+    () => teamOptions.map((t) => t.id).filter((id): id is string => !!id),
+    [teamOptions],
+  );
   const clubId = profile?.club_id ?? null;
 
   const nextEventQ = useQuery({
-    queryKey: ["home-next-event", activeTeam?.id ?? "none"],
-    enabled: !!activeTeam?.id,
+    queryKey: ["home-next-event", teamIds],
+    enabled: teamIds.length > 0,
     queryFn: async () => {
       const { data } = await supabase
         .from("calendar_events")
         .select("id, title, starts_at, event_type, location")
-        .eq("team_id", activeTeam!.id!)
+        .in("team_id", teamIds)
         .gte("starts_at", new Date().toISOString())
         .order("starts_at", { ascending: true })
         .limit(1)
@@ -47,13 +51,13 @@ function Home() {
   });
 
   const rosterQ = useQuery({
-    queryKey: ["home-roster-count", activeTeam?.id ?? "none"],
-    enabled: !!activeTeam?.id,
+    queryKey: ["home-roster-count", teamIds],
+    enabled: teamIds.length > 0,
     queryFn: async () => {
       const { data } = await supabase
         .from("player_profiles")
         .select("availability_status")
-        .eq("team_id", activeTeam!.id!);
+        .in("team_id", teamIds);
       const list = data ?? [];
       return {
         total: list.length,
@@ -111,7 +115,7 @@ function Home() {
   const expensesQ = useExpenseSummary(clubId, hasCompras);
 
   const hasViajes = accessibleModules.includes("viajes");
-  const nextTripQ = useMyNextTrip(clubId, activeTeam?.id ?? null, user.id, hasViajes);
+  const nextTripQ = useMyNextTrip(clubId, null, user.id, hasViajes);
 
   const others = accessibleModules.filter(
     (k) =>
@@ -133,7 +137,7 @@ function Home() {
     <div className="space-y-6">
       <PageHeader
         title={clubName ? `Hola, ${clubName}` : "Bienvenido"}
-        subtitle={activeTeam ? `${activeTeam.name} · ${activeTeam.roleName}` : "Selecciona un módulo para comenzar"}
+        subtitle="Selecciona un módulo para comenzar"
       />
 
       {accessibleModules.length === 0 ? (
