@@ -135,7 +135,33 @@ export function TripDetailSheet({
               </span>
             </div>
 
+            {isTraveler ? (
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={showFull ? "outline" : "default"}
+                  className={showFull ? "flex-1" : "flex-1 glow-primary"}
+                  onClick={() => setShowFull(false)}
+                >
+                  Mi viaje
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={showFull ? "default" : "outline"}
+                  className={showFull ? "flex-1 glow-primary" : "flex-1"}
+                  onClick={() => setShowFull(true)}
+                >
+                  Itinerario completo
+                </Button>
+              </div>
+            ) : null}
+
+            {!showFull ? <MyTripView trip={trip} userId={uid} /> : (
+            <>
             {/* Línea de tiempo — aquí se insertarán transportes, vuelos, hotel y comidas */}
+
             <section className="space-y-3">
               <h3 className="font-display text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                 Cronología
