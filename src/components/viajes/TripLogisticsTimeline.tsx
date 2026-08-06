@@ -102,11 +102,24 @@ export function TripLogisticsTimeline({ trip, canEdit }: Props) {
 
       <LuggageSection
         tripId={trip.id}
+        clubId={trip.club_id}
+        teamId={trip.team_id}
         userId={uid}
+        defaultReturnAt={trip.return_at}
         items={luggage}
+        loans={material}
         travelers={travelers.map((t) => ({ user_id: t.user_id, profile: t.profile }))}
         canEdit={editable}
       />
+
+      <TripDocumentsSection
+        tripId={trip.id}
+        clubId={trip.club_id}
+        teamId={trip.team_id}
+        userId={uid}
+        canEdit={editable}
+      />
+
     </section>
   );
 }
