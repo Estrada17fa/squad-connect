@@ -59,8 +59,19 @@ export function ModuleTabs({ activeKey, hubKey, extraActiveKey }: ModuleTabsProp
         active: extraActiveKey === "admin-clubs",
       });
     }
+    // Consulta de viajes desde Agenda (solo lectura).
+    if (hub?.page.key === "agenda" && (isSuperAdmin || accessibleModules.includes("viajes"))) {
+      out.push({
+        key: "agenda-viajes",
+        label: "Viajes",
+        icon: Plane,
+        to: "/agenda-viajes",
+        active: extraActiveKey === "agenda-viajes",
+      });
+    }
     return out;
-  }, [hub?.page.key, isSuperAdmin, extraActiveKey]);
+  }, [hub?.page.key, isSuperAdmin, accessibleModules, extraActiveKey]);
+
 
   const total = modules.length + extras.length;
   if (total <= 1) return null;

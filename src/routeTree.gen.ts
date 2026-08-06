@@ -16,6 +16,7 @@ import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as AuthenticatedMiPerfilRouteImport } from './routes/_authenticated/mi-perfil'
 import { Route as AuthenticatedMiClubRouteImport } from './routes/_authenticated/mi-club'
 import { Route as AuthenticatedCoordinacionRouteImport } from './routes/_authenticated/coordinacion'
+import { Route as AuthenticatedAgendaViajesRouteImport } from './routes/_authenticated/agenda-viajes'
 import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedMViajesRouteImport } from './routes/_authenticated/m.viajes'
@@ -65,6 +66,12 @@ const AuthenticatedCoordinacionRoute =
   AuthenticatedCoordinacionRouteImport.update({
     id: '/coordinacion',
     path: '/coordinacion',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAgendaViajesRoute =
+  AuthenticatedAgendaViajesRouteImport.update({
+    id: '/agenda-viajes',
+    path: '/agenda-viajes',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedAgendaRoute = AuthenticatedAgendaRouteImport.update({
@@ -154,6 +161,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/agenda': typeof AuthenticatedAgendaRoute
+  '/agenda-viajes': typeof AuthenticatedAgendaViajesRoute
   '/coordinacion': typeof AuthenticatedCoordinacionRoute
   '/mi-club': typeof AuthenticatedMiClubRoute
   '/mi-perfil': typeof AuthenticatedMiPerfilRoute
@@ -176,6 +184,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/agenda': typeof AuthenticatedAgendaRoute
+  '/agenda-viajes': typeof AuthenticatedAgendaViajesRoute
   '/coordinacion': typeof AuthenticatedCoordinacionRoute
   '/mi-club': typeof AuthenticatedMiClubRoute
   '/mi-perfil': typeof AuthenticatedMiPerfilRoute
@@ -201,6 +210,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/agenda': typeof AuthenticatedAgendaRoute
+  '/_authenticated/agenda-viajes': typeof AuthenticatedAgendaViajesRoute
   '/_authenticated/coordinacion': typeof AuthenticatedCoordinacionRoute
   '/_authenticated/mi-club': typeof AuthenticatedMiClubRoute
   '/_authenticated/mi-perfil': typeof AuthenticatedMiPerfilRoute
@@ -227,6 +237,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/admin'
     | '/agenda'
+    | '/agenda-viajes'
     | '/coordinacion'
     | '/mi-club'
     | '/mi-perfil'
@@ -249,6 +260,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/admin'
     | '/agenda'
+    | '/agenda-viajes'
     | '/coordinacion'
     | '/mi-club'
     | '/mi-perfil'
@@ -273,6 +285,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/admin'
     | '/_authenticated/agenda'
+    | '/_authenticated/agenda-viajes'
     | '/_authenticated/coordinacion'
     | '/_authenticated/mi-club'
     | '/_authenticated/mi-perfil'
@@ -348,6 +361,13 @@ declare module '@tanstack/react-router' {
       path: '/coordinacion'
       fullPath: '/coordinacion'
       preLoaderRoute: typeof AuthenticatedCoordinacionRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/agenda-viajes': {
+      id: '/_authenticated/agenda-viajes'
+      path: '/agenda-viajes'
+      fullPath: '/agenda-viajes'
+      preLoaderRoute: typeof AuthenticatedAgendaViajesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/agenda': {
@@ -485,6 +505,7 @@ const AuthenticatedMPlantelRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedAgendaRoute: typeof AuthenticatedAgendaRoute
+  AuthenticatedAgendaViajesRoute: typeof AuthenticatedAgendaViajesRoute
   AuthenticatedCoordinacionRoute: typeof AuthenticatedCoordinacionRoute
   AuthenticatedMiClubRoute: typeof AuthenticatedMiClubRoute
   AuthenticatedMiPerfilRoute: typeof AuthenticatedMiPerfilRoute
@@ -505,6 +526,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedAgendaRoute: AuthenticatedAgendaRoute,
+  AuthenticatedAgendaViajesRoute: AuthenticatedAgendaViajesRoute,
   AuthenticatedCoordinacionRoute: AuthenticatedCoordinacionRoute,
   AuthenticatedMiClubRoute: AuthenticatedMiClubRoute,
   AuthenticatedMiPerfilRoute: AuthenticatedMiPerfilRoute,
@@ -534,13 +556,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
