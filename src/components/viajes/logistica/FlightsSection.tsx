@@ -191,7 +191,3 @@ export function FlightsSection({ tripId, userId, leg, flights, allFlights, trave
     </>
   );
 }
-
-    </>
-  );
-}
