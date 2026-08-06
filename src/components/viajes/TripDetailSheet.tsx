@@ -275,9 +275,11 @@ export function TripDetailSheet({
 
             {/* Logística del viaje: vuelos, transporte, hotel, comidas y equipaje */}
             <TripLogisticsTimeline trip={trip} canEdit={editable} />
-
+            </>
+            )}
           </>
         )}
+
       </EntitySheetBody>
 
       <EntitySheetFooter>
