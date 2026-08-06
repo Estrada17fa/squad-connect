@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Link } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { Building2, type LucideIcon } from "lucide-react";
+import { Building2, Plane, type LucideIcon } from "lucide-react";
 import { useApp } from "./AppLayout";
 import { MODULE_MAP, type ModuleKey } from "@/lib/modules";
 import { findHubForModule, type PageKey } from "@/lib/rolePages";
