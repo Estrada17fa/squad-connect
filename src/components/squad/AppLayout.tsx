@@ -204,35 +204,19 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
 
 function Header({
   clubName,
-  teams,
-  activeTeam,
-  setActiveTeamId,
   userName,
   userId,
   isSuperAdmin,
-  viewsAllClub,
   canOpenModule,
   onSignOut,
 }: {
   clubName: string | null;
-  teams: TeamOption[];
-  activeTeam: TeamOption | null;
-  setActiveTeamId: (id: string | null) => void;
   userName: string;
   userId: string;
   isSuperAdmin: boolean;
-  viewsAllClub: boolean;
   canOpenModule: (key: string) => boolean;
   onSignOut: () => void;
 }) {
-  void viewsAllClub;
-
-  // El selector siempre está disponible cuando el usuario tiene equipos:
-  // dropdown con varios, píldora fija con uno solo.
-  const showTeamSelector = teams.length > 1;
-  const showFixedTeam = teams.length === 1;
-  const showClubName = teams.length === 0;
-
   return (
     <header className="sticky top-0 z-30 border-b border-border/60 bg-background/70 backdrop-blur-xl">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
@@ -240,44 +224,12 @@ function Header({
           <img src={squadLogo.url} alt="Squad" className="h-8 w-auto" />
         </Link>
         <div className="flex items-center gap-2">
-          {showTeamSelector ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger className="glass inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm text-foreground hover:bg-white/[0.06]">
-                <span className="flex flex-col items-start leading-tight">
-                  <span className="max-w-[140px] truncate">{activeTeam?.name ?? "Equipo"}</span>
-                  {activeTeam?.category ? (
-                    <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                      {activeTeam.category}
-                    </span>
-                  ) : null}
-                </span>
-                <ChevronDown className="h-4 w-4 text-muted-foreground" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>Equipo activo</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {teams.map((t) => (
-                  <DropdownMenuItem
-                    key={(t.id ?? "club") + t.roleId}
-                    onSelect={() => setActiveTeamId(t.id)}
-                  >
-                    <div className="flex flex-col">
-                      <span className="text-sm">{t.name}</span>
-                      {t.category ? (
-                        <span className="text-xs text-muted-foreground">{t.category}</span>
-                      ) : null}
-                    </div>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : showFixedTeam ? (
-            <span className="glass inline-flex max-w-[160px] items-center truncate rounded-full px-3 py-1.5 text-sm text-foreground">
-              {activeTeam?.name}
+          {clubName ? (
+            <span className="hidden max-w-[180px] truncate text-sm text-muted-foreground sm:inline">
+              {clubName}
             </span>
-          ) : showClubName && clubName ? (
-            <span className="hidden text-sm text-muted-foreground sm:inline">{clubName}</span>
           ) : null}
+
 
           <NotificationBell userId={userId} canOpenModule={canOpenModule} />
           <DropdownMenu>
