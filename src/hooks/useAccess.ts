@@ -18,6 +18,8 @@ export interface AccessData {
   profile: { full_name: string | null; email: string | null; club_id: string | null } | null;
   clubName: string | null;
   teams: TeamOption[];
+  /** Equipos reales seleccionables en el header (club-wide => todos los del club). */
+  teamOptions: TeamOption[];
   /** Unión (mejor nivel) entre TODAS las membresías + overrides. Úsalo solo para decisiones globales (bottom nav). */
   permissions: Record<string, AccessLevel>;
   /** Permisos efectivos por equipo: la clave 'club' representa el ámbito club (o cuando no hay equipo activo). */
@@ -26,6 +28,7 @@ export interface AccessData {
   /** true si TODAS las membresías del usuario son de rol base 'jugador' (y no es super admin). */
   isPlayerOnly: boolean;
 }
+
 
 const RANK: Record<AccessLevel, number> = { none: 0, read: 1, editor: 2, approver: 3 };
 const TEAM_CLUB_KEY = "club";
