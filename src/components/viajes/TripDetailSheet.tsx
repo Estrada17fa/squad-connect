@@ -25,6 +25,9 @@ import {
 } from "@/hooks/useTrips";
 import { TravelerPicker, initialsOf, type TeamMemberOption } from "./TravelerPicker";
 import { TripLogisticsTimeline } from "./TripLogisticsTimeline";
+import { MyTripView } from "./MyTripView";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 
 interface Props {
