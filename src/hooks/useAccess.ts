@@ -100,6 +100,30 @@ export function useAccess(userId: string) {
         baseRole: m.role?.base_role ?? null,
       }));
 
+      // Opciones reales de equipo para el selector del header.
+      const clubId = profileRes.data?.club_id ?? null;
+      const clubWide = memberships.find((m: any) => !m.team_id) as any | undefined;
+      let teamOptions: TeamOption[] = teams.filter((t) => t.id);
+      if (clubId && (clubWide || superRes.data)) {
+        const { data: clubTeams } = await supabase
+          .from("teams")
+          .select("id, name, category")
+          .eq("club_id", clubId)
+          .order("name");
+        const extras: TeamOption[] = (clubTeams ?? []).map((t: any) => ({
+          id: t.id,
+          name: t.name,
+          category: t.category ?? null,
+          roleId: clubWide?.role_id ?? "",
+          roleName: clubWide?.role?.name ?? "",
+          baseRole: clubWide?.role?.base_role ?? null,
+        }));
+        const seen = new Set(teamOptions.map((t) => t.id));
+        teamOptions = [...teamOptions, ...extras.filter((t) => !seen.has(t.id))];
+      }
+      teamOptions.sort((a, b) => a.name.localeCompare(b.name));
+
+
       // Permisos por membresía (por team_id o 'club' si team_id NULL)
       const byMembership: Record<string, Record<string, AccessLevel>> = {};
       for (const m of memberships as any[]) {
