@@ -110,9 +110,7 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
     return roles.reduce((best, r) => (BASE_ROLE_RANK[r] > BASE_ROLE_RANK[best] ? r : best), roles[0]);
   }, [data?.teams]);
 
-  const activeBaseRole: BaseRole = viewsAllClub
-    ? (data?.isSuperAdmin ? "admin" : dominantBaseRole)
-    : ((activeTeam?.baseRole as BaseRole | null | undefined) ?? inferBaseRole(activeTeam?.roleName ?? null));
+  const activeBaseRole: BaseRole = data?.isSuperAdmin ? "admin" : dominantBaseRole;
 
   const effectiveBaseRole: BaseRole = data?.isSuperAdmin ? "admin" : activeBaseRole;
 
