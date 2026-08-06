@@ -1,3 +1,4 @@
+import * as React from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Calendar, Users, MessagesSquare, Package, Receipt, Plane } from "lucide-react";
