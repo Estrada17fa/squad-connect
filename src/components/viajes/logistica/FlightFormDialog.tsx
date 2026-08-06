@@ -53,6 +53,7 @@ export function FlightFormDialog({ open, onOpenChange, tripId, userId, flight, d
     setDestination(flight?.destination ?? "");
     setGate(flight?.gate ?? "");
     setNotes(flight?.notes ?? "");
+    setBaggage(flight?.baggage_instructions ?? "");
   }, [open, flight, defaultLeg]);
 
   const submit = () => {
