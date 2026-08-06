@@ -69,6 +69,20 @@ export function TripDetailSheet({
   const [busyId, setBusyId] = React.useState<string | null>(null);
   const editable = canEdit && !readOnly;
 
+  const { data: currentUserId } = useQuery({
+    queryKey: ["current-user-id"],
+    queryFn: async () => (await supabase.auth.getUser()).data.user?.id ?? "",
+    staleTime: 5 * 60 * 1000,
+  });
+  const uid = currentUserId ?? "";
+  const isTraveler = !!trip && !!uid && trip.travelers.some((t) => t.user_id === uid);
+  // Un convocado sin permisos de edición arranca en "Mi viaje"; el staff, en el completo.
+  const [showFull, setShowFull] = React.useState(false);
+  React.useEffect(() => {
+    if (open) setShowFull(!isTraveler || editable);
+  }, [open, isTraveler, editable, trip?.id]);
+
+
   React.useEffect(() => {
     if (openPickerSignal > 0 && editable) setPicker(true);
   }, [openPickerSignal, editable]);
