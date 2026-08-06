@@ -1,14 +1,15 @@
 import * as React from "react";
 import { toast } from "sonner";
-import { FileText, Pencil, Plane, Users } from "lucide-react";
+import { FileText, Luggage, Pencil, Plane, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatDateTime } from "@/lib/calendar-utils";
-import { LEG_LABEL, type MiniProfile, type TripLeg } from "@/lib/tripLogistics";
+import { LEG_LABEL, personLabel, type MiniProfile, type TripLeg } from "@/lib/tripLogistics";
 import { useFlightMutations, type TripFlight } from "@/hooks/useTripFlights";
 import { TimelineSection } from "./TimelineSection";
 import { PersonChips } from "./PersonChips";
 import { FlightFormDialog } from "./FlightFormDialog";
 import { BoardingPassDialog } from "./BoardingPassDialog";
+import { BaggageHandlersDialog } from "./BaggageHandlersDialog";
 import { PassengerAssignDialog, type AssignCandidate } from "./PassengerAssignDialog";
 
 interface Props {
@@ -27,6 +28,8 @@ export function FlightsSection({ tripId, userId, leg, flights, allFlights, trave
   const [editing, setEditing] = React.useState<TripFlight | null>(null);
   const [passengersFor, setPassengersFor] = React.useState<TripFlight | null>(null);
   const [passesFor, setPassesFor] = React.useState<TripFlight | null>(null);
+  const [baggageFor, setBaggageFor] = React.useState<TripFlight | null>(null);
+
 
   const importSources = React.useMemo(
     () =>
