@@ -264,10 +264,10 @@ function computeActiveKey(
 
 function useHubPrefetch() {
   const qc = useQueryClient();
-  const { profile, activeTeam } = useApp();
+  const { profile } = useApp();
   const ctx = React.useMemo(
-    () => ({ clubId: profile?.club_id ?? null, teamId: activeTeam?.id ?? null }),
-    [profile?.club_id, activeTeam?.id],
+    () => ({ clubId: profile?.club_id ?? null, teamId: null }),
+    [profile?.club_id],
   );
   return React.useCallback(
     (rp: ResolvedPage) => {
