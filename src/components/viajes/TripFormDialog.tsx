@@ -26,12 +26,16 @@ import {
   type TripStatus,
 } from "@/hooks/useTrips";
 import { cn } from "@/lib/utils";
+import { TeamSelectField } from "@/components/squad/TeamSelectField";
+import type { TeamOption } from "@/hooks/useAccess";
 
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   clubId: string;
-  teamId: string;
+  /** Equipos donde el usuario puede crear viajes. */
+  teams: TeamOption[];
+  defaultTeamId?: string | null;
   userId: string;
   trip?: TripRow | null;
 }
@@ -55,9 +59,15 @@ function useTeamMatches(teamId: string | null, enabled: boolean) {
   });
 }
 
-export function TripFormDialog({ open, onOpenChange, clubId, teamId, userId, trip }: Props) {
+export function TripFormDialog({ open, onOpenChange, clubId, teams, defaultTeamId, userId, trip }: Props) {
   const isEdit = !!trip;
   const qc = useQueryClient();
+  const firstTeamId = teams[0]?.id ?? null;
+  const [teamId, setTeamId] = React.useState<string | null>(trip?.team_id ?? defaultTeamId ?? firstTeamId);
+  React.useEffect(() => {
+    if (!open) return;
+    setTeamId(trip?.team_id ?? defaultTeamId ?? firstTeamId);
+  }, [open, trip?.team_id, defaultTeamId, firstTeamId]);
   const matchesQ = useTeamMatches(teamId, open);
 
   const [title, setTitle] = React.useState("");
@@ -83,10 +93,16 @@ export function TripFormDialog({ open, onOpenChange, clubId, teamId, userId, tri
     setNotes(trip?.notes ?? "");
   }, [open, trip]);
 
-  const invalidate = () => qc.invalidateQueries({ queryKey: ["trips", clubId, teamId] });
+  // Al cambiar de equipo, el partido ligado deja de ser válido.
+  React.useEffect(() => {
+    if (!isEdit) setMatchId("");
+  }, [teamId, isEdit]);
+
+  const invalidate = () => qc.invalidateQueries({ queryKey: ["trips"] });
 
   const mutation = useMutation({
     mutationFn: async () => {
+      if (!teamId) throw new Error("Selecciona un equipo");
       if (!title.trim()) throw new Error("El título es obligatorio");
       if (!departureAt) throw new Error("La fecha y hora de salida son obligatorias");
       if (returnAt && new Date(returnAt) < new Date(departureAt)) {
@@ -137,6 +153,8 @@ export function TripFormDialog({ open, onOpenChange, clubId, teamId, userId, tri
       </EntitySheetHeader>
 
       <EntitySheetBody>
+        <TeamSelectField id="trip-team" teams={teams} value={teamId} onChange={setTeamId} disabled={isEdit} />
+
         <div className="space-y-1.5">
           <Label htmlFor="trip-title">Título</Label>
           <Input

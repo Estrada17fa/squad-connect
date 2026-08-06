@@ -60,36 +60,41 @@ const SELECT =
   "match_event:calendar_events!trips_match_event_id_fkey(id, title, starts_at, location), " +
   "travelers:trip_travelers(id, trip_id, user_id, role_note, created_at, profile:profiles(id, full_name, email, avatar_url))";
 
+/**
+ * `teamId` = null significa "todos los equipos accesibles del club": la RLS
+ * ya limita las filas visibles, así que no se filtra por equipo en la consulta.
+ */
 export const tripsQueryOptions = (clubId: string | null | undefined, teamId: string | null | undefined) =>
   queryOptions({
-    queryKey: ["trips", clubId ?? "none", teamId ?? "none"] as const,
-    enabled: !!clubId && !!teamId,
+    queryKey: ["trips", clubId ?? "none", teamId ?? "all"] as const,
+    enabled: !!clubId,
     staleTime: 30_000,
     queryFn: async (): Promise<TripRow[]> => {
-      const { data, error } = await supabase
+      const q = supabase
         .from("trips")
         .select(SELECT)
         .eq("club_id", clubId!)
-        .eq("team_id", teamId!)
         .order("departure_at", { ascending: false });
+      if (teamId) q.eq("team_id", teamId);
+      const { data, error } = await q;
       if (error) throw error;
       return (data ?? []) as unknown as TripRow[];
     },
   });
 
-/** Lista de viajes del equipo activo, con realtime. */
+/** Lista de viajes del club (o de un equipo concreto), con realtime. */
 export function useTrips(clubId: string | null | undefined, teamId: string | null | undefined) {
   const qc = useQueryClient();
   const query = useQuery(tripsQueryOptions(clubId, teamId));
 
   React.useEffect(() => {
-    if (!clubId || !teamId) return;
+    if (!clubId) return;
     const invalidate = () => {
-      qc.invalidateQueries({ queryKey: ["trips", clubId, teamId] });
+      qc.invalidateQueries({ queryKey: ["trips", clubId, teamId ?? "all"] });
     };
     const channel = supabase
-      .channel(`trips-${clubId}-${teamId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "trips", filter: `team_id=eq.${teamId}` }, invalidate)
+      .channel(`trips-${clubId}-${teamId ?? "all"}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "trips" }, invalidate)
       .on("postgres_changes", { event: "*", schema: "public", table: "trip_travelers" }, invalidate)
       .subscribe();
     return () => {
@@ -99,6 +104,7 @@ export function useTrips(clubId: string | null | undefined, teamId: string | nul
 
   return query;
 }
+
 
 export interface TripInput {
   title: string;

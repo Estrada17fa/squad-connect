@@ -27,12 +27,14 @@ interface AppCtx {
   accessibleModules: ModuleKey[];
   /** Unión (mejor nivel) — úsalo solo para navegación global. */
   permissions: Record<string, AccessLevel>;
-  /** Permisos efectivos según el equipo activo (respeta scope de módulo). */
+  /** Permisos efectivos (unión de membresías). */
   activePermissions: Record<string, AccessLevel>;
   /** Devuelve el nivel efectivo para un módulo específico según su scope. */
   getModuleAccess: (key: ModuleKey) => AccessLevel;
-  activeTeam: TeamOption | null;
-  setActiveTeamId: (id: string | null) => void;
+  /** Equipos a los que el usuario tiene acceso (para filtros y selectores). */
+  teamOptions: TeamOption[];
+  /** Permisos efectivos por equipo (clave 'club' = ámbito club). */
+  permissionsByTeam: Record<string, Record<string, AccessLevel>>;
   clubName: string | null;
   isSuperAdmin: boolean;
   /** true si el usuario ve todo el club (no-jugadores + super admin). */
@@ -56,36 +58,18 @@ export function useApp() {
   return ctx;
 }
 
-const ACTIVE_TEAM_KEY = "squad.activeTeamId";
+const LEGACY_ACTIVE_TEAM_KEY = "squad.activeTeamId";
 
 export function AppLayout({ user }: { user: { id: string; email?: string | null } }) {
   const navigate = useNavigate();
   const { data, isLoading } = useAccess(user.id);
-  const [activeTeamId, setActiveTeamIdState] = React.useState<string | null>(() => {
-    if (typeof window === "undefined") return null;
-    return window.localStorage.getItem(ACTIVE_TEAM_KEY);
-  });
 
-  const setActiveTeamId = React.useCallback((id: string | null) => {
-    setActiveTeamIdState(id);
-    if (typeof window !== "undefined") {
-      if (id) window.localStorage.setItem(ACTIVE_TEAM_KEY, id);
-      else window.localStorage.removeItem(ACTIVE_TEAM_KEY);
-    }
+  // Ya no existe el concepto de "equipo activo global".
+  React.useEffect(() => {
+    if (typeof window !== "undefined") window.localStorage.removeItem(LEGACY_ACTIVE_TEAM_KEY);
   }, []);
 
-  const teams = data?.teamOptions ?? [];
-  const activeTeam = React.useMemo<TeamOption | null>(() => {
-    if (teams.length === 0) return null;
-    const found = teams.find((t) => t.id === activeTeamId);
-    return found ?? teams[0];
-  }, [teams, activeTeamId]);
-
-  // Nunca dejamos la selección vacía: fijamos el primer equipo disponible.
-  React.useEffect(() => {
-    if (activeTeam && activeTeam.id !== activeTeamId) setActiveTeamId(activeTeam.id);
-  }, [activeTeam, activeTeamId, setActiveTeamId]);
-
+  const teamOptions = React.useMemo<TeamOption[]>(() => data?.teamOptions ?? [], [data?.teamOptions]);
 
   const accessibleModules = React.useMemo<ModuleKey[]>(() => {
     if (!data) return [];
@@ -99,22 +83,21 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
 
   const clubPerms = data?.permissionsByTeam?.["club"] ?? {};
   const viewsAllClub = !!(data?.isSuperAdmin || (data && !data.isPlayerOnly));
-  const activePermissions = React.useMemo<Record<string, AccessLevel>>(() => {
-    // No-jugadores y super admin: usan la unión (ven todo el club).
-    if (viewsAllClub) return data?.permissions ?? {};
-    const teamKey = activeTeam?.id ?? "club";
-    return data?.permissionsByTeam?.[teamKey] ?? clubPerms;
-  }, [viewsAllClub, data?.permissions, data?.permissionsByTeam, activeTeam?.id, clubPerms]);
+  // Sin equipo activo: los permisos efectivos son la unión de todas las membresías.
+  const activePermissions = React.useMemo<Record<string, AccessLevel>>(
+    () => data?.permissions ?? {},
+    [data?.permissions],
+  );
 
   const getModuleAccess = React.useCallback(
     (key: ModuleKey): AccessLevel => {
-      if (viewsAllClub) return data?.permissions?.[key] ?? "none";
       const scope = MODULE_MAP[key].scope;
-      if (scope === "club") return clubPerms[key] ?? "none";
-      return activePermissions[key] ?? "none";
+      if (scope === "club" && !viewsAllClub) return clubPerms[key] ?? "none";
+      return data?.permissions?.[key] ?? "none";
     },
-    [viewsAllClub, data?.permissions, clubPerms, activePermissions],
+    [viewsAllClub, data?.permissions, clubPerms],
   );
+
 
   // Rol base efectivo. Para no-jugadores tomamos el "mejor" rol entre todas sus
   // membresías (Admin > Técnico > Médico > Staff) para elegir el mapa de páginas.
@@ -127,9 +110,7 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
     return roles.reduce((best, r) => (BASE_ROLE_RANK[r] > BASE_ROLE_RANK[best] ? r : best), roles[0]);
   }, [data?.teams]);
 
-  const activeBaseRole: BaseRole = viewsAllClub
-    ? (data?.isSuperAdmin ? "admin" : dominantBaseRole)
-    : ((activeTeam?.baseRole as BaseRole | null | undefined) ?? inferBaseRole(activeTeam?.roleName ?? null));
+  const activeBaseRole: BaseRole = data?.isSuperAdmin ? "admin" : dominantBaseRole;
 
   const effectiveBaseRole: BaseRole = data?.isSuperAdmin ? "admin" : activeBaseRole;
 
@@ -165,8 +146,8 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
     permissions: data.permissions,
     activePermissions,
     getModuleAccess,
-    activeTeam,
-    setActiveTeamId,
+    teamOptions,
+    permissionsByTeam: data.permissionsByTeam,
     clubName: data.clubName,
     isSuperAdmin: data.isSuperAdmin,
     viewsAllClub,
@@ -181,13 +162,9 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
       <div className="min-h-screen bg-background pb-24 sm:pb-8">
         <Header
           clubName={data.clubName}
-          teams={teams}
-          activeTeam={activeTeam}
-          setActiveTeamId={setActiveTeamId}
           userName={data.profile?.full_name ?? user.email ?? ""}
           userId={user.id}
           isSuperAdmin={data.isSuperAdmin}
-          viewsAllClub={viewsAllClub}
           canOpenModule={(key) => isModuleAccessible(key as ModuleKey)}
           onSignOut={signOut}
         />
@@ -204,35 +181,19 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
 
 function Header({
   clubName,
-  teams,
-  activeTeam,
-  setActiveTeamId,
   userName,
   userId,
   isSuperAdmin,
-  viewsAllClub,
   canOpenModule,
   onSignOut,
 }: {
   clubName: string | null;
-  teams: TeamOption[];
-  activeTeam: TeamOption | null;
-  setActiveTeamId: (id: string | null) => void;
   userName: string;
   userId: string;
   isSuperAdmin: boolean;
-  viewsAllClub: boolean;
   canOpenModule: (key: string) => boolean;
   onSignOut: () => void;
 }) {
-  void viewsAllClub;
-
-  // El selector siempre está disponible cuando el usuario tiene equipos:
-  // dropdown con varios, píldora fija con uno solo.
-  const showTeamSelector = teams.length > 1;
-  const showFixedTeam = teams.length === 1;
-  const showClubName = teams.length === 0;
-
   return (
     <header className="sticky top-0 z-30 border-b border-border/60 bg-background/70 backdrop-blur-xl">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
@@ -240,44 +201,12 @@ function Header({
           <img src={squadLogo.url} alt="Squad" className="h-8 w-auto" />
         </Link>
         <div className="flex items-center gap-2">
-          {showTeamSelector ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger className="glass inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm text-foreground hover:bg-white/[0.06]">
-                <span className="flex flex-col items-start leading-tight">
-                  <span className="max-w-[140px] truncate">{activeTeam?.name ?? "Equipo"}</span>
-                  {activeTeam?.category ? (
-                    <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                      {activeTeam.category}
-                    </span>
-                  ) : null}
-                </span>
-                <ChevronDown className="h-4 w-4 text-muted-foreground" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>Equipo activo</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {teams.map((t) => (
-                  <DropdownMenuItem
-                    key={(t.id ?? "club") + t.roleId}
-                    onSelect={() => setActiveTeamId(t.id)}
-                  >
-                    <div className="flex flex-col">
-                      <span className="text-sm">{t.name}</span>
-                      {t.category ? (
-                        <span className="text-xs text-muted-foreground">{t.category}</span>
-                      ) : null}
-                    </div>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : showFixedTeam ? (
-            <span className="glass inline-flex max-w-[160px] items-center truncate rounded-full px-3 py-1.5 text-sm text-foreground">
-              {activeTeam?.name}
+          {clubName ? (
+            <span className="hidden max-w-[180px] truncate text-sm text-muted-foreground sm:inline">
+              {clubName}
             </span>
-          ) : showClubName && clubName ? (
-            <span className="hidden text-sm text-muted-foreground sm:inline">{clubName}</span>
           ) : null}
+
 
           <NotificationBell userId={userId} canOpenModule={canOpenModule} />
           <DropdownMenu>
@@ -335,10 +264,10 @@ function computeActiveKey(
 
 function useHubPrefetch() {
   const qc = useQueryClient();
-  const { profile, activeTeam } = useApp();
+  const { profile } = useApp();
   const ctx = React.useMemo(
-    () => ({ clubId: profile?.club_id ?? null, teamId: activeTeam?.id ?? null }),
-    [profile?.club_id, activeTeam?.id],
+    () => ({ clubId: profile?.club_id ?? null, teamId: null }),
+    [profile?.club_id],
   );
   return React.useCallback(
     (rp: ResolvedPage) => {

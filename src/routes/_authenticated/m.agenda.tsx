@@ -11,8 +11,9 @@ import { useApp } from "@/components/squad/AppLayout";
 import { useCalendarEvents, type CalendarEventRow } from "@/hooks/useCalendarEvents";
 import { EVENT_TYPE_MAP } from "@/lib/eventTypes";
 import { formatTime, startOfDay } from "@/lib/calendar-utils";
+import { useEditableTeams } from "@/hooks/useEditableTeams";
 import { EventFormDialog } from "@/components/calendar/EventFormDialog";
-import { supabase } from "@/integrations/supabase/client";
+import { TeamFilter, TeamBadge } from "@/components/squad/TeamFilter";
 
 export const Route = createFileRoute("/_authenticated/m/agenda")({
   head: () => ({
@@ -25,64 +26,30 @@ export const Route = createFileRoute("/_authenticated/m/agenda")({
 });
 
 function AgendaModulePage() {
-  const { activeTeam, getModuleAccess, user, isSuperAdmin, viewsAllClub, profile } = useApp();
+  const { getModuleAccess, user, isSuperAdmin, profile, teamOptions } = useApp();
   const canEdit = isSuperAdmin || getModuleAccess("agenda") === "editor" || getModuleAccess("agenda") === "approver";
+  const editableTeams = useEditableTeams("agenda");
 
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<CalendarEventRow | null>(null);
-  const [clubId, setClubId] = React.useState<string | null>(profile?.club_id ?? null);
-  const [clubTeams, setClubTeams] = React.useState<{ id: string; name: string }[]>([]);
-  const [createTeamId, setCreateTeamId] = React.useState<string | null>(activeTeam?.id ?? null);
+  const [teamFilter, setTeamFilter] = React.useState<string | null>(null);
+  const clubId = profile?.club_id ?? null;
 
-  const { data: events, isLoading } = useCalendarEvents(
-    viewsAllClub
-      ? { mode: "club", clubId: profile?.club_id ?? null }
-      : { mode: "team", teamId: activeTeam?.id ?? null },
-  );
+  const teamNames = React.useMemo(() => {
+    const m: Record<string, string> = {};
+    for (const t of teamOptions) if (t.id) m[t.id] = t.name;
+    return m;
+  }, [teamOptions]);
 
-  React.useEffect(() => {
-    if (!viewsAllClub || !profile?.club_id) return;
-    supabase
-      .from("teams")
-      .select("id, name")
-      .eq("club_id", profile.club_id)
-      .order("name")
-      .then(({ data }) => {
-        const list = (data ?? []) as { id: string; name: string }[];
-        setClubTeams(list);
-        setCreateTeamId((cur) => cur ?? list[0]?.id ?? null);
-      });
-  }, [viewsAllClub, profile?.club_id]);
-
-  React.useEffect(() => {
-    if (!viewsAllClub) setCreateTeamId(activeTeam?.id ?? null);
-  }, [viewsAllClub, activeTeam?.id]);
-
-  React.useEffect(() => {
-    if (profile?.club_id) {
-      setClubId(profile.club_id);
-      return;
-    }
-    if (!activeTeam?.id) {
-      setClubId(null);
-      return;
-    }
-    supabase
-      .from("teams")
-      .select("club_id")
-      .eq("id", activeTeam.id)
-      .maybeSingle()
-      .then(({ data }) => setClubId(data?.club_id ?? null));
-  }, [profile?.club_id, activeTeam?.id]);
+  // La RLS limita las filas: se traen todos los eventos accesibles del club.
+  const { data: events, isLoading } = useCalendarEvents({ mode: "club", clubId });
 
   const upcoming = React.useMemo(() => {
     const now = new Date();
-    return (events ?? []).filter((e) => new Date(e.starts_at) >= startOfDay(now));
-  }, [events]);
-
-  if (!viewsAllClub && !activeTeam) {
-    return <EmptyState title="Sin equipo activo" message="Selecciona un equipo desde el encabezado." />;
-  }
+    return (events ?? [])
+      .filter((e) => new Date(e.starts_at) >= startOfDay(now))
+      .filter((e) => !teamFilter || e.team_id === teamFilter);
+  }, [events, teamFilter]);
 
   function openEdit(ev: CalendarEventRow) {
     setEditing(ev);
@@ -91,31 +58,17 @@ function AgendaModulePage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader hideTitle title="Agenda" subtitle={activeTeam?.name ?? "Todo el club"} />
+      <PageHeader hideTitle title="Agenda" subtitle="Todos tus equipos" />
       <ModuleTabs activeKey="agenda" />
+      <TeamFilter teams={teamOptions} value={teamFilter} onChange={setTeamFilter} />
 
-      {canEdit ? (
-        <div className="flex items-center gap-2">
-          {viewsAllClub && clubTeams.length > 0 ? (
-            <select
-              value={createTeamId ?? ""}
-              onChange={(e) => setCreateTeamId(e.target.value)}
-              className="rounded-md border border-border/60 bg-background/60 px-2 py-2 text-sm text-foreground"
-              aria-label="Categoría para nuevo evento"
-            >
-              {clubTeams.map((t) => (
-                <option key={t.id} value={t.id}>{t.name}</option>
-              ))}
-            </select>
-          ) : null}
-          <Button
-            onClick={() => { setEditing(null); setDialogOpen(true); }}
-            className="flex-1 glow-primary"
-            disabled={!createTeamId}
-          >
-            <Plus className="mr-2 h-4 w-4" /> Nuevo evento
-          </Button>
-        </div>
+      {canEdit && editableTeams.length > 0 ? (
+        <Button
+          onClick={() => { setEditing(null); setDialogOpen(true); }}
+          className="w-full glow-primary"
+        >
+          <Plus className="mr-2 h-4 w-4" /> Nuevo evento
+        </Button>
       ) : null}
 
       <div className="space-y-3">
@@ -138,6 +91,7 @@ function AgendaModulePage() {
                   title={e.title}
                   subtitle={`${new Date(e.starts_at).toLocaleDateString("es-MX", { weekday: "short", day: "numeric", month: "short" })} · ${formatTime(e.starts_at)}${e.location ? ` · ${e.location}` : ""}`}
                 >
+                  <TeamBadge name={e.team_id ? teamNames[e.team_id] : "Todo el club"} className="mr-2" />
                   <span
                     className="inline-block rounded-full px-2 py-0.5 text-xs"
                     style={{ backgroundColor: `${def.cssVar}20`, color: def.cssVar }}
@@ -151,12 +105,13 @@ function AgendaModulePage() {
         )}
       </div>
 
-      {clubId && (editing?.team_id ?? createTeamId) ? (
+      {clubId ? (
         <EventFormDialog
           open={dialogOpen}
           onOpenChange={setDialogOpen}
           clubId={clubId}
-          teamId={(editing?.team_id ?? createTeamId)!}
+          teams={editableTeams}
+          defaultTeamId={editing?.team_id ?? teamFilter ?? null}
           userId={user.id}
           event={editing}
         />
