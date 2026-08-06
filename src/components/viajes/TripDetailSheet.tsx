@@ -37,6 +37,8 @@ import {
   type TripRow,
 } from "@/hooks/useTrips";
 import { TravelerPicker, initialsOf, type TeamMemberOption } from "./TravelerPicker";
+import { TripLogisticsTimeline } from "./TripLogisticsTimeline";
+
 
 interface Props {
   open: boolean;
