@@ -20,19 +20,32 @@ import { toLocalInputValue, fromLocalInputValue } from "@/lib/calendar-utils";
 import { useTeamMembers, type TeamMember } from "@/hooks/useTeamMembers";
 import type { CalendarEventRow } from "@/hooks/useCalendarEvents";
 import { cn } from "@/lib/utils";
+import { TeamSelectField } from "@/components/squad/TeamSelectField";
+import type { TeamOption } from "@/hooks/useAccess";
 
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   clubId: string;
-  teamId: string;
+  /** Equipos donde el usuario puede crear eventos. */
+  teams: TeamOption[];
+  /** Equipo preseleccionado (filtro activo o equipo del evento en edición). */
+  defaultTeamId?: string | null;
   userId: string;
   defaultDate?: Date;
   event?: CalendarEventRow | null;
 }
 
-export function EventFormDialog({ open, onOpenChange, clubId, teamId, userId, defaultDate, event }: Props) {
+export function EventFormDialog({ open, onOpenChange, clubId, teams, defaultTeamId, userId, defaultDate, event }: Props) {
   const isEdit = !!event;
+  const firstTeamId = teams[0]?.id ?? null;
+  const [teamId, setTeamId] = React.useState<string | null>(
+    event?.team_id ?? defaultTeamId ?? firstTeamId,
+  );
+  React.useEffect(() => {
+    if (!open) return;
+    setTeamId(event?.team_id ?? defaultTeamId ?? firstTeamId);
+  }, [open, event?.team_id, defaultTeamId, firstTeamId]);
   const qc = useQueryClient();
   const [step, setStep] = React.useState<"type" | "form">(isEdit ? "form" : "type");
   const [eventType, setEventType] = React.useState<EventType>(event?.event_type ?? "entrenamiento");
@@ -51,6 +64,11 @@ export function EventFormDialog({ open, onOpenChange, clubId, teamId, userId, de
   const [search, setSearch] = React.useState("");
 
   const membersQ = useTeamMembers(teamId, clubId);
+
+  // Al cambiar de equipo, la lista de asistentes deja de ser válida.
+  React.useEffect(() => {
+    if (!isEdit) setAttendeeIds(new Set());
+  }, [teamId, isEdit]);
 
   React.useEffect(() => {
     if (!open) return;
@@ -88,6 +106,7 @@ export function EventFormDialog({ open, onOpenChange, clubId, teamId, userId, de
 
   const mutation = useMutation({
     mutationFn: async () => {
+      if (!teamId) throw new Error("Selecciona un equipo");
       if (!title.trim()) throw new Error("El título es obligatorio");
       if (!startsAt) throw new Error("La fecha y hora son obligatorias");
       const payload = {
@@ -138,7 +157,7 @@ export function EventFormDialog({ open, onOpenChange, clubId, teamId, userId, de
     },
     onSuccess: () => {
       toast.success(isEdit ? "Evento actualizado" : "Evento creado");
-      qc.invalidateQueries({ queryKey: ["calendar-events", teamId] });
+      qc.invalidateQueries({ queryKey: ["calendar-events"] });
       qc.invalidateQueries({ queryKey: ["event-attendees"] });
       onOpenChange(false);
     },
@@ -153,7 +172,7 @@ export function EventFormDialog({ open, onOpenChange, clubId, teamId, userId, de
     },
     onSuccess: () => {
       toast.success("Evento eliminado");
-      qc.invalidateQueries({ queryKey: ["calendar-events", teamId] });
+      qc.invalidateQueries({ queryKey: ["calendar-events"] });
       onOpenChange(false);
     },
     onError: (e: any) => toast.error(e.message ?? "No se pudo eliminar"),
@@ -228,6 +247,14 @@ export function EventFormDialog({ open, onOpenChange, clubId, teamId, userId, de
                 </button>
               ) : null}
             </div>
+
+            <TeamSelectField
+              id="event-team"
+              teams={teams}
+              value={teamId}
+              onChange={setTeamId}
+              disabled={isEdit}
+            />
 
             <div className="space-y-1.5">
               <Label htmlFor="event-title">Título</Label>
