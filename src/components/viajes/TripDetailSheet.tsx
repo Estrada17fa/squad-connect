@@ -241,31 +241,9 @@ export function TripDetailSheet({
               )}
             </section>
 
-            {/* Secciones de logística — se construyen en los siguientes prompts */}
-            <section className="space-y-2">
-              <h3 className="font-display text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                Logística
-              </h3>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                {[
-                  { icon: Bus, label: "Transporte" },
-                  { icon: Plane, label: "Vuelos" },
-                  { icon: Hotel, label: "Hotel" },
-                  { icon: UtensilsCrossed, label: "Comidas" },
-                  { icon: Luggage, label: "Equipaje" },
-                  { icon: FileText, label: "Documentos" },
-                ].map(({ icon: Icon, label }) => (
-                  <div
-                    key={label}
-                    className="flex items-center gap-2 rounded-xl border border-dashed border-border/60 px-3 py-2 text-xs text-muted-foreground"
-                  >
-                    <Icon className="h-4 w-4 shrink-0" />
-                    <span className="truncate">{label}</span>
-                  </div>
-                ))}
-              </div>
-              <p className="text-xs text-muted-foreground">Se habilitarán próximamente.</p>
-            </section>
+            {/* Logística del viaje: vuelos, transporte, hotel, comidas y equipaje */}
+            <TripLogisticsTimeline trip={trip} canEdit={editable} />
+
           </>
         )}
       </EntitySheetBody>
