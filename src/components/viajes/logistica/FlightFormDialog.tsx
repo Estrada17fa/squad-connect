@@ -73,6 +73,7 @@ export function FlightFormDialog({ open, onOpenChange, tripId, userId, flight, d
       destination: destination.trim(),
       gate: gate.trim() || null,
       notes: notes.trim() || null,
+      baggage_instructions: baggage.trim() || null,
     };
     save.mutate(
       { id: flight?.id, input, userId },
