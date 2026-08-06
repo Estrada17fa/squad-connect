@@ -8,11 +8,14 @@ import { useTripTransports } from "@/hooks/useTripTransports";
 import { useTripHotels } from "@/hooks/useTripHotels";
 import { useTripMeals } from "@/hooks/useTripMeals";
 import { useTripLuggage } from "@/hooks/useTripLuggage";
+import { useTripMaterial } from "@/hooks/useTripMaterial";
 import { FlightsSection } from "./logistica/FlightsSection";
 import { TransportsSection } from "./logistica/TransportsSection";
 import { HotelsSection } from "./logistica/HotelsSection";
 import { MealsSection } from "./logistica/MealsSection";
 import { LuggageSection } from "./logistica/LuggageSection";
+import { TripDocumentsSection } from "./logistica/TripDocumentsSection";
+
 import type { AssignCandidate } from "./logistica/PassengerAssignDialog";
 
 interface Props {
