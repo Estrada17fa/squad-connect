@@ -40,6 +40,7 @@ export function FlightFormDialog({ open, onOpenChange, tripId, userId, flight, d
   const [destination, setDestination] = React.useState("");
   const [gate, setGate] = React.useState("");
   const [notes, setNotes] = React.useState("");
+  const [baggage, setBaggage] = React.useState("");
 
   React.useEffect(() => {
     if (!open) return;
