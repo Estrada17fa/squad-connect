@@ -58,36 +58,18 @@ export function useApp() {
   return ctx;
 }
 
-const ACTIVE_TEAM_KEY = "squad.activeTeamId";
+const LEGACY_ACTIVE_TEAM_KEY = "squad.activeTeamId";
 
 export function AppLayout({ user }: { user: { id: string; email?: string | null } }) {
   const navigate = useNavigate();
   const { data, isLoading } = useAccess(user.id);
-  const [activeTeamId, setActiveTeamIdState] = React.useState<string | null>(() => {
-    if (typeof window === "undefined") return null;
-    return window.localStorage.getItem(ACTIVE_TEAM_KEY);
-  });
 
-  const setActiveTeamId = React.useCallback((id: string | null) => {
-    setActiveTeamIdState(id);
-    if (typeof window !== "undefined") {
-      if (id) window.localStorage.setItem(ACTIVE_TEAM_KEY, id);
-      else window.localStorage.removeItem(ACTIVE_TEAM_KEY);
-    }
+  // Ya no existe el concepto de "equipo activo global".
+  React.useEffect(() => {
+    if (typeof window !== "undefined") window.localStorage.removeItem(LEGACY_ACTIVE_TEAM_KEY);
   }, []);
 
-  const teams = data?.teamOptions ?? [];
-  const activeTeam = React.useMemo<TeamOption | null>(() => {
-    if (teams.length === 0) return null;
-    const found = teams.find((t) => t.id === activeTeamId);
-    return found ?? teams[0];
-  }, [teams, activeTeamId]);
-
-  // Nunca dejamos la selección vacía: fijamos el primer equipo disponible.
-  React.useEffect(() => {
-    if (activeTeam && activeTeam.id !== activeTeamId) setActiveTeamId(activeTeam.id);
-  }, [activeTeam, activeTeamId, setActiveTeamId]);
-
+  const teamOptions = React.useMemo<TeamOption[]>(() => data?.teamOptions ?? [], [data?.teamOptions]);
 
   const accessibleModules = React.useMemo<ModuleKey[]>(() => {
     if (!data) return [];
@@ -101,22 +83,21 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
 
   const clubPerms = data?.permissionsByTeam?.["club"] ?? {};
   const viewsAllClub = !!(data?.isSuperAdmin || (data && !data.isPlayerOnly));
-  const activePermissions = React.useMemo<Record<string, AccessLevel>>(() => {
-    // No-jugadores y super admin: usan la unión (ven todo el club).
-    if (viewsAllClub) return data?.permissions ?? {};
-    const teamKey = activeTeam?.id ?? "club";
-    return data?.permissionsByTeam?.[teamKey] ?? clubPerms;
-  }, [viewsAllClub, data?.permissions, data?.permissionsByTeam, activeTeam?.id, clubPerms]);
+  // Sin equipo activo: los permisos efectivos son la unión de todas las membresías.
+  const activePermissions = React.useMemo<Record<string, AccessLevel>>(
+    () => data?.permissions ?? {},
+    [data?.permissions],
+  );
 
   const getModuleAccess = React.useCallback(
     (key: ModuleKey): AccessLevel => {
-      if (viewsAllClub) return data?.permissions?.[key] ?? "none";
       const scope = MODULE_MAP[key].scope;
-      if (scope === "club") return clubPerms[key] ?? "none";
-      return activePermissions[key] ?? "none";
+      if (scope === "club" && !viewsAllClub) return clubPerms[key] ?? "none";
+      return data?.permissions?.[key] ?? "none";
     },
-    [viewsAllClub, data?.permissions, clubPerms, activePermissions],
+    [viewsAllClub, data?.permissions, clubPerms],
   );
+
 
   // Rol base efectivo. Para no-jugadores tomamos el "mejor" rol entre todas sus
   // membresías (Admin > Técnico > Médico > Staff) para elegir el mapa de páginas.
