@@ -25,6 +25,9 @@ import {
 } from "@/hooks/useTrips";
 import { TravelerPicker, initialsOf, type TeamMemberOption } from "./TravelerPicker";
 import { TripLogisticsTimeline } from "./TripLogisticsTimeline";
+import { MyTripView } from "./MyTripView";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 
 interface Props {
@@ -65,6 +68,20 @@ export function TripDetailSheet({
   const [picker, setPicker] = React.useState(false);
   const [busyId, setBusyId] = React.useState<string | null>(null);
   const editable = canEdit && !readOnly;
+
+  const { data: currentUserId } = useQuery({
+    queryKey: ["current-user-id"],
+    queryFn: async () => (await supabase.auth.getUser()).data.user?.id ?? "",
+    staleTime: 5 * 60 * 1000,
+  });
+  const uid = currentUserId ?? "";
+  const isTraveler = !!trip && !!uid && trip.travelers.some((t) => t.user_id === uid);
+  // Un convocado sin permisos de edición arranca en "Mi viaje"; el staff, en el completo.
+  const [showFull, setShowFull] = React.useState(false);
+  React.useEffect(() => {
+    if (open) setShowFull(!isTraveler || editable);
+  }, [open, isTraveler, editable, trip?.id]);
+
 
   React.useEffect(() => {
     if (openPickerSignal > 0 && editable) setPicker(true);
@@ -118,7 +135,33 @@ export function TripDetailSheet({
               </span>
             </div>
 
+            {isTraveler ? (
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={showFull ? "outline" : "default"}
+                  className={showFull ? "flex-1" : "flex-1 glow-primary"}
+                  onClick={() => setShowFull(false)}
+                >
+                  Mi viaje
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={showFull ? "default" : "outline"}
+                  className={showFull ? "flex-1 glow-primary" : "flex-1"}
+                  onClick={() => setShowFull(true)}
+                >
+                  Itinerario completo
+                </Button>
+              </div>
+            ) : null}
+
+            {!showFull ? <MyTripView trip={trip} userId={uid} /> : (
+            <>
             {/* Línea de tiempo — aquí se insertarán transportes, vuelos, hotel y comidas */}
+
             <section className="space-y-3">
               <h3 className="font-display text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                 Cronología
@@ -232,9 +275,11 @@ export function TripDetailSheet({
 
             {/* Logística del viaje: vuelos, transporte, hotel, comidas y equipaje */}
             <TripLogisticsTimeline trip={trip} canEdit={editable} />
-
+            </>
+            )}
           </>
         )}
+
       </EntitySheetBody>
 
       <EntitySheetFooter>

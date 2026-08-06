@@ -40,6 +40,7 @@ export function FlightFormDialog({ open, onOpenChange, tripId, userId, flight, d
   const [destination, setDestination] = React.useState("");
   const [gate, setGate] = React.useState("");
   const [notes, setNotes] = React.useState("");
+  const [baggage, setBaggage] = React.useState("");
 
   React.useEffect(() => {
     if (!open) return;
@@ -52,6 +53,7 @@ export function FlightFormDialog({ open, onOpenChange, tripId, userId, flight, d
     setDestination(flight?.destination ?? "");
     setGate(flight?.gate ?? "");
     setNotes(flight?.notes ?? "");
+    setBaggage(flight?.baggage_instructions ?? "");
   }, [open, flight, defaultLeg]);
 
   const submit = () => {
@@ -71,6 +73,7 @@ export function FlightFormDialog({ open, onOpenChange, tripId, userId, flight, d
       destination: destination.trim(),
       gate: gate.trim() || null,
       notes: notes.trim() || null,
+      baggage_instructions: baggage.trim() || null,
     };
     save.mutate(
       { id: flight?.id, input, userId },
@@ -147,9 +150,24 @@ export function FlightFormDialog({ open, onOpenChange, tripId, userId, flight, d
         </div>
 
         <div className="space-y-1.5">
+          <Label htmlFor="f-baggage">Instrucción de equipaje</Label>
+          <Textarea
+            id="f-baggage"
+            rows={2}
+            value={baggage}
+            onChange={(e) => setBaggage(e.target.value)}
+            placeholder="Todos con 1 maleta de mano. Las maletas del equipo se documentan en recepción del aeropuerto."
+          />
+          <p className="text-xs text-muted-foreground">
+            Se muestra a todos los pasajeros de este vuelo.
+          </p>
+        </div>
+
+        <div className="space-y-1.5">
           <Label htmlFor="f-notes">Notas</Label>
           <Textarea id="f-notes" rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />
         </div>
+
 
         {isEdit ? (
           <Button

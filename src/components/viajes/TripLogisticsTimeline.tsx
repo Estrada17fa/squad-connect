@@ -8,11 +8,14 @@ import { useTripTransports } from "@/hooks/useTripTransports";
 import { useTripHotels } from "@/hooks/useTripHotels";
 import { useTripMeals } from "@/hooks/useTripMeals";
 import { useTripLuggage } from "@/hooks/useTripLuggage";
+import { useTripMaterial } from "@/hooks/useTripMaterial";
 import { FlightsSection } from "./logistica/FlightsSection";
 import { TransportsSection } from "./logistica/TransportsSection";
 import { HotelsSection } from "./logistica/HotelsSection";
 import { MealsSection } from "./logistica/MealsSection";
 import { LuggageSection } from "./logistica/LuggageSection";
+import { TripDocumentsSection } from "./logistica/TripDocumentsSection";
+
 import type { AssignCandidate } from "./logistica/PassengerAssignDialog";
 
 interface Props {
@@ -37,6 +40,7 @@ export function TripLogisticsTimeline({ trip, canEdit }: Props) {
   const hotels = useTripHotels(trip.id).data ?? [];
   const meals = useTripMeals(trip.id).data ?? [];
   const luggage = useTripLuggage(trip.id).data ?? [];
+  const material = useTripMaterial(trip.id).data ?? [];
 
   // Solo los convocados pueden asignarse a vuelos, transportes o cuartos.
   const travelers: AssignCandidate[] = React.useMemo(
@@ -102,11 +106,24 @@ export function TripLogisticsTimeline({ trip, canEdit }: Props) {
 
       <LuggageSection
         tripId={trip.id}
+        clubId={trip.club_id}
+        teamId={trip.team_id}
         userId={uid}
+        defaultReturnAt={trip.return_at}
         items={luggage}
+        loans={material}
         travelers={travelers.map((t) => ({ user_id: t.user_id, profile: t.profile }))}
         canEdit={editable}
       />
+
+      <TripDocumentsSection
+        tripId={trip.id}
+        clubId={trip.club_id}
+        teamId={trip.team_id}
+        userId={uid}
+        canEdit={editable}
+      />
+
     </section>
   );
 }

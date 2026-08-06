@@ -1,14 +1,15 @@
 import * as React from "react";
 import { toast } from "sonner";
-import { FileText, Pencil, Plane, Users } from "lucide-react";
+import { FileText, Luggage, Pencil, Plane, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatDateTime } from "@/lib/calendar-utils";
-import { LEG_LABEL, type MiniProfile, type TripLeg } from "@/lib/tripLogistics";
+import { LEG_LABEL, personLabel, type MiniProfile, type TripLeg } from "@/lib/tripLogistics";
 import { useFlightMutations, type TripFlight } from "@/hooks/useTripFlights";
 import { TimelineSection } from "./TimelineSection";
 import { PersonChips } from "./PersonChips";
 import { FlightFormDialog } from "./FlightFormDialog";
 import { BoardingPassDialog } from "./BoardingPassDialog";
+import { BaggageHandlersDialog } from "./BaggageHandlersDialog";
 import { PassengerAssignDialog, type AssignCandidate } from "./PassengerAssignDialog";
 
 interface Props {
@@ -27,6 +28,8 @@ export function FlightsSection({ tripId, userId, leg, flights, allFlights, trave
   const [editing, setEditing] = React.useState<TripFlight | null>(null);
   const [passengersFor, setPassengersFor] = React.useState<TripFlight | null>(null);
   const [passesFor, setPassesFor] = React.useState<TripFlight | null>(null);
+  const [baggageFor, setBaggageFor] = React.useState<TripFlight | null>(null);
+
 
   const importSources = React.useMemo(
     () =>
@@ -84,24 +87,50 @@ export function FlightsSection({ tripId, userId, leg, flights, allFlights, trave
 
             {f.notes ? <p className="text-xs text-muted-foreground">{f.notes}</p> : null}
 
+            {f.baggage_instructions ? (
+              <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                <Luggage className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {f.baggage_instructions}
+              </p>
+            ) : null}
+
+            {f.baggage_handlers.length > 0 ? (
+              f.baggage_handlers.some((h) => h.user_id === userId) ? (
+                <p className="rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-xs font-medium text-primary">
+                  Tú documentas las maletas del equipo en este vuelo
+                  {(() => {
+                    const mine = f.baggage_handlers.find((h) => h.user_id === userId);
+                    return mine?.pieces ? ` · ${mine.pieces} pieza${mine.pieces === 1 ? "" : "s"}` : "";
+                  })()}
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Documentan: {f.baggage_handlers.map((h) => personLabel(h.profile)).join(", ")}
+                </p>
+              )
+            ) : null}
+
             <PersonChips
               people={f.passengers.map((p) => ({ id: p.id, profile: p.profile as MiniProfile | null }))}
               emptyLabel="Sin pasajeros asignados"
             />
 
             {canEdit ? (
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button type="button" size="sm" variant="outline" className="flex-1" onClick={() => setPassengersFor(f)}>
                   <Users className="mr-1.5 h-4 w-4" /> Pasajeros
                 </Button>
                 <Button type="button" size="sm" variant="outline" className="flex-1" onClick={() => setPassesFor(f)}>
                   <FileText className="mr-1.5 h-4 w-4" /> Pases ({f.boarding_passes.length})
                 </Button>
+                <Button type="button" size="sm" variant="outline" className="w-full" onClick={() => setBaggageFor(f)}>
+                  <Luggage className="mr-1.5 h-4 w-4" /> Documentan maletas ({f.baggage_handlers.length})
+                </Button>
               </div>
             ) : null}
           </article>
         ))}
       </TimelineSection>
+
 
       {canEdit ? (
         <FlightFormDialog
@@ -148,6 +177,15 @@ export function FlightsSection({ tripId, userId, leg, flights, allFlights, trave
           onOpenChange={(v) => !v && setPassesFor(null)}
           tripId={tripId}
           flight={allFlights.find((f) => f.id === passesFor.id) ?? passesFor}
+        />
+      ) : null}
+
+      {canEdit && baggageFor ? (
+        <BaggageHandlersDialog
+          open
+          onOpenChange={(v) => !v && setBaggageFor(null)}
+          tripId={tripId}
+          flight={allFlights.find((f) => f.id === baggageFor.id) ?? baggageFor}
         />
       ) : null}
     </>

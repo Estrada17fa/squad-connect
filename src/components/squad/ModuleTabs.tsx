@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Link } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { Building2, type LucideIcon } from "lucide-react";
+import { Building2, Plane, type LucideIcon } from "lucide-react";
 import { useApp } from "./AppLayout";
 import { MODULE_MAP, type ModuleKey } from "@/lib/modules";
 import { findHubForModule, type PageKey } from "@/lib/rolePages";
@@ -34,7 +34,7 @@ interface ModuleTabsProps {
  * del módulo, preservando URL, back button y deep-linking.
  */
 export function ModuleTabs({ activeKey, hubKey, extraActiveKey }: ModuleTabsProps) {
-  const { visiblePages, isSuperAdmin, profile } = useApp();
+  const { visiblePages, isSuperAdmin, profile, accessibleModules } = useApp();
   const qc = useQueryClient();
   const prefetchCtx = React.useMemo(
     () => ({ clubId: profile?.club_id ?? null, teamId: null }),
@@ -59,8 +59,19 @@ export function ModuleTabs({ activeKey, hubKey, extraActiveKey }: ModuleTabsProp
         active: extraActiveKey === "admin-clubs",
       });
     }
+    // Consulta de viajes desde Agenda (solo lectura).
+    if (hub?.page.key === "agenda" && (isSuperAdmin || accessibleModules.includes("viajes"))) {
+      out.push({
+        key: "agenda-viajes",
+        label: "Viajes",
+        icon: Plane,
+        to: "/agenda-viajes",
+        active: extraActiveKey === "agenda-viajes",
+      });
+    }
     return out;
-  }, [hub?.page.key, isSuperAdmin, extraActiveKey]);
+  }, [hub?.page.key, isSuperAdmin, accessibleModules, extraActiveKey]);
+
 
   const total = modules.length + extras.length;
   if (total <= 1) return null;
