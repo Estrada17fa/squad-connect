@@ -40,6 +40,7 @@ export function TripLogisticsTimeline({ trip, canEdit }: Props) {
   const hotels = useTripHotels(trip.id).data ?? [];
   const meals = useTripMeals(trip.id).data ?? [];
   const luggage = useTripLuggage(trip.id).data ?? [];
+  const material = useTripMaterial(trip.id).data ?? [];
 
   // Solo los convocados pueden asignarse a vuelos, transportes o cuartos.
   const travelers: AssignCandidate[] = React.useMemo(
