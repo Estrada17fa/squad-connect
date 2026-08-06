@@ -179,6 +179,8 @@ export function useAccess(userId: string) {
           : null,
         clubName: (profileRes.data as any)?.club?.name ?? null,
         teams,
+        teamOptions,
+
         permissions,
         permissionsByTeam,
         isSuperAdmin: !!superRes.data,
