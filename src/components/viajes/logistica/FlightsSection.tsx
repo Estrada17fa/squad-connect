@@ -179,6 +179,19 @@ export function FlightsSection({ tripId, userId, leg, flights, allFlights, trave
           flight={allFlights.find((f) => f.id === passesFor.id) ?? passesFor}
         />
       ) : null}
+
+      {canEdit && baggageFor ? (
+        <BaggageHandlersDialog
+          open
+          onOpenChange={(v) => !v && setBaggageFor(null)}
+          tripId={tripId}
+          flight={allFlights.find((f) => f.id === baggageFor.id) ?? baggageFor}
+        />
+      ) : null}
+    </>
+  );
+}
+
     </>
   );
 }
