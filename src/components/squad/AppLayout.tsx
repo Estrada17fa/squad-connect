@@ -74,12 +74,18 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
     }
   }, []);
 
-  const teams = data?.teams ?? [];
+  const teams = data?.teamOptions ?? [];
   const activeTeam = React.useMemo<TeamOption | null>(() => {
     if (teams.length === 0) return null;
-    const found = teams.find((t) => (t.id ?? "__club__") === (activeTeamId ?? "__club__"));
+    const found = teams.find((t) => t.id === activeTeamId);
     return found ?? teams[0];
   }, [teams, activeTeamId]);
+
+  // Nunca dejamos la selección vacía: fijamos el primer equipo disponible.
+  React.useEffect(() => {
+    if (activeTeam && activeTeam.id !== activeTeamId) setActiveTeamId(activeTeam.id);
+  }, [activeTeam, activeTeamId, setActiveTeamId]);
+
 
   const accessibleModules = React.useMemo<ModuleKey[]>(() => {
     if (!data) return [];
