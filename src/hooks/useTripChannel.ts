@@ -43,14 +43,18 @@ export async function syncAssignments(
   const toAdd = nextUserIds.filter((id) => !current.has(id));
   const toRemove = currentUserIds.filter((id) => !next.has(id));
 
+  const client = supabase as unknown as {
+    from: (t: string) => any;
+  };
+
   if (toRemove.length) {
-    const { error } = await supabase.from(table).delete().eq(parentColumn, parentId).in("user_id", toRemove);
+    const { error } = await client.from(table).delete().eq(parentColumn, parentId).in("user_id", toRemove);
     if (error) throw error;
   }
   if (toAdd.length) {
-    const { error } = await supabase
+    const { error } = await client
       .from(table)
-      .insert(toAdd.map((user_id) => ({ [parentColumn]: parentId, user_id }) as never));
+      .insert(toAdd.map((user_id) => ({ [parentColumn]: parentId, user_id })));
     if (error) throw error;
   }
 }
