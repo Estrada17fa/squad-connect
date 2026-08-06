@@ -29,6 +29,7 @@ export type Database = {
           starts_at: string
           team_id: string | null
           title: string
+          trip_id: string | null
           updated_at: string
         }
         Insert: {
@@ -45,6 +46,7 @@ export type Database = {
           starts_at: string
           team_id?: string | null
           title: string
+          trip_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -61,6 +63,7 @@ export type Database = {
           starts_at?: string
           team_id?: string | null
           title?: string
+          trip_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -90,6 +93,13 @@ export type Database = {
             columns: ["team_id"]
             isOneToOne: false
             referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_events_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
             referencedColumns: ["id"]
           },
         ]
@@ -201,6 +211,7 @@ export type Database = {
           tags: string[] | null
           team_id: string | null
           title: string
+          trip_id: string | null
           updated_at: string
           uploaded_by: string | null
         }
@@ -219,6 +230,7 @@ export type Database = {
           tags?: string[] | null
           team_id?: string | null
           title: string
+          trip_id?: string | null
           updated_at?: string
           uploaded_by?: string | null
         }
@@ -237,6 +249,7 @@ export type Database = {
           tags?: string[] | null
           team_id?: string | null
           title?: string
+          trip_id?: string | null
           updated_at?: string
           uploaded_by?: string | null
         }
@@ -260,6 +273,13 @@ export type Database = {
             columns: ["team_id"]
             isOneToOne: false
             referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
             referencedColumns: ["id"]
           },
           {
@@ -465,6 +485,7 @@ export type Database = {
           returned_at: string | null
           returned_quantity: number
           team_id: string | null
+          trip_id: string | null
           updated_at: string
         }
         Insert: {
@@ -482,6 +503,7 @@ export type Database = {
           returned_at?: string | null
           returned_quantity?: number
           team_id?: string | null
+          trip_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -499,6 +521,7 @@ export type Database = {
           returned_at?: string | null
           returned_quantity?: number
           team_id?: string | null
+          trip_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -535,6 +558,13 @@ export type Database = {
             columns: ["team_id"]
             isOneToOne: false
             referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_loans_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
             referencedColumns: ["id"]
           },
         ]
@@ -1530,6 +1560,45 @@ export type Database = {
           },
         ]
       }
+      trip_flight_baggage_handlers: {
+        Row: {
+          created_at: string
+          flight_id: string
+          id: string
+          pieces: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          flight_id: string
+          id?: string
+          pieces?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          flight_id?: string
+          id?: string
+          pieces?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_flight_baggage_handlers_flight_id_fkey"
+            columns: ["flight_id"]
+            isOneToOne: false
+            referencedRelation: "trip_flights"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_flight_baggage_handlers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trip_flight_passengers: {
         Row: {
           created_at: string
@@ -1570,6 +1639,7 @@ export type Database = {
         Row: {
           airline: string | null
           arrives_at: string | null
+          baggage_instructions: string | null
           created_at: string
           created_by: string | null
           departs_at: string
@@ -1586,6 +1656,7 @@ export type Database = {
         Insert: {
           airline?: string | null
           arrives_at?: string | null
+          baggage_instructions?: string | null
           created_at?: string
           created_by?: string | null
           departs_at: string
@@ -1602,6 +1673,7 @@ export type Database = {
         Update: {
           airline?: string | null
           arrives_at?: string | null
+          baggage_instructions?: string | null
           created_at?: string
           created_by?: string | null
           departs_at?: string
