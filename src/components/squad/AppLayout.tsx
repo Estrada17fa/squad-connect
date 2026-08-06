@@ -162,9 +162,9 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
       <div className="min-h-screen bg-background pb-24 sm:pb-8">
         <Header
           clubName={data.clubName}
-          teams={teams}
-          activeTeam={activeTeam}
-          setActiveTeamId={setActiveTeamId}
+          teams={teamOptions}
+          activeTeam={null}
+          setActiveTeamId={() => {}}
           userName={data.profile?.full_name ?? user.email ?? ""}
           userId={user.id}
           isSuperAdmin={data.isSuperAdmin}
