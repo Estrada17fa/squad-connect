@@ -150,9 +150,24 @@ export function FlightFormDialog({ open, onOpenChange, tripId, userId, flight, d
         </div>
 
         <div className="space-y-1.5">
+          <Label htmlFor="f-baggage">Instrucción de equipaje</Label>
+          <Textarea
+            id="f-baggage"
+            rows={2}
+            value={baggage}
+            onChange={(e) => setBaggage(e.target.value)}
+            placeholder="Todos con 1 maleta de mano. Las maletas del equipo se documentan en recepción del aeropuerto."
+          />
+          <p className="text-xs text-muted-foreground">
+            Se muestra a todos los pasajeros de este vuelo.
+          </p>
+        </div>
+
+        <div className="space-y-1.5">
           <Label htmlFor="f-notes">Notas</Label>
           <Textarea id="f-notes" rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />
         </div>
+
 
         {isEdit ? (
           <Button
