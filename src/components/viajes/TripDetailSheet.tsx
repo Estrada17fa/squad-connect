@@ -1,21 +1,8 @@
 import * as React from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import {
-  CalendarClock,
-  MapPin,
-  Pencil,
-  Plane,
-  Trophy,
-  Users,
-  UserPlus,
-  X,
-  Bus,
-  Hotel,
-  UtensilsCrossed,
-  Luggage,
-  FileText,
-} from "lucide-react";
+import { CalendarClock, MapPin, Pencil, Plane, Trophy, Users, UserPlus, X } from "lucide-react";
+
 import {
   EntitySheet,
   EntitySheetBody,
