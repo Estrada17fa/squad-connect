@@ -18,6 +18,8 @@ export interface AccessData {
   profile: { full_name: string | null; email: string | null; club_id: string | null } | null;
   clubName: string | null;
   teams: TeamOption[];
+  /** Equipos reales seleccionables en el header (club-wide => todos los del club). */
+  teamOptions: TeamOption[];
   /** Unión (mejor nivel) entre TODAS las membresías + overrides. Úsalo solo para decisiones globales (bottom nav). */
   permissions: Record<string, AccessLevel>;
   /** Permisos efectivos por equipo: la clave 'club' representa el ámbito club (o cuando no hay equipo activo). */
@@ -26,6 +28,7 @@ export interface AccessData {
   /** true si TODAS las membresías del usuario son de rol base 'jugador' (y no es super admin). */
   isPlayerOnly: boolean;
 }
+
 
 const RANK: Record<AccessLevel, number> = { none: 0, read: 1, editor: 2, approver: 3 };
 const TEAM_CLUB_KEY = "club";
@@ -97,6 +100,30 @@ export function useAccess(userId: string) {
         baseRole: m.role?.base_role ?? null,
       }));
 
+      // Opciones reales de equipo para el selector del header.
+      const clubId = profileRes.data?.club_id ?? null;
+      const clubWide = memberships.find((m: any) => !m.team_id) as any | undefined;
+      let teamOptions: TeamOption[] = teams.filter((t) => t.id);
+      if (clubId && (clubWide || superRes.data)) {
+        const { data: clubTeams } = await supabase
+          .from("teams")
+          .select("id, name, category")
+          .eq("club_id", clubId)
+          .order("name");
+        const extras: TeamOption[] = (clubTeams ?? []).map((t: any) => ({
+          id: t.id,
+          name: t.name,
+          category: t.category ?? null,
+          roleId: clubWide?.role_id ?? "",
+          roleName: clubWide?.role?.name ?? "",
+          baseRole: clubWide?.role?.base_role ?? null,
+        }));
+        const seen = new Set(teamOptions.map((t) => t.id));
+        teamOptions = [...teamOptions, ...extras.filter((t) => !seen.has(t.id))];
+      }
+      teamOptions.sort((a, b) => a.name.localeCompare(b.name));
+
+
       // Permisos por membresía (por team_id o 'club' si team_id NULL)
       const byMembership: Record<string, Record<string, AccessLevel>> = {};
       for (const m of memberships as any[]) {
@@ -152,6 +179,8 @@ export function useAccess(userId: string) {
           : null,
         clubName: (profileRes.data as any)?.club?.name ?? null,
         teams,
+        teamOptions,
+
         permissions,
         permissionsByTeam,
         isSuperAdmin: !!superRes.data,

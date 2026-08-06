@@ -74,12 +74,18 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
     }
   }, []);
 
-  const teams = data?.teams ?? [];
+  const teams = data?.teamOptions ?? [];
   const activeTeam = React.useMemo<TeamOption | null>(() => {
     if (teams.length === 0) return null;
-    const found = teams.find((t) => (t.id ?? "__club__") === (activeTeamId ?? "__club__"));
+    const found = teams.find((t) => t.id === activeTeamId);
     return found ?? teams[0];
   }, [teams, activeTeamId]);
+
+  // Nunca dejamos la selección vacía: fijamos el primer equipo disponible.
+  React.useEffect(() => {
+    if (activeTeam && activeTeam.id !== activeTeamId) setActiveTeamId(activeTeam.id);
+  }, [activeTeam, activeTeamId, setActiveTeamId]);
+
 
   const accessibleModules = React.useMemo<ModuleKey[]>(() => {
     if (!data) return [];
@@ -219,13 +225,13 @@ function Header({
   canOpenModule: (key: string) => boolean;
   onSignOut: () => void;
 }) {
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const activeModule = moduleFromPath(pathname);
-  const activeScope = activeModule ? MODULE_MAP[activeModule].scope : null;
-  // No-jugadores y super admin ven todo el club: nunca mostramos selector de equipo.
-  // Jugadores solo lo ven cuando pertenecen a varios equipos y el módulo no es de club.
-  const showTeamSelector = !viewsAllClub && activeScope !== "club" && teams.length > 1;
-  const showClubName = !showTeamSelector;
+  void viewsAllClub;
+
+  // El selector siempre está disponible cuando el usuario tiene equipos:
+  // dropdown con varios, píldora fija con uno solo.
+  const showTeamSelector = teams.length > 1;
+  const showFixedTeam = teams.length === 1;
+  const showClubName = teams.length === 0;
 
   return (
     <header className="sticky top-0 z-30 border-b border-border/60 bg-background/70 backdrop-blur-xl">
@@ -239,16 +245,16 @@ function Header({
               <DropdownMenuTrigger className="glass inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm text-foreground hover:bg-white/[0.06]">
                 <span className="flex flex-col items-start leading-tight">
                   <span className="max-w-[140px] truncate">{activeTeam?.name ?? "Equipo"}</span>
-                  {activeTeam?.roleName ? (
+                  {activeTeam?.category ? (
                     <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                      {activeTeam.roleName}
+                      {activeTeam.category}
                     </span>
                   ) : null}
                 </span>
                 <ChevronDown className="h-4 w-4 text-muted-foreground" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>Cambiar contexto</DropdownMenuLabel>
+                <DropdownMenuLabel>Equipo activo</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {teams.map((t) => (
                   <DropdownMenuItem
@@ -257,15 +263,22 @@ function Header({
                   >
                     <div className="flex flex-col">
                       <span className="text-sm">{t.name}</span>
-                      <span className="text-xs text-muted-foreground">{t.roleName}</span>
+                      {t.category ? (
+                        <span className="text-xs text-muted-foreground">{t.category}</span>
+                      ) : null}
                     </div>
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
+          ) : showFixedTeam ? (
+            <span className="glass inline-flex max-w-[160px] items-center truncate rounded-full px-3 py-1.5 text-sm text-foreground">
+              {activeTeam?.name}
+            </span>
           ) : showClubName && clubName ? (
             <span className="hidden text-sm text-muted-foreground sm:inline">{clubName}</span>
           ) : null}
+
           <NotificationBell userId={userId} canOpenModule={canOpenModule} />
           <DropdownMenu>
             <DropdownMenuTrigger className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-sm font-medium text-foreground hover:bg-white/10">
