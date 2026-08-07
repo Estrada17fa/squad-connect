@@ -50,6 +50,9 @@ function PlayerDetail() {
   const meta = AVAILABILITY_META[player.availability_status];
   const isSelf = player.user_id === user.id;
   const showFull = canEdit || isSelf;
+  // Privacidad: el expediente médico solo lo abre el cuerpo médico del equipo o el propio jugador.
+  const canEditHealth = canEditSalud(player.team_id);
+  const canSeeHealth = isSelf || canReadSalud(player.team_id);
 
   return (
     <div className="space-y-6">
