@@ -1,6 +1,6 @@
 import * as React from "react";
 import { createFileRoute, useNavigate, useRouterState } from "@tanstack/react-router";
-import { Users } from "lucide-react";
+import { Plus, Users } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { ModuleTabs } from "@/components/squad/ModuleTabs";
 import { EmptyState } from "@/components/squad/EmptyState";
@@ -14,6 +14,9 @@ import type { AvailabilityStatus } from "@/hooks/usePlayers";
 import { cn } from "@/lib/utils";
 import type { BaseRole } from "@/lib/rolePages";
 import { TeamFilter, TeamBadge } from "@/components/squad/TeamFilter";
+import { Button } from "@/components/ui/button";
+import { useEditableTeams } from "@/hooks/useEditableTeams";
+import { PlayerFormDialog } from "@/components/plantel/PlayerFormDialog";
 
 export const Route = createFileRoute("/_authenticated/m/plantel")({
   head: () => ({
@@ -68,6 +71,9 @@ function PlantelPage() {
     return r ? new Set([r]) : new Set();
   });
   const [search, setSearch] = React.useState("");
+  // Alta de jugador: solo equipos donde el nivel de 'plantel' llega a editor.
+  const editableTeams = useEditableTeams("plantel");
+  const [createOpen, setCreateOpen] = React.useState(false);
   
 
   const toggleRole = (r: BaseRole) => {
@@ -103,6 +109,12 @@ function PlantelPage() {
         subtitle="Todos tus equipos"
       />
       <TeamFilter teams={teamOptions} value={teamFilter} onChange={setTeamFilter} />
+
+      {clubId && editableTeams.length > 0 ? (
+        <Button onClick={() => setCreateOpen(true)} className="w-full glow-primary">
+          <Plus className="mr-2 h-4 w-4" /> Agregar jugador
+        </Button>
+      ) : null}
 
       <div className="space-y-2">
         <Input placeholder="Buscar miembro…" value={search} onChange={(e) => setSearch(e.target.value)} />
@@ -197,6 +209,18 @@ function PlantelPage() {
           })}
         </div>
       )}
+
+      {clubId && editableTeams.length > 0 ? (
+        <PlayerFormDialog
+          open={createOpen}
+          onOpenChange={setCreateOpen}
+          clubId={clubId}
+          teamId={(teamFilter && editableTeams.some((t) => t.id === teamFilter)
+            ? teamFilter
+            : editableTeams[0].id) ?? ""}
+          teams={editableTeams}
+        />
+      ) : null}
     </div>
   );
 }

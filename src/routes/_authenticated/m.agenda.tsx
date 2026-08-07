@@ -12,6 +12,7 @@ import { useCalendarEvents, type CalendarEventRow } from "@/hooks/useCalendarEve
 import { EVENT_TYPE_MAP } from "@/lib/eventTypes";
 import { formatTime, startOfDay } from "@/lib/calendar-utils";
 import { useEditableTeams } from "@/hooks/useEditableTeams";
+import { useTeamAccess } from "@/hooks/useTeamAccess";
 import { EventFormDialog } from "@/components/calendar/EventFormDialog";
 import { TeamFilter, TeamBadge } from "@/components/squad/TeamFilter";
 
@@ -26,9 +27,11 @@ export const Route = createFileRoute("/_authenticated/m/agenda")({
 });
 
 function AgendaModulePage() {
-  const { getModuleAccess, user, isSuperAdmin, profile, teamOptions } = useApp();
-  const canEdit = isSuperAdmin || getModuleAccess("agenda") === "editor" || getModuleAccess("agenda") === "approver";
+  const { user, profile, teamOptions } = useApp();
   const editableTeams = useEditableTeams("agenda");
+  const { canEditTeam } = useTeamAccess("agenda");
+  const canEdit = editableTeams.length > 0;
+
 
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<CalendarEventRow | null>(null);
@@ -62,7 +65,7 @@ function AgendaModulePage() {
       <ModuleTabs activeKey="agenda" />
       <TeamFilter teams={teamOptions} value={teamFilter} onChange={setTeamFilter} />
 
-      {canEdit && editableTeams.length > 0 ? (
+      {canEdit ? (
         <Button
           onClick={() => { setEditing(null); setDialogOpen(true); }}
           className="w-full glow-primary"
@@ -82,11 +85,12 @@ function AgendaModulePage() {
         ) : (
           upcoming.map((e, i) => {
             const def = EVENT_TYPE_MAP[e.event_type];
+            const rowEditable = canEditTeam(e.team_id);
             return (
               <div key={e.id} className="animate-card-in" style={{ animationDelay: `${i * 30}ms` }}>
                 <StandardCard
-                  interactive={canEdit}
-                  onClick={canEdit ? () => openEdit(e) : undefined}
+                  interactive={rowEditable}
+                  onClick={rowEditable ? () => openEdit(e) : undefined}
                   icon={def.icon}
                   title={e.title}
                   subtitle={`${new Date(e.starts_at).toLocaleDateString("es-MX", { weekday: "short", day: "numeric", month: "short" })} · ${formatTime(e.starts_at)}${e.location ? ` · ${e.location}` : ""}`}

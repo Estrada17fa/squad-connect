@@ -19,6 +19,7 @@ import { TripFormDialog } from "@/components/viajes/TripFormDialog";
 import { TripDetailSheet } from "@/components/viajes/TripDetailSheet";
 import { TeamFilter, TeamBadge } from "@/components/squad/TeamFilter";
 import { useEditableTeams } from "@/hooks/useEditableTeams";
+import { useTeamAccess } from "@/hooks/useTeamAccess";
 
 export const Route = createFileRoute("/_authenticated/m/viajes")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -39,7 +40,7 @@ export const Route = createFileRoute("/_authenticated/m/viajes")({
 });
 
 function ViajesPage() {
-  const { permissions, isSuperAdmin, accessibleModules, profile, user, teamOptions } = useApp();
+  const { isSuperAdmin, accessibleModules, profile, user, teamOptions } = useApp();
   const clubId = profile?.club_id ?? null;
   const editableTeams = useEditableTeams("viajes");
   const [teamFilter, setTeamFilter] = React.useState<string | null>(null);
@@ -49,8 +50,7 @@ function ViajesPage() {
     return m;
   }, [teamOptions]);
   const canAccess = isSuperAdmin || accessibleModules.includes("viajes");
-  const level = permissions.viajes;
-  const canEdit = isSuperAdmin || level === "editor" || level === "approver";
+  const { canEditTeam } = useTeamAccess("viajes");
 
   const [formOpen, setFormOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<TripRow | null>(null);
@@ -92,7 +92,7 @@ function ViajesPage() {
       <ModuleTabs activeKey="viajes" />
       <TeamFilter teams={teamOptions} value={teamFilter} onChange={setTeamFilter} />
 
-      {canEdit && editableTeams.length > 0 ? (
+      {editableTeams.length > 0 ? (
         <Button
           className="w-full glow-primary"
           onClick={() => {
@@ -135,7 +135,7 @@ function ViajesPage() {
         open={!!detail}
         onOpenChange={(v) => !v && setDetailId(null)}
         trip={detail}
-        canEdit={canEdit}
+        canEdit={canEditTeam(detail?.team_id)}
         onEdit={(t) => {
           setDetailId(null);
           setEditing(t);
