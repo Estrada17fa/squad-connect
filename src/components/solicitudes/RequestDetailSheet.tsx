@@ -105,6 +105,7 @@ export function RequestDetailSheet({
   const [note, setNote] = React.useState("");
   const [loanOpen, setLoanOpen] = React.useState(false);
   const [expenseOpen, setExpenseOpen] = React.useState(false);
+  const [checkupOpen, setCheckupOpen] = React.useState(false);
   const teamsQ = useClubTeams(open && request ? clubId : null);
 
 
