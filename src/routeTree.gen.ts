@@ -19,6 +19,7 @@ import { Route as AuthenticatedCoordinacionRouteImport } from './routes/_authent
 import { Route as AuthenticatedAgendaViajesRouteImport } from './routes/_authenticated/agenda-viajes'
 import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedMViajesRouteImport } from './routes/_authenticated/m.viajes'
 import { Route as AuthenticatedMUsuariosRouteImport } from './routes/_authenticated/m.usuarios'
 import { Route as AuthenticatedMSolicitudesRouteImport } from './routes/_authenticated/m.solicitudes'
@@ -87,6 +88,11 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
 const AuthenticatedMViajesRoute = AuthenticatedMViajesRouteImport.update({
   id: '/m/viajes',
@@ -209,11 +215,11 @@ export interface FileRoutesByFullPath {
   '/m/solicitudes': typeof AuthenticatedMSolicitudesRoute
   '/m/usuarios': typeof AuthenticatedMUsuariosRoute
   '/m/viajes': typeof AuthenticatedMViajesRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
   '/m/plantel/$playerId': typeof AuthenticatedMPlantelPlayerIdRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
-  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/agenda': typeof AuthenticatedAgendaRoute
   '/agenda-viajes': typeof AuthenticatedAgendaViajesRoute
   '/coordinacion': typeof AuthenticatedCoordinacionRoute
@@ -237,6 +243,7 @@ export interface FileRoutesByTo {
   '/m/solicitudes': typeof AuthenticatedMSolicitudesRoute
   '/m/usuarios': typeof AuthenticatedMUsuariosRoute
   '/m/viajes': typeof AuthenticatedMViajesRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
   '/m/plantel/$playerId': typeof AuthenticatedMPlantelPlayerIdRoute
 }
 export interface FileRoutesById {
@@ -267,6 +274,7 @@ export interface FileRoutesById {
   '/_authenticated/m/solicitudes': typeof AuthenticatedMSolicitudesRoute
   '/_authenticated/m/usuarios': typeof AuthenticatedMUsuariosRoute
   '/_authenticated/m/viajes': typeof AuthenticatedMViajesRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/m/plantel/$playerId': typeof AuthenticatedMPlantelPlayerIdRoute
 }
 export interface FileRouteTypes {
@@ -297,11 +305,11 @@ export interface FileRouteTypes {
     | '/m/solicitudes'
     | '/m/usuarios'
     | '/m/viajes'
+    | '/admin/'
     | '/m/plantel/$playerId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/auth'
-    | '/admin'
     | '/agenda'
     | '/agenda-viajes'
     | '/coordinacion'
@@ -325,6 +333,7 @@ export interface FileRouteTypes {
     | '/m/solicitudes'
     | '/m/usuarios'
     | '/m/viajes'
+    | '/admin'
     | '/m/plantel/$playerId'
   id:
     | '__root__'
@@ -354,6 +363,7 @@ export interface FileRouteTypes {
     | '/_authenticated/m/solicitudes'
     | '/_authenticated/m/usuarios'
     | '/_authenticated/m/viajes'
+    | '/_authenticated/admin/'
     | '/_authenticated/m/plantel/$playerId'
   fileRoutesById: FileRoutesById
 }
@@ -434,6 +444,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin'
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/m/viajes': {
       id: '/_authenticated/m/viajes'
@@ -560,11 +577,13 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminClubsRoute: typeof AuthenticatedAdminClubsRoute
   AuthenticatedAdminConfiguracionRoute: typeof AuthenticatedAdminConfiguracionRoute
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminClubsRoute: AuthenticatedAdminClubsRoute,
   AuthenticatedAdminConfiguracionRoute: AuthenticatedAdminConfiguracionRoute,
+  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 
 const AuthenticatedAdminRouteWithChildren =
@@ -643,13 +662,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
