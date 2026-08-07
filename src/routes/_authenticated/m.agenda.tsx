@@ -26,9 +26,11 @@ export const Route = createFileRoute("/_authenticated/m/agenda")({
 });
 
 function AgendaModulePage() {
-  const { getModuleAccess, user, isSuperAdmin, profile, teamOptions } = useApp();
-  const canEdit = isSuperAdmin || getModuleAccess("agenda") === "editor" || getModuleAccess("agenda") === "approver";
+  const { user, profile, teamOptions } = useApp();
   const editableTeams = useEditableTeams("agenda");
+  const { canEditTeam } = useTeamAccess("agenda");
+  const canEdit = editableTeams.length > 0;
+
 
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<CalendarEventRow | null>(null);
