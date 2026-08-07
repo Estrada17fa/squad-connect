@@ -51,7 +51,7 @@ export function LocationPicker({
   const save = useSaveLocation();
   const resolve = useResolveLocation();
   const promote = usePromoteLocation();
-  const [managerOpen, setManagerOpen] = React.useState(false);
+  
   const [query, setQuery] = React.useState("");
   const [open, setOpen] = React.useState(false);
 
