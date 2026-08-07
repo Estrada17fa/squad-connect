@@ -1,6 +1,6 @@
 import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { MapPin, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { EmptyState } from "@/components/squad/EmptyState";
 import { AgendaSkeleton } from "@/components/squad/LoadingState";
