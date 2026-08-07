@@ -1,0 +1,156 @@
+import * as React from "react";
+import { Pencil } from "lucide-react";
+import {
+  EntitySheet,
+  EntitySheetBody,
+  EntitySheetDescription,
+  EntitySheetFooter,
+  EntitySheetHeader,
+  EntitySheetTitle,
+} from "@/components/squad/EntitySheet";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+/**
+ * DetailSheet — patrón universal "abrir = ver, editar = acción deliberada".
+ *
+ * Siempre abre en modo LECTURA. Si `canEdit`, muestra el botón "Editar" en la
+ * cabecera que cambia al modo edición. `renderEdit` recibe `done()` para volver
+ * a lectura tras guardar y `cancel()` para descartar.
+ */
+
+interface DetailSheetProps {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  title: React.ReactNode;
+  description?: React.ReactNode;
+  canEdit?: boolean;
+  size?: "md" | "lg" | "xl";
+  /** Acciones no destructivas/estado visibles en modo lectura (junto a "Editar"). */
+  headerActions?: React.ReactNode;
+  /** Ficha de información (modo lectura). */
+  children: React.ReactNode;
+  /** Formulario del modo edición. */
+  renderEdit?: (helpers: { done: () => void; cancel: () => void }) => React.ReactNode;
+  /** Pie del modo lectura. Por defecto un botón "Cerrar". */
+  footer?: React.ReactNode;
+  editLabel?: string;
+}
+
+export function DetailSheet({
+  open,
+  onOpenChange,
+  title,
+  description,
+  canEdit,
+  size = "lg",
+  headerActions,
+  children,
+  renderEdit,
+  footer,
+  editLabel = "Editar",
+}: DetailSheetProps) {
+  const [editing, setEditing] = React.useState(false);
+
+  // Al abrir (o cambiar de elemento) siempre volvemos a lectura.
+  React.useEffect(() => {
+    if (!open) setEditing(false);
+  }, [open]);
+  React.useEffect(() => {
+    if (open) setEditing(false);
+  }, [open]);
+
+  const showEdit = editing && !!renderEdit && !!canEdit;
+
+  return (
+    <EntitySheet open={open} onOpenChange={onOpenChange} size={size}>
+      <EntitySheetHeader>
+        <EntitySheetTitle>{title}</EntitySheetTitle>
+        {description ? <EntitySheetDescription>{description}</EntitySheetDescription> : null}
+        {!showEdit && (canEdit && renderEdit ? true : !!headerActions) ? (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {canEdit && renderEdit ? (
+              <Button size="sm" variant="secondary" onClick={() => setEditing(true)}>
+                <Pencil className="mr-2 h-3.5 w-3.5" /> {editLabel}
+              </Button>
+            ) : null}
+            {headerActions}
+          </div>
+        ) : null}
+      </EntitySheetHeader>
+
+      {showEdit ? (
+        <>{renderEdit!({ done: () => setEditing(false), cancel: () => setEditing(false) })}</>
+      ) : (
+        <>
+          <EntitySheetBody>{children}</EntitySheetBody>
+          {footer !== undefined ? (
+            footer ? <EntitySheetFooter>{footer}</EntitySheetFooter> : null
+          ) : (
+            <EntitySheetFooter>
+              <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+                Cerrar
+              </Button>
+            </EntitySheetFooter>
+          )}
+        </>
+      )}
+    </EntitySheet>
+  );
+}
+
+/* ---------------------------------- Primitivas de lectura --------------------------------- */
+
+export function DetailSection({
+  title,
+  className,
+  children,
+}: {
+  title?: React.ReactNode;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className={cn("space-y-3", className)}>
+      {title ? (
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</h3>
+      ) : null}
+      {children}
+    </section>
+  );
+}
+
+export function DetailField({
+  label,
+  icon: Icon,
+  children,
+  className,
+}: {
+  label: React.ReactNode;
+  icon?: React.ComponentType<{ className?: string }>;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn("space-y-1.5", className)}>
+      <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        {Icon ? <Icon className="h-3.5 w-3.5" /> : null}
+        {label}
+      </div>
+      <div className="text-sm text-foreground">{children}</div>
+    </div>
+  );
+}
+
+export function DetailGrid({ children, className }: { children: React.ReactNode; className?: string }) {
+  return <div className={cn("grid grid-cols-2 gap-3", className)}>{children}</div>;
+}
+
+export function DetailEmpty({ children = "—" }: { children?: React.ReactNode }) {
+  return <span className="text-muted-foreground">{children}</span>;
+}
+
+export function DetailValue({ value }: { value?: string | number | null }) {
+  if (value === null || value === undefined || value === "") return <DetailEmpty />;
+  return <span className="whitespace-pre-wrap">{String(value)}</span>;
+}
