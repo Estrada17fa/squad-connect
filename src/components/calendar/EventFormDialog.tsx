@@ -18,7 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { EVENT_TYPES, type EventType } from "@/lib/eventTypes";
 import { toLocalInputValue, fromLocalInputValue } from "@/lib/calendar-utils";
 import { saveCalendarEvent } from "@/lib/calendarEvents";
-import { AttendeePicker } from "@/components/calendar/AttendeePicker";
+import { AttendeePicker, type AttendeeMode } from "@/components/calendar/AttendeePicker";
 import { LocationField } from "@/components/calendar/LocationField";
 import type { CalendarEventRow } from "@/hooks/useCalendarEvents";
 import { TeamSelectField } from "@/components/squad/TeamSelectField";
