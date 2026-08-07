@@ -161,15 +161,8 @@ export function LocationPicker({
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between gap-2">
-        <Label htmlFor={id}>{label}</Label>
-        {canManage ? (
-          <Button type="button" size="sm" variant="ghost" onClick={() => setManagerOpen(true)}>
-            <Settings2 className="mr-1 h-3.5 w-3.5" />
-            Ubicaciones
-          </Button>
-        ) : null}
-      </div>
+      <Label htmlFor={id}>{label}</Label>
+
 
       {value && (selected || resolve.isPending) ? (
         <div className="glass flex items-start gap-2 p-3">
