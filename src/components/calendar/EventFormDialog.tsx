@@ -19,7 +19,7 @@ import { EVENT_TYPES, type EventType } from "@/lib/eventTypes";
 import { toLocalInputValue, fromLocalInputValue } from "@/lib/calendar-utils";
 import { saveCalendarEvent } from "@/lib/calendarEvents";
 import { AttendeePicker, type AttendeeMode } from "@/components/calendar/AttendeePicker";
-import { LocationField } from "@/components/calendar/LocationField";
+import { LocationPicker } from "@/components/calendar/LocationPicker";
 import type { CalendarEventRow } from "@/hooks/useCalendarEvents";
 import { TeamSelectField } from "@/components/squad/TeamSelectField";
 import type { TeamOption } from "@/hooks/useAccess";
@@ -236,7 +236,7 @@ export function EventFormDialog({ open, onOpenChange, clubId, teams, defaultTeam
               </div>
             </div>
 
-            <LocationField
+            <LocationPicker
               clubId={clubId}
               userId={userId}
               value={location}

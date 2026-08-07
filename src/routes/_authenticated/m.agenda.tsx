@@ -1,6 +1,6 @@
 import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
+import { MapPin, Plus } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { EmptyState } from "@/components/squad/EmptyState";
 import { AgendaSkeleton } from "@/components/squad/LoadingState";
@@ -14,6 +14,7 @@ import { formatTime, startOfDay } from "@/lib/calendar-utils";
 import { useEditableTeams } from "@/hooks/useEditableTeams";
 import { useTeamAccess } from "@/hooks/useTeamAccess";
 import { EventFormDialog } from "@/components/calendar/EventFormDialog";
+import { LocationsManager } from "@/components/calendar/LocationPicker";
 import { EventDetailSheet } from "@/components/calendar/EventDetailSheet";
 import { TeamFilter, TeamBadge } from "@/components/squad/TeamFilter";
 
@@ -32,6 +33,7 @@ function AgendaModulePage() {
   const editableTeams = useEditableTeams("agenda");
   const { canEditTeam } = useTeamAccess("agenda");
   const canEdit = editableTeams.length > 0;
+  const [locationsOpen, setLocationsOpen] = React.useState(false);
 
 
   const [dialogOpen, setDialogOpen] = React.useState(false);
@@ -74,6 +76,22 @@ function AgendaModulePage() {
         >
           <Plus className="mr-2 h-4 w-4" /> Nuevo evento
         </Button>
+      ) : null}
+
+      {canEdit && clubId ? (
+        <>
+          <Button variant="ghost" size="sm" className="w-full" onClick={() => setLocationsOpen(true)}>
+            <MapPin className="mr-2 h-4 w-4" /> Ubicaciones del club
+          </Button>
+          {locationsOpen ? (
+            <LocationsManager
+              open={locationsOpen}
+              onOpenChange={setLocationsOpen}
+              clubId={clubId}
+              userId={user.id}
+            />
+          ) : null}
+        </>
       ) : null}
 
       <div className="space-y-3">

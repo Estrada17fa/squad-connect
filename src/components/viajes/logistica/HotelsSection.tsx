@@ -13,13 +13,14 @@ import { type AssignCandidate } from "./PassengerAssignDialog";
 
 interface Props {
   tripId: string;
+  clubId: string;
   userId: string;
   hotels: TripHotel[];
   travelers: AssignCandidate[];
   canEdit: boolean;
 }
 
-export function HotelsSection({ tripId, userId, hotels, travelers, canEdit }: Props) {
+export function HotelsSection({ tripId, clubId, userId, hotels, travelers, canEdit }: Props) {
   const [hotelForm, setHotelForm] = React.useState(false);
   const [roomForm, setRoomForm] = React.useState<{ hotelId: string; room: TripRoom | null } | null>(null);
   const [detailHotelId, setDetailHotelId] = React.useState<string | null>(null);
@@ -76,7 +77,7 @@ export function HotelsSection({ tripId, userId, hotels, travelers, canEdit }: Pr
         ))}
       </TimelineSection>
 
-      {canEdit ? <HotelFormDialog open={hotelForm} onOpenChange={setHotelForm} tripId={tripId} userId={userId} hotel={null} /> : null}
+      {canEdit ? <HotelFormDialog open={hotelForm} onOpenChange={setHotelForm} tripId={tripId} clubId={clubId} userId={userId} hotel={null} /> : null}
 
       {canEdit && roomForm ? (
         <RoomFormDialog
@@ -93,6 +94,7 @@ export function HotelsSection({ tripId, userId, hotels, travelers, canEdit }: Pr
         onOpenChange={(v) => !v && setDetailHotelId(null)}
         hotel={detailHotel}
         tripId={tripId}
+        clubId={clubId}
         userId={userId}
         canEdit={canEdit}
         onOpenRoom={(room) => detailHotel && setDetailRoom({ hotelId: detailHotel.id, room })}

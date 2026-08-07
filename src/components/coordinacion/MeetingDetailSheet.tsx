@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Trash2, Pencil, Check, X as XIcon, MapPin, CalendarClock, Video, ExternalLink } from "lucide-react";
 import { isMeetingUrl } from "./MeetingFormDialog";
 import { DetailSheet, DetailField } from "@/components/squad/DetailSheet";
+import { LocationDisplay } from "@/components/calendar/LocationDisplay";
 import { StatusBadge, type StatusVariant } from "@/components/squad/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -159,21 +160,13 @@ export function MeetingDetailSheet({ open, onOpenChange, meeting, userId, clubId
         ) : null}
       </DetailField>
 
-      {meeting.location ? (
-        <DetailField label="Ubicación" icon={isMeetingUrl(meeting.location) ? Video : MapPin}>
-          {isMeetingUrl(meeting.location) ? (
-            <a
-              href={meeting.location}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-primary underline-offset-4 hover:underline break-all"
-            >
-              <span className="break-all">{meeting.location}</span>
-              <ExternalLink className="h-3.5 w-3.5 shrink-0" />
-            </a>
-          ) : (
-            <span className="text-foreground">{meeting.location}</span>
-          )}
+      {meeting.location || (meeting as any).location_id ? (
+        <DetailField label="Ubicación" icon={isMeetingUrl(meeting.location ?? "") ? Video : MapPin}>
+          <LocationDisplay
+            clubId={clubId}
+            locationId={(meeting as any).location_id ?? null}
+            text={meeting.location}
+          />
         </DetailField>
       ) : null}
 

@@ -1,4 +1,5 @@
 import * as React from "react";
+import { LocationPicker } from "@/components/calendar/LocationPicker";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
 import {
@@ -20,16 +21,18 @@ interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   tripId: string;
+  clubId: string;
   userId: string;
   hotel?: TripHotel | null;
 }
 
-export function HotelFormDialog({ open, onOpenChange, tripId, userId, hotel }: Props) {
+export function HotelFormDialog({ open, onOpenChange, tripId, clubId, userId, hotel }: Props) {
   const isEdit = !!hotel;
   const { saveHotel, removeHotel } = useHotelMutations(tripId);
 
   const [name, setName] = React.useState("");
   const [address, setAddress] = React.useState("");
+  const [locationId, setLocationId] = React.useState<string | null>(null);
   const [checkIn, setCheckIn] = React.useState("");
   const [checkOut, setCheckOut] = React.useState("");
   const [phone, setPhone] = React.useState("");
@@ -39,6 +42,7 @@ export function HotelFormDialog({ open, onOpenChange, tripId, userId, hotel }: P
     if (!open) return;
     setName(hotel?.name ?? "");
     setAddress(hotel?.address ?? "");
+    setLocationId(((hotel as any)?.location_id as string | null) ?? null);
     setCheckIn(hotel?.check_in_at ? toLocalInputValue(hotel.check_in_at) : "");
     setCheckOut(hotel?.check_out_at ? toLocalInputValue(hotel.check_out_at) : "");
     setPhone(hotel?.phone ?? "");
@@ -54,6 +58,7 @@ export function HotelFormDialog({ open, onOpenChange, tripId, userId, hotel }: P
     const input: HotelInput = {
       name: name.trim(),
       address: address.trim() || null,
+      location_id: locationId,
       check_in_at: fromLocalInputValue(checkIn),
       check_out_at: checkOut ? fromLocalInputValue(checkOut) : null,
       phone: phone.trim() || null,
@@ -85,8 +90,17 @@ export function HotelFormDialog({ open, onOpenChange, tripId, userId, hotel }: P
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="h-address">Dirección</Label>
-          <Input id="h-address" value={address} onChange={(e) => setAddress(e.target.value)} />
+          <LocationPicker
+            id="h-address"
+            label="Dirección"
+            placeholder="Busca el hotel o su dirección…"
+            clubId={clubId}
+            userId={userId}
+            value={address}
+            onChange={setAddress}
+            locationId={locationId}
+            onLocationIdChange={setLocationId}
+          />
         </div>
 
         <div className="grid grid-cols-2 gap-3">

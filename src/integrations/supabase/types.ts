@@ -1017,8 +1017,12 @@ export type Database = {
           created_at: string
           created_by: string | null
           id: string
+          latitude: number | null
+          longitude: number | null
           name: string
           notes: string | null
+          place_id: string | null
+          source: string | null
           updated_at: string
         }
         Insert: {
@@ -1027,8 +1031,12 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           name: string
           notes?: string | null
+          place_id?: string | null
+          source?: string | null
           updated_at?: string
         }
         Update: {
@@ -1037,8 +1045,12 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           name?: string
           notes?: string | null
+          place_id?: string | null
+          source?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -1275,6 +1287,7 @@ export type Database = {
           ends_at: string | null
           id: string
           location: string | null
+          location_id: string | null
           notes: string | null
           started_at: string | null
           starts_at: string
@@ -1291,6 +1304,7 @@ export type Database = {
           ends_at?: string | null
           id?: string
           location?: string | null
+          location_id?: string | null
           notes?: string | null
           started_at?: string | null
           starts_at: string
@@ -1307,6 +1321,7 @@ export type Database = {
           ends_at?: string | null
           id?: string
           location?: string | null
+          location_id?: string | null
           notes?: string | null
           started_at?: string | null
           starts_at?: string
@@ -1320,6 +1335,13 @@ export type Database = {
             columns: ["club_id"]
             isOneToOne: false
             referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meetings_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
             referencedColumns: ["id"]
           },
         ]
@@ -2725,6 +2747,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           id: string
+          location_id: string | null
           name: string
           notes: string | null
           phone: string | null
@@ -2738,6 +2761,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          location_id?: string | null
           name: string
           notes?: string | null
           phone?: string | null
@@ -2751,6 +2775,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          location_id?: string | null
           name?: string
           notes?: string | null
           phone?: string | null
@@ -2763,6 +2788,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_hotels_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
             referencedColumns: ["id"]
           },
           {
@@ -3099,6 +3131,7 @@ export type Database = {
           id: string
           match_event_id: string | null
           meeting_at: string | null
+          meeting_location_id: string | null
           meeting_point: string | null
           notes: string | null
           return_at: string | null
@@ -3116,6 +3149,7 @@ export type Database = {
           id?: string
           match_event_id?: string | null
           meeting_at?: string | null
+          meeting_location_id?: string | null
           meeting_point?: string | null
           notes?: string | null
           return_at?: string | null
@@ -3133,6 +3167,7 @@ export type Database = {
           id?: string
           match_event_id?: string | null
           meeting_at?: string | null
+          meeting_location_id?: string | null
           meeting_point?: string | null
           notes?: string | null
           return_at?: string | null
@@ -3161,6 +3196,13 @@ export type Database = {
             columns: ["match_event_id"]
             isOneToOne: false
             referencedRelation: "calendar_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trips_meeting_location_id_fkey"
+            columns: ["meeting_location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
             referencedColumns: ["id"]
           },
           {
