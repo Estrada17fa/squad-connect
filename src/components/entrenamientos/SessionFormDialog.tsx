@@ -114,6 +114,8 @@ export function SessionFormDialog({
     setLocation("");
     setLocationId(null);
     setAttendeeIds(new Set());
+    setAttendeeMode("auto");
+
     setPickerPhase(null);
     if (!session) setPlan([]);
   }, [open, session, defaultTeamId, teams]);
