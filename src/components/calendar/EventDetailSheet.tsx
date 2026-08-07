@@ -6,7 +6,9 @@ import { EVENT_TYPE_MAP } from "@/lib/eventTypes";
 import { formatDayLabel, formatTime } from "@/lib/calendar-utils";
 import type { CalendarEventRow } from "@/hooks/useCalendarEvents";
 import type { TeamOption } from "@/hooks/useAccess";
+import { AttendeeSummary } from "./AttendeeSummary";
 import { EventFormDialog } from "./EventFormDialog";
+
 
 interface Props {
   open: boolean;
