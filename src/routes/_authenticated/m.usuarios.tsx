@@ -73,7 +73,7 @@ const LEVELS: { value: AccessLevel; label: string }[] = [
 ];
 
 function UsuariosPage() {
-  const { profile, isSuperAdmin, permissions } = useApp();
+  const { user, profile, isSuperAdmin, permissions } = useApp();
   const canEdit = isSuperAdmin || permissions["usuarios"] === "editor" || permissions["usuarios"] === "approver";
 
   return (
@@ -86,6 +86,7 @@ function UsuariosPage() {
           <TabsTrigger value="roles" className="flex-1 sm:flex-none">Roles</TabsTrigger>
           <TabsTrigger value="miembros" className="flex-1 sm:flex-none">Miembros</TabsTrigger>
           <TabsTrigger value="categorias" className="flex-1 sm:flex-none">Categorías</TabsTrigger>
+          <TabsTrigger value="ubicaciones" className="flex-1 sm:flex-none">Ubicaciones</TabsTrigger>
         </TabsList>
         <TabsContent value="roles">
           <RolesTab clubId={profile?.club_id ?? null} canEdit={canEdit} />
@@ -104,10 +105,18 @@ function UsuariosPage() {
             <EmptyState title="Sin club" message="Tu perfil aún no está asociado a un club." />
           )}
         </TabsContent>
+        <TabsContent value="ubicaciones">
+          {profile?.club_id ? (
+            <LocationsTab clubId={profile.club_id} userId={user.id} canEdit={canEdit} />
+          ) : (
+            <EmptyState title="Sin club" message="Tu perfil aún no está asociado a un club." />
+          )}
+        </TabsContent>
       </Tabs>
     </div>
   );
 }
+
 
 function RolesTab({ clubId, canEdit }: { clubId: string | null; canEdit: boolean }) {
   const qc = useQueryClient();
