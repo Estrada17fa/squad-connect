@@ -12,6 +12,7 @@ import {
   AlertTriangle,
   Link as LinkIcon,
   Receipt,
+  Stethoscope,
 } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
@@ -27,6 +28,9 @@ import { ExpenseFormDialog } from "@/components/compras/ExpenseFormDialog";
 import { useRequestExpense } from "@/hooks/useExpenses";
 import { expenseDraftFromRequest, formatMoney as formatExpenseMoney } from "@/lib/expenses";
 import { useApp } from "@/components/squad/AppLayout";
+import { useTeamAccess } from "@/hooks/useTeamAccess";
+import { useMedicalRoster, useRequestCheckup } from "@/hooks/useHealth";
+import { CheckupFormDialog } from "@/components/salud/CheckupFormDialog";
 import { loanDraftFromRequest } from "@/lib/requestTypes";
 import { categoryIcon } from "./InventoryItemPicker";
 
@@ -102,6 +106,7 @@ export function RequestDetailSheet({
   const [note, setNote] = React.useState("");
   const [loanOpen, setLoanOpen] = React.useState(false);
   const [expenseOpen, setExpenseOpen] = React.useState(false);
+  const [checkupOpen, setCheckupOpen] = React.useState(false);
   const teamsQ = useClubTeams(open && request ? clubId : null);
 
 
@@ -122,11 +127,24 @@ export function RequestDetailSheet({
   const expenseQ = useRequestExpense(open && request && isFinancial ? request.id : null);
   const linkedExpense = expenseQ.data ?? null;
 
+  // Salud: la revisión médica la registra un editor de 'salud' del equipo del jugador.
+  const isMedical = request?.type === "medica";
+  const { canEditTeam: canEditSalud } = useTeamAccess("salud");
+  const medicalRosterQ = useMedicalRoster(open && isMedical ? clubId : null);
+  const medicalPlayers = React.useMemo(
+    () => (medicalRosterQ.data ?? []).filter((p) => canEditSalud(p.teamId)),
+    [medicalRosterQ.data, canEditSalud],
+  );
+  const canCreateCheckup = medicalPlayers.length > 0;
+  const checkupQ = useRequestCheckup(open && request && isMedical ? request.id : null);
+  const linkedCheckup = checkupQ.data ?? null;
+
   React.useEffect(() => {
     if (open) setNote("");
     if (!open) {
       setLoanOpen(false);
       setExpenseOpen(false);
+      setCheckupOpen(false);
     }
   }, [open, request?.id]);
 
@@ -157,6 +175,7 @@ export function RequestDetailSheet({
       // Aprobar material abre de inmediato el formulario de préstamo pre-llenado.
       if (next === "aprobada" && isMaterial && canCreateLoan && !linkedLoan) setLoanOpen(true);
       if (next === "aprobada" && isFinancial && canCreateExpense && !linkedExpense) setExpenseOpen(true);
+      if (next === "aprobada" && isMedical && canCreateCheckup && !linkedCheckup) setCheckupOpen(true);
 
     },
     onError: (e: any) => toast.error(e.message ?? "No se pudo actualizar"),
@@ -190,7 +209,10 @@ export function RequestDetailSheet({
   const showLoanButton = isMaterial && isApproved && !linkedLoan && canCreateLoan;
   // El gasto es la forma de completar compras, pagos a proveedor y reembolsos.
   const showExpenseButton = isFinancial && isApproved && !linkedExpense && canCreateExpense;
-  const canComplete = canManage && def.completable && isApproved && !isMaterial && !isFinancial;
+  // La solicitud médica se completa registrando la revisión.
+  const showCheckupButton = isMedical && isApproved && !linkedCheckup && canCreateCheckup;
+  const canComplete =
+    canManage && def.completable && isApproved && !isMaterial && !isFinancial && !isMedical;
   const canEditRow = isOwner && isPending;
 
 
@@ -207,7 +229,7 @@ export function RequestDetailSheet({
 
       <EntitySheetBody>
         {/* Acciones arriba */}
-        {(canEditRow || canManage || canCancel || showLoanButton || showExpenseButton) && (
+        {(canEditRow || canManage || canCancel || showLoanButton || showExpenseButton || showCheckupButton) && (
           <div className="flex flex-wrap gap-2">
             {canEditRow ? (
               <Button type="button" variant="outline" size="sm" onClick={onEdit}>
@@ -238,6 +260,11 @@ export function RequestDetailSheet({
             {showExpenseButton ? (
               <Button type="button" size="sm" className="glow-primary" onClick={() => setExpenseOpen(true)}>
                 <Receipt className="mr-2 h-4 w-4" /> Registrar gasto
+              </Button>
+            ) : null}
+            {showCheckupButton ? (
+              <Button type="button" size="sm" className="glow-primary" onClick={() => setCheckupOpen(true)}>
+                <Stethoscope className="mr-2 h-4 w-4" /> Registrar revisión
               </Button>
             ) : null}
             {canComplete ? (
@@ -471,6 +498,28 @@ export function RequestDetailSheet({
             requestPhotoPath: d.requestPhotoPath,
           };
         })()}
+      />
+    ) : null}
+
+    {isMedical && canCreateCheckup ? (
+      <CheckupFormDialog
+        open={checkupOpen}
+        onOpenChange={setCheckupOpen}
+        clubId={clubId}
+        userId={userId}
+        players={medicalPlayers}
+        draft={{
+          requestId: request.id,
+          playerUserId:
+            medicalPlayers.find((p) => p.userId === request.requester_id)?.userId ?? null,
+          reason:
+            [(request.details as any)?.tipo_atencion, (request.details as any)?.urgencia
+              ? `Urgencia ${(request.details as any).urgencia}`
+              : null]
+              .filter(Boolean)
+              .join(" · ") || request.title,
+          notes: (request.details as any)?.descripcion ?? request.description ?? null,
+        }}
       />
     ) : null}
     </>

@@ -2,7 +2,8 @@ import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { FileText, Save, User } from "lucide-react";
+import { FileText, HeartPulse, Save, User } from "lucide-react";
+import { PlayerMedicalSheet } from "@/components/salud/PlayerMedicalSheet";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { StandardCard } from "@/components/squad/StandardCard";
 import { EmptyState } from "@/components/squad/EmptyState";
@@ -146,6 +147,12 @@ function MiPerfilPage() {
         </Button>
       </div>
 
+      <MiSaludSection
+        userId={user.id}
+        fullName={data?.full_name ?? null}
+        avatarUrl={form.avatar_url}
+      />
+
       <section className="space-y-2">
         <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
           Documentos asignados
@@ -157,6 +164,64 @@ function MiPerfilPage() {
         />
       </section>
     </div>
+  );
+}
+
+/** El jugador ve SU información médica en modo consulta. */
+function MiSaludSection({
+  userId,
+  fullName,
+  avatarUrl,
+}: {
+  userId: string;
+  fullName: string | null;
+  avatarUrl: string | null;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const { data } = useQuery({
+    queryKey: ["mi-salud-team", userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("player_profiles")
+        .select("team_id, team:teams(club_id, name)")
+        .eq("user_id", userId)
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data as any;
+    },
+  });
+
+  if (!data?.team_id || !data?.team?.club_id) return null;
+
+  return (
+    <section className="space-y-2">
+      <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+        Mi salud
+      </h3>
+      <StandardCard
+        icon={HeartPulse}
+        title="Mi expediente médico"
+        subtitle="Revisiones, recetas y lesiones"
+        interactive
+        onClick={() => setOpen(true)}
+      >
+        Solo tú y el cuerpo médico de tu equipo pueden ver esta información.
+      </StandardCard>
+      <PlayerMedicalSheet
+        open={open}
+        onOpenChange={setOpen}
+        clubId={data.team.club_id}
+        player={{
+          userId,
+          teamId: data.team_id,
+          fullName,
+          avatarUrl,
+          teamName: data.team?.name ?? null,
+        }}
+        canEdit={false}
+      />
+    </section>
   );
 }
 

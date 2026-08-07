@@ -12,6 +12,7 @@ import { useTeamAccess } from "@/hooks/useTeamAccess";
 import { usePlayer } from "@/hooks/usePlayers";
 import { AVAILABILITY_META } from "./m.plantel";
 import { PlayerFormDialog } from "@/components/plantel/PlayerFormDialog";
+import { PlayerMedicalSheet } from "@/components/salud/PlayerMedicalSheet";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/m/plantel/$playerId")({
@@ -29,11 +30,13 @@ function PlayerDetail() {
   const { playerId } = Route.useParams();
   const { user } = useApp();
   const { canEditTeam } = useTeamAccess("plantel");
+  const { canEditTeam: canEditSalud, canReadTeam: canReadSalud } = useTeamAccess("salud");
 
   const { data: player, isLoading } = usePlayer(playerId);
   // Permiso por equipo: editor en Sub-20 no puede editar fichas de Primera.
   const canEdit = canEditTeam(player?.team_id);
   const [editOpen, setEditOpen] = React.useState(false);
+  const [healthOpen, setHealthOpen] = React.useState(false);
   const [clubId, setClubId] = React.useState<string | null>(null);
 
   React.useEffect(() => {
@@ -48,6 +51,9 @@ function PlayerDetail() {
   const meta = AVAILABILITY_META[player.availability_status];
   const isSelf = player.user_id === user.id;
   const showFull = canEdit || isSelf;
+  // Privacidad: el expediente médico solo lo abre el cuerpo médico del equipo o el propio jugador.
+  const canEditHealth = canEditSalud(player.team_id);
+  const canSeeHealth = isSelf || canReadSalud(player.team_id);
 
   return (
     <div className="space-y-6">
@@ -103,10 +109,39 @@ function PlayerDetail() {
       ) : null}
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <EmptyState icon={HeartPulse} title="Salud" message="Se conecta desde el módulo de Salud." />
+        {canSeeHealth ? (
+          <button
+            type="button"
+            onClick={() => setHealthOpen(true)}
+            className="glass flex flex-col items-center justify-center gap-2 p-6 text-center transition-all hover:border-white/15 hover:bg-white/[0.06]"
+          >
+            <HeartPulse className="h-6 w-6 text-primary" />
+            <span className="font-display font-semibold text-foreground">Salud</span>
+            <span className="text-xs text-muted-foreground">
+              {isSelf && !canEditHealth ? "Tu expediente médico" : "Expediente médico del jugador"}
+            </span>
+          </button>
+        ) : (
+          <EmptyState icon={HeartPulse} title="Salud" message="Información médica privada." />
+        )}
         <EmptyState icon={TrendingUp} title="Desarrollo" message="Se conecta desde el módulo de Desarrollo." />
         <EmptyState icon={Apple} title="Nutrición" message="Se conecta desde el módulo de Nutrición." />
       </div>
+
+      {clubId ? (
+        <PlayerMedicalSheet
+          open={healthOpen}
+          onOpenChange={setHealthOpen}
+          clubId={clubId}
+          player={{
+            userId: player.user_id,
+            teamId: player.team_id,
+            fullName: player.profile?.full_name ?? null,
+            avatarUrl: player.profile?.avatar_url ?? null,
+          }}
+          canEdit={canEditHealth}
+        />
+      ) : null}
 
       {clubId ? (
         <PlayerFormDialog

@@ -416,6 +416,128 @@ export type Database = {
           },
         ]
       }
+      injuries: {
+        Row: {
+          body_part: string
+          club_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          estimated_return: string | null
+          id: string
+          injury_type: string
+          occurred_at: string
+          player_user_id: string
+          severity: Database["public"]["Enums"]["injury_severity"]
+          status: Database["public"]["Enums"]["injury_status"]
+          team_id: string
+          updated_at: string
+        }
+        Insert: {
+          body_part: string
+          club_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          estimated_return?: string | null
+          id?: string
+          injury_type: string
+          occurred_at?: string
+          player_user_id: string
+          severity?: Database["public"]["Enums"]["injury_severity"]
+          status?: Database["public"]["Enums"]["injury_status"]
+          team_id: string
+          updated_at?: string
+        }
+        Update: {
+          body_part?: string
+          club_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          estimated_return?: string | null
+          id?: string
+          injury_type?: string
+          occurred_at?: string
+          player_user_id?: string
+          severity?: Database["public"]["Enums"]["injury_severity"]
+          status?: Database["public"]["Enums"]["injury_status"]
+          team_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "injuries_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "injuries_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "injuries_player_user_id_fkey"
+            columns: ["player_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "injuries_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      injury_progress: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          injury_id: string
+          note: string
+          progress_date: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          injury_id: string
+          note: string
+          progress_date?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          injury_id?: string
+          note?: string
+          progress_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "injury_progress_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "injury_progress_injury_id_fkey"
+            columns: ["injury_id"]
+            isOneToOne: false
+            referencedRelation: "injuries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_items: {
         Row: {
           category: string | null
@@ -565,6 +687,174 @@ export type Database = {
             columns: ["trip_id"]
             isOneToOne: false
             referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medical_checkups: {
+        Row: {
+          checkup_date: string
+          club_id: string
+          created_at: string
+          created_by: string | null
+          diagnosis: string | null
+          findings: string | null
+          id: string
+          notes: string | null
+          player_user_id: string
+          reason: string
+          request_id: string | null
+          team_id: string
+          updated_at: string
+        }
+        Insert: {
+          checkup_date?: string
+          club_id: string
+          created_at?: string
+          created_by?: string | null
+          diagnosis?: string | null
+          findings?: string | null
+          id?: string
+          notes?: string | null
+          player_user_id: string
+          reason: string
+          request_id?: string | null
+          team_id: string
+          updated_at?: string
+        }
+        Update: {
+          checkup_date?: string
+          club_id?: string
+          created_at?: string
+          created_by?: string | null
+          diagnosis?: string | null
+          findings?: string | null
+          id?: string
+          notes?: string | null
+          player_user_id?: string
+          reason?: string
+          request_id?: string | null
+          team_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medical_checkups_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medical_checkups_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medical_checkups_player_user_id_fkey"
+            columns: ["player_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medical_checkups_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medical_checkups_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medical_prescriptions: {
+        Row: {
+          checkup_id: string | null
+          club_id: string
+          created_at: string
+          dosage: string | null
+          duration: string | null
+          id: string
+          instructions: string | null
+          medication: string
+          player_user_id: string
+          prescribed_at: string
+          prescribed_by: string | null
+          team_id: string
+          updated_at: string
+        }
+        Insert: {
+          checkup_id?: string | null
+          club_id: string
+          created_at?: string
+          dosage?: string | null
+          duration?: string | null
+          id?: string
+          instructions?: string | null
+          medication: string
+          player_user_id: string
+          prescribed_at?: string
+          prescribed_by?: string | null
+          team_id: string
+          updated_at?: string
+        }
+        Update: {
+          checkup_id?: string | null
+          club_id?: string
+          created_at?: string
+          dosage?: string | null
+          duration?: string | null
+          id?: string
+          instructions?: string | null
+          medication?: string
+          player_user_id?: string
+          prescribed_at?: string
+          prescribed_by?: string | null
+          team_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medical_prescriptions_checkup_id_fkey"
+            columns: ["checkup_id"]
+            isOneToOne: false
+            referencedRelation: "medical_checkups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medical_prescriptions_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medical_prescriptions_player_user_id_fkey"
+            columns: ["player_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medical_prescriptions_prescribed_by_fkey"
+            columns: ["prescribed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medical_prescriptions_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
             referencedColumns: ["id"]
           },
         ]
@@ -753,6 +1043,83 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      player_medical_profile: {
+        Row: {
+          allergies: string | null
+          blood_type: string | null
+          chronic_conditions: string | null
+          club_id: string
+          created_at: string
+          created_by: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          id: string
+          notes: string | null
+          player_user_id: string
+          team_id: string
+          updated_at: string
+        }
+        Insert: {
+          allergies?: string | null
+          blood_type?: string | null
+          chronic_conditions?: string | null
+          club_id: string
+          created_at?: string
+          created_by?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          id?: string
+          notes?: string | null
+          player_user_id: string
+          team_id: string
+          updated_at?: string
+        }
+        Update: {
+          allergies?: string | null
+          blood_type?: string | null
+          chronic_conditions?: string | null
+          club_id?: string
+          created_at?: string
+          created_by?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          id?: string
+          notes?: string | null
+          player_user_id?: string
+          team_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_medical_profile_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "player_medical_profile_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "player_medical_profile_player_user_id_fkey"
+            columns: ["player_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "player_medical_profile_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
             referencedColumns: ["id"]
           },
         ]
@@ -2209,12 +2576,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_access_health: {
+        Args: { _team_id: string; _user_id: string }
+        Returns: boolean
+      }
       can_approve_request_type: {
         Args: {
           _requester_id: string
           _type: Database["public"]["Enums"]["request_type"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      can_edit_health: {
+        Args: { _team_id: string; _user_id: string }
         Returns: boolean
       }
       can_edit_trip: {
@@ -2292,6 +2667,10 @@ export type Database = {
       has_team_scope: {
         Args: { _team_id: string; _user_id: string }
         Returns: boolean
+      }
+      health_level: {
+        Args: { _team_id: string; _user_id: string }
+        Returns: Database["public"]["Enums"]["access_level"]
       }
       inventory_catalog: {
         Args: { _club_id: string }
@@ -2382,6 +2761,8 @@ export type Database = {
         | "mantenimiento"
         | "proveedores"
         | "otro"
+      injury_severity: "leve" | "moderada" | "grave"
+      injury_status: "activa" | "en_recuperacion" | "recuperada"
       payment_status: "pendiente" | "pagado"
       request_status:
         | "pendiente"
@@ -2560,6 +2941,8 @@ export const Constants = {
         "proveedores",
         "otro",
       ],
+      injury_severity: ["leve", "moderada", "grave"],
+      injury_status: ["activa", "en_recuperacion", "recuperada"],
       payment_status: ["pendiente", "pagado"],
       request_status: [
         "pendiente",
