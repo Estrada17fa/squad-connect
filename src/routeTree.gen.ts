@@ -18,7 +18,7 @@ import { Route as AuthenticatedMiClubRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedCoordinacionRouteImport } from './routes/_authenticated/coordinacion'
 import { Route as AuthenticatedAgendaViajesRouteImport } from './routes/_authenticated/agenda-viajes'
 import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
-import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedMViajesRouteImport } from './routes/_authenticated/m.viajes'
 import { Route as AuthenticatedMUsuariosRouteImport } from './routes/_authenticated/m.usuarios'
 import { Route as AuthenticatedMSolicitudesRouteImport } from './routes/_authenticated/m.solicitudes'
@@ -83,9 +83,9 @@ const AuthenticatedAgendaRoute = AuthenticatedAgendaRouteImport.update({
   path: '/agenda',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedMViajesRoute = AuthenticatedMViajesRouteImport.update({
@@ -167,14 +167,14 @@ const AuthenticatedMModuleRoute = AuthenticatedMModuleRouteImport.update({
 } as any)
 const AuthenticatedAdminConfiguracionRoute =
   AuthenticatedAdminConfiguracionRouteImport.update({
-    id: '/configuracion',
-    path: '/configuracion',
-    getParentRoute: () => AuthenticatedAdminRoute,
+    id: '/admin/configuracion',
+    path: '/admin/configuracion',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedAdminClubsRoute = AuthenticatedAdminClubsRouteImport.update({
-  id: '/clubs',
-  path: '/clubs',
-  getParentRoute: () => AuthenticatedAdminRoute,
+  id: '/admin/clubs',
+  path: '/admin/clubs',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedMPlantelPlayerIdRoute =
   AuthenticatedMPlantelPlayerIdRouteImport.update({
@@ -186,7 +186,6 @@ const AuthenticatedMPlantelPlayerIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/auth': typeof AuthRoute
-  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/agenda': typeof AuthenticatedAgendaRoute
   '/agenda-viajes': typeof AuthenticatedAgendaViajesRoute
   '/coordinacion': typeof AuthenticatedCoordinacionRoute
@@ -209,11 +208,11 @@ export interface FileRoutesByFullPath {
   '/m/solicitudes': typeof AuthenticatedMSolicitudesRoute
   '/m/usuarios': typeof AuthenticatedMUsuariosRoute
   '/m/viajes': typeof AuthenticatedMViajesRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
   '/m/plantel/$playerId': typeof AuthenticatedMPlantelPlayerIdRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
-  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/agenda': typeof AuthenticatedAgendaRoute
   '/agenda-viajes': typeof AuthenticatedAgendaViajesRoute
   '/coordinacion': typeof AuthenticatedCoordinacionRoute
@@ -237,13 +236,13 @@ export interface FileRoutesByTo {
   '/m/solicitudes': typeof AuthenticatedMSolicitudesRoute
   '/m/usuarios': typeof AuthenticatedMUsuariosRoute
   '/m/viajes': typeof AuthenticatedMViajesRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
   '/m/plantel/$playerId': typeof AuthenticatedMPlantelPlayerIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
-  '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/agenda': typeof AuthenticatedAgendaRoute
   '/_authenticated/agenda-viajes': typeof AuthenticatedAgendaViajesRoute
   '/_authenticated/coordinacion': typeof AuthenticatedCoordinacionRoute
@@ -267,6 +266,7 @@ export interface FileRoutesById {
   '/_authenticated/m/solicitudes': typeof AuthenticatedMSolicitudesRoute
   '/_authenticated/m/usuarios': typeof AuthenticatedMUsuariosRoute
   '/_authenticated/m/viajes': typeof AuthenticatedMViajesRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/m/plantel/$playerId': typeof AuthenticatedMPlantelPlayerIdRoute
 }
 export interface FileRouteTypes {
@@ -274,7 +274,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
-    | '/admin'
     | '/agenda'
     | '/agenda-viajes'
     | '/coordinacion'
@@ -297,11 +296,11 @@ export interface FileRouteTypes {
     | '/m/solicitudes'
     | '/m/usuarios'
     | '/m/viajes'
+    | '/admin/'
     | '/m/plantel/$playerId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/auth'
-    | '/admin'
     | '/agenda'
     | '/agenda-viajes'
     | '/coordinacion'
@@ -325,12 +324,12 @@ export interface FileRouteTypes {
     | '/m/solicitudes'
     | '/m/usuarios'
     | '/m/viajes'
+    | '/admin'
     | '/m/plantel/$playerId'
   id:
     | '__root__'
     | '/_authenticated'
     | '/auth'
-    | '/_authenticated/admin'
     | '/_authenticated/agenda'
     | '/_authenticated/agenda-viajes'
     | '/_authenticated/coordinacion'
@@ -354,6 +353,7 @@ export interface FileRouteTypes {
     | '/_authenticated/m/solicitudes'
     | '/_authenticated/m/usuarios'
     | '/_authenticated/m/viajes'
+    | '/_authenticated/admin/'
     | '/_authenticated/m/plantel/$playerId'
   fileRoutesById: FileRoutesById
 }
@@ -428,11 +428,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAgendaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/admin': {
-      id: '/_authenticated/admin'
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
       path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/m/viajes': {
@@ -535,17 +535,17 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/admin/configuracion': {
       id: '/_authenticated/admin/configuracion'
-      path: '/configuracion'
+      path: '/admin/configuracion'
       fullPath: '/admin/configuracion'
       preLoaderRoute: typeof AuthenticatedAdminConfiguracionRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/clubs': {
       id: '/_authenticated/admin/clubs'
-      path: '/clubs'
+      path: '/admin/clubs'
       fullPath: '/admin/clubs'
       preLoaderRoute: typeof AuthenticatedAdminClubsRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/m/plantel/$playerId': {
       id: '/_authenticated/m/plantel/$playerId'
@@ -556,19 +556,6 @@ declare module '@tanstack/react-router' {
     }
   }
 }
-
-interface AuthenticatedAdminRouteChildren {
-  AuthenticatedAdminClubsRoute: typeof AuthenticatedAdminClubsRoute
-  AuthenticatedAdminConfiguracionRoute: typeof AuthenticatedAdminConfiguracionRoute
-}
-
-const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
-  AuthenticatedAdminClubsRoute: AuthenticatedAdminClubsRoute,
-  AuthenticatedAdminConfiguracionRoute: AuthenticatedAdminConfiguracionRoute,
-}
-
-const AuthenticatedAdminRouteWithChildren =
-  AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
 
 interface AuthenticatedMPlantelRouteChildren {
   AuthenticatedMPlantelPlayerIdRoute: typeof AuthenticatedMPlantelPlayerIdRoute
@@ -584,13 +571,14 @@ const AuthenticatedMPlantelRouteWithChildren =
   )
 
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedAgendaRoute: typeof AuthenticatedAgendaRoute
   AuthenticatedAgendaViajesRoute: typeof AuthenticatedAgendaViajesRoute
   AuthenticatedCoordinacionRoute: typeof AuthenticatedCoordinacionRoute
   AuthenticatedMiClubRoute: typeof AuthenticatedMiClubRoute
   AuthenticatedMiPerfilRoute: typeof AuthenticatedMiPerfilRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedAdminClubsRoute: typeof AuthenticatedAdminClubsRoute
+  AuthenticatedAdminConfiguracionRoute: typeof AuthenticatedAdminConfiguracionRoute
   AuthenticatedMModuleRoute: typeof AuthenticatedMModuleRoute
   AuthenticatedMAgendaRoute: typeof AuthenticatedMAgendaRoute
   AuthenticatedMCompras_facturasRoute: typeof AuthenticatedMCompras_facturasRoute
@@ -605,16 +593,18 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMSolicitudesRoute: typeof AuthenticatedMSolicitudesRoute
   AuthenticatedMUsuariosRoute: typeof AuthenticatedMUsuariosRoute
   AuthenticatedMViajesRoute: typeof AuthenticatedMViajesRoute
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedAgendaRoute: AuthenticatedAgendaRoute,
   AuthenticatedAgendaViajesRoute: AuthenticatedAgendaViajesRoute,
   AuthenticatedCoordinacionRoute: AuthenticatedCoordinacionRoute,
   AuthenticatedMiClubRoute: AuthenticatedMiClubRoute,
   AuthenticatedMiPerfilRoute: AuthenticatedMiPerfilRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedAdminClubsRoute: AuthenticatedAdminClubsRoute,
+  AuthenticatedAdminConfiguracionRoute: AuthenticatedAdminConfiguracionRoute,
   AuthenticatedMModuleRoute: AuthenticatedMModuleRoute,
   AuthenticatedMAgendaRoute: AuthenticatedMAgendaRoute,
   AuthenticatedMCompras_facturasRoute: AuthenticatedMCompras_facturasRoute,
@@ -630,6 +620,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMSolicitudesRoute: AuthenticatedMSolicitudesRoute,
   AuthenticatedMUsuariosRoute: AuthenticatedMUsuariosRoute,
   AuthenticatedMViajesRoute: AuthenticatedMViajesRoute,
+  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -643,13 +634,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
