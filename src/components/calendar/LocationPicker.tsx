@@ -1,19 +1,10 @@
 import * as React from "react";
 import { toast } from "sonner";
-import { Bookmark, Loader2, MapPin, Search, Settings2, Trash2, X } from "lucide-react";
+import { Bookmark, Loader2, MapPin, Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import {
-  EntitySheet,
-  EntitySheetBody,
-  EntitySheetDescription,
-  EntitySheetFooter,
-  EntitySheetHeader,
-  EntitySheetTitle,
-} from "@/components/squad/EntitySheet";
-import {
-  useDeleteLocation,
   useLocation,
   useLocations,
   usePromoteLocation,
@@ -60,7 +51,7 @@ export function LocationPicker({
   const save = useSaveLocation();
   const resolve = useResolveLocation();
   const promote = usePromoteLocation();
-  const [managerOpen, setManagerOpen] = React.useState(false);
+  
   const [query, setQuery] = React.useState("");
   const [open, setOpen] = React.useState(false);
 
@@ -161,15 +152,8 @@ export function LocationPicker({
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between gap-2">
-        <Label htmlFor={id}>{label}</Label>
-        {canManage ? (
-          <Button type="button" size="sm" variant="ghost" onClick={() => setManagerOpen(true)}>
-            <Settings2 className="mr-1 h-3.5 w-3.5" />
-            Ubicaciones
-          </Button>
-        ) : null}
-      </div>
+      <Label htmlFor={id}>{label}</Label>
+
 
       {value && (selected || resolve.isPending) ? (
         <div className="glass flex items-start gap-2 p-3">
@@ -293,183 +277,6 @@ export function LocationPicker({
         </Button>
       ) : null}
 
-
-      {managerOpen ? (
-        <LocationsManager open={managerOpen} onOpenChange={setManagerOpen} clubId={clubId} userId={userId} />
-      ) : null}
     </div>
-  );
-}
-
-/** Gestor del catálogo de ubicaciones del club. */
-export function LocationsManager({
-  open,
-  onOpenChange,
-  clubId,
-  userId,
-}: {
-  open: boolean;
-  onOpenChange: (v: boolean) => void;
-  clubId: string;
-  userId: string;
-}) {
-  const locationsQ = useLocations(clubId);
-  const save = useSaveLocation();
-  const del = useDeleteLocation();
-  const [name, setName] = React.useState("");
-  const [address, setAddress] = React.useState("");
-  const [coords, setCoords] = React.useState<{ lat: number; lng: number } | null>(null);
-  const [query, setQuery] = React.useState("");
-  const [editingId, setEditingId] = React.useState<string | null>(null);
-  const geo = useGeocodeSearch(query, open);
-
-  function reset() {
-    setName("");
-    setAddress("");
-    setCoords(null);
-    setQuery("");
-    setEditingId(null);
-  }
-
-  async function submit() {
-    if (!name.trim()) return toast.error("Escribe el nombre de la ubicación");
-    try {
-      await save.mutateAsync({
-        id: editingId ?? undefined,
-        club_id: clubId,
-        name,
-        address,
-        latitude: coords?.lat ?? null,
-        longitude: coords?.lng ?? null,
-        source: coords ? "osm" : "manual",
-        created_by: userId,
-      });
-      toast.success(editingId ? "Ubicación actualizada" : "Ubicación creada");
-      reset();
-    } catch (e: any) {
-      toast.error(e.message ?? "No se pudo guardar");
-    }
-  }
-
-  async function remove(id: string) {
-    try {
-      await del.mutateAsync(id);
-      toast.success("Ubicación eliminada");
-    } catch (e: any) {
-      toast.error(e.message ?? "No se pudo eliminar");
-    }
-  }
-
-  return (
-    <EntitySheet open={open} onOpenChange={onOpenChange}>
-      <EntitySheetHeader>
-        <EntitySheetTitle>Ubicaciones del club</EntitySheetTitle>
-        <EntitySheetDescription>Catálogo reutilizable de sedes, canchas y salas con mapa.</EntitySheetDescription>
-      </EntitySheetHeader>
-
-      <EntitySheetBody>
-        <div className="space-y-1.5">
-          <Label htmlFor="loc-search">Buscar en el mapa</Label>
-          <Input
-            id="loc-search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Estadio, cancha, dirección…"
-          />
-          {query.trim().length >= 3 ? (
-            <div className="max-h-52 overflow-y-auto rounded-xl border border-border bg-popover p-1">
-              {geo.isFetching ? (
-                <p className="flex items-center gap-2 px-2 py-2 text-sm text-muted-foreground">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> Buscando…
-                </p>
-              ) : (
-                (geo.data ?? []).map((r) => (
-                  <button
-                    key={r.placeId}
-                    type="button"
-                    onClick={() => {
-                      setName(r.name);
-                      setAddress(r.address);
-                      setCoords({ lat: r.latitude, lng: r.longitude });
-                      setQuery("");
-                    }}
-                    className="flex w-full items-start gap-2 rounded-md px-2 py-2 text-left hover:bg-white/[0.06]"
-                  >
-                    <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                    <span className="min-w-0">
-                      <span className="block truncate text-sm text-foreground">{r.name}</span>
-                      <span className="block truncate text-xs text-muted-foreground">{r.address}</span>
-                    </span>
-                  </button>
-                ))
-              )}
-            </div>
-          ) : null}
-        </div>
-
-        <div className="space-y-1.5">
-          <Label htmlFor="loc-name">Nombre</Label>
-          <Input id="loc-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="p.ej. Cancha 2" />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="loc-addr">Dirección (opcional)</Label>
-          <Input id="loc-addr" value={address} onChange={(e) => setAddress(e.target.value)} />
-        </div>
-
-        {coords ? (
-          <LocationMap
-            latitude={coords.lat}
-            longitude={coords.lng}
-            draggable
-            onMove={(lat, lng) => setCoords({ lat, lng })}
-            className="h-40 w-full rounded-xl"
-          />
-        ) : null}
-
-        <Button type="button" onClick={submit} disabled={save.isPending} className="w-full">
-          {editingId ? "Guardar cambios" : "Agregar ubicación"}
-        </Button>
-        {editingId ? (
-          <Button type="button" variant="ghost" onClick={reset} className="w-full">
-            Cancelar edición
-          </Button>
-        ) : null}
-
-        <div className="mt-2 divide-y divide-border/60 rounded-lg border border-border/60">
-          {(locationsQ.data ?? []).length === 0 ? (
-            <div className="p-3 text-sm text-muted-foreground">Aún no hay ubicaciones guardadas.</div>
-          ) : (
-            (locationsQ.data ?? []).map((l) => (
-              <div key={l.id} className="flex items-center gap-2 px-3 py-2 text-sm">
-                <button
-                  type="button"
-                  className="min-w-0 flex-1 truncate text-left text-foreground"
-                  onClick={() => {
-                    setEditingId(l.id);
-                    setName(l.name);
-                    setAddress(l.address ?? "");
-                    setCoords(
-                      l.latitude != null && l.longitude != null ? { lat: l.latitude, lng: l.longitude } : null,
-                    );
-                  }}
-                >
-                  {l.name}
-                  {l.address ? <span className="ml-2 text-xs text-muted-foreground">{l.address}</span> : null}
-                </button>
-                <button type="button" onClick={() => remove(l.id)} className="p-1 text-destructive">
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
-            ))
-          )}
-        </div>
-      </EntitySheetBody>
-
-      <EntitySheetFooter>
-        <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-          Cerrar
-        </Button>
-      </EntitySheetFooter>
-    </EntitySheet>
   );
 }
