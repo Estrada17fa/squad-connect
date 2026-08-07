@@ -67,6 +67,11 @@ export function EventDetailSheet({ open, onOpenChange, event, canEdit, clubId, u
           </DetailField>
         ) : null}
       </DetailSection>
+
+      <DetailSection title="Convocatoria">
+        <AttendeeSummary eventId={event.id} clubId={clubId} teamId={event.team_id} />
+      </DetailSection>
+
     </DetailSheet>
   );
 }
