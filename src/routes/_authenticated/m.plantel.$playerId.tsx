@@ -12,6 +12,7 @@ import { useTeamAccess } from "@/hooks/useTeamAccess";
 import { usePlayer } from "@/hooks/usePlayers";
 import { AVAILABILITY_META } from "./m.plantel";
 import { PlayerFormDialog } from "@/components/plantel/PlayerFormDialog";
+import { PlayerMedicalSheet } from "@/components/salud/PlayerMedicalSheet";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/m/plantel/$playerId")({
