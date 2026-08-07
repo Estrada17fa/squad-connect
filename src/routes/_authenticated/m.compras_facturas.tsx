@@ -39,6 +39,7 @@ import {
 import { ExpenseFormDialog } from "@/components/compras/ExpenseFormDialog";
 import { ExpenseDetailSheet } from "@/components/compras/ExpenseDetailSheet";
 import { SupplierFormDialog } from "@/components/compras/SupplierFormDialog";
+import { SupplierDetailSheet } from "@/components/compras/SupplierDetailSheet";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/m/compras_facturas")({
@@ -81,6 +82,7 @@ function ComprasPage() {
   const [supplierForm, setSupplierForm] = React.useState(false);
   const [editingSupplier, setEditingSupplier] = React.useState<SupplierRow | null>(null);
   const [openSupplier, setOpenSupplier] = React.useState<SupplierRow | null>(null);
+  const [supplierDetail, setSupplierDetail] = React.useState<SupplierRow | null>(null);
 
   const expensesQ = useExpenses(canAccess ? clubId : null);
   const suppliersQ = useSuppliers(canAccess ? clubId : null);
@@ -245,27 +247,12 @@ function ComprasPage() {
                     icon={Building2}
                     title={s.name}
                     subtitle={s.contact ?? undefined}
-                    onClick={() => setOpenSupplier(s)}
+                    onClick={() => setSupplierDetail(s)}
                   >
                     <div className="space-y-1">
                       {s.phone ? <p>{s.phone}</p> : null}
                       {s.email ? <p className="truncate">{s.email}</p> : null}
                       <p>{count === 0 ? "Sin gastos registrados" : `${count} gasto${count === 1 ? "" : "s"}`}</p>
-                      {canEdit ? (
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="ghost"
-                          className="mt-1"
-                          onClick={(ev) => {
-                            ev.stopPropagation();
-                            setEditingSupplier(s);
-                            setSupplierForm(true);
-                          }}
-                        >
-                          Editar
-                        </Button>
-                      ) : null}
                     </div>
                   </StandardCard>
                 );
@@ -307,6 +294,22 @@ function ComprasPage() {
           setDetail(null);
           setEditing(e);
           setFormOpen(true);
+        }}
+      />
+
+      <SupplierDetailSheet
+        open={!!supplierDetail}
+        onOpenChange={(v) => !v && setSupplierDetail(null)}
+        supplier={supplierDetail}
+        canEdit={canEdit}
+        onEdit={(s) => {
+          setSupplierDetail(null);
+          setEditingSupplier(s);
+          setSupplierForm(true);
+        }}
+        onViewExpenses={(s) => {
+          setSupplierDetail(null);
+          setOpenSupplier(s);
         }}
       />
 

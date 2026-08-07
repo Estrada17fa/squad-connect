@@ -34,13 +34,7 @@ import { CheckupFormDialog } from "@/components/salud/CheckupFormDialog";
 import { loanDraftFromRequest } from "@/lib/requestTypes";
 import { categoryIcon } from "./InventoryItemPicker";
 
-import {
-  EntitySheet,
-  EntitySheetBody,
-  EntitySheetDescription,
-  EntitySheetHeader,
-  EntitySheetTitle,
-} from "@/components/squad/EntitySheet";
+import { DetailSheet } from "@/components/squad/DetailSheet";
 import { StatusBadge } from "@/components/squad/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -216,26 +210,8 @@ export function RequestDetailSheet({
   const canEditRow = isOwner && isPending;
 
 
-  return (
+  const headerActions = (canManage || canCancel || showLoanButton || showExpenseButton || showCheckupButton) ? (
     <>
-    <EntitySheet open={open} onOpenChange={onOpenChange}>
-
-      <EntitySheetHeader>
-        <EntitySheetTitle>{requestSummary(request)}</EntitySheetTitle>
-        <EntitySheetDescription>
-          {def.label} · Solicitada por {request.requester?.full_name ?? request.requester?.email ?? "—"}
-        </EntitySheetDescription>
-      </EntitySheetHeader>
-
-      <EntitySheetBody>
-        {/* Acciones arriba */}
-        {(canEditRow || canManage || canCancel || showLoanButton || showExpenseButton || showCheckupButton) && (
-          <div className="flex flex-wrap gap-2">
-            {canEditRow ? (
-              <Button type="button" variant="outline" size="sm" onClick={onEdit}>
-                <Pencil className="mr-2 h-4 w-4" /> Editar
-              </Button>
-            ) : null}
             {canCancel ? (
               <Button
                 type="button"
@@ -285,8 +261,25 @@ export function RequestDetailSheet({
                 <Trash2 className="mr-2 h-4 w-4" /> Eliminar
               </Button>
             ) : null}
+    </>
+  ) : undefined;
+
+  return (
+    <>
+    <DetailSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title={requestSummary(request)}
+      description={`${def.label} · Solicitada por ${request.requester?.full_name ?? request.requester?.email ?? "—"}`}
+      headerActions={headerActions}
+    >
+        {canEditRow ? (
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={onEdit}>
+              <Pencil className="mr-2 h-4 w-4" /> Editar
+            </Button>
           </div>
-        )}
+        ) : null}
 
         <div className="glass flex items-center gap-3 p-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/5 text-primary">
@@ -454,8 +447,7 @@ export function RequestDetailSheet({
             </p>
           </div>
         ) : null}
-      </EntitySheetBody>
-    </EntitySheet>
+    </DetailSheet>
 
     {isMaterial && canCreateLoan ? (
       <LoanFormDialog

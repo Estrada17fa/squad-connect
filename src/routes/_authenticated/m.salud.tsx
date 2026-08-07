@@ -29,6 +29,7 @@ import {
 import { CheckupFormDialog } from "@/components/salud/CheckupFormDialog";
 import { InjuryFormDialog } from "@/components/salud/InjuryFormDialog";
 import { InjuryDetailSheet, INJURY_STATUS_VARIANT } from "@/components/salud/InjuryDetailSheet";
+import { CheckupDetailSheet } from "@/components/salud/CheckupDetailSheet";
 import { PlayerMedicalSheet } from "@/components/salud/PlayerMedicalSheet";
 import { AVAILABILITY_META } from "./m.plantel";
 
@@ -60,6 +61,7 @@ function SaludPage() {
   const [injuryOpen, setInjuryOpen] = React.useState(false);
   const [editingInjury, setEditingInjury] = React.useState<InjuryRow | null>(null);
   const [detailInjury, setDetailInjury] = React.useState<InjuryRow | null>(null);
+  const [detailCheckup, setDetailCheckup] = React.useState<CheckupRow | null>(null);
   const [detailPlayer, setDetailPlayer] = React.useState<MedicalRosterMember | null>(null);
 
   const rosterQ = useMedicalRoster(canAccess ? clubId : null);
@@ -235,15 +237,8 @@ function SaludPage() {
                   icon={Stethoscope}
                   title={c.player?.full_name ?? "Jugador"}
                   subtitle={c.reason}
-                  interactive={canEditTeam(c.team_id)}
-                  onClick={
-                    canEditTeam(c.team_id)
-                      ? () => {
-                          setEditingCheckup(c);
-                          setCheckupOpen(true);
-                        }
-                      : undefined
-                  }
+                  interactive
+                  onClick={() => setDetailCheckup(c)}
                   action={<TeamBadge name={c.team?.name} />}
                 >
                   <div className="space-y-1">
@@ -336,6 +331,17 @@ function SaludPage() {
             userId={user.id}
             players={editablePlayers}
             injury={editingInjury}
+          />
+          <CheckupDetailSheet
+            open={!!detailCheckup}
+            onOpenChange={(v) => !v && setDetailCheckup(null)}
+            checkup={detailCheckup}
+            canEdit={!!detailCheckup && canEditTeam(detailCheckup.team_id)}
+            onEdit={(c) => {
+              setDetailCheckup(null);
+              setEditingCheckup(c);
+              setCheckupOpen(true);
+            }}
           />
           <InjuryDetailSheet
             open={!!detailInjury}

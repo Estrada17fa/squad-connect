@@ -19,7 +19,7 @@ import {
   type DocumentRow,
 } from "@/hooks/useDocuments";
 import { DocumentFormDialog } from "@/components/documentos/DocumentFormDialog";
-import { DocumentPreviewDialog } from "@/components/documentos/DocumentPreviewDialog";
+import { DocumentDetailSheet } from "@/components/documentos/DocumentDetailSheet";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/m/documentos")({
@@ -182,7 +182,7 @@ function DocumentosPage() {
       )}
 
       <DocumentFormDialog open={formOpen} onOpenChange={setFormOpen} existing={editing} />
-      <DocumentPreviewDialog
+      <DocumentDetailSheet
         open={previewOpen}
         onOpenChange={setPreviewOpen}
         doc={preview}

@@ -1,11 +1,11 @@
 import * as React from "react";
-import { Pencil, UtensilsCrossed } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { UtensilsCrossed } from "lucide-react";
 import { formatDateTime } from "@/lib/calendar-utils";
 import { MEAL_TYPE_LABEL } from "@/lib/tripLogistics";
 import type { TripMeal } from "@/hooks/useTripMeals";
 import { TimelineSection } from "./TimelineSection";
 import { MealFormDialog } from "./MealFormDialog";
+import { MealDetailSheet } from "./MealDetailSheet";
 
 interface Props {
   tripId: string;
@@ -15,8 +15,8 @@ interface Props {
 }
 
 export function MealsSection({ tripId, userId, meals, canEdit }: Props) {
-  const [open, setOpen] = React.useState(false);
-  const [editing, setEditing] = React.useState<TripMeal | null>(null);
+  const [formOpen, setFormOpen] = React.useState(false);
+  const [detailFor, setDetailFor] = React.useState<TripMeal | null>(null);
 
   return (
     <>
@@ -27,39 +27,34 @@ export function MealsSection({ tripId, userId, meals, canEdit }: Props) {
         canEdit={canEdit}
         addLabel="Agregar comida"
         emptyLabel="Sin comidas programadas."
-        onAdd={() => {
-          setEditing(null);
-          setOpen(true);
-        }}
+        onAdd={() => setFormOpen(true)}
       >
         {meals.map((m) => (
-          <article key={m.id} className="glass flex items-start gap-2 p-3">
+          <button
+            key={m.id}
+            type="button"
+            className="glass flex w-full items-start gap-2 p-3 text-left transition-colors hover:bg-white/[0.04]"
+            onClick={() => setDetailFor(m)}
+          >
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium text-foreground">{MEAL_TYPE_LABEL[m.meal_type]}</p>
               <p className="text-xs text-muted-foreground">{formatDateTime(m.scheduled_at)}</p>
               {m.location ? <p className="text-xs text-muted-foreground">{m.location}</p> : null}
-              {m.notes ? <p className="text-xs text-muted-foreground">{m.notes}</p> : null}
             </div>
-            {canEdit ? (
-              <Button
-                type="button"
-                size="icon"
-                variant="ghost"
-                onClick={() => {
-                  setEditing(m);
-                  setOpen(true);
-                }}
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
-            ) : null}
-          </article>
+          </button>
         ))}
       </TimelineSection>
 
-      {canEdit ? (
-        <MealFormDialog open={open} onOpenChange={setOpen} tripId={tripId} userId={userId} meal={editing} />
-      ) : null}
+      {canEdit ? <MealFormDialog open={formOpen} onOpenChange={setFormOpen} tripId={tripId} userId={userId} meal={null} /> : null}
+
+      <MealDetailSheet
+        open={!!detailFor}
+        onOpenChange={(v) => !v && setDetailFor(null)}
+        meal={detailFor}
+        tripId={tripId}
+        userId={userId}
+        canEdit={canEdit}
+      />
     </>
   );
 }

@@ -1,13 +1,6 @@
 import * as React from "react";
 import { Clock, Package, Pencil, Target } from "lucide-react";
-import {
-  EntitySheet,
-  EntitySheetBody,
-  EntitySheetDescription,
-  EntitySheetFooter,
-  EntitySheetHeader,
-  EntitySheetTitle,
-} from "@/components/squad/EntitySheet";
+import { DetailSection, DetailSheet } from "@/components/squad/DetailSheet";
 import { Button } from "@/components/ui/button";
 import { LoadingState } from "@/components/squad/LoadingState";
 import {
@@ -79,66 +72,65 @@ function PlanItem({ item, index }: { item: SessionExerciseRow; index: number }) 
   );
 }
 
+/** Ficha de lectura de una sesión de entrenamiento. Editar es una acción explícita en la cabecera. */
 export function SessionDetailSheet({ open, onOpenChange, session, readOnly, onEdit }: Props) {
   const planQ = useSessionPlan(open && session ? session.id : null);
   const plan = planQ.data ?? [];
+  const canEdit = !readOnly && !!onEdit;
 
   return (
-    <EntitySheet open={open} onOpenChange={onOpenChange} size="xl">
-      <EntitySheetHeader>
-        <EntitySheetTitle>{session?.title ?? "Sesión"}</EntitySheetTitle>
-        <EntitySheetDescription>
-          {session ? formatSessionDate(session.session_date) : ""}
-        </EntitySheetDescription>
-      </EntitySheetHeader>
-
-      <EntitySheetBody>
-        {session?.objective ? (
-          <div className="glass p-3">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">Objetivo</p>
-            <p className="mt-1 text-sm text-foreground">{session.objective}</p>
-          </div>
-        ) : null}
-
-        {planQ.isLoading ? (
-          <LoadingState />
-        ) : plan.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Esta sesión aún no tiene ejercicios en su plan.</p>
-        ) : (
-          PHASES.map((phase) => {
-            const items = plan.filter((p) => p.phase === phase.key);
-            if (!items.length) return null;
-            return (
-              <div key={phase.key} className="space-y-2">
-                <p className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
-                  <Clock className="h-4 w-4 text-primary" /> {phase.label}
-                </p>
-                {items.map((item, i) => (
-                  <PlanItem key={item.id} item={item} index={i} />
-                ))}
-              </div>
-            );
-          })
-        )}
-
-        {session?.notes ? (
-          <div className="glass p-3">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">Notas</p>
-            <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">{session.notes}</p>
-          </div>
-        ) : null}
-      </EntitySheetBody>
-
-      {!readOnly && onEdit ? (
-        <EntitySheetFooter>
-          <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-            Cerrar
+    <DetailSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      size="xl"
+      title={session?.title ?? "Sesión"}
+      description={session ? formatSessionDate(session.session_date) : ""}
+      headerActions={
+        canEdit ? (
+          <Button type="button" size="sm" variant="secondary" onClick={onEdit}>
+            <Pencil className="mr-2 h-3.5 w-3.5" /> Editar sesión
           </Button>
-          <Button type="button" onClick={onEdit}>
-            <Pencil className="mr-2 h-4 w-4" /> Editar sesión
-          </Button>
-        </EntitySheetFooter>
+        ) : undefined
+      }
+    >
+      {session?.objective ? (
+        <div className="glass p-3">
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">Objetivo</p>
+          <p className="mt-1 text-sm text-foreground">{session.objective}</p>
+        </div>
       ) : null}
-    </EntitySheet>
+
+      {planQ.isLoading ? (
+        <LoadingState />
+      ) : plan.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Esta sesión aún no tiene ejercicios en su plan.</p>
+      ) : (
+        PHASES.map((phase) => {
+          const items = plan.filter((p) => p.phase === phase.key);
+          if (!items.length) return null;
+          return (
+            <DetailSection
+              key={phase.key}
+              title={
+                <span className="flex items-center gap-1.5 normal-case tracking-normal text-foreground">
+                  <Clock className="h-4 w-4 text-primary" /> {phase.label}
+                </span>
+              }
+            >
+              {items.map((item, i) => (
+                <PlanItem key={item.id} item={item} index={i} />
+              ))}
+            </DetailSection>
+          );
+        })
+      )}
+
+      {session?.notes ? (
+        <div className="glass p-3">
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">Notas</p>
+          <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">{session.notes}</p>
+        </div>
+      ) : null}
+    </DetailSheet>
   );
 }

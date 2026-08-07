@@ -24,6 +24,7 @@ import {
 import { ExerciseFormDialog } from "@/components/entrenamientos/ExerciseFormDialog";
 import { SessionFormDialog } from "@/components/entrenamientos/SessionFormDialog";
 import { SessionDetailSheet } from "@/components/entrenamientos/SessionDetailSheet";
+import { ExerciseDetailSheet } from "@/components/entrenamientos/ExerciseDetailSheet";
 
 export const Route = createFileRoute("/_authenticated/m/entrenamientos")({
   head: () => ({
@@ -63,6 +64,7 @@ function EntrenamientosPage() {
   const [detailSession, setDetailSession] = React.useState<TrainingSessionRow | null>(null);
   const [exerciseOpen, setExerciseOpen] = React.useState(false);
   const [editingExercise, setEditingExercise] = React.useState<ExerciseRow | null>(null);
+  const [detailExercise, setDetailExercise] = React.useState<ExerciseRow | null>(null);
 
   const sessionsQ = useTrainingSessions(canAccess ? clubId : null);
   const exercisesQ = useExercises(canAccess ? clubId : null);
@@ -222,16 +224,11 @@ function EntrenamientosPage() {
           ) : (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {exercises.map((ex) => {
-                const editable = canEditTeam(ex.team_id) || (!ex.team_id && canEditAny);
                 return (
                   <button
                     key={ex.id}
                     type="button"
-                    onClick={() => {
-                      if (!editable) return;
-                      setEditingExercise(ex);
-                      setExerciseOpen(true);
-                    }}
+                    onClick={() => setDetailExercise(ex)}
                     className="glass p-4 text-left transition-all hover:border-white/15 hover:bg-white/[0.06]"
                   >
                     <p className="truncate font-display font-semibold text-foreground">{ex.name}</p>
@@ -283,6 +280,17 @@ function EntrenamientosPage() {
           setDetailSession(null);
           setSessionFormOpen(true);
         }}
+      />
+
+      <ExerciseDetailSheet
+        open={!!detailExercise}
+        onOpenChange={(v) => !v && setDetailExercise(null)}
+        exercise={detailExercise}
+        canEdit={!!detailExercise && (canEditTeam(detailExercise.team_id) || (!detailExercise.team_id && canEditAny))}
+        clubId={clubId}
+        userId={userId}
+        teams={editableTeams}
+        teamName={teamName}
       />
     </div>
   );

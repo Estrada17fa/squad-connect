@@ -123,6 +123,13 @@ export function TripDetailSheet({
         <EntitySheetDescription>
           {trip?.destination ? `Destino: ${trip.destination}` : "Sin destino especificado"}
         </EntitySheetDescription>
+        {editable && trip && onEdit ? (
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button type="button" size="sm" variant="secondary" onClick={() => onEdit(trip)}>
+              <Pencil className="mr-2 h-3.5 w-3.5" /> Editar viaje
+            </Button>
+          </div>
+        ) : null}
       </EntitySheetHeader>
 
       <EntitySheetBody>
@@ -286,11 +293,6 @@ export function TripDetailSheet({
         <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
           Cerrar
         </Button>
-        {editable && trip && onEdit ? (
-          <Button type="button" className="glow-primary" onClick={() => onEdit(trip)}>
-            <Pencil className="mr-2 h-4 w-4" /> Editar viaje
-          </Button>
-        ) : null}
       </EntitySheetFooter>
     </EntitySheet>
   );
