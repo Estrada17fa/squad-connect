@@ -50,6 +50,15 @@ export function ModuleTabs({ activeKey, hubKey, extraActiveKey }: ModuleTabsProp
 
   const extras: ExtraTab[] = React.useMemo(() => {
     const out: ExtraTab[] = [];
+    if (hub?.page.key === "admin") {
+      out.push({
+        key: "admin-config",
+        label: "Configuración",
+        icon: Settings2,
+        to: "/admin/configuracion",
+        active: extraActiveKey === "admin-config",
+      });
+    }
     if (hub?.page.key === "admin" && isSuperAdmin) {
       out.push({
         key: "admin-clubs",
@@ -59,6 +68,7 @@ export function ModuleTabs({ activeKey, hubKey, extraActiveKey }: ModuleTabsProp
         active: extraActiveKey === "admin-clubs",
       });
     }
+
     // Consulta de viajes desde Agenda (solo lectura).
     if (hub?.page.key === "agenda" && (isSuperAdmin || accessibleModules.includes("viajes"))) {
       out.push({
