@@ -63,11 +63,19 @@ export function EventFormDialog({ open, onOpenChange, clubId, teams, defaultTeam
   const [locationId, setLocationId] = React.useState<string | null>((event as any)?.location_id ?? null);
   const [description, setDescription] = React.useState(event?.description ?? "");
   const [attendeeIds, setAttendeeIds] = React.useState<Set<string>>(new Set());
+  const [attendeeMode, setAttendeeMode] = React.useState<AttendeeMode>("auto");
 
-  // Al cambiar de equipo, la lista de asistentes deja de ser válida.
+  // Al cambiar de equipo, la convocatoria se recalcula al equipo completo.
+  const prevTeamRef = React.useRef<string | null>(teamId);
   React.useEffect(() => {
-    if (!isEdit) setAttendeeIds(new Set());
-  }, [teamId, isEdit]);
+    if (prevTeamRef.current === teamId) return;
+    prevTeamRef.current = teamId;
+    if (attendeeMode === "custom") toast.info("Se recalculó la convocatoria al equipo completo");
+    setAttendeeMode("auto");
+    setAttendeeIds(new Set());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [teamId]);
+
 
   React.useEffect(() => {
     if (!open) return;
