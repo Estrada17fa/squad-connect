@@ -1,14 +1,13 @@
 import * as React from "react";
-import { toast } from "sonner";
-import { Bus, Pencil, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Bus } from "lucide-react";
 import { formatDateTime } from "@/lib/calendar-utils";
 import { LEG_LABEL, TRANSPORT_TYPE_LABEL, type MiniProfile, type TripLeg } from "@/lib/tripLogistics";
-import { useTransportMutations, type TripTransport } from "@/hooks/useTripTransports";
+import { type TripTransport } from "@/hooks/useTripTransports";
 import { TimelineSection } from "./TimelineSection";
 import { PersonChips } from "./PersonChips";
 import { TransportFormDialog } from "./TransportFormDialog";
-import { PassengerAssignDialog, type AssignCandidate } from "./PassengerAssignDialog";
+import { TransportDetailSheet } from "./TransportDetailSheet";
+import { type AssignCandidate } from "./PassengerAssignDialog";
 
 interface Props {
   tripId: string;
@@ -20,30 +19,9 @@ interface Props {
   canEdit: boolean;
 }
 
-export function TransportsSection({
-  tripId,
-  userId,
-  leg,
-  transports,
-  allTransports,
-  travelers,
-  canEdit,
-}: Props) {
-  const { setPassengers } = useTransportMutations(tripId);
+export function TransportsSection({ tripId, userId, leg, transports, allTransports, travelers, canEdit }: Props) {
   const [formOpen, setFormOpen] = React.useState(false);
-  const [editing, setEditing] = React.useState<TripTransport | null>(null);
-  const [passengersFor, setPassengersFor] = React.useState<TripTransport | null>(null);
-
-  const importSources = React.useMemo(
-    () =>
-      allTransports
-        .filter((t) => t.id !== passengersFor?.id && t.passengers.length > 0)
-        .map((t) => ({
-          label: `${LEG_LABEL[t.leg]} · ${t.label ?? TRANSPORT_TYPE_LABEL[t.transport_type]}`,
-          userIds: t.passengers.map((p) => p.user_id),
-        })),
-    [allTransports, passengersFor?.id],
-  );
+  const [detailFor, setDetailFor] = React.useState<TripTransport | null>(null);
 
   return (
     <>
@@ -54,95 +32,48 @@ export function TransportsSection({
         canEdit={canEdit}
         addLabel="Agregar transporte"
         emptyLabel="Sin transporte registrado."
-        onAdd={() => {
-          setEditing(null);
-          setFormOpen(true);
-        }}
+        onAdd={() => setFormOpen(true)}
       >
         {transports.map((t) => (
-          <article key={t.id} className="glass space-y-2 p-3">
-            <div className="flex items-start gap-2">
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-foreground">
-                  {t.label ?? TRANSPORT_TYPE_LABEL[t.transport_type]}
-                  {t.label ? (
-                    <span className="text-muted-foreground"> · {TRANSPORT_TYPE_LABEL[t.transport_type]}</span>
-                  ) : null}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {t.pickup_location} → {t.destination}
-                </p>
-                <p className="text-xs text-muted-foreground">Sale {formatDateTime(t.departs_at)}</p>
-              </div>
-              {canEdit ? (
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => {
-                    setEditing(t);
-                    setFormOpen(true);
-                  }}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-              ) : null}
+          <button
+            key={t.id}
+            type="button"
+            className="glass w-full space-y-2 p-3 text-left transition-colors hover:bg-white/[0.04]"
+            onClick={() => setDetailFor(t)}
+          >
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-foreground">
+                {t.label ?? TRANSPORT_TYPE_LABEL[t.transport_type]}
+                {t.label ? <span className="text-muted-foreground"> · {TRANSPORT_TYPE_LABEL[t.transport_type]}</span> : null}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {t.pickup_location} → {t.destination}
+              </p>
+              <p className="text-xs text-muted-foreground">Sale {formatDateTime(t.departs_at)}</p>
             </div>
-
-            {t.notes ? <p className="text-xs text-muted-foreground">{t.notes}</p> : null}
 
             <PersonChips
               people={t.passengers.map((p) => ({ id: p.id, profile: p.profile as MiniProfile | null }))}
               emptyLabel="Sin pasajeros asignados"
             />
-
-            {canEdit ? (
-              <Button type="button" size="sm" variant="outline" className="w-full" onClick={() => setPassengersFor(t)}>
-                <Users className="mr-1.5 h-4 w-4" /> Asignar pasajeros
-              </Button>
-            ) : null}
-          </article>
+          </button>
         ))}
       </TimelineSection>
 
       {canEdit ? (
-        <TransportFormDialog
-          open={formOpen}
-          onOpenChange={setFormOpen}
-          tripId={tripId}
-          userId={userId}
-          transport={editing}
-          defaultLeg={leg}
-        />
+        <TransportFormDialog open={formOpen} onOpenChange={setFormOpen} tripId={tripId} userId={userId} transport={null} defaultLeg={leg} />
       ) : null}
 
-      {canEdit && passengersFor ? (
-        <PassengerAssignDialog
-          open
-          onOpenChange={(v) => !v && setPassengersFor(null)}
-          title={`Pasajeros · ${passengersFor.label ?? TRANSPORT_TYPE_LABEL[passengersFor.transport_type]}`}
-          candidates={travelers}
-          selectedIds={passengersFor.passengers.map((p) => p.user_id)}
-          importSources={importSources}
-          saving={setPassengers.isPending}
-          onSave={(ids) =>
-            setPassengers.mutate(
-              {
-                transportId: passengersFor.id,
-                current: passengersFor.passengers.map((p) => p.user_id),
-                next: ids,
-              },
-              {
-                onSuccess: () => {
-                  toast.success("Pasajeros actualizados");
-                  setPassengersFor(null);
-                },
-                onError: (e: any) => toast.error(e.message ?? "No se pudo guardar"),
-              },
-            )
-          }
-        />
-      ) : null}
+      <TransportDetailSheet
+        open={!!detailFor}
+        onOpenChange={(v) => !v && setDetailFor(null)}
+        transport={detailFor}
+        allTransports={allTransports}
+        tripId={tripId}
+        userId={userId}
+        travelers={travelers}
+        canEdit={canEdit}
+      />
     </>
   );
 }
