@@ -13,6 +13,7 @@ import { usePlayer } from "@/hooks/usePlayers";
 import { AVAILABILITY_META } from "./m.plantel";
 import { PlayerFormDialog } from "@/components/plantel/PlayerFormDialog";
 import { PlayerMedicalSheet } from "@/components/salud/PlayerMedicalSheet";
+import { PlayerDevelopmentSheet } from "@/components/desarrollo/PlayerDevelopmentSheet";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/m/plantel/$playerId")({
@@ -31,12 +32,14 @@ function PlayerDetail() {
   const { user } = useApp();
   const { canEditTeam } = useTeamAccess("plantel");
   const { canEditTeam: canEditSalud, canReadTeam: canReadSalud } = useTeamAccess("salud");
+  const { canEditTeam: canEditDesarrollo } = useTeamAccess("desarrollo");
 
   const { data: player, isLoading } = usePlayer(playerId);
   // Permiso por equipo: editor en Sub-20 no puede editar fichas de Primera.
   const canEdit = canEditTeam(player?.team_id);
   const [editOpen, setEditOpen] = React.useState(false);
   const [healthOpen, setHealthOpen] = React.useState(false);
+  const [devOpen, setDevOpen] = React.useState(false);
   const [clubId, setClubId] = React.useState<string | null>(null);
 
   React.useEffect(() => {
@@ -54,6 +57,9 @@ function PlayerDetail() {
   // Privacidad: el expediente médico solo lo abre el cuerpo médico del equipo o el propio jugador.
   const canEditHealth = canEditSalud(player.team_id);
   const canSeeHealth = isSelf || canReadSalud(player.team_id);
+  // Desarrollo: el lector solo ve lo suyo; ver a otros exige editor en el equipo.
+  const canEditDev = canEditDesarrollo(player.team_id);
+  const canSeeDev = isSelf || canEditDev;
 
   return (
     <div className="space-y-6">
@@ -124,7 +130,21 @@ function PlayerDetail() {
         ) : (
           <EmptyState icon={HeartPulse} title="Salud" message="Información médica privada." />
         )}
-        <EmptyState icon={TrendingUp} title="Desarrollo" message="Se conecta desde el módulo de Desarrollo." />
+        {canSeeDev ? (
+          <button
+            type="button"
+            onClick={() => setDevOpen(true)}
+            className="glass flex flex-col items-center justify-center gap-2 p-6 text-center transition-all hover:border-white/15 hover:bg-white/[0.06]"
+          >
+            <TrendingUp className="h-6 w-6 text-primary" />
+            <span className="font-display font-semibold text-foreground">Desarrollo</span>
+            <span className="text-xs text-muted-foreground">
+              {isSelf && !canEditDev ? "Tu progreso" : "Progreso del jugador"}
+            </span>
+          </button>
+        ) : (
+          <EmptyState icon={TrendingUp} title="Desarrollo" message="Información privada del jugador." />
+        )}
         <EmptyState icon={Apple} title="Nutrición" message="Se conecta desde el módulo de Nutrición." />
       </div>
 
@@ -142,6 +162,19 @@ function PlayerDetail() {
           canEdit={canEditHealth}
         />
       ) : null}
+
+      <PlayerDevelopmentSheet
+        open={devOpen}
+        onOpenChange={setDevOpen}
+        clubId={clubId}
+        player={{
+          userId: player.user_id,
+          fullName: player.profile?.full_name ?? null,
+          avatarUrl: player.profile?.avatar_url ?? null,
+        }}
+        isSelf={isSelf}
+      />
+
 
       {clubId ? (
         <PlayerFormDialog

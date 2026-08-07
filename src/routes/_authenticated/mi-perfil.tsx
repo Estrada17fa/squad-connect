@@ -2,8 +2,9 @@ import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { FileText, HeartPulse, Save, User } from "lucide-react";
+import { FileText, HeartPulse, Save, TrendingUp, User } from "lucide-react";
 import { PlayerMedicalSheet } from "@/components/salud/PlayerMedicalSheet";
+import { PlayerDevelopmentSheet } from "@/components/desarrollo/PlayerDevelopmentSheet";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { StandardCard } from "@/components/squad/StandardCard";
 import { EmptyState } from "@/components/squad/EmptyState";
@@ -153,6 +154,13 @@ function MiPerfilPage() {
         avatarUrl={form.avatar_url}
       />
 
+      <MiDesarrolloSection
+        userId={user.id}
+        fullName={data?.full_name ?? null}
+        avatarUrl={form.avatar_url}
+      />
+
+
       <section className="space-y-2">
         <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
           Documentos asignados
@@ -224,6 +232,46 @@ function MiSaludSection({
     </section>
   );
 }
+
+/** El jugador ve SU desarrollo (retro, objetivos, evaluaciones y rutinas). */
+function MiDesarrolloSection({
+  userId,
+  fullName,
+  avatarUrl,
+}: {
+  userId: string;
+  fullName: string | null;
+  avatarUrl: string | null;
+}) {
+  const { profile } = useApp();
+  const [open, setOpen] = React.useState(false);
+
+  return (
+    <section className="space-y-2">
+      <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+        Mi desarrollo
+      </h3>
+      <StandardCard
+        icon={TrendingUp}
+        title="Mi progreso"
+        subtitle="Retroalimentación, objetivos, evaluaciones y rutinas"
+        interactive
+        onClick={() => setOpen(true)}
+      >
+        Puedes marcar tus rutinas asignadas como en progreso o completadas.
+      </StandardCard>
+      <PlayerDevelopmentSheet
+        open={open}
+        onOpenChange={setOpen}
+        clubId={profile?.club_id ?? null}
+        player={{ userId, fullName, avatarUrl, teamName: null }}
+        isSelf
+      />
+    </section>
+  );
+}
+
+
 
 function Field({
   label, value, onChange, type = "text", placeholder,

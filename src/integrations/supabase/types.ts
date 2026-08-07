@@ -14,6 +14,38 @@ export type Database = {
   }
   public: {
     Tables: {
+      assessment_scores: {
+        Row: {
+          assessment_id: string
+          attribute: string
+          created_at: string
+          id: string
+          score: number
+        }
+        Insert: {
+          assessment_id: string
+          attribute: string
+          created_at?: string
+          id?: string
+          score: number
+        }
+        Update: {
+          assessment_id?: string
+          attribute?: string
+          created_at?: string
+          id?: string
+          score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessment_scores_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "development_assessments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendar_events: {
         Row: {
           club_id: string
@@ -194,6 +226,213 @@ export type Database = {
           secondary_color?: string | null
         }
         Relationships: []
+      }
+      development_assessments: {
+        Row: {
+          assessment_date: string
+          club_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          player_user_id: string
+          team_id: string
+          updated_at: string
+        }
+        Insert: {
+          assessment_date?: string
+          club_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          player_user_id: string
+          team_id: string
+          updated_at?: string
+        }
+        Update: {
+          assessment_date?: string
+          club_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          player_user_id?: string
+          team_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "development_assessments_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "development_assessments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "development_assessments_player_user_id_fkey"
+            columns: ["player_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "development_assessments_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      development_feedback: {
+        Row: {
+          club_id: string
+          content: string
+          context: string | null
+          created_at: string
+          created_by: string | null
+          feedback_date: string
+          id: string
+          player_user_id: string
+          team_id: string
+          updated_at: string
+        }
+        Insert: {
+          club_id: string
+          content: string
+          context?: string | null
+          created_at?: string
+          created_by?: string | null
+          feedback_date?: string
+          id?: string
+          player_user_id: string
+          team_id: string
+          updated_at?: string
+        }
+        Update: {
+          club_id?: string
+          content?: string
+          context?: string | null
+          created_at?: string
+          created_by?: string | null
+          feedback_date?: string
+          id?: string
+          player_user_id?: string
+          team_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "development_feedback_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "development_feedback_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "development_feedback_player_user_id_fkey"
+            columns: ["player_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "development_feedback_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      development_goals: {
+        Row: {
+          club_id: string
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          player_user_id: string
+          status: Database["public"]["Enums"]["development_goal_status"]
+          target_date: string | null
+          team_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          club_id: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          player_user_id: string
+          status?: Database["public"]["Enums"]["development_goal_status"]
+          target_date?: string | null
+          team_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          club_id?: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          player_user_id?: string
+          status?: Database["public"]["Enums"]["development_goal_status"]
+          target_date?: string | null
+          team_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "development_goals_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "development_goals_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "development_goals_player_user_id_fkey"
+            columns: ["player_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "development_goals_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       documents: {
         Row: {
@@ -1622,6 +1861,108 @@ export type Database = {
           },
         ]
       }
+      routine_assignments: {
+        Row: {
+          assigned_at: string
+          created_at: string
+          created_by: string | null
+          due_date: string | null
+          id: string
+          notes: string | null
+          player_user_id: string
+          routine_id: string
+          status: Database["public"]["Enums"]["routine_assignment_status"]
+          updated_at: string
+        }
+        Insert: {
+          assigned_at?: string
+          created_at?: string
+          created_by?: string | null
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          player_user_id: string
+          routine_id: string
+          status?: Database["public"]["Enums"]["routine_assignment_status"]
+          updated_at?: string
+        }
+        Update: {
+          assigned_at?: string
+          created_at?: string
+          created_by?: string | null
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          player_user_id?: string
+          routine_id?: string
+          status?: Database["public"]["Enums"]["routine_assignment_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "routine_assignments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "routine_assignments_player_user_id_fkey"
+            columns: ["player_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "routine_assignments_routine_id_fkey"
+            columns: ["routine_id"]
+            isOneToOne: false
+            referencedRelation: "training_routines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      routine_exercises: {
+        Row: {
+          created_at: string
+          id: string
+          instructions: string | null
+          name: string
+          order_index: number
+          reps: string | null
+          routine_id: string
+          sets: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          instructions?: string | null
+          name: string
+          order_index?: number
+          reps?: string | null
+          routine_id: string
+          sets?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          instructions?: string | null
+          name?: string
+          order_index?: number
+          reps?: string | null
+          routine_id?: string
+          sets?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "routine_exercises_routine_id_fkey"
+            columns: ["routine_id"]
+            isOneToOne: false
+            referencedRelation: "training_routines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       super_admins: {
         Row: {
           created_at: string
@@ -1865,6 +2206,64 @@ export type Database = {
             columns: ["club_id"]
             isOneToOne: false
             referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_routines: {
+        Row: {
+          category: string | null
+          club_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          team_id: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          club_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          team_id: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          club_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          team_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_routines_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_routines_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_routines_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
             referencedColumns: ["id"]
           },
         ]
@@ -2588,6 +2987,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      can_edit_development: {
+        Args: { _team_id: string; _user_id: string }
+        Returns: boolean
+      }
       can_edit_health: {
         Args: { _team_id: string; _user_id: string }
         Returns: boolean
@@ -2603,6 +3006,10 @@ export type Database = {
       can_view_trip: {
         Args: { _trip_id: string; _user_id: string }
         Returns: boolean
+      }
+      development_level: {
+        Args: { _team_id: string; _user_id: string }
+        Returns: Database["public"]["Enums"]["access_level"]
       }
       expense_report: {
         Args: { _club_id: string; _from: string; _to: string }
@@ -2658,6 +3065,10 @@ export type Database = {
       }
       has_module_editor_any: {
         Args: { _module_key: string; _user_id: string }
+        Returns: boolean
+      }
+      has_routine_assignment: {
+        Args: { _routine_id: string; _user_id: string }
         Returns: boolean
       }
       has_team_access: {
@@ -2739,6 +3150,11 @@ export type Database = {
       approver_override_mode: "grant" | "revoke"
       attendance_status: "invitado" | "confirmado" | "rechazado"
       availability_status: "apto" | "lesionado" | "en_duda"
+      development_goal_status:
+        | "pendiente"
+        | "en_progreso"
+        | "cumplido"
+        | "no_cumplido"
       document_category:
         | "jugador"
         | "staff"
@@ -2779,6 +3195,7 @@ export type Database = {
         | "reembolso"
         | "medica"
         | "otro"
+      routine_assignment_status: "asignada" | "en_progreso" | "completada"
       task_priority: "baja" | "media" | "alta"
       task_status: "pendiente" | "en_progreso" | "completada" | "en_pausa"
       trip_leg: "ida" | "regreso"
@@ -2916,6 +3333,12 @@ export const Constants = {
       approver_override_mode: ["grant", "revoke"],
       attendance_status: ["invitado", "confirmado", "rechazado"],
       availability_status: ["apto", "lesionado", "en_duda"],
+      development_goal_status: [
+        "pendiente",
+        "en_progreso",
+        "cumplido",
+        "no_cumplido",
+      ],
       document_category: [
         "jugador",
         "staff",
@@ -2961,6 +3384,7 @@ export const Constants = {
         "medica",
         "otro",
       ],
+      routine_assignment_status: ["asignada", "en_progreso", "completada"],
       task_priority: ["baja", "media", "alta"],
       task_status: ["pendiente", "en_progreso", "completada", "en_pausa"],
       trip_leg: ["ida", "regreso"],
