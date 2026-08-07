@@ -53,7 +53,7 @@ export function ModuleTabs({ activeKey, hubKey, extraActiveKey }: ModuleTabsProp
     if (hub?.page.key === "admin") {
       out.push({
         key: "admin-config",
-        label: "Configuración",
+        label: "Configuración del club",
         icon: Settings2,
         to: "/admin/configuracion",
         active: extraActiveKey === "admin-config",
