@@ -126,11 +126,24 @@ export function RequestDetailSheet({
   const expenseQ = useRequestExpense(open && request && isFinancial ? request.id : null);
   const linkedExpense = expenseQ.data ?? null;
 
+  // Salud: la revisión médica la registra un editor de 'salud' del equipo del jugador.
+  const isMedical = request?.type === "medica";
+  const { canEditTeam: canEditSalud } = useTeamAccess("salud");
+  const medicalRosterQ = useMedicalRoster(open && isMedical ? clubId : null);
+  const medicalPlayers = React.useMemo(
+    () => (medicalRosterQ.data ?? []).filter((p) => canEditSalud(p.teamId)),
+    [medicalRosterQ.data, canEditSalud],
+  );
+  const canCreateCheckup = medicalPlayers.length > 0;
+  const checkupQ = useRequestCheckup(open && request && isMedical ? request.id : null);
+  const linkedCheckup = checkupQ.data ?? null;
+
   React.useEffect(() => {
     if (open) setNote("");
     if (!open) {
       setLoanOpen(false);
       setExpenseOpen(false);
+      setCheckupOpen(false);
     }
   }, [open, request?.id]);
 
