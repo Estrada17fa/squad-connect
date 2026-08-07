@@ -8,6 +8,7 @@ import { StatusBadge } from "@/components/squad/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useApp } from "@/components/squad/AppLayout";
+import { useTeamAccess } from "@/hooks/useTeamAccess";
 import { usePlayer } from "@/hooks/usePlayers";
 import { AVAILABILITY_META } from "./m.plantel";
 import { PlayerFormDialog } from "@/components/plantel/PlayerFormDialog";
@@ -26,10 +27,12 @@ export const Route = createFileRoute("/_authenticated/m/plantel/$playerId")({
 
 function PlayerDetail() {
   const { playerId } = Route.useParams();
-  const { getModuleAccess, user, isSuperAdmin } = useApp();
-  const canEdit = isSuperAdmin || getModuleAccess("plantel") === "editor" || getModuleAccess("plantel") === "approver";
+  const { user } = useApp();
+  const { canEditTeam } = useTeamAccess("plantel");
 
   const { data: player, isLoading } = usePlayer(playerId);
+  // Permiso por equipo: editor en Sub-20 no puede editar fichas de Primera.
+  const canEdit = canEditTeam(player?.team_id);
   const [editOpen, setEditOpen] = React.useState(false);
   const [clubId, setClubId] = React.useState<string | null>(null);
 

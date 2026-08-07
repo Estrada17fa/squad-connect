@@ -52,6 +52,7 @@ function ViajesPage() {
   const canAccess = isSuperAdmin || accessibleModules.includes("viajes");
   const level = permissions.viajes;
   const canEdit = isSuperAdmin || level === "editor" || level === "approver";
+  const { canEditTeam } = useTeamAccess("viajes");
 
   const [formOpen, setFormOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<TripRow | null>(null);
@@ -93,7 +94,7 @@ function ViajesPage() {
       <ModuleTabs activeKey="viajes" />
       <TeamFilter teams={teamOptions} value={teamFilter} onChange={setTeamFilter} />
 
-      {canEdit && editableTeams.length > 0 ? (
+      {editableTeams.length > 0 ? (
         <Button
           className="w-full glow-primary"
           onClick={() => {
@@ -136,7 +137,7 @@ function ViajesPage() {
         open={!!detail}
         onOpenChange={(v) => !v && setDetailId(null)}
         trip={detail}
-        canEdit={canEdit}
+        canEdit={canEditTeam(detail?.team_id)}
         onEdit={(t) => {
           setDetailId(null);
           setEditing(t);
