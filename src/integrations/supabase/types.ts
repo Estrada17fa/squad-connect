@@ -566,6 +566,76 @@ export type Database = {
           },
         ]
       }
+      exercises: {
+        Row: {
+          category: Database["public"]["Enums"]["exercise_category"]
+          club_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          duration_minutes: number | null
+          id: string
+          materials: string | null
+          media_path: string | null
+          name: string
+          objective: string | null
+          team_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["exercise_category"]
+          club_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          materials?: string | null
+          media_path?: string | null
+          name: string
+          objective?: string | null
+          team_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["exercise_category"]
+          club_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          materials?: string | null
+          media_path?: string | null
+          name?: string
+          objective?: string | null
+          team_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exercises_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exercises_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exercises_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       expenses: {
         Row: {
           amount: number
@@ -1963,6 +2033,54 @@ export type Database = {
           },
         ]
       }
+      session_exercises: {
+        Row: {
+          created_at: string
+          custom_notes: string | null
+          duration_override: number | null
+          exercise_id: string
+          id: string
+          order_index: number
+          phase: Database["public"]["Enums"]["session_phase"]
+          session_id: string
+        }
+        Insert: {
+          created_at?: string
+          custom_notes?: string | null
+          duration_override?: number | null
+          exercise_id: string
+          id?: string
+          order_index?: number
+          phase?: Database["public"]["Enums"]["session_phase"]
+          session_id: string
+        }
+        Update: {
+          created_at?: string
+          custom_notes?: string | null
+          duration_override?: number | null
+          exercise_id?: string
+          id?: string
+          order_index?: number
+          phase?: Database["public"]["Enums"]["session_phase"]
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_exercises_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "exercises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_exercises_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "training_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       super_admins: {
         Row: {
           created_at: string
@@ -2261,6 +2379,77 @@ export type Database = {
           },
           {
             foreignKeyName: "training_routines_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_sessions: {
+        Row: {
+          club_id: string
+          created_at: string
+          created_by: string | null
+          event_id: string | null
+          id: string
+          notes: string | null
+          objective: string | null
+          session_date: string
+          team_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          club_id: string
+          created_at?: string
+          created_by?: string | null
+          event_id?: string | null
+          id?: string
+          notes?: string | null
+          objective?: string | null
+          session_date?: string
+          team_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          club_id?: string
+          created_at?: string
+          created_by?: string | null
+          event_id?: string | null
+          id?: string
+          notes?: string | null
+          objective?: string | null
+          session_date?: string
+          team_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_sessions_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_sessions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_sessions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "calendar_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_sessions_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
             referencedRelation: "teams"
@@ -2995,12 +3184,28 @@ export type Database = {
         Args: { _team_id: string; _user_id: string }
         Returns: boolean
       }
+      can_edit_training: {
+        Args: { _team_id: string; _user_id: string }
+        Returns: boolean
+      }
+      can_edit_training_club: {
+        Args: { _club_id: string; _user_id: string }
+        Returns: boolean
+      }
       can_edit_trip: {
         Args: { _trip_id: string; _user_id: string }
         Returns: boolean
       }
       can_view_request: {
         Args: { _request_id: string; _user_id: string }
+        Returns: boolean
+      }
+      can_view_training: {
+        Args: { _team_id: string; _user_id: string }
+        Returns: boolean
+      }
+      can_view_training_club: {
+        Args: { _club_id: string; _user_id: string }
         Returns: boolean
       }
       can_view_trip: {
@@ -3140,6 +3345,10 @@ export type Database = {
           user_id: string
         }[]
       }
+      training_level: {
+        Args: { _team_id: string; _user_id: string }
+        Returns: Database["public"]["Enums"]["access_level"]
+      }
       user_sees_all_club: {
         Args: { _club_id: string; _user_id: string }
         Returns: boolean
@@ -3169,6 +3378,14 @@ export type Database = {
         | "viaje"
         | "junta"
         | "evento_especial"
+      exercise_category:
+        | "calentamiento"
+        | "tecnica"
+        | "tactica"
+        | "fisico"
+        | "portero"
+        | "recuperacion"
+        | "otro"
       expense_category:
         | "material"
         | "servicios"
@@ -3196,6 +3413,7 @@ export type Database = {
         | "medica"
         | "otro"
       routine_assignment_status: "asignada" | "en_progreso" | "completada"
+      session_phase: "calentamiento" | "principal" | "vuelta_calma"
       task_priority: "baja" | "media" | "alta"
       task_status: "pendiente" | "en_progreso" | "completada" | "en_pausa"
       trip_leg: "ida" | "regreso"
@@ -3355,6 +3573,15 @@ export const Constants = {
         "junta",
         "evento_especial",
       ],
+      exercise_category: [
+        "calentamiento",
+        "tecnica",
+        "tactica",
+        "fisico",
+        "portero",
+        "recuperacion",
+        "otro",
+      ],
       expense_category: [
         "material",
         "servicios",
@@ -3385,6 +3612,7 @@ export const Constants = {
         "otro",
       ],
       routine_assignment_status: ["asignada", "en_progreso", "completada"],
+      session_phase: ["calentamiento", "principal", "vuelta_calma"],
       task_priority: ["baja", "media", "alta"],
       task_status: ["pendiente", "en_progreso", "completada", "en_pausa"],
       trip_leg: ["ida", "regreso"],

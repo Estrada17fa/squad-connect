@@ -15,6 +15,7 @@ import {
   HeartPulse,
   TrendingUp,
   Apple,
+  Dumbbell,
   Receipt,
   Home,
   type LucideIcon,
@@ -37,6 +38,7 @@ export type ModuleKey =
   | "tacticas"
   | "salud"
   | "desarrollo"
+  | "entrenamientos"
   | "nutricion";
 
 /**
@@ -72,6 +74,7 @@ export const MODULES: ModuleDef[] = [
   { key: "tacticas", label: "Tácticas", icon: LayoutGrid, description: "Formaciones y jugadas", scope: "team" },
   { key: "salud", label: "Salud", icon: HeartPulse, description: "Parte médico y lesiones", scope: "team" },
   { key: "desarrollo", label: "Desarrollo", icon: TrendingUp, description: "Evaluaciones y progresos", scope: "team" },
+  { key: "entrenamientos", label: "Entrenamientos", icon: Dumbbell, description: "Sesiones del equipo y biblioteca de ejercicios", scope: "team" },
   { key: "nutricion", label: "Nutrición", icon: Apple, description: "Planes alimenticios", scope: "team" },
 ];
 

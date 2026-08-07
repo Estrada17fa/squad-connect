@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/squad/EmptyState";
 import { EVENT_TYPE_MAP } from "@/lib/eventTypes";
 import { formatDayLabel, formatTime } from "@/lib/calendar-utils";
 import type { CalendarEventRow } from "@/hooks/useCalendarEvents";
+import { TrainingPlanButton } from "@/components/entrenamientos/TrainingPlanButton";
 
 interface Props {
   day: Date | null;
@@ -33,6 +34,7 @@ export function DaySheet({ day, events, onClose, onSelect }: Props) {
             events.map((e) => {
               const def = EVENT_TYPE_MAP[e.event_type];
               return (
+                <div key={e.id}>
                 <StandardCard
                   key={e.id}
                   interactive
@@ -48,6 +50,8 @@ export function DaySheet({ day, events, onClose, onSelect }: Props) {
                     {def.label}
                   </span>
                 </StandardCard>
+                <TrainingPlanButton eventId={e.id} eventType={e.event_type} />
+                </div>
               );
             })
           )}
