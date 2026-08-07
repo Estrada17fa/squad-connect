@@ -19,6 +19,7 @@ import { TripFormDialog } from "@/components/viajes/TripFormDialog";
 import { TripDetailSheet } from "@/components/viajes/TripDetailSheet";
 import { TeamFilter, TeamBadge } from "@/components/squad/TeamFilter";
 import { useEditableTeams } from "@/hooks/useEditableTeams";
+import { useTeamAccess } from "@/hooks/useTeamAccess";
 
 export const Route = createFileRoute("/_authenticated/m/viajes")({
   validateSearch: (search: Record<string, unknown>) => ({

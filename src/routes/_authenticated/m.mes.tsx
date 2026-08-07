@@ -14,6 +14,7 @@ import { ModuleTabs } from "@/components/squad/ModuleTabs";
 import { cn } from "@/lib/utils";
 import { TeamFilter } from "@/components/squad/TeamFilter";
 import { useEditableTeams } from "@/hooks/useEditableTeams";
+import { useTeamAccess } from "@/hooks/useTeamAccess";
 
 export const Route = createFileRoute("/_authenticated/m/mes")({
   head: () => ({
@@ -28,9 +29,10 @@ export const Route = createFileRoute("/_authenticated/m/mes")({
 const WEEKDAYS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
 function MesModulePage() {
-  const { getModuleAccess, user, isSuperAdmin, profile, teamOptions } = useApp();
-  const canEdit = isSuperAdmin || getModuleAccess("mes") === "editor" || getModuleAccess("mes") === "approver";
+  const { user, profile, teamOptions } = useApp();
   const editableTeams = useEditableTeams("mes");
+  const { canEditTeam } = useTeamAccess("mes");
+  const canEdit = editableTeams.length > 0;
 
   const [anchor, setAnchor] = React.useState(() => startOfDay(new Date()));
   const [selectedDay, setSelectedDay] = React.useState<Date | null>(null);
@@ -80,7 +82,7 @@ function MesModulePage() {
       <ModuleTabs activeKey="mes" />
       <TeamFilter teams={teamOptions} value={teamFilter} onChange={setTeamFilter} />
 
-      {canEdit && editableTeams.length > 0 ? (
+      {canEdit ? (
         <Button onClick={() => openCreate()} className="w-full glow-primary">
           <Plus className="mr-2 h-4 w-4" /> Nuevo evento
         </Button>
@@ -153,7 +155,7 @@ function MesModulePage() {
         day={selectedDay}
         events={selectedEvents}
         onClose={() => setSelectedDay(null)}
-        onSelect={(e) => (canEdit ? openEdit(e) : null)}
+        onSelect={(e) => (canEditTeam(e.team_id) ? openEdit(e) : null)}
       />
 
       {clubId ? (
