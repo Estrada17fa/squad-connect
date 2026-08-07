@@ -50,6 +50,10 @@ import {
   ASSIGNMENT_STATUS_VARIANT,
   GOAL_STATUS_VARIANT,
 } from "@/components/desarrollo/PlayerDevelopmentSheet";
+import { FeedbackDetailSheet } from "@/components/desarrollo/FeedbackDetailSheet";
+import { GoalDetailSheet } from "@/components/desarrollo/GoalDetailSheet";
+import { AssessmentDetailSheet } from "@/components/desarrollo/AssessmentDetailSheet";
+import { RoutineDetailSheet } from "@/components/desarrollo/RoutineDetailSheet";
 
 export const Route = createFileRoute("/_authenticated/m/desarrollo")({
   head: () => ({
@@ -92,6 +96,10 @@ function DesarrolloPage() {
   const [editingRoutine, setEditingRoutine] = React.useState<RoutineRow | null>(null);
   const [assignRoutine, setAssignRoutine] = React.useState<RoutineRow | null>(null);
   const [detailPlayer, setDetailPlayer] = React.useState<DevelopmentRosterMember | null>(null);
+  const [detailFeedback, setDetailFeedback] = React.useState<FeedbackRow | null>(null);
+  const [detailGoal, setDetailGoal] = React.useState<GoalRow | null>(null);
+  const [detailAssessment, setDetailAssessment] = React.useState<AssessmentRow | null>(null);
+  const [detailRoutine, setDetailRoutine] = React.useState<RoutineRow | null>(null);
   const [selfOpen, setSelfOpen] = React.useState(false);
 
   const rosterQ = useDevelopmentRoster(canAccess ? clubId : null);
@@ -266,15 +274,8 @@ function DesarrolloPage() {
                   icon={MessageSquareQuote}
                   title={f.player?.full_name ?? "Jugador"}
                   subtitle={f.context ?? formatDay(f.feedback_date)}
-                  interactive={canEditTeam(f.team_id)}
-                  onClick={
-                    canEditTeam(f.team_id)
-                      ? () => {
-                          setEditingFeedback(f);
-                          setFeedbackOpen(true);
-                        }
-                      : undefined
-                  }
+                  interactive
+                  onClick={() => setDetailFeedback(f)}
                   action={<TeamBadge name={f.team?.name} />}
                 >
                   <div className="space-y-1">
@@ -305,16 +306,9 @@ function DesarrolloPage() {
                     title={g.title}
                     subtitle={g.player?.full_name ?? "Jugador"}
                     status={{ label: GOAL_STATUS_LABEL[g.status], variant: GOAL_STATUS_VARIANT[g.status] }}
-                    interactive={canEditTeam(g.team_id)}
+                    interactive
                     className={overdue ? "border-destructive/50" : undefined}
-                    onClick={
-                      canEditTeam(g.team_id)
-                        ? () => {
-                            setEditingGoal(g);
-                            setGoalOpen(true);
-                          }
-                        : undefined
-                    }
+                    onClick={() => setDetailGoal(g)}
                   >
                     <div className="space-y-1">
                       {g.description ? <p className="line-clamp-2">{g.description}</p> : null}
@@ -350,15 +344,8 @@ function DesarrolloPage() {
                   icon={TrendingUp}
                   title={a.player?.full_name ?? "Jugador"}
                   subtitle={formatDay(a.assessment_date)}
-                  interactive={canEditTeam(a.team_id)}
-                  onClick={
-                    canEditTeam(a.team_id)
-                      ? () => {
-                          setEditingAssessment(a);
-                          setAssessOpen(true);
-                        }
-                      : undefined
-                  }
+                  interactive
+                  onClick={() => setDetailAssessment(a)}
                   action={<TeamBadge name={a.team?.name} />}
                 >
                   <div className="space-y-1">
@@ -386,15 +373,8 @@ function DesarrolloPage() {
                   icon={Dumbbell}
                   title={r.name}
                   subtitle={r.category ?? `${(r.exercises ?? []).length} ejercicio(s)`}
-                  interactive={canEditTeam(r.team_id)}
-                  onClick={
-                    canEditTeam(r.team_id)
-                      ? () => {
-                          setEditingRoutine(r);
-                          setRoutineOpen(true);
-                        }
-                      : undefined
-                  }
+                  interactive
+                  onClick={() => setDetailRoutine(r)}
                   action={<TeamBadge name={r.team?.name} />}
                 >
                   <div className="space-y-2">
@@ -406,19 +386,6 @@ function DesarrolloPage() {
                         </StatusBadge>
                       ))}
                     </div>
-                    {canEditTeam(r.team_id) ? (
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setAssignRoutine(r);
-                        }}
-                      >
-                        Asignar a jugadores
-                      </Button>
-                    ) : null}
                   </div>
                 </StandardCard>
               ))}
@@ -512,6 +479,44 @@ function DesarrolloPage() {
           teamName: null,
         }}
         isSelf
+      />
+
+      <FeedbackDetailSheet
+        open={!!detailFeedback}
+        onOpenChange={(v) => !v && setDetailFeedback(null)}
+        feedback={detailFeedback}
+        canEdit={!!detailFeedback && canEditTeam(detailFeedback.team_id)}
+        clubId={clubId}
+        userId={user.id}
+        players={editablePlayers}
+      />
+      <GoalDetailSheet
+        open={!!detailGoal}
+        onOpenChange={(v) => !v && setDetailGoal(null)}
+        goal={detailGoal}
+        canEdit={!!detailGoal && canEditTeam(detailGoal.team_id)}
+        clubId={clubId}
+        userId={user.id}
+        players={editablePlayers}
+      />
+      <AssessmentDetailSheet
+        open={!!detailAssessment}
+        onOpenChange={(v) => !v && setDetailAssessment(null)}
+        assessment={detailAssessment}
+        canEdit={!!detailAssessment && canEditTeam(detailAssessment.team_id)}
+        clubId={clubId}
+        userId={user.id}
+        players={editablePlayers}
+      />
+      <RoutineDetailSheet
+        open={!!detailRoutine}
+        onOpenChange={(v) => !v && setDetailRoutine(null)}
+        routine={detailRoutine}
+        canEdit={!!detailRoutine && canEditTeam(detailRoutine.team_id)}
+        clubId={clubId}
+        userId={user.id}
+        teams={editableTeams}
+        onAssign={(r) => setAssignRoutine(r)}
       />
     </div>
   );

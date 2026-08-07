@@ -29,6 +29,7 @@ import { ItemFormDialog } from "@/components/inventario/ItemFormDialog";
 import { LoanFormDialog } from "@/components/inventario/LoanFormDialog";
 import { ReturnDialog } from "@/components/inventario/ReturnDialog";
 import { LoanDetailSheet } from "@/components/inventario/LoanDetailSheet";
+import { ItemDetailSheet } from "@/components/inventario/ItemDetailSheet";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/m/inventario")({
@@ -63,6 +64,7 @@ function InventarioPage() {
   const [loanDialog, setLoanDialog] = React.useState(false);
   const [presetItem, setPresetItem] = React.useState<InventoryCatalogItem | null>(null);
   const [detailLoan, setDetailLoan] = React.useState<LoanRow | null>(null);
+  const [detailItem, setDetailItem] = React.useState<InventoryCatalogItem | null>(null);
   const [returnLoan, setReturnLoan] = React.useState<LoanRow | null>(null);
 
   const catalogQ = useInventoryCatalog(canAccess ? clubId : null);
@@ -211,7 +213,12 @@ function InventarioPage() {
                 const min = minById[i.id] ?? 0;
                 const low = i.available_quantity <= min;
                 return (
-                  <div key={i.id} className="glass flex items-center gap-3 p-4">
+                  <button
+                    type="button"
+                    key={i.id}
+                    onClick={() => setDetailItem(i)}
+                    className="glass flex items-center gap-3 p-4 text-left transition-colors hover:bg-white/[0.04]"
+                  >
                     {thumb ? (
                       <img src={thumb} alt="" className="h-14 w-14 shrink-0 rounded-xl object-cover" loading="lazy" />
                     ) : (
@@ -235,33 +242,22 @@ function InventarioPage() {
                       </p>
                     </div>
                     {canEdit ? (
-                      <div className="flex shrink-0 flex-col gap-1">
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            setEditingItem(itemById[i.id] ?? null);
-                            setItemDialog(true);
-                          }}
-                        >
-                          Editar
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="ghost"
-                          disabled={i.available_quantity <= 0}
-                          onClick={() => {
-                            setPresetItem(i);
-                            setLoanDialog(true);
-                          }}
-                        >
-                          Prestar
-                        </Button>
-                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        className="shrink-0"
+                        disabled={i.available_quantity <= 0}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPresetItem(i);
+                          setLoanDialog(true);
+                        }}
+                      >
+                        Prestar
+                      </Button>
                     ) : null}
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -324,6 +320,19 @@ function InventarioPage() {
           />
         </>
       ) : null}
+
+      <ItemDetailSheet
+        open={!!detailItem}
+        onOpenChange={(v) => !v && setDetailItem(null)}
+        item={detailItem ? itemById[detailItem.id] ?? null : null}
+        availableQuantity={detailItem?.available_quantity ?? 0}
+        canEdit={canEdit}
+        onEdit={(it) => {
+          setDetailItem(null);
+          setEditingItem(it);
+          setItemDialog(true);
+        }}
+      />
 
       <LoanDetailSheet
         open={!!detailLoan}

@@ -3,14 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Trash2, Pencil, Check, X as XIcon, MapPin, CalendarClock, Video, ExternalLink } from "lucide-react";
 import { isMeetingUrl } from "./MeetingFormDialog";
-import {
-  EntitySheet,
-  EntitySheetBody,
-  EntitySheetDescription,
-  EntitySheetFooter,
-  EntitySheetHeader,
-  EntitySheetTitle,
-} from "@/components/squad/EntitySheet";
+import { DetailSheet, DetailField } from "@/components/squad/DetailSheet";
 import { StatusBadge, type StatusVariant } from "@/components/squad/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -100,14 +93,14 @@ export function MeetingDetailSheet({ open, onOpenChange, meeting, userId, clubId
   const confirmed = meeting.attendees.filter((a) => a.attendance_status === "confirmado").length;
 
   return (
-    <EntitySheet open={open} onOpenChange={onOpenChange}>
-      <EntitySheetHeader>
-        <EntitySheetTitle>{meeting.title}</EntitySheetTitle>
-        <EntitySheetDescription>
-          <StatusBadge variant={M_STATUS_VARIANT[meeting.status]}>{M_STATUS_LABEL[meeting.status]}</StatusBadge>
-        </EntitySheetDescription>
-        {canEdit ? (
-          <div className="mt-3 flex flex-wrap gap-2">
+    <DetailSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title={meeting.title}
+      description={<StatusBadge variant={M_STATUS_VARIANT[meeting.status]}>{M_STATUS_LABEL[meeting.status]}</StatusBadge>}
+      headerActions={
+        canEdit ? (
+          <>
             <Button size="sm" variant="secondary" onClick={onEdit}>
               <Pencil className="mr-2 h-3.5 w-3.5" /> Editar
             </Button>
@@ -122,142 +115,136 @@ export function MeetingDetailSheet({ open, onOpenChange, meeting, userId, clubId
             >
               <Trash2 className="mr-2 h-3.5 w-3.5" /> Eliminar
             </Button>
+          </>
+        ) : undefined
+      }
+    >
+      {canEdit ? (
+        <DetailField label="Estado">
+          <div className="flex flex-wrap gap-1.5">
+            {M_STATUSES.map((s) => {
+              const active = meeting.status === s.key;
+              return (
+                <button
+                  key={s.key}
+                  type="button"
+                  disabled={setStatus.isPending}
+                  onClick={() => setStatus.mutate(s.key)}
+                  className={cn(
+                    "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                    active
+                      ? "border-primary bg-primary/15 text-primary"
+                      : "border-border/60 text-muted-foreground hover:bg-white/[0.04]",
+                  )}
+                >
+                  {s.label}
+                </button>
+              );
+            })}
+          </div>
+        </DetailField>
+      ) : null}
+
+      <DetailField label="Fecha y hora" icon={CalendarClock}>
+        <div className="text-foreground">
+          {formatDateTime(meeting.starts_at)}
+          {meeting.ends_at ? <span className="text-muted-foreground"> — {formatDateTime(meeting.ends_at)}</span> : null}
+        </div>
+        {meeting.started_at || meeting.ended_at_actual ? (
+          <div className="mt-1 text-xs text-muted-foreground">
+            {meeting.started_at ? `Iniciada ${formatDateTime(meeting.started_at)}` : null}
+            {meeting.started_at && meeting.ended_at_actual ? " · " : ""}
+            {meeting.ended_at_actual ? `Finalizada ${formatDateTime(meeting.ended_at_actual)}` : null}
           </div>
         ) : null}
-      </EntitySheetHeader>
+      </DetailField>
 
-      <EntitySheetBody>
-        {canEdit ? (
-          <Field label="Estado">
-            <div className="flex flex-wrap gap-1.5">
-              {M_STATUSES.map((s) => {
-                const active = meeting.status === s.key;
-                return (
-                  <button
-                    key={s.key}
-                    type="button"
-                    disabled={setStatus.isPending}
-                    onClick={() => setStatus.mutate(s.key)}
-                    className={cn(
-                      "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
-                      active
-                        ? "border-primary bg-primary/15 text-primary"
-                        : "border-border/60 text-muted-foreground hover:bg-white/[0.04]",
-                    )}
-                  >
-                    {s.label}
-                  </button>
-                );
-              })}
-            </div>
-          </Field>
-        ) : null}
+      {meeting.location ? (
+        <DetailField label="Ubicación" icon={isMeetingUrl(meeting.location) ? Video : MapPin}>
+          {isMeetingUrl(meeting.location) ? (
+            <a
+              href={meeting.location}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-primary underline-offset-4 hover:underline break-all"
+            >
+              <span className="break-all">{meeting.location}</span>
+              <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+            </a>
+          ) : (
+            <span className="text-foreground">{meeting.location}</span>
+          )}
+        </DetailField>
+      ) : null}
 
-        <Field label="Fecha y hora" icon={CalendarClock}>
-          <div className="text-foreground">
-            {formatDateTime(meeting.starts_at)}
-            {meeting.ends_at ? <span className="text-muted-foreground"> — {formatDateTime(meeting.ends_at)}</span> : null}
+      {meeting.agenda ? (
+        <DetailField label="Agenda">
+          <p className="whitespace-pre-wrap text-sm text-foreground/90">{meeting.agenda}</p>
+        </DetailField>
+      ) : null}
+
+      <DetailField label={`Invitados (${confirmed}/${meeting.attendees.length} confirmados)`}>
+        {meeting.attendees.length === 0 ? (
+          <span className="text-muted-foreground">Sin invitados</span>
+        ) : (
+          <ul className="space-y-1.5">
+            {meeting.attendees.map((a) => (
+              <li key={a.user_id} className="flex items-center justify-between gap-2 text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-[11px] font-medium">
+                    {(a.profile?.full_name ?? a.profile?.email ?? "?").slice(0, 1).toUpperCase()}
+                  </span>
+                  <span className="text-foreground">{a.profile?.full_name ?? a.profile?.email ?? "—"}</span>
+                </div>
+                <AttendanceChip status={a.attendance_status} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </DetailField>
+
+      {me && !isPast ? (
+        <DetailField label="Mi asistencia">
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant={me.attendance_status === "confirmado" ? "default" : "secondary"}
+              onClick={() => setAttendance.mutate("confirmado")}
+              disabled={setAttendance.isPending}
+            >
+              <Check className="mr-1 h-3.5 w-3.5" /> Confirmar
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={me.attendance_status === "rechazado" ? "default" : "ghost"}
+              onClick={() => setAttendance.mutate("rechazado")}
+              disabled={setAttendance.isPending}
+            >
+              <XIcon className="mr-1 h-3.5 w-3.5" /> Rechazar
+            </Button>
           </div>
-          {meeting.started_at || meeting.ended_at_actual ? (
-            <div className="mt-1 text-xs text-muted-foreground">
-              {meeting.started_at ? `Iniciada ${formatDateTime(meeting.started_at)}` : null}
-              {meeting.started_at && meeting.ended_at_actual ? " · " : ""}
-              {meeting.ended_at_actual ? `Finalizada ${formatDateTime(meeting.ended_at_actual)}` : null}
-            </div>
-          ) : null}
-        </Field>
+        </DetailField>
+      ) : null}
 
-        {meeting.location ? (
-          <Field label="Ubicación" icon={isMeetingUrl(meeting.location) ? Video : MapPin}>
-            {isMeetingUrl(meeting.location) ? (
-              <a
-                href={meeting.location}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-primary underline-offset-4 hover:underline break-all"
-              >
-                <span className="break-all">{meeting.location}</span>
-                <ExternalLink className="h-3.5 w-3.5 shrink-0" />
-              </a>
-            ) : (
-              <span className="text-foreground">{meeting.location}</span>
-            )}
-          </Field>
+      <DetailField label="Minuta / notas">
+        {meeting.notes ? (
+          <p className="whitespace-pre-wrap text-sm text-foreground/90">{meeting.notes}</p>
+        ) : (
+          <span className="text-muted-foreground">
+            {isPast ? "Aún sin minuta." : "Se agrega después de la junta."}
+          </span>
+        )}
+        {canEdit && isPast ? (
+          <div className="mt-2">
+            <Button size="sm" variant="ghost" onClick={onEdit}>
+              <Pencil className="mr-2 h-3.5 w-3.5" /> {meeting.notes ? "Editar minuta" : "Agregar minuta"}
+            </Button>
+          </div>
         ) : null}
-
-        {meeting.agenda ? (
-          <Field label="Agenda">
-            <p className="whitespace-pre-wrap text-sm text-foreground/90">{meeting.agenda}</p>
-          </Field>
-        ) : null}
-
-        <Field label={`Invitados (${confirmed}/${meeting.attendees.length} confirmados)`}>
-          {meeting.attendees.length === 0 ? (
-            <span className="text-muted-foreground">Sin invitados</span>
-          ) : (
-            <ul className="space-y-1.5">
-              {meeting.attendees.map((a) => (
-                <li key={a.user_id} className="flex items-center justify-between gap-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-[11px] font-medium">
-                      {(a.profile?.full_name ?? a.profile?.email ?? "?").slice(0, 1).toUpperCase()}
-                    </span>
-                    <span className="text-foreground">{a.profile?.full_name ?? a.profile?.email ?? "—"}</span>
-                  </div>
-                  <AttendanceChip status={a.attendance_status} />
-                </li>
-              ))}
-            </ul>
-          )}
-        </Field>
-
-        {me && !isPast ? (
-          <Field label="Mi asistencia">
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                size="sm"
-                variant={me.attendance_status === "confirmado" ? "default" : "secondary"}
-                onClick={() => setAttendance.mutate("confirmado")}
-                disabled={setAttendance.isPending}
-              >
-                <Check className="mr-1 h-3.5 w-3.5" /> Confirmar
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant={me.attendance_status === "rechazado" ? "default" : "ghost"}
-                onClick={() => setAttendance.mutate("rechazado")}
-                disabled={setAttendance.isPending}
-              >
-                <XIcon className="mr-1 h-3.5 w-3.5" /> Rechazar
-              </Button>
-            </div>
-          </Field>
-        ) : null}
-
-        <Field label="Minuta / notas">
-          {meeting.notes ? (
-            <p className="whitespace-pre-wrap text-sm text-foreground/90">{meeting.notes}</p>
-          ) : (
-            <span className="text-muted-foreground">
-              {isPast ? "Aún sin minuta." : "Se agrega después de la junta."}
-            </span>
-          )}
-          {canEdit && isPast ? (
-            <div className="mt-2">
-              <Button size="sm" variant="ghost" onClick={onEdit}>
-                <Pencil className="mr-2 h-3.5 w-3.5" /> {meeting.notes ? "Editar minuta" : "Agregar minuta"}
-              </Button>
-            </div>
-          ) : null}
-        </Field>
-      </EntitySheetBody>
-
-      <EntitySheetFooter>
-        <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cerrar</Button>
-      </EntitySheetFooter>
-    </EntitySheet>
+      </DetailField>
+    </DetailSheet>
   );
 }
 
@@ -269,16 +256,4 @@ function AttendanceChip({ status }: { status: AttendanceStatus }) {
   };
   const s = map[status];
   return <StatusBadge variant={s.variant}>{s.label}</StatusBadge>;
-}
-
-function Field({ label, icon: Icon, children }: { label: string; icon?: React.ComponentType<{ className?: string }>; children: React.ReactNode }) {
-  return (
-    <div className="space-y-1.5">
-      <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-        {Icon ? <Icon className="h-3.5 w-3.5" /> : null}
-        {label}
-      </div>
-      <div>{children}</div>
-    </div>
-  );
 }
