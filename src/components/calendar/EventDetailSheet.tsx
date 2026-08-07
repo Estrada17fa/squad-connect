@@ -6,7 +6,9 @@ import { EVENT_TYPE_MAP } from "@/lib/eventTypes";
 import { formatDayLabel, formatTime } from "@/lib/calendar-utils";
 import type { CalendarEventRow } from "@/hooks/useCalendarEvents";
 import type { TeamOption } from "@/hooks/useAccess";
+import { AttendeeSummary } from "./AttendeeSummary";
 import { EventFormDialog } from "./EventFormDialog";
+
 
 interface Props {
   open: boolean;
@@ -67,6 +69,11 @@ export function EventDetailSheet({ open, onOpenChange, event, canEdit, clubId, u
           </DetailField>
         ) : null}
       </DetailSection>
+
+      <DetailSection title="Convocatoria">
+        <AttendeeSummary eventId={event.id} clubId={clubId} teamId={event.team_id} />
+      </DetailSection>
+
     </DetailSheet>
   );
 }

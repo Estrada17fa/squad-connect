@@ -17,7 +17,7 @@ import { TeamSelectField } from "@/components/squad/TeamSelectField";
 import type { TeamOption } from "@/hooks/useAccess";
 import { toLocalInputValue, fromLocalInputValue } from "@/lib/calendar-utils";
 import { saveCalendarEvent } from "@/lib/calendarEvents";
-import { AttendeePicker } from "@/components/calendar/AttendeePicker";
+import { AttendeePicker, type AttendeeMode } from "@/components/calendar/AttendeePicker";
 import { LocationField } from "@/components/calendar/LocationField";
 import { useCalendarEvents } from "@/hooks/useCalendarEvents";
 import {
@@ -73,6 +73,8 @@ export function SessionFormDialog({
   const [location, setLocation] = React.useState("");
   const [locationId, setLocationId] = React.useState<string | null>(null);
   const [attendeeIds, setAttendeeIds] = React.useState<Set<string>>(new Set());
+  const [attendeeMode, setAttendeeMode] = React.useState<AttendeeMode>("auto");
+
   const [plan, setPlan] = React.useState<PlanDraftItem[]>([]);
   const [pickerPhase, setPickerPhase] = React.useState<SessionPhase | null>(null);
   const [busy, setBusy] = React.useState(false);
@@ -112,9 +114,24 @@ export function SessionFormDialog({
     setLocation("");
     setLocationId(null);
     setAttendeeIds(new Set());
+    setAttendeeMode("auto");
+
     setPickerPhase(null);
     if (!session) setPlan([]);
   }, [open, session, defaultTeamId, teams]);
+
+  // Al cambiar de equipo, la convocatoria se recalcula al equipo completo.
+  const prevTeamRef = React.useRef<string | null>(teamId);
+  React.useEffect(() => {
+    if (prevTeamRef.current === teamId) return;
+    prevTeamRef.current = teamId;
+    if (attendeeMode === "custom") toast.info("Se recalculó la convocatoria al equipo completo");
+    setAttendeeMode("auto");
+    setAttendeeIds(new Set());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [teamId]);
+
+
 
   React.useEffect(() => {
     if (!open || !session || !planQ.data) return;
@@ -307,6 +324,9 @@ export function SessionFormDialog({
                   value={attendeeIds}
                   onChange={setAttendeeIds}
                   label="Convocados"
+                  mode={attendeeMode}
+                  onModeChange={setAttendeeMode}
+
                 />
               </>
             ) : null}

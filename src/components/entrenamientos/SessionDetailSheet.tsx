@@ -3,6 +3,8 @@ import { Clock, Package, Pencil, Target } from "lucide-react";
 import { DetailSection, DetailSheet } from "@/components/squad/DetailSheet";
 import { Button } from "@/components/ui/button";
 import { LoadingState } from "@/components/squad/LoadingState";
+import { AttendeeSummary } from "@/components/calendar/AttendeeSummary";
+
 import {
   CATEGORY_LABEL,
   PHASES,
@@ -99,6 +101,13 @@ export function SessionDetailSheet({ open, onOpenChange, session, readOnly, onEd
           <p className="mt-1 text-sm text-foreground">{session.objective}</p>
         </div>
       ) : null}
+
+      {session?.event_id ? (
+        <DetailSection title="Convocatoria">
+          <AttendeeSummary eventId={session.event_id} clubId={session.club_id} teamId={session.team_id} />
+        </DetailSection>
+      ) : null}
+
 
       {planQ.isLoading ? (
         <LoadingState />
