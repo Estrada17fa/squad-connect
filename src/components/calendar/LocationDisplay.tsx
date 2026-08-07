@@ -2,7 +2,7 @@ import * as React from "react";
 import { MapPin, Navigation, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LocationMap } from "./LocationMap";
-import { useLocations } from "@/hooks/useLocations";
+import { useLocation } from "@/hooks/useLocations";
 
 interface Props {
   clubId: string | null | undefined;
@@ -20,8 +20,10 @@ function isUrl(v: string) {
 
 /** Ficha de ubicación: nombre, dirección, mini-mapa y "Cómo llegar". */
 export function LocationDisplay({ clubId, locationId, text, showMap = true }: Props) {
-  const locationsQ = useLocations(clubId);
-  const loc = locationId ? (locationsQ.data ?? []).find((l) => l.id === locationId) : undefined;
+  void clubId;
+  const locQ = useLocation(locationId ?? null);
+  const loc = locQ.data ?? undefined;
+
 
   if (!loc) {
     const value = (text ?? "").trim();

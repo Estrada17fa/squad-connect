@@ -1017,6 +1017,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           id: string
+          is_catalog: boolean
           latitude: number | null
           longitude: number | null
           name: string
@@ -1031,6 +1032,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          is_catalog?: boolean
           latitude?: number | null
           longitude?: number | null
           name: string
@@ -1045,6 +1047,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          is_catalog?: boolean
           latitude?: number | null
           longitude?: number | null
           name?: string

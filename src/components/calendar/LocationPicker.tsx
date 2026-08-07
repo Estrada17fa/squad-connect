@@ -12,7 +12,16 @@ import {
   EntitySheetHeader,
   EntitySheetTitle,
 } from "@/components/squad/EntitySheet";
-import { useDeleteLocation, useLocations, useSaveLocation, type LocationRow } from "@/hooks/useLocations";
+import {
+  useDeleteLocation,
+  useLocation,
+  useLocations,
+  usePromoteLocation,
+  useResolveLocation,
+  useSaveLocation,
+  type LocationRow,
+} from "@/hooks/useLocations";
+
 import { useGeocodeSearch, type GeocodeResult } from "@/hooks/useGeocodeSearch";
 import { LocationMap } from "./LocationMap";
 
@@ -49,15 +58,18 @@ export function LocationPicker({
 }: Props) {
   const locationsQ = useLocations(clubId);
   const save = useSaveLocation();
+  const resolve = useResolveLocation();
+  const promote = usePromoteLocation();
   const [managerOpen, setManagerOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
   const [open, setOpen] = React.useState(false);
-  /** Resultado de mapa elegido pero aún no guardado en el catálogo. */
-  const [pending, setPending] = React.useState<GeocodeResult | null>(null);
 
   const geo = useGeocodeSearch(query, open);
   const locations = locationsQ.data ?? [];
-  const selected = locationId ? locations.find((l) => l.id === locationId) : undefined;
+  const selectedQ = useLocation(locationId);
+  const selected = selectedQ.data ?? undefined;
+  /** La ubicación existe con coordenadas pero aún no está en el catálogo visible. */
+  const isDraft = !!selected && selected.is_catalog === false;
 
   const savedMatches = React.useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -68,51 +80,84 @@ export function LocationPicker({
   function pickSaved(loc: LocationRow) {
     onLocationIdChange(loc.id);
     onChange(loc.name);
-    setPending(null);
     setQuery("");
     setOpen(false);
   }
 
-  function pickPlace(r: GeocodeResult) {
-    onLocationIdChange(null);
-    onChange(r.name);
-    setPending(r);
+  /** Persiste el lugar del mapa (fuera del catálogo) y lo liga de inmediato. */
+  async function pickPlace(r: GeocodeResult) {
     setQuery("");
     setOpen(false);
+    onChange(r.name);
+    try {
+      const row = await resolve.mutateAsync({
+        club_id: clubId,
+        name: r.name,
+        address: r.address,
+        latitude: r.latitude,
+        longitude: r.longitude,
+        place_id: r.placeId,
+        created_by: userId,
+      });
+      onLocationIdChange(row.id);
+      onChange(row.name);
+    } catch (e: any) {
+      onLocationIdChange(null);
+      toast.error(e.message ?? "No se pudo usar esa ubicación");
+    }
   }
 
   function clear() {
     onLocationIdChange(null);
     onChange("");
-    setPending(null);
+  }
+
+  /** Ajuste manual del pin sobre la ubicación ya persistida. */
+  async function movePin(lat: number, lng: number) {
+    if (!selected) return;
+    try {
+      await save.mutateAsync({
+        id: selected.id,
+        club_id: clubId,
+        name: selected.name,
+        address: selected.address,
+        notes: selected.notes,
+        latitude: lat,
+        longitude: lng,
+        place_id: selected.place_id,
+        source: selected.source ?? "osm",
+        is_catalog: selected.is_catalog,
+      });
+    } catch (e: any) {
+      toast.error(e.message ?? "No se pudo ajustar la ubicación");
+    }
   }
 
   async function saveToCatalog() {
     try {
-      const created = await save.mutateAsync({
-        club_id: clubId,
-        name: (pending?.name ?? value).trim(),
-        address: pending?.address ?? null,
-        latitude: pending?.latitude ?? null,
-        longitude: pending?.longitude ?? null,
-        place_id: pending?.placeId ?? null,
-        source: pending ? "osm" : "manual",
-        created_by: userId,
-      });
-      onLocationIdChange(created.id);
-      onChange(created.name);
-      setPending(null);
+      if (selected) {
+        await promote.mutateAsync(selected.id);
+      } else {
+        const created = await save.mutateAsync({
+          club_id: clubId,
+          name: value,
+          source: "manual",
+          created_by: userId,
+        });
+        onLocationIdChange(created.id);
+        onChange(created.name);
+      }
       toast.success("Ubicación guardada en el catálogo");
     } catch (e: any) {
       toast.error(e.message ?? "No se pudo guardar la ubicación");
     }
   }
 
-  const coords = selected?.latitude != null && selected?.longitude != null
-    ? { lat: selected.latitude, lng: selected.longitude }
-    : pending
-      ? { lat: pending.latitude, lng: pending.longitude }
+  const coords =
+    selected?.latitude != null && selected?.longitude != null
+      ? { lat: selected.latitude, lng: selected.longitude }
       : null;
+
 
   return (
     <div className="space-y-2">
@@ -126,15 +171,14 @@ export function LocationPicker({
         ) : null}
       </div>
 
-      {value && (selected || pending) ? (
+      {value && (selected || resolve.isPending) ? (
         <div className="glass flex items-start gap-2 p-3">
           <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium text-foreground">{value}</p>
-            <p className="truncate text-xs text-muted-foreground">
-              {selected?.address ?? pending?.address ?? ""}
-            </p>
+            <p className="truncate text-xs text-muted-foreground">{selected?.address ?? ""}</p>
           </div>
+
           <button type="button" onClick={clear} className="p-1 text-muted-foreground" aria-label="Quitar ubicación">
             <X className="h-4 w-4" />
           </button>
@@ -226,28 +270,29 @@ export function LocationPicker({
         <LocationMap
           latitude={coords.lat}
           longitude={coords.lng}
-          draggable={!!pending}
-          onMove={(lat, lng) => setPending((p) => (p ? { ...p, latitude: lat, longitude: lng } : p))}
+          draggable
+          onMove={(lat, lng) => void movePin(lat, lng)}
           className="h-40 w-full rounded-xl"
         />
       ) : null}
-      {pending ? (
+      {coords ? (
         <p className="text-xs text-muted-foreground">Puedes arrastrar el pin para ajustar la ubicación exacta.</p>
       ) : null}
 
-      {canManage && !locationId && value.trim() ? (
+      {canManage && (isDraft || (!locationId && value.trim())) ? (
         <Button
           type="button"
           size="sm"
           variant="ghost"
           onClick={saveToCatalog}
-          disabled={save.isPending}
+          disabled={save.isPending || promote.isPending}
           className="text-primary"
         >
           <Bookmark className="mr-1 h-3.5 w-3.5" />
           Guardar esta ubicación en el catálogo
         </Button>
       ) : null}
+
 
       {managerOpen ? (
         <LocationsManager open={managerOpen} onOpenChange={setManagerOpen} clubId={clubId} userId={userId} />

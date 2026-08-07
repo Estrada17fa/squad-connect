@@ -1,0 +1,2 @@
+ALTER TABLE public.locations ADD COLUMN IF NOT EXISTS is_catalog boolean NOT NULL DEFAULT true;
+CREATE UNIQUE INDEX IF NOT EXISTS locations_club_place_uniq ON public.locations (club_id, place_id) WHERE place_id IS NOT NULL;
