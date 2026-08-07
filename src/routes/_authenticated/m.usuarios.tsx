@@ -87,7 +87,7 @@ function UsuariosPage() {
           <TabsTrigger value="roles" className="flex-1 sm:flex-none">Roles</TabsTrigger>
           <TabsTrigger value="miembros" className="flex-1 sm:flex-none">Miembros</TabsTrigger>
           <TabsTrigger value="categorias" className="flex-1 sm:flex-none">Categorías</TabsTrigger>
-          <TabsTrigger value="ubicaciones" className="flex-1 sm:flex-none">Ubicaciones</TabsTrigger>
+          
         </TabsList>
         <TabsContent value="roles">
           <RolesTab clubId={profile?.club_id ?? null} canEdit={canEdit} />
