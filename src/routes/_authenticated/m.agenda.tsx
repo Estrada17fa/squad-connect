@@ -14,7 +14,7 @@ import { formatTime, startOfDay } from "@/lib/calendar-utils";
 import { useEditableTeams } from "@/hooks/useEditableTeams";
 import { useTeamAccess } from "@/hooks/useTeamAccess";
 import { EventFormDialog } from "@/components/calendar/EventFormDialog";
-import { LocationsManager } from "@/components/calendar/LocationPicker";
+
 import { EventDetailSheet } from "@/components/calendar/EventDetailSheet";
 import { TeamFilter, TeamBadge } from "@/components/squad/TeamFilter";
 
