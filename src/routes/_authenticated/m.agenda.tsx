@@ -14,6 +14,7 @@ import { formatTime, startOfDay } from "@/lib/calendar-utils";
 import { useEditableTeams } from "@/hooks/useEditableTeams";
 import { useTeamAccess } from "@/hooks/useTeamAccess";
 import { EventFormDialog } from "@/components/calendar/EventFormDialog";
+import { EventDetailSheet } from "@/components/calendar/EventDetailSheet";
 import { TeamFilter, TeamBadge } from "@/components/squad/TeamFilter";
 import { TrainingPlanButton } from "@/components/entrenamientos/TrainingPlanButton";
 
@@ -36,6 +37,7 @@ function AgendaModulePage() {
 
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<CalendarEventRow | null>(null);
+  const [detailEvent, setDetailEvent] = React.useState<CalendarEventRow | null>(null);
   const [teamFilter, setTeamFilter] = React.useState<string | null>(null);
   const clubId = profile?.club_id ?? null;
 
@@ -90,8 +92,8 @@ function AgendaModulePage() {
             return (
               <div key={e.id} className="animate-card-in" style={{ animationDelay: `${i * 30}ms` }}>
                 <StandardCard
-                  interactive={rowEditable}
-                  onClick={rowEditable ? () => openEdit(e) : undefined}
+                  interactive
+                  onClick={() => setDetailEvent(e)}
                   icon={def.icon}
                   title={e.title}
                   subtitle={`${new Date(e.starts_at).toLocaleDateString("es-MX", { weekday: "short", day: "numeric", month: "short" })} · ${formatTime(e.starts_at)}${e.location ? ` · ${e.location}` : ""}`}
@@ -122,6 +124,17 @@ function AgendaModulePage() {
           event={editing}
         />
       ) : null}
+
+      <EventDetailSheet
+        open={!!detailEvent}
+        onOpenChange={(v) => !v && setDetailEvent(null)}
+        event={detailEvent}
+        canEdit={!!detailEvent && canEditTeam(detailEvent.team_id)}
+        clubId={clubId}
+        userId={user.id}
+        teams={editableTeams}
+        teamName={(id) => (id ? teamNames[id] ?? null : "Todo el club")}
+      />
     </div>
   );
 }
