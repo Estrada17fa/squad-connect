@@ -32,6 +32,7 @@ function PlayerDetail() {
   const { user } = useApp();
   const { canEditTeam } = useTeamAccess("plantel");
   const { canEditTeam: canEditSalud, canReadTeam: canReadSalud } = useTeamAccess("salud");
+  const { canEditTeam: canEditDesarrollo } = useTeamAccess("desarrollo");
 
   const { data: player, isLoading } = usePlayer(playerId);
   // Permiso por equipo: editor en Sub-20 no puede editar fichas de Primera.
