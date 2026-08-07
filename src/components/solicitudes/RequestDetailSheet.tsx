@@ -261,6 +261,11 @@ export function RequestDetailSheet({
                 <Receipt className="mr-2 h-4 w-4" /> Registrar gasto
               </Button>
             ) : null}
+            {showCheckupButton ? (
+              <Button type="button" size="sm" className="glow-primary" onClick={() => setCheckupOpen(true)}>
+                <Stethoscope className="mr-2 h-4 w-4" /> Registrar revisión
+              </Button>
+            ) : null}
             {canComplete ? (
               <Button type="button" size="sm" onClick={() => setStatus.mutate("completada")} disabled={setStatus.isPending}>
                 <PackageCheck className="mr-2 h-4 w-4" /> Marcar completada
