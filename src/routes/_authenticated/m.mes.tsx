@@ -10,6 +10,7 @@ import { EVENT_TYPES, EVENT_TYPE_MAP } from "@/lib/eventTypes";
 import { addMonths, isSameDay, monthGrid, monthLabel, startOfDay } from "@/lib/calendar-utils";
 import { EventFormDialog } from "@/components/calendar/EventFormDialog";
 import { DaySheet } from "@/components/calendar/DaySheet";
+import { EventDetailSheet } from "@/components/calendar/EventDetailSheet";
 import { ModuleTabs } from "@/components/squad/ModuleTabs";
 import { cn } from "@/lib/utils";
 import { TeamFilter } from "@/components/squad/TeamFilter";
@@ -38,6 +39,7 @@ function MesModulePage() {
   const [selectedDay, setSelectedDay] = React.useState<Date | null>(null);
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<CalendarEventRow | null>(null);
+  const [detailEvent, setDetailEvent] = React.useState<CalendarEventRow | null>(null);
   const [teamFilter, setTeamFilter] = React.useState<string | null>(null);
   const clubId = profile?.club_id ?? null;
 
@@ -155,7 +157,7 @@ function MesModulePage() {
         day={selectedDay}
         events={selectedEvents}
         onClose={() => setSelectedDay(null)}
-        onSelect={(e) => (canEditTeam(e.team_id) ? openEdit(e) : null)}
+        onSelect={(e) => setDetailEvent(e)}
       />
 
       {clubId ? (
@@ -170,6 +172,17 @@ function MesModulePage() {
           event={editing}
         />
       ) : null}
+
+      <EventDetailSheet
+        open={!!detailEvent}
+        onOpenChange={(v) => !v && setDetailEvent(null)}
+        event={detailEvent}
+        canEdit={!!detailEvent && canEditTeam(detailEvent.team_id)}
+        clubId={clubId}
+        userId={user.id}
+        teams={editableTeams}
+        teamName={(id) => teamOptions.find((t) => t.id === id)?.name ?? null}
+      />
     </div>
   );
 }
