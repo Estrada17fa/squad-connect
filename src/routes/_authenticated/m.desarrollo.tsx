@@ -508,7 +508,7 @@ function DesarrolloPage() {
         player={{
           userId: user.id,
           fullName: profile?.full_name ?? "Mi desarrollo",
-          avatarUrl: profile?.avatar_url ?? null,
+          avatarUrl: null,
           teamName: null,
         }}
         isSelf
