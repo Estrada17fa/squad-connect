@@ -57,6 +57,9 @@ function PlayerDetail() {
   // Privacidad: el expediente médico solo lo abre el cuerpo médico del equipo o el propio jugador.
   const canEditHealth = canEditSalud(player.team_id);
   const canSeeHealth = isSelf || canReadSalud(player.team_id);
+  // Desarrollo: el lector solo ve lo suyo; ver a otros exige editor en el equipo.
+  const canEditDev = canEditDesarrollo(player.team_id);
+  const canSeeDev = isSelf || canEditDev;
 
   return (
     <div className="space-y-6">
