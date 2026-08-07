@@ -17,7 +17,7 @@ import { TeamSelectField } from "@/components/squad/TeamSelectField";
 import type { TeamOption } from "@/hooks/useAccess";
 import { toLocalInputValue, fromLocalInputValue } from "@/lib/calendar-utils";
 import { saveCalendarEvent } from "@/lib/calendarEvents";
-import { AttendeePicker } from "@/components/calendar/AttendeePicker";
+import { AttendeePicker, type AttendeeMode } from "@/components/calendar/AttendeePicker";
 import { LocationField } from "@/components/calendar/LocationField";
 import { useCalendarEvents } from "@/hooks/useCalendarEvents";
 import {
