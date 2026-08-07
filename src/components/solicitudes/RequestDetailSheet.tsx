@@ -500,6 +500,28 @@ export function RequestDetailSheet({
         })()}
       />
     ) : null}
+
+    {isMedical && canCreateCheckup ? (
+      <CheckupFormDialog
+        open={checkupOpen}
+        onOpenChange={setCheckupOpen}
+        clubId={clubId}
+        userId={userId}
+        players={medicalPlayers}
+        draft={{
+          requestId: request.id,
+          playerUserId:
+            medicalPlayers.find((p) => p.userId === request.requester_id)?.userId ?? null,
+          reason:
+            [(request.details as any)?.tipo_atencion, (request.details as any)?.urgencia
+              ? `Urgencia ${(request.details as any).urgencia}`
+              : null]
+              .filter(Boolean)
+              .join(" · ") || request.title,
+          notes: (request.details as any)?.descripcion ?? request.description ?? null,
+        }}
+      />
+    ) : null}
     </>
   );
 
