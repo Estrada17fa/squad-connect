@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, ShieldCheck, Trash2, Pencil } from "lucide-react";
 import { MembersTab } from "@/components/usuarios/MembersTab";
 import { CategoriesTab } from "@/components/usuarios/CategoriesTab";
-import { LocationsTab } from "@/components/usuarios/LocationsTab";
+
 
 import { toast } from "sonner";
 import { PageHeader } from "@/components/squad/PageHeader";
@@ -87,7 +87,7 @@ function UsuariosPage() {
           <TabsTrigger value="roles" className="flex-1 sm:flex-none">Roles</TabsTrigger>
           <TabsTrigger value="miembros" className="flex-1 sm:flex-none">Miembros</TabsTrigger>
           <TabsTrigger value="categorias" className="flex-1 sm:flex-none">Categorías</TabsTrigger>
-          <TabsTrigger value="ubicaciones" className="flex-1 sm:flex-none">Ubicaciones</TabsTrigger>
+          
         </TabsList>
         <TabsContent value="roles">
           <RolesTab clubId={profile?.club_id ?? null} canEdit={canEdit} />
@@ -102,13 +102,6 @@ function UsuariosPage() {
         <TabsContent value="categorias">
           {profile?.club_id ? (
             <CategoriesTab clubId={profile.club_id} canEdit={canEdit} />
-          ) : (
-            <EmptyState title="Sin club" message="Tu perfil aún no está asociado a un club." />
-          )}
-        </TabsContent>
-        <TabsContent value="ubicaciones">
-          {profile?.club_id ? (
-            <LocationsTab clubId={profile.club_id} userId={user.id} canEdit={canEdit} />
           ) : (
             <EmptyState title="Sin club" message="Tu perfil aún no está asociado a un club." />
           )}
