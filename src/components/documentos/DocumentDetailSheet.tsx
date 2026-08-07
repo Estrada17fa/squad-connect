@@ -110,8 +110,6 @@ export function DocumentDetailSheet({ open, onOpenChange, doc, canEdit, onEdit }
             </Button>
           ) : null
         }
-        canEdit={canEdit}
-        renderEdit={undefined}
         footer={
           <>
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
