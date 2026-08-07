@@ -73,6 +73,8 @@ export function SessionFormDialog({
   const [location, setLocation] = React.useState("");
   const [locationId, setLocationId] = React.useState<string | null>(null);
   const [attendeeIds, setAttendeeIds] = React.useState<Set<string>>(new Set());
+  const [attendeeMode, setAttendeeMode] = React.useState<AttendeeMode>("auto");
+
   const [plan, setPlan] = React.useState<PlanDraftItem[]>([]);
   const [pickerPhase, setPickerPhase] = React.useState<SessionPhase | null>(null);
   const [busy, setBusy] = React.useState(false);
