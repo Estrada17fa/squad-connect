@@ -255,7 +255,10 @@ export function EventFormDialog({ open, onOpenChange, clubId, teams, defaultTeam
               teamId={teamId}
               value={attendeeIds}
               onChange={setAttendeeIds}
+              mode={attendeeMode}
+              onModeChange={setAttendeeMode}
             />
+
           </>
         )}
       </EntitySheetBody>
