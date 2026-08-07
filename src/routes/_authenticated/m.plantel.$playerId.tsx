@@ -124,7 +124,21 @@ function PlayerDetail() {
         ) : (
           <EmptyState icon={HeartPulse} title="Salud" message="Información médica privada." />
         )}
-        <EmptyState icon={TrendingUp} title="Desarrollo" message="Se conecta desde el módulo de Desarrollo." />
+        {canSeeDev ? (
+          <button
+            type="button"
+            onClick={() => setDevOpen(true)}
+            className="glass flex flex-col items-center justify-center gap-2 p-6 text-center transition-all hover:border-white/15 hover:bg-white/[0.06]"
+          >
+            <TrendingUp className="h-6 w-6 text-primary" />
+            <span className="font-display font-semibold text-foreground">Desarrollo</span>
+            <span className="text-xs text-muted-foreground">
+              {isSelf && !canEditDev ? "Tu progreso" : "Progreso del jugador"}
+            </span>
+          </button>
+        ) : (
+          <EmptyState icon={TrendingUp} title="Desarrollo" message="Información privada del jugador." />
+        )}
         <EmptyState icon={Apple} title="Nutrición" message="Se conecta desde el módulo de Nutrición." />
       </div>
 
@@ -142,6 +156,19 @@ function PlayerDetail() {
           canEdit={canEditHealth}
         />
       ) : null}
+
+      <PlayerDevelopmentSheet
+        open={devOpen}
+        onOpenChange={setDevOpen}
+        clubId={clubId}
+        player={{
+          userId: player.user_id,
+          fullName: player.profile?.full_name ?? null,
+          avatarUrl: player.profile?.avatar_url ?? null,
+        }}
+        isSelf={isSelf}
+      />
+
 
       {clubId ? (
         <PlayerFormDialog
