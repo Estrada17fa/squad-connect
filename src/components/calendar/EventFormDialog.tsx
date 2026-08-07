@@ -89,6 +89,7 @@ export function EventFormDialog({ open, onOpenChange, clubId, teams, defaultTeam
       setLocationId(null);
       setDescription("");
       setAttendeeIds(new Set());
+      setAttendeeMode("auto");
     } else if (event) {
       setStep("form");
       setEventType(event.event_type);
@@ -109,8 +110,10 @@ export function EventFormDialog({ open, onOpenChange, clubId, teams, defaultTeam
       .eq("event_id", event.id)
       .then(({ data }) => {
         setAttendeeIds(new Set((data ?? []).map((r) => r.user_id)));
+        setAttendeeMode("detect");
       });
   }, [isEdit, event]);
+
 
   const mutation = useMutation({
     mutationFn: async () => {
