@@ -12,6 +12,7 @@ import {
   AlertTriangle,
   Link as LinkIcon,
   Receipt,
+  Stethoscope,
 } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
