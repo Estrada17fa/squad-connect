@@ -13,10 +13,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/client";
 import { TeamSelectField } from "@/components/squad/TeamSelectField";
 import type { TeamOption } from "@/hooks/useAccess";
 import { toLocalInputValue, fromLocalInputValue } from "@/lib/calendar-utils";
+import { saveCalendarEvent } from "@/lib/calendarEvents";
+import { AttendeePicker } from "@/components/calendar/AttendeePicker";
+import { LocationField } from "@/components/calendar/LocationField";
 import { useCalendarEvents } from "@/hooks/useCalendarEvents";
 import {
   CATEGORY_LABEL,
@@ -69,6 +71,8 @@ export function SessionFormDialog({
   );
   const [eventId, setEventId] = React.useState<string | null>(session?.event_id ?? null);
   const [location, setLocation] = React.useState("");
+  const [locationId, setLocationId] = React.useState<string | null>(null);
+  const [attendeeIds, setAttendeeIds] = React.useState<Set<string>>(new Set());
   const [plan, setPlan] = React.useState<PlanDraftItem[]>([]);
   const [pickerPhase, setPickerPhase] = React.useState<SessionPhase | null>(null);
   const [busy, setBusy] = React.useState(false);
@@ -106,6 +110,8 @@ export function SessionFormDialog({
     setEventMode(session?.event_id ? "link" : "create");
     setEventId(session?.event_id ?? null);
     setLocation("");
+    setLocationId(null);
+    setAttendeeIds(new Set());
     setPickerPhase(null);
     if (!session) setPlan([]);
   }, [open, session, defaultTeamId, teams]);
@@ -161,21 +167,18 @@ export function SessionFormDialog({
         const ev = trainingEvents.find((e) => e.id === eventId);
         if (ev) sessionDate = ev.starts_at;
       } else if (eventMode === "create") {
-        const { data, error } = await supabase
-          .from("calendar_events")
-          .insert({
-            club_id: clubId,
-            team_id: teamId,
-            event_type: "entrenamiento",
-            title: title.trim(),
-            starts_at: sessionDate,
-            location: location.trim() || null,
-            created_by: userId,
-          })
-          .select("id")
-          .single();
-        if (error) throw error;
-        finalEventId = data.id;
+        finalEventId = await saveCalendarEvent({
+          clubId,
+          teamId,
+          eventType: "entrenamiento",
+          title,
+          startsAt: sessionDate,
+          location,
+          locationId,
+          description: objective,
+          attendeeIds: [...attendeeIds],
+          userId,
+        });
       }
 
       await save.mutateAsync({
@@ -277,7 +280,7 @@ export function SessionFormDialog({
             </select>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <>
             <div className="space-y-1.5">
               <Label htmlFor="sess-date">Fecha y hora</Label>
               <Input
@@ -288,12 +291,26 @@ export function SessionFormDialog({
               />
             </div>
             {eventMode === "create" ? (
-              <div className="space-y-1.5">
-                <Label htmlFor="sess-loc">Lugar</Label>
-                <Input id="sess-loc" value={location} onChange={(e) => setLocation(e.target.value)} />
-              </div>
+              <>
+                <LocationField
+                  id="sess-loc"
+                  clubId={clubId}
+                  userId={userId}
+                  value={location}
+                  onChange={setLocation}
+                  locationId={locationId}
+                  onLocationIdChange={setLocationId}
+                />
+                <AttendeePicker
+                  clubId={clubId}
+                  teamId={teamId}
+                  value={attendeeIds}
+                  onChange={setAttendeeIds}
+                  label="Convocados"
+                />
+              </>
             ) : null}
-          </div>
+          </>
         )}
 
         <div className="space-y-3 pt-2">

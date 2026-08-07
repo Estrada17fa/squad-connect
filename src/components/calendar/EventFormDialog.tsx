@@ -17,9 +17,10 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { EVENT_TYPES, type EventType } from "@/lib/eventTypes";
 import { toLocalInputValue, fromLocalInputValue } from "@/lib/calendar-utils";
-import { useTeamMembers, type TeamMember } from "@/hooks/useTeamMembers";
+import { saveCalendarEvent } from "@/lib/calendarEvents";
+import { AttendeePicker } from "@/components/calendar/AttendeePicker";
+import { LocationField } from "@/components/calendar/LocationField";
 import type { CalendarEventRow } from "@/hooks/useCalendarEvents";
-import { cn } from "@/lib/utils";
 import { TeamSelectField } from "@/components/squad/TeamSelectField";
 import type { TeamOption } from "@/hooks/useAccess";
 
@@ -59,11 +60,9 @@ export function EventFormDialog({ open, onOpenChange, clubId, teams, defaultTeam
   );
   const [endsAt, setEndsAt] = React.useState<string>(event?.ends_at ? toLocalInputValue(event.ends_at) : "");
   const [location, setLocation] = React.useState(event?.location ?? "");
+  const [locationId, setLocationId] = React.useState<string | null>((event as any)?.location_id ?? null);
   const [description, setDescription] = React.useState(event?.description ?? "");
   const [attendeeIds, setAttendeeIds] = React.useState<Set<string>>(new Set());
-  const [search, setSearch] = React.useState("");
-
-  const membersQ = useTeamMembers(teamId, clubId);
 
   // Al cambiar de equipo, la lista de asistentes deja de ser válida.
   React.useEffect(() => {
@@ -79,9 +78,9 @@ export function EventFormDialog({ open, onOpenChange, clubId, teams, defaultTeam
       setStartsAt(defaultDate ? toLocalInputValue(new Date(defaultDate.setHours(18, 0, 0, 0)).toISOString()) : "");
       setEndsAt("");
       setLocation("");
+      setLocationId(null);
       setDescription("");
       setAttendeeIds(new Set());
-      setSearch("");
     } else if (event) {
       setStep("form");
       setEventType(event.event_type);
@@ -89,6 +88,7 @@ export function EventFormDialog({ open, onOpenChange, clubId, teams, defaultTeam
       setStartsAt(toLocalInputValue(event.starts_at));
       setEndsAt(event.ends_at ? toLocalInputValue(event.ends_at) : "");
       setLocation(event.location ?? "");
+      setLocationId((event as any).location_id ?? null);
       setDescription(event.description ?? "");
     }
   }, [open, isEdit, event, defaultDate]);
@@ -106,54 +106,20 @@ export function EventFormDialog({ open, onOpenChange, clubId, teams, defaultTeam
 
   const mutation = useMutation({
     mutationFn: async () => {
-      if (!teamId) throw new Error("Selecciona un equipo");
-      if (!title.trim()) throw new Error("El título es obligatorio");
-      if (!startsAt) throw new Error("La fecha y hora son obligatorias");
-      const payload = {
-        club_id: clubId,
-        team_id: teamId,
-        event_type: eventType,
-        title: title.trim(),
-        starts_at: fromLocalInputValue(startsAt),
-        ends_at: endsAt ? fromLocalInputValue(endsAt) : null,
-        location: location.trim() || null,
-        description: description.trim() || null,
-      };
-      let eventId = event?.id;
-      if (isEdit && event) {
-        const { error } = await supabase.from("calendar_events").update(payload).eq("id", event.id);
-        if (error) throw error;
-      } else {
-        const { data, error } = await supabase
-          .from("calendar_events")
-          .insert({ ...payload, created_by: userId })
-          .select("id")
-          .single();
-        if (error) throw error;
-        eventId = data.id;
-      }
-      if (!eventId) return;
-      const { data: existing } = await supabase
-        .from("event_attendees")
-        .select("user_id")
-        .eq("event_id", eventId);
-      const existingIds = new Set((existing ?? []).map((r) => r.user_id));
-      const toAdd = [...attendeeIds].filter((id) => !existingIds.has(id));
-      const toRemove = [...existingIds].filter((id) => !attendeeIds.has(id));
-      if (toAdd.length) {
-        const { error } = await supabase
-          .from("event_attendees")
-          .insert(toAdd.map((user_id) => ({ event_id: eventId!, user_id })));
-        if (error) throw error;
-      }
-      if (toRemove.length) {
-        const { error } = await supabase
-          .from("event_attendees")
-          .delete()
-          .eq("event_id", eventId)
-          .in("user_id", toRemove);
-        if (error) throw error;
-      }
+      await saveCalendarEvent({
+        eventId: event?.id ?? null,
+        clubId,
+        teamId: teamId!,
+        eventType,
+        title,
+        startsAt: startsAt ? fromLocalInputValue(startsAt) : "",
+        endsAt: endsAt ? fromLocalInputValue(endsAt) : null,
+        location,
+        locationId,
+        description,
+        attendeeIds: [...attendeeIds],
+        userId,
+      });
     },
     onSuccess: () => {
       toast.success(isEdit ? "Evento actualizado" : "Evento creado");
@@ -177,19 +143,6 @@ export function EventFormDialog({ open, onOpenChange, clubId, teams, defaultTeam
     },
     onError: (e: any) => toast.error(e.message ?? "No se pudo eliminar"),
   });
-
-  const filteredMembers = (membersQ.data ?? []).filter((m: TeamMember) =>
-    (m.full_name ?? m.email ?? "").toLowerCase().includes(search.toLowerCase()),
-  );
-
-  function toggleAttendee(id: string) {
-    setAttendeeIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }
 
   return (
     <EntitySheet open={open} onOpenChange={onOpenChange}>
@@ -272,53 +225,26 @@ export function EventFormDialog({ open, onOpenChange, clubId, teams, defaultTeam
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="event-loc">Ubicación</Label>
-              <Input id="event-loc" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Estadio, sala, ciudad…" />
-            </div>
+            <LocationField
+              clubId={clubId}
+              userId={userId}
+              value={location}
+              onChange={setLocation}
+              locationId={locationId}
+              onLocationIdChange={setLocationId}
+            />
 
             <div className="space-y-1.5">
               <Label htmlFor="event-desc">Descripción</Label>
               <Textarea id="event-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
             </div>
 
-            <div className="space-y-1.5">
-              <Label>Asistentes ({attendeeIds.size})</Label>
-              <Input placeholder="Buscar…" value={search} onChange={(e) => setSearch(e.target.value)} />
-              <div className="max-h-48 overflow-y-auto rounded-lg border border-border/60">
-                {filteredMembers.length === 0 ? (
-                  <div className="p-3 text-sm text-muted-foreground">Sin miembros</div>
-                ) : (
-                  filteredMembers.map((m) => {
-                    const selected = attendeeIds.has(m.id);
-                    return (
-                      <button
-                        type="button"
-                        key={m.id}
-                        onClick={() => toggleAttendee(m.id)}
-                        className={cn(
-                          "flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-white/[0.04]",
-                          selected && "bg-white/[0.06]",
-                        )}
-                      >
-                        <span className="truncate">
-                          <span className="text-foreground">{m.full_name ?? m.email ?? "—"}</span>
-                          {m.role_name ? (
-                            <span className="ml-2 text-xs text-muted-foreground">{m.role_name}</span>
-                          ) : null}
-                        </span>
-                        <span
-                          className={cn(
-                            "h-4 w-4 shrink-0 rounded border",
-                            selected ? "border-primary bg-primary" : "border-border",
-                          )}
-                        />
-                      </button>
-                    );
-                  })
-                )}
-              </div>
-            </div>
+            <AttendeePicker
+              clubId={clubId}
+              teamId={teamId}
+              value={attendeeIds}
+              onChange={setAttendeeIds}
+            />
           </>
         )}
       </EntitySheetBody>
