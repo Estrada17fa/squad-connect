@@ -41,6 +41,8 @@ interface Props {
   userId: string;
   teams: TeamOption[];
   defaultTeamId?: string | null;
+  /** Evento del calendario al que queda ligada la sesión (desde el detalle del evento). */
+  defaultEventId?: string | null;
   session?: TrainingSessionRow | null;
 }
 
@@ -51,6 +53,7 @@ export function SessionFormDialog({
   userId,
   teams,
   defaultTeamId,
+  defaultEventId,
   session,
 }: Props) {
   const isEdit = !!session;
@@ -67,9 +70,9 @@ export function SessionFormDialog({
     session?.session_date ? toLocalInputValue(session.session_date) : "",
   );
   const [eventMode, setEventMode] = React.useState<"none" | "link" | "create">(
-    session?.event_id ? "link" : "create",
+    session?.event_id || defaultEventId ? "link" : "create",
   );
-  const [eventId, setEventId] = React.useState<string | null>(session?.event_id ?? null);
+  const [eventId, setEventId] = React.useState<string | null>(session?.event_id ?? defaultEventId ?? null);
   const [location, setLocation] = React.useState("");
   const [locationId, setLocationId] = React.useState<string | null>(null);
   const [attendeeIds, setAttendeeIds] = React.useState<Set<string>>(new Set());
@@ -109,8 +112,8 @@ export function SessionFormDialog({
     setObjective(session?.objective ?? "");
     setNotes(session?.notes ?? "");
     setDate(session?.session_date ? toLocalInputValue(session.session_date) : "");
-    setEventMode(session?.event_id ? "link" : "create");
-    setEventId(session?.event_id ?? null);
+    setEventMode(session?.event_id || defaultEventId ? "link" : "create");
+    setEventId(session?.event_id ?? defaultEventId ?? null);
     setLocation("");
     setLocationId(null);
     setAttendeeIds(new Set());
@@ -118,7 +121,7 @@ export function SessionFormDialog({
 
     setPickerPhase(null);
     if (!session) setPlan([]);
-  }, [open, session, defaultTeamId, teams]);
+  }, [open, session, defaultTeamId, defaultEventId, teams]);
 
   // Al cambiar de equipo, la convocatoria se recalcula al equipo completo.
   const prevTeamRef = React.useRef<string | null>(teamId);

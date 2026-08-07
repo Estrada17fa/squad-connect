@@ -16,7 +16,6 @@ import { useTeamAccess } from "@/hooks/useTeamAccess";
 import { EventFormDialog } from "@/components/calendar/EventFormDialog";
 import { EventDetailSheet } from "@/components/calendar/EventDetailSheet";
 import { TeamFilter, TeamBadge } from "@/components/squad/TeamFilter";
-import { TrainingPlanButton } from "@/components/entrenamientos/TrainingPlanButton";
 
 export const Route = createFileRoute("/_authenticated/m/agenda")({
   head: () => ({
@@ -106,7 +105,6 @@ function AgendaModulePage() {
                     {def.label}
                   </span>
                 </StandardCard>
-                <TrainingPlanButton eventId={e.id} eventType={e.event_type} />
               </div>
             );
           })
