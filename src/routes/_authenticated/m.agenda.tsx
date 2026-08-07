@@ -33,7 +33,7 @@ function AgendaModulePage() {
   const editableTeams = useEditableTeams("agenda");
   const { canEditTeam } = useTeamAccess("agenda");
   const canEdit = editableTeams.length > 0;
-  const [locationsOpen, setLocationsOpen] = React.useState(false);
+  
 
 
   const [dialogOpen, setDialogOpen] = React.useState(false);
