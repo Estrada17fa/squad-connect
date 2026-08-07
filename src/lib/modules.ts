@@ -37,6 +37,7 @@ export type ModuleKey =
   | "tacticas"
   | "salud"
   | "desarrollo"
+  | "entrenamientos"
   | "nutricion";
 
 /**
