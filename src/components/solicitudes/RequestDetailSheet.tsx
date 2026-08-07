@@ -174,6 +174,7 @@ export function RequestDetailSheet({
       // Aprobar material abre de inmediato el formulario de préstamo pre-llenado.
       if (next === "aprobada" && isMaterial && canCreateLoan && !linkedLoan) setLoanOpen(true);
       if (next === "aprobada" && isFinancial && canCreateExpense && !linkedExpense) setExpenseOpen(true);
+      if (next === "aprobada" && isMedical && canCreateCheckup && !linkedCheckup) setCheckupOpen(true);
 
     },
     onError: (e: any) => toast.error(e.message ?? "No se pudo actualizar"),
