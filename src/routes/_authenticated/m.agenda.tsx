@@ -78,21 +78,6 @@ function AgendaModulePage() {
         </Button>
       ) : null}
 
-      {canEdit && clubId ? (
-        <>
-          <Button variant="ghost" size="sm" className="w-full" onClick={() => setLocationsOpen(true)}>
-            <MapPin className="mr-2 h-4 w-4" /> Ubicaciones del club
-          </Button>
-          {locationsOpen ? (
-            <LocationsManager
-              open={locationsOpen}
-              onOpenChange={setLocationsOpen}
-              clubId={clubId}
-              userId={user.id}
-            />
-          ) : null}
-        </>
-      ) : null}
 
       <div className="space-y-3">
         {isLoading && !events ? (
