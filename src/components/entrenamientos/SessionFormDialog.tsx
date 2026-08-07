@@ -324,6 +324,9 @@ export function SessionFormDialog({
                   value={attendeeIds}
                   onChange={setAttendeeIds}
                   label="Convocados"
+                  mode={attendeeMode}
+                  onModeChange={setAttendeeMode}
+
                 />
               </>
             ) : null}
