@@ -120,6 +120,19 @@ export function SessionFormDialog({
     if (!session) setPlan([]);
   }, [open, session, defaultTeamId, teams]);
 
+  // Al cambiar de equipo, la convocatoria se recalcula al equipo completo.
+  const prevTeamRef = React.useRef<string | null>(teamId);
+  React.useEffect(() => {
+    if (prevTeamRef.current === teamId) return;
+    prevTeamRef.current = teamId;
+    if (attendeeMode === "custom") toast.info("Se recalculó la convocatoria al equipo completo");
+    setAttendeeMode("auto");
+    setAttendeeIds(new Set());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [teamId]);
+
+
+
   React.useEffect(() => {
     if (!open || !session || !planQ.data) return;
     setPlan(
