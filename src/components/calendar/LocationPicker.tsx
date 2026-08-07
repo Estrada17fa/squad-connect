@@ -1,19 +1,10 @@
 import * as React from "react";
 import { toast } from "sonner";
-import { Bookmark, Loader2, MapPin, Search, Settings2, Trash2, X } from "lucide-react";
+import { Bookmark, Loader2, MapPin, Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import {
-  EntitySheet,
-  EntitySheetBody,
-  EntitySheetDescription,
-  EntitySheetFooter,
-  EntitySheetHeader,
-  EntitySheetTitle,
-} from "@/components/squad/EntitySheet";
-import {
-  useDeleteLocation,
   useLocation,
   useLocations,
   usePromoteLocation,
