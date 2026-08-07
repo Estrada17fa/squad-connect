@@ -3,6 +3,8 @@ import { Clock, Package, Pencil, Target } from "lucide-react";
 import { DetailSection, DetailSheet } from "@/components/squad/DetailSheet";
 import { Button } from "@/components/ui/button";
 import { LoadingState } from "@/components/squad/LoadingState";
+import { AttendeeSummary } from "@/components/calendar/AttendeeSummary";
+
 import {
   CATEGORY_LABEL,
   PHASES,
