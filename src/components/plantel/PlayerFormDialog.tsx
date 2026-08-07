@@ -19,6 +19,9 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useTeamMembers } from "@/hooks/useTeamMembers";
+import { useTeamAccess } from "@/hooks/useTeamAccess";
+import { TeamSelectField } from "@/components/squad/TeamSelectField";
+import type { TeamOption } from "@/hooks/useAccess";
 import type { PlayerRow, AvailabilityStatus } from "@/hooks/usePlayers";
 
 const AVAILABILITY: { value: AvailabilityStatus; label: string }[] = [
@@ -33,11 +36,22 @@ interface Props {
   clubId: string;
   teamId: string;
   player?: PlayerRow | null;
+  /** Equipos donde el usuario puede crear (solo alta). Con uno solo se fija. */
+  teams?: TeamOption[];
 }
 
-export function PlayerFormDialog({ open, onOpenChange, clubId, teamId, player }: Props) {
+export function PlayerFormDialog({ open, onOpenChange, clubId, teamId: teamIdProp, player, teams }: Props) {
   const isEdit = !!player;
   const qc = useQueryClient();
+  const [selectedTeamId, setSelectedTeamId] = React.useState<string>(teamIdProp);
+  React.useEffect(() => {
+    if (open) setSelectedTeamId(player?.team_id ?? teamIdProp);
+  }, [open, player, teamIdProp]);
+  const teamId = isEdit ? player!.team_id : selectedTeamId;
+  // Guard defensivo: la UI ya filtra, pero nunca permitimos guardar en un
+  // equipo donde el nivel del módulo no llega a editor.
+  const { canEditTeam } = useTeamAccess("plantel");
+  const canWrite = canEditTeam(teamId);
 
   const [userId, setUserId] = React.useState<string>(player?.user_id ?? "");
   const [position, setPosition] = React.useState(player?.position ?? "");
@@ -130,6 +144,13 @@ export function PlayerFormDialog({ open, onOpenChange, clubId, teamId, player }:
       </EntitySheetHeader>
 
       <EntitySheetBody>
+        {!isEdit && teams && teams.length > 0 ? (
+          <TeamSelectField
+            teams={teams}
+            value={selectedTeamId || null}
+            onChange={setSelectedTeamId}
+          />
+        ) : null}
         {!isEdit ? (
           <div className="space-y-1.5">
             <Label>Miembro</Label>
@@ -199,14 +220,14 @@ export function PlayerFormDialog({ open, onOpenChange, clubId, teamId, player }:
             variant="ghost"
             className="text-destructive hover:bg-destructive/10 hover:text-destructive sm:mr-auto"
             onClick={() => deleteMutation.mutate()}
-            disabled={deleteMutation.isPending}
+            disabled={deleteMutation.isPending || !canWrite}
           >
             <Trash2 className="mr-2 h-4 w-4" />
             Quitar
           </Button>
         ) : null}
         <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
-        <Button type="button" onClick={() => mutation.mutate()} disabled={mutation.isPending}>
+        <Button type="button" onClick={() => mutation.mutate()} disabled={mutation.isPending || !canWrite}>
           {isEdit ? "Guardar" : "Agregar"}
         </Button>
       </EntitySheetFooter>

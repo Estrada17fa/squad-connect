@@ -40,7 +40,7 @@ export const Route = createFileRoute("/_authenticated/m/viajes")({
 });
 
 function ViajesPage() {
-  const { permissions, isSuperAdmin, accessibleModules, profile, user, teamOptions } = useApp();
+  const { isSuperAdmin, accessibleModules, profile, user, teamOptions } = useApp();
   const clubId = profile?.club_id ?? null;
   const editableTeams = useEditableTeams("viajes");
   const [teamFilter, setTeamFilter] = React.useState<string | null>(null);
@@ -50,8 +50,6 @@ function ViajesPage() {
     return m;
   }, [teamOptions]);
   const canAccess = isSuperAdmin || accessibleModules.includes("viajes");
-  const level = permissions.viajes;
-  const canEdit = isSuperAdmin || level === "editor" || level === "approver";
   const { canEditTeam } = useTeamAccess("viajes");
 
   const [formOpen, setFormOpen] = React.useState(false);
