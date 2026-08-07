@@ -106,13 +106,6 @@ function UsuariosPage() {
             <EmptyState title="Sin club" message="Tu perfil aún no está asociado a un club." />
           )}
         </TabsContent>
-        <TabsContent value="ubicaciones">
-          {profile?.club_id ? (
-            <LocationsTab clubId={profile.club_id} userId={user.id} canEdit={canEdit} />
-          ) : (
-            <EmptyState title="Sin club" message="Tu perfil aún no está asociado a un club." />
-          )}
-        </TabsContent>
       </Tabs>
     </div>
   );
