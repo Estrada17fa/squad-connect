@@ -153,6 +153,13 @@ function MiPerfilPage() {
         avatarUrl={form.avatar_url}
       />
 
+      <MiDesarrolloSection
+        userId={user.id}
+        fullName={data?.full_name ?? null}
+        avatarUrl={form.avatar_url}
+      />
+
+
       <section className="space-y-2">
         <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
           Documentos asignados
