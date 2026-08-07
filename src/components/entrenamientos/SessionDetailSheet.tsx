@@ -100,6 +100,13 @@ export function SessionDetailSheet({ open, onOpenChange, session, readOnly, onEd
         </div>
       ) : null}
 
+      {session?.event_id ? (
+        <DetailSection title="Convocatoria">
+          <AttendeeSummary eventId={session.event_id} clubId={session.club_id} teamId={session.team_id} />
+        </DetailSection>
+      ) : null}
+
+
       {planQ.isLoading ? (
         <LoadingState />
       ) : plan.length === 0 ? (
