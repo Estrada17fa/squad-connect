@@ -39,6 +39,7 @@ function PlayerDetail() {
   const canEdit = canEditTeam(player?.team_id);
   const [editOpen, setEditOpen] = React.useState(false);
   const [healthOpen, setHealthOpen] = React.useState(false);
+  const [devOpen, setDevOpen] = React.useState(false);
   const [clubId, setClubId] = React.useState<string | null>(null);
 
   React.useEffect(() => {
