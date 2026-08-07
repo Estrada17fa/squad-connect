@@ -26,6 +26,7 @@ export interface TripHotel {
 export interface HotelInput {
   name: string;
   address: string | null;
+  location_id?: string | null;
   check_in_at: string;
   check_out_at: string | null;
   phone: string | null;

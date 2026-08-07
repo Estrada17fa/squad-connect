@@ -80,7 +80,7 @@ export function TripLogisticsTimeline({ trip, canEdit }: Props) {
         canEdit={editable}
       />
 
-      <HotelsSection tripId={trip.id} userId={uid} hotels={hotels} travelers={travelers} canEdit={editable} />
+      <HotelsSection tripId={trip.id} clubId={trip.club_id} userId={uid} hotels={hotels} travelers={travelers} canEdit={editable} />
 
       <MealsSection tripId={trip.id} userId={uid} meals={meals} canEdit={editable} />
 

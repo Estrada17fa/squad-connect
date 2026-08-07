@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toLocalInputValue, fromLocalInputValue } from "@/lib/calendar-utils";
 import { useClubStaff, type MeetingRow } from "@/hooks/useCoordinacion";
 import { cn } from "@/lib/utils";
+import { LocationPicker } from "@/components/calendar/LocationPicker";
 
 interface Props {
   open: boolean;
@@ -38,6 +39,7 @@ export function MeetingFormDialog({ open, onOpenChange, clubId, userId, meeting 
   const [endsAt, setEndsAt] = React.useState("");
   const [locationType, setLocationType] = React.useState<"presencial" | "videollamada">("presencial");
   const [location, setLocation] = React.useState("");
+  const [locationId, setLocationId] = React.useState<string | null>(null);
   const [agenda, setAgenda] = React.useState("");
   const [notes, setNotes] = React.useState("");
   const [invitees, setInvitees] = React.useState<Set<string>>(new Set());
@@ -53,6 +55,7 @@ export function MeetingFormDialog({ open, onOpenChange, clubId, userId, meeting 
     const loc = meeting?.location ?? "";
     setLocationType(isMeetingUrl(loc) ? "videollamada" : "presencial");
     setLocation(loc);
+    setLocationId(((meeting as any)?.location_id as string | null) ?? null);
     setAgenda(meeting?.agenda ?? "");
     setNotes(meeting?.notes ?? "");
     setInvitees(new Set((meeting?.attendees ?? []).map((a) => a.user_id)));
@@ -69,6 +72,7 @@ export function MeetingFormDialog({ open, onOpenChange, clubId, userId, meeting 
         starts_at: fromLocalInputValue(startsAt),
         ends_at: endsAt ? fromLocalInputValue(endsAt) : null,
         location: location.trim() || null,
+        location_id: locationType === "presencial" ? locationId : null,
         agenda: agenda.trim() || null,
         notes: isPast ? (notes.trim() || null) : (meeting?.notes ?? null),
       };
@@ -199,13 +203,29 @@ export function MeetingFormDialog({ open, onOpenChange, clubId, userId, meeting 
               <Video className="h-3.5 w-3.5" /> Videollamada
             </button>
           </div>
-          <Input
-            id="m-loc"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            placeholder={locationType === "videollamada" ? "https://zoom.us/… o link de Teams/Meet" : "Sala, oficina, dirección…"}
-            type={locationType === "videollamada" ? "url" : "text"}
-          />
+          {locationType === "videollamada" ? (
+            <Input
+              id="m-loc"
+              value={location}
+              onChange={(e) => {
+                setLocation(e.target.value);
+                setLocationId(null);
+              }}
+              placeholder="https://zoom.us/… o link de Teams/Meet"
+              type="url"
+            />
+          ) : (
+            <LocationPicker
+              id="m-loc"
+              label=""
+              clubId={clubId}
+              userId={userId}
+              value={location}
+              onChange={setLocation}
+              locationId={locationId}
+              onLocationIdChange={setLocationId}
+            />
+          )}
         </div>
 
         <div className="space-y-1.5">

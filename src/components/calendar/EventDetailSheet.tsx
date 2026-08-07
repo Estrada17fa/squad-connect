@@ -12,6 +12,7 @@ import { useTeamAccess } from "@/hooks/useTeamAccess";
 import { SessionPlanContent } from "@/components/entrenamientos/SessionPlanContent";
 import { SessionFormDialog } from "@/components/entrenamientos/SessionFormDialog";
 import { AttendeeSummary } from "./AttendeeSummary";
+import { LocationDisplay } from "./LocationDisplay";
 import { EventFormDialog } from "./EventFormDialog";
 
 interface Props {
@@ -71,9 +72,13 @@ export function EventDetailSheet({ open, onOpenChange, event, canEdit, clubId, u
             {formatDayLabel(new Date(event.starts_at))} · {formatTime(event.starts_at)}
             {event.ends_at ? ` – ${formatTime(event.ends_at)}` : ""}
           </DetailField>
-          {event.location ? (
+          {event.location || (event as any).location_id ? (
             <DetailField label="Ubicación" icon={MapPin}>
-              <DetailValue value={event.location} />
+              <LocationDisplay
+                clubId={clubId}
+                locationId={(event as any).location_id ?? null}
+                text={event.location}
+              />
             </DetailField>
           ) : null}
           <DetailField label="Equipo" icon={Users}>

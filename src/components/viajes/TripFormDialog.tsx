@@ -28,6 +28,7 @@ import {
 import { cn } from "@/lib/utils";
 import { TeamSelectField } from "@/components/squad/TeamSelectField";
 import type { TeamOption } from "@/hooks/useAccess";
+import { LocationPicker } from "@/components/calendar/LocationPicker";
 
 interface Props {
   open: boolean;
@@ -76,6 +77,7 @@ export function TripFormDialog({ open, onOpenChange, clubId, teams, defaultTeamI
   const [departureAt, setDepartureAt] = React.useState("");
   const [returnAt, setReturnAt] = React.useState("");
   const [meetingPoint, setMeetingPoint] = React.useState("");
+  const [meetingLocationId, setMeetingLocationId] = React.useState<string | null>(null);
   const [meetingAt, setMeetingAt] = React.useState("");
   const [status, setStatus] = React.useState<TripStatus>("planeacion");
   const [notes, setNotes] = React.useState("");
@@ -88,6 +90,7 @@ export function TripFormDialog({ open, onOpenChange, clubId, teams, defaultTeamI
     setDepartureAt(trip?.departure_at ? toLocalInputValue(trip.departure_at) : "");
     setReturnAt(trip?.return_at ? toLocalInputValue(trip.return_at) : "");
     setMeetingPoint(trip?.meeting_point ?? "");
+    setMeetingLocationId(((trip as any)?.meeting_location_id as string | null) ?? null);
     setMeetingAt(trip?.meeting_at ? toLocalInputValue(trip.meeting_at) : "");
     setStatus(trip?.status ?? "planeacion");
     setNotes(trip?.notes ?? "");
@@ -115,6 +118,7 @@ export function TripFormDialog({ open, onOpenChange, clubId, teams, defaultTeamI
         departure_at: fromLocalInputValue(departureAt),
         return_at: returnAt ? fromLocalInputValue(returnAt) : null,
         meeting_point: meetingPoint.trim() || null,
+        meeting_location_id: meetingLocationId,
         meeting_at: meetingAt ? fromLocalInputValue(meetingAt) : null,
         status,
         notes: notes.trim() || null,
@@ -214,15 +218,17 @@ export function TripFormDialog({ open, onOpenChange, clubId, teams, defaultTeamI
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="trip-meeting-point">Punto de reunión</Label>
-            <Input
-              id="trip-meeting-point"
-              value={meetingPoint}
-              onChange={(e) => setMeetingPoint(e.target.value)}
-              placeholder="Estacionamiento del estadio"
-            />
-          </div>
+          <LocationPicker
+            id="trip-meeting-point"
+            label="Punto de reunión"
+            placeholder="Estacionamiento del estadio…"
+            clubId={clubId}
+            userId={userId}
+            value={meetingPoint}
+            onChange={setMeetingPoint}
+            locationId={meetingLocationId}
+            onLocationIdChange={setMeetingLocationId}
+          />
           <div className="space-y-1.5">
             <Label htmlFor="trip-meeting-at">Hora de citatorio</Label>
             <Input

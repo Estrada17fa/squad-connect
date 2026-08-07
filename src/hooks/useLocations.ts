@@ -7,6 +7,10 @@ export interface LocationRow {
   name: string;
   address: string | null;
   notes: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  place_id: string | null;
+  source: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -40,6 +44,10 @@ export function useSaveLocation() {
       name: string;
       address?: string | null;
       notes?: string | null;
+      latitude?: number | null;
+      longitude?: number | null;
+      place_id?: string | null;
+      source?: string | null;
       created_by?: string | null;
     }): Promise<LocationRow> => {
       const payload = {
@@ -47,6 +55,10 @@ export function useSaveLocation() {
         name: input.name.trim(),
         address: input.address?.trim() || null,
         notes: input.notes?.trim() || null,
+        latitude: input.latitude ?? null,
+        longitude: input.longitude ?? null,
+        place_id: input.place_id ?? null,
+        source: input.source ?? null,
       };
       if (input.id) {
         const { data, error } = await db
@@ -74,13 +86,21 @@ export function useDeleteLocation() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { count, error: cErr } = await db
-        .from("calendar_events")
-        .select("id", { count: "exact", head: true })
-        .eq("location_id", id);
-      if (cErr) throw cErr;
-      if ((count ?? 0) > 0) {
-        throw new Error(`No se puede eliminar: el lugar se usa en ${count} evento(s).`);
+      const uses: Array<[string, string, string]> = [
+        ["calendar_events", "location_id", "evento(s)"],
+        ["meetings", "location_id", "junta(s)"],
+        ["trips", "meeting_location_id", "viaje(s)"],
+        ["trip_hotels", "location_id", "hotel(es)"],
+      ];
+      for (const [table, col, label] of uses) {
+        const { count, error: cErr } = await db
+          .from(table)
+          .select("id", { count: "exact", head: true })
+          .eq(col, id);
+        if (cErr) throw cErr;
+        if ((count ?? 0) > 0) {
+          throw new Error(`No se puede eliminar: la ubicación se usa en ${count} ${label}.`);
+        }
       }
       const { error } = await db.from("locations").delete().eq("id", id);
       if (error) throw error;

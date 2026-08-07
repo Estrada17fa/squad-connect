@@ -18,7 +18,7 @@ import type { TeamOption } from "@/hooks/useAccess";
 import { toLocalInputValue, fromLocalInputValue } from "@/lib/calendar-utils";
 import { saveCalendarEvent } from "@/lib/calendarEvents";
 import { AttendeePicker, type AttendeeMode } from "@/components/calendar/AttendeePicker";
-import { LocationField } from "@/components/calendar/LocationField";
+import { LocationPicker } from "@/components/calendar/LocationPicker";
 import { useCalendarEvents } from "@/hooks/useCalendarEvents";
 import {
   CATEGORY_LABEL,
@@ -312,7 +312,7 @@ export function SessionFormDialog({
             </div>
             {eventMode === "create" ? (
               <>
-                <LocationField
+                <LocationPicker
                   id="sess-loc"
                   clubId={clubId}
                   userId={userId}

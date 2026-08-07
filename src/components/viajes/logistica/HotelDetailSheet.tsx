@@ -15,6 +15,7 @@ import type { MiniProfile } from "@/lib/tripLogistics";
 import { type TripHotel, type TripRoom } from "@/hooks/useTripHotels";
 import { PersonChips } from "./PersonChips";
 import { HotelFormDialog } from "./HotelFormDialog";
+import { LocationDisplay } from "@/components/calendar/LocationDisplay";
 import { RoomFormDialog } from "./RoomFormDialog";
 
 interface Props {
@@ -22,6 +23,7 @@ interface Props {
   onOpenChange: (v: boolean) => void;
   hotel: TripHotel | null;
   tripId: string;
+  clubId: string;
   userId: string;
   canEdit: boolean;
   onOpenRoom: (room: TripRoom) => void;
@@ -29,7 +31,7 @@ interface Props {
 }
 
 /** Ficha de lectura de un hotel: datos generales y rooming list. */
-export function HotelDetailSheet({ open, onOpenChange, hotel, tripId, userId, canEdit, onOpenRoom, onAddRoom }: Props) {
+export function HotelDetailSheet({ open, onOpenChange, hotel, tripId, clubId, userId, canEdit, onOpenRoom, onAddRoom }: Props) {
   const [editOpen, setEditOpen] = React.useState(false);
 
   if (!hotel) {
@@ -61,6 +63,16 @@ export function HotelDetailSheet({ open, onOpenChange, hotel, tripId, userId, ca
               <DetailField label="Teléfono">{hotel.phone ?? "—"}</DetailField>
             </DetailGrid>
           </DetailSection>
+
+          {hotel.address || (hotel as any).location_id ? (
+            <DetailSection title="Ubicación">
+              <LocationDisplay
+                clubId={clubId}
+                locationId={(hotel as any).location_id ?? null}
+                text={hotel.address}
+              />
+            </DetailSection>
+          ) : null}
 
           {hotel.notes ? (
             <DetailSection title="Notas">
@@ -108,7 +120,7 @@ export function HotelDetailSheet({ open, onOpenChange, hotel, tripId, userId, ca
       </EntitySheet>
 
       {canEdit ? (
-        <HotelFormDialog open={editOpen} onOpenChange={setEditOpen} tripId={tripId} userId={userId} hotel={hotel} />
+        <HotelFormDialog open={editOpen} onOpenChange={setEditOpen} tripId={tripId} clubId={clubId} userId={userId} hotel={hotel} />
       ) : null}
     </>
   );

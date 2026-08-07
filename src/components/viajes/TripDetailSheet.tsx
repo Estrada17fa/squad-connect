@@ -1,6 +1,7 @@
 import * as React from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { LocationDisplay } from "@/components/calendar/LocationDisplay";
 import { CalendarClock, MapPin, Pencil, Plane, Trophy, Users, UserPlus, X } from "lucide-react";
 
 import {
@@ -197,11 +198,17 @@ export function TripDetailSheet({
 
             {trip.meeting_point || trip.notes ? (
               <section className="space-y-2">
-                {trip.meeting_point ? (
-                  <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <MapPin className="h-4 w-4 shrink-0 text-primary" />
-                    Punto de reunión: <span className="text-foreground">{trip.meeting_point}</span>
-                  </p>
+                {trip.meeting_point || (trip as any).meeting_location_id ? (
+                  <div className="space-y-1.5 text-sm text-muted-foreground">
+                    <p className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 shrink-0 text-primary" /> Punto de reunión
+                    </p>
+                    <LocationDisplay
+                      clubId={trip.club_id}
+                      locationId={(trip as any).meeting_location_id ?? null}
+                      text={trip.meeting_point}
+                    />
+                  </div>
                 ) : null}
                 {trip.notes ? <p className="whitespace-pre-wrap text-sm text-muted-foreground">{trip.notes}</p> : null}
               </section>
