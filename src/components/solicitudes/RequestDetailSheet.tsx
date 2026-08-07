@@ -27,6 +27,9 @@ import { ExpenseFormDialog } from "@/components/compras/ExpenseFormDialog";
 import { useRequestExpense } from "@/hooks/useExpenses";
 import { expenseDraftFromRequest, formatMoney as formatExpenseMoney } from "@/lib/expenses";
 import { useApp } from "@/components/squad/AppLayout";
+import { useTeamAccess } from "@/hooks/useTeamAccess";
+import { useMedicalRoster, useRequestCheckup } from "@/hooks/useHealth";
+import { CheckupFormDialog } from "@/components/salud/CheckupFormDialog";
 import { loanDraftFromRequest } from "@/lib/requestTypes";
 import { categoryIcon } from "./InventoryItemPicker";
 
