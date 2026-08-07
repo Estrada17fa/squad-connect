@@ -208,7 +208,10 @@ export function RequestDetailSheet({
   const showLoanButton = isMaterial && isApproved && !linkedLoan && canCreateLoan;
   // El gasto es la forma de completar compras, pagos a proveedor y reembolsos.
   const showExpenseButton = isFinancial && isApproved && !linkedExpense && canCreateExpense;
-  const canComplete = canManage && def.completable && isApproved && !isMaterial && !isFinancial;
+  // La solicitud médica se completa registrando la revisión.
+  const showCheckupButton = isMedical && isApproved && !linkedCheckup && canCreateCheckup;
+  const canComplete =
+    canManage && def.completable && isApproved && !isMaterial && !isFinancial && !isMedical;
   const canEditRow = isOwner && isPending;
 
 
