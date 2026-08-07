@@ -29,11 +29,13 @@ function PlayerDetail() {
   const { playerId } = Route.useParams();
   const { user } = useApp();
   const { canEditTeam } = useTeamAccess("plantel");
+  const { canEditTeam: canEditSalud, canReadTeam: canReadSalud } = useTeamAccess("salud");
 
   const { data: player, isLoading } = usePlayer(playerId);
   // Permiso por equipo: editor en Sub-20 no puede editar fichas de Primera.
   const canEdit = canEditTeam(player?.team_id);
   const [editOpen, setEditOpen] = React.useState(false);
+  const [healthOpen, setHealthOpen] = React.useState(false);
   const [clubId, setClubId] = React.useState<string | null>(null);
 
   React.useEffect(() => {
