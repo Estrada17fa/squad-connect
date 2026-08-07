@@ -114,6 +114,7 @@ export function PlayerFormDialog({ open, onOpenChange, clubId, teamId: teamIdPro
     onSuccess: () => {
       toast.success(isEdit ? "Jugador actualizado" : "Jugador agregado");
       qc.invalidateQueries({ queryKey: ["players", teamId] });
+      qc.invalidateQueries({ queryKey: ["roster"] });
       if (player) qc.invalidateQueries({ queryKey: ["player", player.id] });
       onOpenChange(false);
     },
@@ -129,6 +130,7 @@ export function PlayerFormDialog({ open, onOpenChange, clubId, teamId: teamIdPro
     onSuccess: () => {
       toast.success("Jugador eliminado del plantel");
       qc.invalidateQueries({ queryKey: ["players", teamId] });
+      qc.invalidateQueries({ queryKey: ["roster"] });
       onOpenChange(false);
     },
     onError: (e: any) => toast.error(e.message ?? "No se pudo eliminar"),
