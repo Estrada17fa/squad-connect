@@ -302,7 +302,7 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
                     {displayName(selected)}
                   </h3>
                   {selected.status === "baja" ? (
-                    <StatusBadge variant="danger">Baja</StatusBadge>
+                    <StatusBadge variant="rejected">Baja</StatusBadge>
                   ) : null}
                   {selected.name_completed === false ? (
                     <StatusBadge variant="pending">Completar nombre</StatusBadge>
