@@ -295,12 +295,15 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
       <div>
         {selected ? (
           <div className="glass p-4 space-y-5">
-            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+            <div className="space-y-3">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <h3 className="truncate font-display text-lg font-semibold">
                     {displayName(selected)}
                   </h3>
+                  {selected.status === "baja" ? (
+                    <StatusBadge variant="danger">Baja</StatusBadge>
+                  ) : null}
                   {selected.name_completed === false ? (
                     <StatusBadge variant="pending">Completar nombre</StatusBadge>
                   ) : null}
@@ -308,12 +311,34 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
                 <p className="truncate text-xs text-muted-foreground">{selected.email}</p>
               </div>
               {canEdit ? (
-                <Button size="sm" variant="secondary" onClick={() => setAddOpen(true)}>
-                  <Plus className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Añadir membresía</span>
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm" variant="secondary" onClick={() => setEditUserId(selected.id)}>
+                    <Pencil className="mr-2 h-4 w-4" /> Editar
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setAddOpen(true)}>
+                    <Plus className="mr-2 h-4 w-4" /> Añadir membresía
+                  </Button>
+                  {selected.status === "baja" ? (
+                    <Button size="sm" variant="ghost" onClick={() => handleReactivate(selected)}>
+                      <RotateCcw className="mr-2 h-4 w-4" /> Reactivar
+                    </Button>
+                  ) : (
+                    <Button size="sm" variant="ghost" onClick={() => handleDeactivate(selected)}>
+                      <UserMinus className="mr-2 h-4 w-4" /> Dar de baja
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-destructive"
+                    onClick={() => handleHardDelete(selected)}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" /> Eliminar
+                  </Button>
+                </div>
               ) : null}
             </div>
+
 
             <div className="space-y-2">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
