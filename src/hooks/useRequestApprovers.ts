@@ -221,18 +221,32 @@ export function useMemberApprovals(clubId: string | null, userId: string | null)
   };
 }
 
-/** Tipos que el usuario actual puede aprobar (misma regla que el servidor). */
+/**
+ * Tipos que el usuario actual puede aprobar (misma regla que el servidor):
+ * ser EDITOR del módulo correspondiente al tipo (medica→salud,
+ * material→inventario, compra/pago/reembolso→compras_facturas, resto→
+ * coordinacion_interna) Y estar designado como aprobador por rol/override.
+ */
 export function useMyApproverTypes(
   clubId: string | null,
   userId: string | null,
   isSuperAdmin: boolean,
+  getModuleAccess?: (key: ModuleKey) => PermissionLevel,
 ) {
   const { rows } = useMemberApprovals(clubId, userId);
   return React.useMemo(() => {
     if (isSuperAdmin) return new Set<RequestType>(ALL_REQUEST_TYPES);
-    return new Set<RequestType>(rows.filter((r) => r.effective).map((r) => r.type));
-  }, [rows, isSuperAdmin]);
+    return new Set<RequestType>(
+      rows
+        .filter((r) => r.effective)
+        .filter((r) =>
+          getModuleAccess ? canEdit(getModuleAccess(approverModuleFor(r.type))) : true,
+        )
+        .map((r) => r.type),
+    );
+  }, [rows, isSuperAdmin, getModuleAccess]);
 }
+
 
 /* ------------------------------------------------------------------ */
 /* Lista efectiva de aprobadores por tipo (fuente: servidor)           */
