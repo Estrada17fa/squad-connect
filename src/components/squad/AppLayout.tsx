@@ -5,7 +5,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import { prefetchModule } from "@/lib/prefetch";
 import { ChevronDown, LogOut, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAccess, hasAccess, type TeamOption, type AccessLevel } from "@/hooks/useAccess";
+import { useAccess, hasAccess, type TeamOption } from "@/hooks/useAccess";
+import {
+  canEdit as levelCanEdit,
+  canRead as levelCanRead,
+  maxLevel,
+  type PermissionLevel,
+} from "@/lib/permissions";
+
 import { MODULES, MODULE_MAP, moduleFromPath, type ModuleKey } from "@/lib/modules";
 import { resolvePagesForUser, inferBaseRole, type BaseRole, type ResolvedPage } from "@/lib/rolePages";
 import { LoadingState } from "./LoadingState";
