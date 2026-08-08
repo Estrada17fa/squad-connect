@@ -53,7 +53,7 @@ export function useTeamAccess(moduleKey: ModuleKey) {
     [levelForTeam, isSuperAdmin],
   );
 
-  /** Atajo: módulo personal + vista_jugador => filtrar "solo lo mío". */
+  /** Atajo: módulo con vista personal + vista_jugador => filtrar "solo lo mío". */
   const onlyOwnRows = React.useCallback(
     (teamId?: string | null) => isPersonalModule(moduleKey) && isPlayerScoped(teamId),
     [isPlayerScoped, moduleKey],
