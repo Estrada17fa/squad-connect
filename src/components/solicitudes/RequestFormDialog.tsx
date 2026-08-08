@@ -27,6 +27,7 @@ import type { RequestRow } from "@/hooks/useRequests";
 import { InventoryItemPicker } from "./InventoryItemPicker";
 import { useClubTeams, useRequestAttachmentUrl, type InventoryCatalogItem } from "@/hooks/useInventory";
 import { cn } from "@/lib/utils";
+import { useClubPrefs } from "@/hooks/useClubSettings";
 
 interface Props {
   open: boolean;
@@ -55,6 +56,7 @@ export function RequestFormDialog({ open, onOpenChange, clubId, userId, type, re
   const def = REQUEST_TYPE_MAP[type];
   const qc = useQueryClient();
   const teamsQ = useClubTeams(clubId);
+  const { currency: clubCurrency } = useClubPrefs();
 
 
   const [description, setDescription] = React.useState("");
@@ -142,11 +144,11 @@ export function RequestFormDialog({ open, onOpenChange, clubId, userId, type, re
       const payload = {
         club_id: clubId,
         type,
-        title: requestSummary({ type, details, amount, currency: amount !== null ? "MXN" : null }),
+        title: requestSummary({ type, details, amount, currency: amount !== null ? clubCurrency : null }),
         description: description.trim() || null,
         details,
         amount,
-        currency: amount !== null ? "MXN" : null,
+        currency: amount !== null ? clubCurrency : null,
       };
       if (isEdit && request) {
         const { error } = await supabase.from("requests").update(payload).eq("id", request.id);
