@@ -24,6 +24,7 @@ import {
   type PaymentStatus,
 } from "@/lib/expenses";
 import { cn } from "@/lib/utils";
+import { useClubPrefs } from "@/hooks/useClubSettings";
 
 /** Pre-llenado del formulario (registro directo o desde una solicitud). */
 export interface ExpenseInitialValues {
@@ -65,6 +66,7 @@ export function ExpenseFormDialog({
   const isEdit = !!expense;
   const qc = useQueryClient();
   const suppliersQ = useSuppliers(open ? clubId : null);
+  const { currency: clubCurrency } = useClubPrefs();
 
   const [concept, setConcept] = React.useState("");
   const [amount, setAmount] = React.useState("");
@@ -145,7 +147,7 @@ export function ExpenseFormDialog({
         club_id: clubId,
         concept: concept.trim(),
         amount: Math.round(amountN * 100) / 100,
-        currency: expense?.currency ?? initial?.currency ?? "MXN",
+        currency: expense?.currency ?? initial?.currency ?? clubCurrency,
         category,
         supplier_id: finalSupplierId,
         supplier_name: finalSupplierId ? null : freeName || null,
