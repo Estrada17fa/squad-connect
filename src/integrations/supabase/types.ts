@@ -3325,6 +3325,10 @@ export type Database = {
         Args: { _trip_id: string; _user_id: string }
         Returns: boolean
       }
+      can_view_event_new: {
+        Args: { _event_id: string; _user_id: string }
+        Returns: boolean
+      }
       can_view_module: {
         Args: { _module_key: string; _team_id: string; _user_id: string }
         Returns: boolean
