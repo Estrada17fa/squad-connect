@@ -32,9 +32,16 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
-import { CreateMemberDialog } from "./CreateMemberDialog";
+import { MemberForm } from "./MemberForm";
+import {
+  deactivateClubMember,
+  hardDeleteClubMember,
+  reactivateClubMember,
+} from "@/lib/members.functions";
+import { useServerFn } from "@tanstack/react-start";
 import { REQUEST_TYPE_MAP, type RequestType } from "@/lib/requestTypes";
 import { useMemberApprovals, useSetApproverOverride } from "@/hooks/useRequestApprovers";
+
 
 
 const LEVELS: { value: AccessLevel; label: string }[] = [
@@ -53,7 +60,9 @@ interface ProfileRow {
   name_completed: boolean | null;
   email: string | null;
   avatar_url: string | null;
+  status?: "activo" | "baja" | null;
 }
+
 
 function displayName(p: Pick<ProfileRow, "first_name" | "paternal_last_name" | "maternal_last_name" | "full_name" | "email">) {
   const composed = [p.first_name, p.paternal_last_name, p.maternal_last_name]
@@ -90,6 +99,8 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
   const [search, setSearch] = React.useState("");
   const [addOpen, setAddOpen] = React.useState(false);
   const [createOpen, setCreateOpen] = React.useState(false);
+  const [editUserId, setEditUserId] = React.useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = React.useState<"activo" | "baja">("activo");
   const [overrideCtx, setOverrideCtx] = React.useState<{
     userId: string;
     teamId: string | null;
@@ -97,17 +108,22 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
     label: string;
   } | null>(null);
 
+  const deactivateFn = useServerFn(deactivateClubMember);
+  const reactivateFn = useServerFn(reactivateClubMember);
+  const hardDeleteFn = useServerFn(hardDeleteClubMember);
+
   const membersQ = useQuery({
     queryKey: ["club-members", clubId],
     queryFn: async (): Promise<ProfileRow[]> => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, full_name, first_name, paternal_last_name, maternal_last_name, name_completed, email, avatar_url")
+        .select("id, full_name, first_name, paternal_last_name, maternal_last_name, name_completed, email, avatar_url, status")
         .eq("club_id", clubId)
         .order("full_name");
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as unknown as ProfileRow[];
     },
+
   });
 
   const rolesQ = useQuery({
@@ -354,18 +370,31 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
         />
       ) : null}
 
-      <CreateMemberDialog
+      <MemberForm
         open={createOpen}
         onOpenChange={setCreateOpen}
         clubId={clubId}
         roles={rolesQ.data ?? []}
         teams={teamsQ.data ?? []}
-        onCreated={(id, dominant) => {
+        onSaved={(id: string, roleName: string | null) => {
           setSelectedUserId(id);
-          const base = inferBaseRole(dominant);
+          const base = inferBaseRole(roleName);
           navigate({ to: "/m/plantel", search: { role: base } as any });
         }}
       />
+
+      {editUserId ? (
+        <MemberForm
+          open={!!editUserId}
+          onOpenChange={(o) => !o && setEditUserId(null)}
+          clubId={clubId}
+          roles={rolesQ.data ?? []}
+          teams={teamsQ.data ?? []}
+          userId={editUserId}
+          onSaved={() => setEditUserId(null)}
+        />
+      ) : null}
+
     </div>
   );
 }
