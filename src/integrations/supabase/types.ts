@@ -3321,6 +3321,14 @@ export type Database = {
         Args: { _trip_id: string; _user_id: string }
         Returns: boolean
       }
+      can_edit_trip_new: {
+        Args: { _trip_id: string; _user_id: string }
+        Returns: boolean
+      }
+      can_view_event_new: {
+        Args: { _event_id: string; _user_id: string }
+        Returns: boolean
+      }
       can_view_module: {
         Args: { _module_key: string; _team_id: string; _user_id: string }
         Returns: boolean
@@ -3347,6 +3355,10 @@ export type Database = {
         Returns: boolean
       }
       can_view_trip: {
+        Args: { _trip_id: string; _user_id: string }
+        Returns: boolean
+      }
+      can_view_trip_new: {
         Args: { _trip_id: string; _user_id: string }
         Returns: boolean
       }
@@ -3495,6 +3507,7 @@ export type Database = {
         Args: { _team_id: string; _user_id: string }
         Returns: Database["public"]["Enums"]["access_level"]
       }
+      trip_team_id: { Args: { _trip_id: string }; Returns: string }
       user_sees_all_club: {
         Args: { _club_id: string; _user_id: string }
         Returns: boolean
