@@ -210,30 +210,42 @@ export type Database = {
       clubs: {
         Row: {
           created_at: string
+          currency: string
+          current_season: string | null
+          date_format: string
           id: string
           league_name: string | null
           logo_url: string | null
           name: string
           primary_color: string | null
           secondary_color: string | null
+          timezone: string
         }
         Insert: {
           created_at?: string
+          currency?: string
+          current_season?: string | null
+          date_format?: string
           id?: string
           league_name?: string | null
           logo_url?: string | null
           name: string
           primary_color?: string | null
           secondary_color?: string | null
+          timezone?: string
         }
         Update: {
           created_at?: string
+          currency?: string
+          current_season?: string | null
+          date_format?: string
           id?: string
           league_name?: string | null
           logo_url?: string | null
           name?: string
           primary_color?: string | null
           secondary_color?: string | null
+          timezone?: string
         }
         Relationships: []
       }
