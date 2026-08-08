@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useClubPrefs } from "@/hooks/useClubSettings";
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { prefetchModule } from "@/lib/prefetch";
