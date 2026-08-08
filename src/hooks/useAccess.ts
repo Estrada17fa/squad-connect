@@ -2,7 +2,19 @@ import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { ModuleKey } from "@/lib/modules";
+import {
+  LEVEL_RANK,
+  canRead,
+  isGlobalLevel,
+  normalizeLevel,
+  type PermissionLevel,
+} from "@/lib/permissions";
 
+/**
+ * Escala vieja (`access_level`). Se conserva SOLO para la interfaz de
+ * administración de permisos, que todavía escribe esa columna. Todas las
+ * decisiones de la app usan `PermissionLevel`.
+ */
 export type AccessLevel = "none" | "read" | "editor" | "approver";
 
 export interface TeamOption {
@@ -20,22 +32,25 @@ export interface AccessData {
   teams: TeamOption[];
   /** Equipos reales seleccionables en el header (club-wide => todos los del club). */
   teamOptions: TeamOption[];
-  /** Unión (mejor nivel) entre TODAS las membresías + overrides. Úsalo solo para decisiones globales (bottom nav). */
-  permissions: Record<string, AccessLevel>;
+  /** Unión (mejor nivel) entre TODAS las membresías + overrides — equivalente a max_permission_any_team. */
+  permissions: Record<string, PermissionLevel>;
   /** Permisos efectivos por equipo: la clave 'club' representa el ámbito club (o cuando no hay equipo activo). */
-  permissionsByTeam: Record<string, Record<string, AccessLevel>>;
+  permissionsByTeam: Record<string, Record<string, PermissionLevel>>;
+  /** Niveles globales (lector_global / editor_global): aplican a CUALQUIER equipo. */
+  globalPermissions: Record<string, PermissionLevel>;
   isSuperAdmin: boolean;
   /** true si TODAS las membresías del usuario son de rol base 'jugador' (y no es super admin). */
   isPlayerOnly: boolean;
 }
 
 
-const RANK: Record<AccessLevel, number> = { none: 0, read: 1, editor: 2, approver: 3 };
+const RANK = LEVEL_RANK;
 const TEAM_CLUB_KEY = "club";
 
-function bumpLevel(target: Record<string, AccessLevel>, key: string, lvl: AccessLevel) {
+function bumpLevel(target: Record<string, PermissionLevel>, key: string, lvl: PermissionLevel) {
   if (!target[key] || RANK[lvl] > RANK[target[key]]) target[key] = lvl;
 }
+
 
 export function useAccess(userId: string) {
   const qc = useQueryClient();
