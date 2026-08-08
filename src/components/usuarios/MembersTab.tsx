@@ -167,14 +167,17 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
 
   const filtered = React.useMemo(() => {
     const q = search.trim().toLowerCase();
-    const rows = membersQ.data ?? [];
+    const rows = (membersQ.data ?? []).filter(
+      (m) => (m.status ?? "activo") === statusFilter,
+    );
     if (!q) return rows;
     return rows.filter(
       (m) =>
         (m.full_name ?? "").toLowerCase().includes(q) ||
         (m.email ?? "").toLowerCase().includes(q),
     );
-  }, [membersQ.data, search]);
+  }, [membersQ.data, search, statusFilter]);
+
 
   const selected = (membersQ.data ?? []).find((m) => m.id === selectedUserId) ?? null;
 
