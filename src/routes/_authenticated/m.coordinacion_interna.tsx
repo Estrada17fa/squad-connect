@@ -20,6 +20,7 @@ import { MeetingFormDialog } from "@/components/coordinacion/MeetingFormDialog";
 import { TaskDetailSheet } from "@/components/coordinacion/TaskDetailSheet";
 import { MeetingDetailSheet } from "@/components/coordinacion/MeetingDetailSheet";
 import { cn } from "@/lib/utils";
+import { canEdit as levelCanEdit } from "@/lib/permissions";
 
 export const Route = createFileRoute("/_authenticated/m/coordinacion_interna")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -65,7 +66,7 @@ type PriorityFilter = "all" | TaskPriority;
 function CoordinacionPage() {
   const { permissions, isSuperAdmin, user, accessibleModules, profile } = useApp();
   const clubId = profile?.club_id ?? null;
-  const canEdit = isSuperAdmin || permissions.coordinacion_interna === "editor" || permissions.coordinacion_interna === "approver";
+  const canEdit = isSuperAdmin || levelCanEdit(permissions.coordinacion_interna);
   const canAccess = isSuperAdmin || accessibleModules.includes("coordinacion_interna");
 
   const tasksQ = useTasks(clubId);

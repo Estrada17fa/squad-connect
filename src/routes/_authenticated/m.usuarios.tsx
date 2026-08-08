@@ -41,6 +41,7 @@ import type { AccessLevel } from "@/hooks/useAccess";
 import { REQUEST_TYPES, type RequestType } from "@/lib/requestTypes";
 import { useRoleApprovals, useSaveRoleApprovals } from "@/hooks/useRequestApprovers";
 import { Checkbox } from "@/components/ui/checkbox";
+import { canEdit as levelCanEdit } from "@/lib/permissions";
 
 
 export const Route = createFileRoute("/_authenticated/m/usuarios")({
@@ -75,7 +76,7 @@ const LEVELS: { value: AccessLevel; label: string }[] = [
 
 function UsuariosPage() {
   const { user, profile, isSuperAdmin, permissions } = useApp();
-  const canEdit = isSuperAdmin || permissions["usuarios"] === "editor" || permissions["usuarios"] === "approver";
+  const canEdit = isSuperAdmin || levelCanEdit(permissions["usuarios"]);
 
   return (
     <div className="space-y-6">

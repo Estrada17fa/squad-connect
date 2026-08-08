@@ -10,6 +10,7 @@ import { ClubIdentityTab } from "@/components/admin/ClubIdentityTab";
 import { ClubLeagueTab } from "@/components/admin/ClubLeagueTab";
 import { ClubPreferencesTab } from "@/components/admin/ClubPreferencesTab";
 import { useApp } from "@/components/squad/AppLayout";
+import { canEdit as levelCanEdit } from "@/lib/permissions";
 
 export const Route = createFileRoute("/_authenticated/admin/configuracion")({
   head: () => ({
@@ -27,8 +28,7 @@ export const Route = createFileRoute("/_authenticated/admin/configuracion")({
 function ClubSettingsPage() {
   const { user, profile, isSuperAdmin, activeBaseRole, permissions } = useApp();
   const isAdmin = isSuperAdmin || activeBaseRole === "admin";
-  const canEdit =
-    isSuperAdmin || permissions["usuarios"] === "editor" || permissions["usuarios"] === "approver";
+  const canEdit = isSuperAdmin || levelCanEdit(permissions["usuarios"]);
 
   if (!isAdmin) {
     return (

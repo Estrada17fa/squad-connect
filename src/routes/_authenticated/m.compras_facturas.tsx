@@ -41,6 +41,7 @@ import { ExpenseDetailSheet } from "@/components/compras/ExpenseDetailSheet";
 import { SupplierFormDialog } from "@/components/compras/SupplierFormDialog";
 import { SupplierDetailSheet } from "@/components/compras/SupplierDetailSheet";
 import { cn } from "@/lib/utils";
+import { canEdit as levelCanEdit } from "@/lib/permissions";
 
 export const Route = createFileRoute("/_authenticated/m/compras_facturas")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -67,7 +68,7 @@ function ComprasPage() {
   const clubId = profile?.club_id ?? null;
   const canAccess = isSuperAdmin || accessibleModules.includes("compras_facturas");
   const level = permissions.compras_facturas;
-  const canEdit = isSuperAdmin || level === "editor" || level === "approver";
+  const canEdit = isSuperAdmin || levelCanEdit(level);
 
   const [view, setView] = React.useState<SubView>("gastos");
   const [search, setSearch] = React.useState("");
