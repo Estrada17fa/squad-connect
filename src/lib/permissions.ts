@@ -88,3 +88,27 @@ export function isGlobalLevel(level: PermissionLevel | undefined | null): boolea
 export function isPlayerView(level: PermissionLevel | undefined | null): boolean {
   return normalizeLevel(level) === "vista_jugador";
 }
+
+/**
+ * Puente temporal: la UI de administración de permisos todavía usa la escala
+ * vieja de 4 opciones. Al guardar escribe AMBAS columnas para que la app (que
+ * ya lee `level`) y la RLS vieja (que lee `access_level`) queden alineadas.
+ */
+export function legacyToLevel(legacy: string): PermissionLevel {
+  switch (legacy) {
+    case "read":
+      return "lector_categoria";
+    case "editor":
+    case "approver":
+      return "editor_categoria";
+    default:
+      return "sin_acceso";
+  }
+}
+
+/** Cubeta vieja equivalente a un nivel nuevo (para comparar sin perder detalle). */
+export function levelToLegacy(level: PermissionLevel | undefined | null): "none" | "read" | "editor" {
+  const l = normalizeLevel(level);
+  if (l === "sin_acceso") return "none";
+  return canEdit(l) ? "editor" : "read";
+}
