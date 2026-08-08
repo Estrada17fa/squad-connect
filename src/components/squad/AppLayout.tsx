@@ -175,8 +175,12 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
     permissions: data.permissions,
     activePermissions,
     getModuleAccess,
+    canViewModule,
+    canEditModule,
     teamOptions,
     permissionsByTeam: data.permissionsByTeam,
+    globalPermissions: data.globalPermissions,
+
     clubName: data.clubName,
     isSuperAdmin: data.isSuperAdmin,
     viewsAllClub,
