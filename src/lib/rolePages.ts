@@ -141,9 +141,11 @@ export function resolvePagesForUser(
   for (const p of PAGES) {
     if (p.key === "home") { out.push({ page: p, modules: [] }); continue; }
     if (p.key === "admin") {
-      if (role === "admin" && perPage.admin.length > 0) out.push({ page: p, modules: perPage.admin });
+      const canAdmin = opts?.canAccessAdmin ?? role === "admin";
+      if (canAdmin && perPage.admin.length > 0) out.push({ page: p, modules: perPage.admin });
       continue;
     }
+
     if (p.key === "coordinacion" && role === "jugador") {
       if (perPage.coordinacion.length > 0) {
         out.push({
