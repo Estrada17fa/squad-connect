@@ -1934,18 +1934,21 @@ export type Database = {
         Row: {
           access_level: Database["public"]["Enums"]["access_level"]
           id: string
+          level: Database["public"]["Enums"]["permission_level"]
           module_key: string
           role_id: string
         }
         Insert: {
           access_level?: Database["public"]["Enums"]["access_level"]
           id?: string
+          level?: Database["public"]["Enums"]["permission_level"]
           module_key: string
           role_id: string
         }
         Update: {
           access_level?: Database["public"]["Enums"]["access_level"]
           id?: string
+          level?: Database["public"]["Enums"]["permission_level"]
           module_key?: string
           role_id?: string
         }
@@ -3234,6 +3237,7 @@ export type Database = {
           access_level: Database["public"]["Enums"]["access_level"]
           created_at: string
           id: string
+          level: Database["public"]["Enums"]["permission_level"]
           module_key: string
           team_id: string | null
           updated_at: string
@@ -3243,6 +3247,7 @@ export type Database = {
           access_level: Database["public"]["Enums"]["access_level"]
           created_at?: string
           id?: string
+          level?: Database["public"]["Enums"]["permission_level"]
           module_key: string
           team_id?: string | null
           updated_at?: string
@@ -3252,6 +3257,7 @@ export type Database = {
           access_level?: Database["public"]["Enums"]["access_level"]
           created_at?: string
           id?: string
+          level?: Database["public"]["Enums"]["permission_level"]
           module_key?: string
           team_id?: string | null
           updated_at?: string
@@ -3299,6 +3305,10 @@ export type Database = {
         Args: { _team_id: string; _user_id: string }
         Returns: boolean
       }
+      can_edit_module: {
+        Args: { _module_key: string; _team_id: string; _user_id: string }
+        Returns: boolean
+      }
       can_edit_training: {
         Args: { _team_id: string; _user_id: string }
         Returns: boolean
@@ -3309,6 +3319,19 @@ export type Database = {
       }
       can_edit_trip: {
         Args: { _trip_id: string; _user_id: string }
+        Returns: boolean
+      }
+      can_view_module: {
+        Args: { _module_key: string; _team_id: string; _user_id: string }
+        Returns: boolean
+      }
+      can_view_own_row: {
+        Args: {
+          _module_key: string
+          _owner_id: string
+          _team_id: string
+          _user_id: string
+        }
         Returns: boolean
       }
       can_view_request: {
@@ -3330,6 +3353,10 @@ export type Database = {
       development_level: {
         Args: { _team_id: string; _user_id: string }
         Returns: Database["public"]["Enums"]["access_level"]
+      }
+      effective_permission: {
+        Args: { _module_key: string; _team_id: string; _user_id: string }
+        Returns: Database["public"]["Enums"]["permission_level"]
       }
       expense_report: {
         Args: { _club_id: string; _from: string; _to: string }
@@ -3417,6 +3444,10 @@ export type Database = {
       }
       is_player_only: { Args: { _user_id: string }; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      max_permission_any_team: {
+        Args: { _module_key: string; _user_id: string }
+        Returns: Database["public"]["Enums"]["permission_level"]
+      }
       notifications_push_hook: {
         Args: { _notification_id: string }
         Returns: undefined
@@ -3512,6 +3543,13 @@ export type Database = {
       injury_severity: "leve" | "moderada" | "grave"
       injury_status: "activa" | "en_recuperacion" | "recuperada"
       payment_status: "pendiente" | "pagado"
+      permission_level:
+        | "sin_acceso"
+        | "vista_jugador"
+        | "lector_categoria"
+        | "lector_global"
+        | "editor_categoria"
+        | "editor_global"
       request_status:
         | "pendiente"
         | "aprobada"
@@ -3709,6 +3747,14 @@ export const Constants = {
       injury_severity: ["leve", "moderada", "grave"],
       injury_status: ["activa", "en_recuperacion", "recuperada"],
       payment_status: ["pendiente", "pagado"],
+      permission_level: [
+        "sin_acceso",
+        "vista_jugador",
+        "lector_categoria",
+        "lector_global",
+        "editor_categoria",
+        "editor_global",
+      ],
       request_status: [
         "pendiente",
         "aprobada",
