@@ -79,7 +79,12 @@ function DesarrolloPage() {
   const { profile, user, teamOptions, isSuperAdmin, accessibleModules } = useApp();
   const clubId = profile?.club_id ?? null;
   const canAccess = isSuperAdmin || accessibleModules.includes("desarrollo");
-  const { canEditTeam, canReadTeam } = useTeamAccess("desarrollo");
+  const { canEditTeam, canReadTeam, onlyOwnRows } = useTeamAccess("desarrollo");
+  // 'vista_jugador' en un módulo personal: solo se ven los registros propios.
+  const seesOwnOnly = React.useCallback(
+    (teamId: string, playerUserId: string) => !onlyOwnRows(teamId) || playerUserId === user.id,
+    [onlyOwnRows, user.id],
+  );
   const editableTeams = useEditableTeams("desarrollo");
 
   const [view, setView] = React.useState<SubView>("resumen");
@@ -109,8 +114,8 @@ function DesarrolloPage() {
   const routinesQ = useRoutines(canAccess ? clubId : null);
 
   const roster = React.useMemo(
-    () => (rosterQ.data ?? []).filter((p) => canReadTeam(p.teamId)),
-    [rosterQ.data, canReadTeam],
+    () => (rosterQ.data ?? []).filter((p) => canReadTeam(p.teamId) && seesOwnOnly(p.teamId, p.userId)),
+    [rosterQ.data, canReadTeam, seesOwnOnly],
   );
   const editablePlayers = React.useMemo(
     () => roster.filter((p) => canEditTeam(p.teamId)),
