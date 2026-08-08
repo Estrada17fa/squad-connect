@@ -52,7 +52,7 @@ function SolicitudesPage() {
 
   const level = getModuleAccess("solicitudes");
   const canManage = isSuperAdmin || levelCanEdit(level);
-  const myApproverTypes = useMyApproverTypes(clubId, user.id, isSuperAdmin);
+  const myApproverTypes = useMyApproverTypes(clubId, user.id, isSuperAdmin, getModuleAccess);
   const isApproverOf = React.useCallback(
     (type: RequestType) => myApproverTypes.has(type),
     [myApproverTypes],
