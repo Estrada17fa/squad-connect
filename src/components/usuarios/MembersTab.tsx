@@ -256,6 +256,24 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
             className="pl-9"
           />
         </div>
+        <div className="flex gap-1 rounded-lg border border-border/60 p-1">
+          {(["activo", "baja"] as const).map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setStatusFilter(s)}
+              className={cn(
+                "flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+                statusFilter === s
+                  ? "bg-primary/15 text-primary"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {s === "activo" ? "Activos" : "Bajas"}
+            </button>
+          ))}
+        </div>
+
         <div className="grid gap-2">
           {filtered.map((m) => (
             <StandardCard
