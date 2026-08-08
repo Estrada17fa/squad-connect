@@ -2,7 +2,9 @@ import * as React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { REQUEST_TYPES, approverModuleFor, type RequestType } from "@/lib/requestTypes";
-import { canEdit, type ModuleKey, type PermissionLevel } from "@/lib/permissions";
+import { canEdit, type PermissionLevel } from "@/lib/permissions";
+import type { ModuleKey } from "@/lib/modules";
+
 
 
 /**
