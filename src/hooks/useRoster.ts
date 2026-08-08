@@ -23,9 +23,10 @@ async function fetchRoster(clubId: string, teamId: string | null): Promise<Roste
   const q = supabase
     .from("team_memberships")
     .select(
-      "user_id, team_id, job_title, team:teams(name), role:roles(name, base_role), profile:profiles!inner(id, full_name, avatar_url, birthdate, club_id)",
+      "user_id, team_id, job_title, team:teams(name), role:roles(name, base_role), profile:profiles!inner(id, full_name, avatar_url, birthdate, club_id, status)",
     )
-    .eq("profile.club_id", clubId);
+    .eq("profile.club_id", clubId)
+    .eq("profile.status", "activo");
   if (teamId) q.or(`team_id.is.null,team_id.eq.${teamId}`);
   const { data, error } = await q;
   if (error) throw error;
@@ -38,6 +39,7 @@ async function fetchRoster(clubId: string, teamId: string | null): Promise<Roste
           .from("player_profiles")
           .select("id, user_id, team_id, jersey_number, position, availability_status")
           .eq("team_id", teamId)
+          .is("archived_at", null)
       ).data ?? [];
   } else {
     // Club-wide: traer todos los player_profiles de equipos del club.
@@ -50,6 +52,7 @@ async function fetchRoster(clubId: string, teamId: string | null): Promise<Roste
             .from("player_profiles")
             .select("id, user_id, team_id, jersey_number, position, availability_status")
             .in("team_id", ids)
+            .is("archived_at", null)
         ).data ?? [];
     }
   }

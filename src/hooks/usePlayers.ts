@@ -36,7 +36,8 @@ export const playersQueryOptions = (teamId: string | null | undefined) =>
         .select(
           "id, user_id, team_id, position, jersey_number, birthdate, height_cm, weight_kg, availability_status, notes, profile:profiles(id, full_name, email, avatar_url)",
         )
-        .eq("team_id", teamId!);
+        .eq("team_id", teamId!)
+        .is("archived_at", null);
       if (error) throw error;
       return (data ?? []) as unknown as PlayerRow[];
     },
