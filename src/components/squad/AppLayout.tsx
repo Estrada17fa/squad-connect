@@ -159,7 +159,9 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
 
   return (
     <AppContext.Provider value={ctx}>
+      <ClubPrefsSync />
       <div className="min-h-screen bg-background pb-24 sm:pb-8">
+
         <Header
           clubName={data.clubName}
           userName={data.profile?.full_name ?? user.email ?? ""}
