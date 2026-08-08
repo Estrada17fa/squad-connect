@@ -13,12 +13,10 @@ import { ModuleTabs } from "@/components/squad/ModuleTabs";
 import { EmptyState } from "@/components/squad/EmptyState";
 import { LoadingState } from "@/components/squad/LoadingState";
 import { StandardCard } from "@/components/squad/StandardCard";
-import { StatusBadge } from "@/components/squad/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -35,14 +33,10 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useApp } from "@/components/squad/AppLayout";
-import { MODULES, MODULE_MAP, type ModuleKey } from "@/lib/modules";
-import { groupModulesByPage, type BaseRole } from "@/lib/rolePages";
 import { cn } from "@/lib/utils";
-import type { AccessLevel } from "@/hooks/useAccess";
-import { REQUEST_TYPES, type RequestType } from "@/lib/requestTypes";
-import { useRoleApprovals, useSaveRoleApprovals } from "@/hooks/useRequestApprovers";
-import { Checkbox } from "@/components/ui/checkbox";
-import { canEdit as levelCanEdit, legacyToLevel, normalizeLevel, type PermissionLevel } from "@/lib/permissions";
+import type { RequestType } from "@/lib/requestTypes";
+import { useRoleApprovals } from "@/hooks/useRequestApprovers";
+import { canEdit as levelCanEdit, type PermissionLevel } from "@/lib/permissions";
 
 
 export const Route = createFileRoute("/_authenticated/m/usuarios")({
@@ -65,16 +59,8 @@ interface RoleRow {
 interface PermRow {
   role_id: string;
   module_key: string;
-  access_level: AccessLevel;
   level: PermissionLevel | null;
 }
-
-const LEVELS: { value: AccessLevel; label: string }[] = [
-  { value: "none", label: "Sin acceso" },
-  { value: "read", label: "Solo ver" },
-  { value: "editor", label: "Editar" },
-  { value: "approver", label: "Aprobar" },
-];
 
 function UsuariosPage() {
   const { user, profile, isSuperAdmin, permissions } = useApp();
@@ -136,7 +122,7 @@ function RolesTab({ clubId, canEdit }: { clubId: string | null; canEdit: boolean
       if (roleIds.length === 0) return [];
       const { data, error } = await supabase
         .from("role_permissions")
-        .select("role_id, module_key, access_level, level")
+        .select("role_id, module_key, level")
         .in("role_id", roleIds);
       if (error) throw error;
       return (data ?? []) as PermRow[];
