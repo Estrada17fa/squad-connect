@@ -1,4 +1,4 @@
-import type { ModuleKey } from "./modules";
+import { MODULE_MAP, type ModuleKey } from "./modules";
 
 /**
  * Escala nueva de permisos (tipo `permission_level` en la base).
