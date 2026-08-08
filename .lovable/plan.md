@@ -33,20 +33,36 @@ Reglas base:
 
 5. **`src/components/squad/AppLayout.tsx`** — `getModuleAccess` devuelve el máximo nivel del usuario en el módulo (equivalente cliente de `max_permission_any_team`), respetando que los módulos de ámbito club no dependan de equipos. `isModuleAccessible` = ese máximo ≠ `sin_acceso`. Navbar y chips usan el mismo predicado, así que un módulo en `sin_acceso` desaparece de ambos. Los tipos del contexto pasan de `AccessLevel` a `PermissionLevel`.
 
-6. **`src/lib/rolePages.ts`** — la página aparece si tiene al menos un módulo accesible con el nivel nuevo. Se conserva el agrupado por rol base solo como ORDEN/ubicación de los módulos dentro de cada página (Mi Club, Coordinación, Admin); la visibilidad deja de depender del rol base y pasa a depender del nivel. Admin deja de exigir `base_role = admin`: se muestra si hay módulos de admin accesibles.
+6. **`src/lib/rolePages.ts`** — la página aparece si tiene al menos un módulo accesible con el nivel nuevo. Se conserva el agrupado por rol base solo como ORDEN/ubicación de los módulos dentro de cada página. **Corrección tras tu punto 1: la sección Admin NO se abre por accesibilidad genérica.** Admin se muestra únicamente si el usuario es super admin o tiene nivel de EDICIÓN en `usuarios` (que es lo mismo que exigimos para Configuración del club). Verifiqué el riesgo concreto: hoy Médico y Staff tienen `documentos` en `lector_categoria`, y con la regla "aparece si hay módulos de admin accesibles" habrían visto la pestaña Admin. Con la regla de edición sobre `usuarios`, Médico, Staff y Jugador quedan en `sin_acceso` en `usuarios` y no ven Admin; `documentos` en solo lectura se les muestra dentro de Coordinación, no en Admin.
 
 7. **Vistas de módulos** — donde hoy comparan contra `'editor'`/`'approver'` o contra `'none'`:
    - `m.documentos.tsx`, `m.solicitudes.tsx`, `m.inventario.tsx`, `m.compras_facturas.tsx`, `m.coordinacion_interna.tsx`, `m.usuarios.tsx` (que usan `getModuleAccess`) pasan a `canEdit`/`canRead` del nuevo módulo de permisos.
    - `m.plantel.*`, `m.salud.tsx`, `m.desarrollo.tsx`, `m.entrenamientos.tsx`, `m.viajes.tsx`, `m.agenda.tsx`, `m.mes.tsx`, `TripDetailSheet`, `RequestDetailSheet`, `PlayerFormDialog`, `EventDetailSheet` ya usan `useTeamAccess`, así que heredan el comportamiento nuevo sin cambios de llamada; solo se revisan los casos donde el nivel se compara a mano.
    - `m.salud.tsx` y `m.desarrollo.tsx` además filtran el roster a la persona del usuario cuando el nivel es `vista_jugador`.
-   - La pestaña de matriz de permisos (`m.usuarios.tsx`, `MembersTab.tsx`) NO se rediseña en 2A: sigue escribiendo `access_level` como hoy para no romper la RLS vieja. Su rediseño a 6 niveles es la Parte 2C.
+   - `/admin` y `/admin/configuracion` verifican el mismo criterio que la navegación (edición en `usuarios`) para que no se pueda entrar escribiendo la URL.
+   - La pestaña de matriz de permisos (`m.usuarios.tsx`, `MembersTab.tsx`) NO se rediseña en 2A: sigue escribiendo `access_level` como hoy. Su rediseño a 6 niveles es la Parte 2C.
+
+## Punto 2: hay desfase real entre lo nuevo y lo viejo, y hay que cerrarlo
+
+Consulté los datos y **NO coinciden**. La Parte 1 pobló `level` con los defaults correctos de cada rol, pero dejó `access_level` como estaba. Resultado en `role_permissions`: 50 filas con `access_level = 'none'` cuyo nivel nuevo sí da acceso.
+
+Tu caso exacto: **Médico → salud** es `editor_categoria` con `access_level = 'none'`. Igual pasa con Médico → nutrición (editor), plantel, agenda, viajes, documentos (lectura), y con varios permisos de Staff y Jugador.
+
+Si solo cambio el frontend, el Médico vería Salud con botón de editar y la base vieja se lo rechazaría. Para evitarlo, **antes del cambio de frontend** ejecuto un ajuste de datos (solo datos: ninguna política, ninguna función, ningún tipo):
+
+- En `role_permissions` y `user_permission_overrides`, el valor viejo se recalcula desde el nuevo: `sin_acceso` → sin acceso; `vista_jugador`, `lector_categoria`, `lector_global` → lectura; `editor_categoria`, `editor_global` → edición.
+
+Con eso los dos sistemas describen los mismos accesos y no queda nada a medias mientras llega la 2B. Como es un cambio en la base, necesito que salgas de modo plan para aplicarlo.
 
 ## Cómo verificamos
 
-- Consulta a la base del nivel efectivo por usuario/módulo y comparación contra lo que la navegación muestra, con las cuentas existentes: super admin, Admin con overrides en `sin_acceso`, Médico, Jugador.
-- Recorrido en el navegador con sesión real: navbar, chips de cada hub y presencia/ausencia de los botones de crear y editar en Plantel, Salud, Entrenamientos y Solicitudes.
-- Chequeo explícito de que un módulo en `sin_acceso` no aparece en ningún lado y de que el jugador no ve datos personales ajenos en Salud y Desarrollo.
+- Antes/después del ajuste de datos: consulta que muestre cero filas donde el nivel nuevo y el viejo discrepen.
+- Consulta del nivel efectivo por usuario/módulo comparada con lo que la navegación muestra, para super admin, Admin con excepciones en `sin_acceso`, Médico y Jugador.
+- Caso Médico: ve Salud y Nutrición con edición en el frontend y la base también se lo permite; no ve Admin.
+- Caso Jugador y Staff: no ven Admin por ningún camino, ni en la barra ni entrando por URL.
+- Recorrido en el navegador con sesión real: barra de navegación, chips de cada hub y presencia/ausencia de botones de crear y editar en Plantel, Salud, Entrenamientos y Solicitudes.
 
 ## Fuera de alcance en 2A
 
-RLS, funciones SQL, `access_level`, y el rediseño de la interfaz de roles y asignaciones.
+Políticas de seguridad, funciones SQL, el tipo viejo `access_level` (se conserva y se sigue usando por la base) y el rediseño de la interfaz de roles y asignaciones.
+
