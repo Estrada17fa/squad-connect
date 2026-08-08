@@ -99,18 +99,31 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
   const clubPerms = data?.permissionsByTeam?.["club"] ?? {};
   const viewsAllClub = !!(data?.isSuperAdmin || (data && !data.isPlayerOnly));
   // Sin equipo activo: los permisos efectivos son la unión de todas las membresías.
-  const activePermissions = React.useMemo<Record<string, AccessLevel>>(
+  const activePermissions = React.useMemo<Record<string, PermissionLevel>>(
     () => data?.permissions ?? {},
     [data?.permissions],
   );
 
+  // Equivalente cliente de max_permission_any_team: el mejor nivel del usuario
+  // en cualquier equipo (los módulos de ámbito club usan el contexto 'club').
   const getModuleAccess = React.useCallback(
-    (key: ModuleKey): AccessLevel => {
+    (key: ModuleKey): PermissionLevel => {
+      if (data?.isSuperAdmin) return "editor_global";
       const scope = MODULE_MAP[key].scope;
-      if (scope === "club" && !viewsAllClub) return clubPerms[key] ?? "none";
-      return data?.permissions?.[key] ?? "none";
+      const globalLvl = data?.globalPermissions?.[key];
+      if (scope === "club" && !viewsAllClub) return maxLevel(clubPerms[key], globalLvl);
+      return maxLevel(data?.permissions?.[key], globalLvl);
     },
-    [viewsAllClub, data?.permissions, clubPerms],
+    [data?.isSuperAdmin, viewsAllClub, data?.permissions, data?.globalPermissions, clubPerms],
+  );
+
+  const canViewModule = React.useCallback(
+    (key: ModuleKey) => levelCanRead(getModuleAccess(key)),
+    [getModuleAccess],
+  );
+  const canEditModule = React.useCallback(
+    (key: ModuleKey) => levelCanEdit(getModuleAccess(key)),
+    [getModuleAccess],
   );
 
 
@@ -135,16 +148,17 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
   // modo que la navegación nunca oculta elementos con display:none — los que no
   // pasan el predicado simplemente no se incluyen en el array renderizado.
   const isModuleAccessible = React.useCallback(
-    (key: ModuleKey) => {
-      if (data?.isSuperAdmin) return true;
-      return getModuleAccess(key) !== "none";
-    },
-    [data?.isSuperAdmin, getModuleAccess],
+    (key: ModuleKey) => canViewModule(key),
+    [canViewModule],
   );
+  // La sección Admin exige EDICIÓN real en `usuarios` (o super admin):
+  // leer documentos u otros módulos nunca abre Admin.
+  const canAccessAdmin = !!data?.isSuperAdmin || canEditModule("usuarios");
   const visiblePages = React.useMemo(
-    () => resolvePagesForUser(effectiveBaseRole, isModuleAccessible),
-    [effectiveBaseRole, isModuleAccessible],
+    () => resolvePagesForUser(effectiveBaseRole, isModuleAccessible, { canAccessAdmin }),
+    [effectiveBaseRole, isModuleAccessible, canAccessAdmin],
   );
+
 
   if (isLoading || !data) {
     return (
