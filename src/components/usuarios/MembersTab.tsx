@@ -200,6 +200,43 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
     qc.invalidateQueries({ queryKey: ["user-memberships", selectedUserId] });
   }
 
+  async function handleDeactivate(m: ProfileRow) {
+    if (!confirm(`¿Dar de baja a ${displayName(m)}? Pierde el acceso pero se conserva todo su historial.`)) return;
+    try {
+      await deactivateFn({ data: { user_id: m.id } });
+      toast.success("Miembro dado de baja");
+      qc.invalidateQueries({ queryKey: ["club-members", clubId] });
+      qc.invalidateQueries({ queryKey: ["roster"] });
+    } catch (e: any) {
+      toast.error(e?.message ?? "No se pudo dar de baja");
+    }
+  }
+
+  async function handleReactivate(m: ProfileRow) {
+    try {
+      await reactivateFn({ data: { user_id: m.id } });
+      toast.success("Miembro reactivado");
+      qc.invalidateQueries({ queryKey: ["club-members", clubId] });
+    } catch (e: any) {
+      toast.error(e?.message ?? "No se pudo reactivar");
+    }
+  }
+
+  async function handleHardDelete(m: ProfileRow) {
+    const name = displayName(m);
+    const typed = prompt(`Esto elimina la cuenta de forma permanente.\nEscribe "${name}" para confirmar:`);
+    if (typed?.trim() !== name) return;
+    try {
+      await hardDeleteFn({ data: { user_id: m.id } });
+      toast.success("Miembro eliminado");
+      setSelectedUserId(null);
+      qc.invalidateQueries({ queryKey: ["club-members", clubId] });
+      qc.invalidateQueries({ queryKey: ["roster"] });
+    } catch (e: any) {
+      toast.error(e?.message ?? "No se pudo eliminar");
+    }
+  }
+
   if (membersQ.isLoading) return <LoadingState />;
 
   return (
