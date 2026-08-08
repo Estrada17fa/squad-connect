@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, ShieldCheck, Trash2, Pencil } from "lucide-react";
 import { MembersTab } from "@/components/usuarios/MembersTab";
-import { CategoriesTab } from "@/components/usuarios/CategoriesTab";
+
 
 
 import { toast } from "sonner";
@@ -86,8 +86,6 @@ function UsuariosPage() {
         <TabsList className="glass w-full sm:w-auto">
           <TabsTrigger value="roles" className="flex-1 sm:flex-none">Roles</TabsTrigger>
           <TabsTrigger value="miembros" className="flex-1 sm:flex-none">Miembros</TabsTrigger>
-          <TabsTrigger value="categorias" className="flex-1 sm:flex-none">Categorías</TabsTrigger>
-          
         </TabsList>
         <TabsContent value="roles">
           <RolesTab clubId={profile?.club_id ?? null} canEdit={canEdit} />
@@ -99,13 +97,7 @@ function UsuariosPage() {
             <EmptyState title="Sin club" message="Tu perfil aún no está asociado a un club." />
           )}
         </TabsContent>
-        <TabsContent value="categorias">
-          {profile?.club_id ? (
-            <CategoriesTab clubId={profile.club_id} canEdit={canEdit} />
-          ) : (
-            <EmptyState title="Sin club" message="Tu perfil aún no está asociado a un club." />
-          )}
-        </TabsContent>
+
       </Tabs>
     </div>
   );
