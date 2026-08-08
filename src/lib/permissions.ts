@@ -1,4 +1,4 @@
-import { MODULE_MAP, type ModuleKey } from "./modules";
+import { MODULES, MODULE_MAP, type ModuleKey } from "./modules";
 
 /**
  * Escala nueva de permisos (tipo `permission_level` en la base).
@@ -45,11 +45,17 @@ export const LEVEL_LABEL: Record<PermissionLevel, string> = {
   editor_global: "Editor global",
 };
 
-/** Módulos con datos personales: 'vista_jugador' significa "solo lo mío". */
-export const PERSONAL_MODULES: ModuleKey[] = ["salud", "desarrollo", "nutricion"];
+/**
+ * Módulos donde 'vista_jugador' significa "solo lo mío" (el resto muestra el
+ * contenido de su categoría en modo lectura). Se deriva de la definición del
+ * módulo para no mantener dos listas.
+ */
+export const PERSONAL_MODULES: ModuleKey[] = MODULES.filter(
+  (m) => m.playerView === "mine",
+).map((m) => m.key);
 
 export function isPersonalModule(key: ModuleKey): boolean {
-  return PERSONAL_MODULES.includes(key);
+  return MODULE_MAP[key]?.playerView === "mine";
 }
 
 export function normalizeLevel(level: unknown): PermissionLevel {
@@ -134,7 +140,8 @@ const HINTS: Record<PermissionLevel, string> = {
 
 /**
  * Niveles que tienen sentido en cada módulo:
- * - 'vista_jugador' solo en módulos con datos personales.
+ * - 'vista_jugador' está disponible SIEMPRE (todos los módulos tienen una
+ *   vista de jugador definida en `playerView`).
  * - En módulos de ámbito club, la distinción categoría/global no aplica:
  *   se ofrecen únicamente los niveles globales.
  */
@@ -142,11 +149,20 @@ export function levelOptionsFor(key: ModuleKey): LevelOption[] {
   const scope = MODULE_MAP[key]?.scope ?? "team";
   const values: PermissionLevel[] =
     scope === "club"
-      ? ["sin_acceso", "lector_global", "editor_global"]
-      : isPersonalModule(key)
-        ? PERMISSION_LEVELS
-        : PERMISSION_LEVELS.filter((l) => l !== "vista_jugador");
-  return values.map((value) => ({ value, label: LEVEL_LABEL[value], hint: HINTS[value] }));
+      ? ["sin_acceso", "vista_jugador", "lector_global", "editor_global"]
+      : PERMISSION_LEVELS;
+  return values.map((value) => ({
+    value,
+    label: LEVEL_LABEL[value],
+    hint: value === "vista_jugador" ? playerViewHint(key) : HINTS[value],
+  }));
+}
+
+/** Texto de ayuda de 'vista_jugador' según lo que muestra el módulo. */
+export function playerViewHint(key: ModuleKey): string {
+  return MODULE_MAP[key]?.playerView === "mine"
+    ? "Solo ve lo suyo (sus registros). Nunca edita."
+    : "Ve el contenido de su categoría en modo lectura. Nunca edita.";
 }
 
 /** Ajusta un nivel guardado a una opción válida del módulo (para el <Select>). */
