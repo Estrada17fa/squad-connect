@@ -92,8 +92,16 @@ export interface ResolvedPage {
 export function resolvePagesForUser(
   baseRole: BaseRole | null,
   accessibleModules: ModuleKey[] | ((key: ModuleKey) => boolean),
+  opts?: {
+    /**
+     * Acceso real a la sección Admin: super admin o EDITOR del módulo
+     * `usuarios`. Nunca basta con leer documentos u otros módulos.
+     */
+    canAccessAdmin?: boolean;
+  },
 ): ResolvedPage[] {
   const role = baseRole ?? "staff";
+
   const roleMap = ROLE_PAGES[role];
 
   // Fuente de verdad única: un predicado `isAccessible(module)` que se aplica
