@@ -1,13 +1,10 @@
 import * as React from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Plus, RotateCcw, Search, Settings2, Sliders, Trash2, User as UserIcon, UserMinus, UserPlus } from "lucide-react";
+import { Pencil, Plus, RotateCcw, Search, Settings2, Trash2, User as UserIcon, UserMinus, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { MODULES, MODULE_MAP, type ModuleKey } from "@/lib/modules";
-import { inferBaseRole, groupModulesByPage, type BaseRole } from "@/lib/rolePages";
-import type { AccessLevel } from "@/hooks/useAccess";
-import { legacyToLevel } from "@/lib/permissions";
+import { inferBaseRole } from "@/lib/rolePages";
 import { EmptyState } from "@/components/squad/EmptyState";
 import { LoadingState } from "@/components/squad/LoadingState";
 import { StandardCard } from "@/components/squad/StandardCard";
@@ -39,17 +36,9 @@ import {
   reactivateClubMember,
 } from "@/lib/members.functions";
 import { useServerFn } from "@tanstack/react-start";
-import { REQUEST_TYPE_MAP, type RequestType } from "@/lib/requestTypes";
-import { useMemberApprovals, useSetApproverOverride } from "@/hooks/useRequestApprovers";
+import { UserAdvancedSettings, type MembershipCtx } from "./UserAdvancedSettings";
 
 
-
-const LEVELS: { value: AccessLevel; label: string }[] = [
-  { value: "none", label: "Sin acceso" },
-  { value: "read", label: "Solo ver" },
-  { value: "editor", label: "Editar" },
-  { value: "approver", label: "Aprobar" },
-];
 
 interface ProfileRow {
   id: string;
@@ -101,12 +90,6 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
   const [createOpen, setCreateOpen] = React.useState(false);
   const [editUserId, setEditUserId] = React.useState<string | null>(null);
   const [statusFilter, setStatusFilter] = React.useState<"activo" | "baja">("activo");
-  const [overrideCtx, setOverrideCtx] = React.useState<{
-    userId: string;
-    teamId: string | null;
-    roleId: string;
-    label: string;
-  } | null>(null);
 
   const deactivateFn = useServerFn(deactivateClubMember);
   const reactivateFn = useServerFn(reactivateClubMember);
@@ -392,21 +375,6 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
                           <Button
                             size="icon"
                             variant="ghost"
-                            title="Personalizar permisos"
-                            onClick={() =>
-                              setOverrideCtx({
-                                userId: selected.id,
-                                teamId: m.team_id,
-                                roleId: m.role_id,
-                                label: `${m.team?.name ?? "Club"} · ${m.role?.name ?? ""}`,
-                              })
-                            }
-                          >
-                            <Sliders className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
                             title="Eliminar membresía"
                             onClick={() => handleRemoveMembership(m)}
                           >
@@ -422,7 +390,17 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
               )}
             </div>
 
-            <MemberApproverSection clubId={clubId} userId={selected.id} canEdit={canEdit} />
+            <UserAdvancedSettings
+              clubId={clubId}
+              userId={selected.id}
+              canEdit={canEdit}
+              memberships={(membershipsQ.data ?? []).map<MembershipCtx>((m) => ({
+                id: m.id,
+                teamId: m.team_id,
+                roleId: m.role_id,
+                label: `${m.team?.name ?? "Todo el club"} · ${m.role?.name ?? ""}`,
+              }))}
+            />
           </div>
 
         ) : (
@@ -442,14 +420,6 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
           teams={teamsQ.data ?? []}
           roles={rolesQ.data ?? []}
           onAdded={() => qc.invalidateQueries({ queryKey: ["user-memberships", selected.id] })}
-        />
-      ) : null}
-
-      {overrideCtx ? (
-        <OverridesDialog
-          ctx={overrideCtx}
-          onClose={() => setOverrideCtx(null)}
-          canEdit={canEdit}
         />
       ) : null}
 
@@ -481,119 +451,6 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
     </div>
   );
 }
-
-function MemberApproverSection({
-  clubId,
-  userId,
-  canEdit,
-}: {
-  clubId: string;
-  userId: string;
-  canEdit: boolean;
-}) {
-  const { rows, isLoading } = useMemberApprovals(clubId, userId);
-  const setOverride = useSetApproverOverride(clubId);
-
-  function apply(type: RequestType, mode: "grant" | "revoke" | null, msg: string) {
-    setOverride.mutate(
-      { userId, type, mode },
-      {
-        onSuccess: () => toast.success(msg),
-        onError: (e: any) => toast.error(e.message ?? "No se pudo actualizar"),
-      },
-    );
-  }
-
-  if (!canEdit) return null;
-
-  return (
-    <div className="space-y-2">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h4 className="text-xs uppercase tracking-wide text-muted-foreground">
-          Aprobador de solicitudes
-        </h4>
-        <p className="text-[11px] text-muted-foreground">
-          El rol define el default; aquí ajustas solo a esta persona.
-        </p>
-      </div>
-      {isLoading ? (
-        <LoadingState />
-      ) : (
-        <div className="grid gap-2">
-          {rows.map((r) => {
-            const def = REQUEST_TYPE_MAP[r.type];
-            const TIcon = def.icon;
-            return (
-              <div
-                key={r.type}
-                className="glass rounded-lg p-3 space-y-2 sm:flex sm:items-center sm:gap-3 sm:space-y-0"
-              >
-                <div className="flex min-w-0 flex-1 items-center gap-3">
-                  <span
-                    className={cn(
-                      "flex h-8 w-8 shrink-0 items-center justify-center rounded-md",
-                      r.effective ? "bg-primary/15 text-primary" : "bg-white/5 text-muted-foreground",
-                    )}
-                  >
-                    <TIcon className="h-4 w-4" />
-                  </span>
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="truncate text-sm font-medium">{def.label}</p>
-                      {r.override ? (
-                        <StatusBadge variant="pending">Ajustado manualmente</StatusBadge>
-                      ) : null}
-                    </div>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {r.override === "grant"
-                        ? "Aprueba (asignado a esta persona)"
-                        : r.override === "revoke"
-                          ? "No aprueba (quitado a esta persona)"
-                          : r.byRole
-                            ? "Aprueba (por su rol)"
-                            : "No aprueba (su rol no lo cubre)"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex shrink-0 gap-2">
-                  {r.override ? (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={setOverride.isPending}
-                      onClick={() => apply(r.type, null, "Se restauró el comportamiento por rol")}
-                    >
-                      Volver al rol
-                    </Button>
-                  ) : r.effective ? (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={setOverride.isPending}
-                      onClick={() => apply(r.type, "revoke", "Se le quitó este tipo")}
-                    >
-                      Quitar a esta persona
-                    </Button>
-                  ) : (
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      disabled={setOverride.isPending}
-                      onClick={() => apply(r.type, "grant", "Se le asignó este tipo")}
-                    >
-                      Dar a esta persona
-                    </Button>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
 
 function AddMembershipDialog({
   open,
@@ -720,262 +577,6 @@ function AddMembershipDialog({
           <Button onClick={handleAdd} disabled={!roleId || !teamId || saving}>
             {saving ? "Añadiendo..." : "Añadir"}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-interface PermRow {
-  module_key: string;
-  access_level: AccessLevel;
-}
-
-function OverridesDialog({
-  ctx,
-  onClose,
-  canEdit,
-}: {
-  ctx: { userId: string; teamId: string | null; roleId: string; label: string };
-  onClose: () => void;
-  canEdit: boolean;
-}) {
-  const qc = useQueryClient();
-  const roleQ = useQuery({
-    queryKey: ["role-info", ctx.roleId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("roles")
-        .select("id, name, base_role")
-        .eq("id", ctx.roleId)
-        .maybeSingle();
-      if (error) throw error;
-      return data as { id: string; name: string; base_role: string | null } | null;
-    },
-  });
-
-  const rolePermsQ = useQuery({
-    queryKey: ["role-perms", ctx.roleId],
-    queryFn: async (): Promise<PermRow[]> => {
-      const { data, error } = await supabase
-        .from("role_permissions")
-        .select("module_key, access_level")
-        .eq("role_id", ctx.roleId);
-      if (error) throw error;
-      return (data ?? []) as any;
-    },
-  });
-
-  const overridesQ = useQuery({
-    queryKey: ["user-overrides", ctx.userId, ctx.teamId ?? "club"],
-    queryFn: async (): Promise<PermRow[]> => {
-      let q = supabase
-        .from("user_permission_overrides")
-        .select("module_key, access_level")
-        .eq("user_id", ctx.userId);
-      q = ctx.teamId ? q.eq("team_id", ctx.teamId) : q.is("team_id", null);
-      const { data, error } = await q;
-      if (error) throw error;
-      return (data ?? []) as any;
-    },
-  });
-
-  const roleMap = React.useMemo(() => {
-    const m: Record<string, AccessLevel> = {};
-    for (const p of rolePermsQ.data ?? []) m[p.module_key] = p.access_level;
-    return m;
-  }, [rolePermsQ.data]);
-  const overrideMap = React.useMemo(() => {
-    const m: Record<string, AccessLevel> = {};
-    for (const p of overridesQ.data ?? []) m[p.module_key] = p.access_level;
-    return m;
-  }, [overridesQ.data]);
-
-  const effectiveLevel = React.useCallback(
-    (mk: string): AccessLevel => overrideMap[mk] ?? roleMap[mk] ?? "none",
-    [overrideMap, roleMap],
-  );
-
-  const pageGroups = React.useMemo(
-    () => groupModulesByPage(roleQ.data?.base_role as BaseRole | null, MODULES.map((m) => m.key)),
-    [roleQ.data?.base_role],
-  );
-
-  async function setOverride(moduleKey: string, level: AccessLevel) {
-    const existing = (overridesQ.data ?? []).find((o) => o.module_key === moduleKey);
-    let error;
-    if (existing) {
-      let q = supabase
-        .from("user_permission_overrides")
-        .update({ access_level: level, level: legacyToLevel(level) })
-        .eq("user_id", ctx.userId)
-        .eq("module_key", moduleKey);
-      q = ctx.teamId ? q.eq("team_id", ctx.teamId) : q.is("team_id", null);
-      ({ error } = await q);
-    } else {
-      ({ error } = await supabase.from("user_permission_overrides").insert({
-        user_id: ctx.userId,
-        team_id: ctx.teamId,
-        module_key: moduleKey,
-        access_level: level,
-        level: legacyToLevel(level),
-      }));
-    }
-    return error;
-  }
-
-  async function resetOverride(moduleKey: string) {
-    let q = supabase
-      .from("user_permission_overrides")
-      .delete()
-      .eq("user_id", ctx.userId)
-      .eq("module_key", moduleKey);
-    q = ctx.teamId ? q.eq("team_id", ctx.teamId) : q.is("team_id", null);
-    return (await q).error;
-  }
-
-  async function handleSetOne(moduleKey: string, level: AccessLevel) {
-    const err = await setOverride(moduleKey, level);
-    if (err) return toast.error(err.message);
-    toast.success("Permiso actualizado");
-    qc.invalidateQueries({ queryKey: ["user-overrides", ctx.userId, ctx.teamId ?? "club"] });
-  }
-
-  async function handleResetOne(moduleKey: string) {
-    const err = await resetOverride(moduleKey);
-    if (err) return toast.error(err.message);
-    toast.success("Restablecido al rol");
-    qc.invalidateQueries({ queryKey: ["user-overrides", ctx.userId, ctx.teamId ?? "club"] });
-  }
-
-  async function togglePage(modules: ModuleKey[], on: boolean) {
-    const errors: string[] = [];
-    for (const mk of modules) {
-      if (on) {
-        if (effectiveLevel(mk) === "none") {
-          const err = await setOverride(mk, "read");
-          if (err) errors.push(err.message);
-        }
-      } else {
-        if (effectiveLevel(mk) !== "none") {
-          const err = await setOverride(mk, "none");
-          if (err) errors.push(err.message);
-        }
-      }
-    }
-    qc.invalidateQueries({ queryKey: ["user-overrides", ctx.userId, ctx.teamId ?? "club"] });
-    if (errors.length) toast.error(errors[0]);
-    else toast.success(on ? "Página activada" : "Página desactivada");
-  }
-
-  async function handleResetPage(modules: ModuleKey[]) {
-    for (const mk of modules) await resetOverride(mk);
-    qc.invalidateQueries({ queryKey: ["user-overrides", ctx.userId, ctx.teamId ?? "club"] });
-    toast.success("Página restablecida al rol");
-  }
-
-  const loading = rolePermsQ.isLoading || overridesQ.isLoading || roleQ.isLoading;
-
-  return (
-    <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Permisos personalizados</DialogTitle>
-          <DialogDescription>{ctx.label} — los cambios solo afectan a este usuario en este contexto.</DialogDescription>
-        </DialogHeader>
-        {loading ? (
-          <LoadingState />
-        ) : (
-          <div className="max-h-[60vh] overflow-y-auto space-y-3">
-            {pageGroups.map(({ page, modules }) => {
-              const PageIcon = page.icon;
-              const activeCount = modules.filter((mk) => effectiveLevel(mk) !== "none").length;
-              const isActive = activeCount > 0;
-              const hasOverride = modules.some((mk) => overrideMap[mk] !== undefined);
-              return (
-                <div key={page.key + page.label} className="glass rounded-lg overflow-hidden">
-                  <div className="flex items-center gap-3 px-3 py-2.5">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white/5">
-                      <PageIcon className="h-4 w-4" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold">{page.label}</p>
-                      <p className="truncate text-[11px] text-muted-foreground">
-                        {isActive ? `${activeCount} de ${modules.length} activos` : "Página desactivada"}
-                      </p>
-                    </div>
-                    {canEdit && hasOverride ? (
-                      <Button size="sm" variant="ghost" onClick={() => handleResetPage(modules)}>
-                        Restablecer
-                      </Button>
-                    ) : null}
-                    <Switch
-                      checked={isActive}
-                      disabled={!canEdit}
-                      onCheckedChange={(on) => togglePage(modules, on)}
-                    />
-                  </div>
-                  {isActive ? (
-                    <div className="divide-y divide-border/50 border-t border-border/50 px-3">
-                      {modules.map((mk) => {
-                        const m = MODULE_MAP[mk];
-                        if (!m) return null;
-                        const Icon = m.icon;
-                        const roleLvl: AccessLevel = roleMap[mk] ?? "none";
-                        const overrideLvl: AccessLevel | undefined = overrideMap[mk];
-                        const effective: AccessLevel = overrideLvl ?? roleLvl;
-                        return (
-                          <div
-                            key={mk}
-                            className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 py-2.5 sm:grid-cols-[auto_minmax(0,1fr)_auto_auto]"
-                          >
-                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white/5">
-                              <Icon className="h-4 w-4" />
-                            </div>
-                            <div className="min-w-0">
-                              <p className="truncate text-sm font-medium">{m.label}</p>
-                              <p className="truncate text-xs text-muted-foreground">
-                                Rol: {LEVELS.find((l) => l.value === roleLvl)?.label}
-                                {overrideLvl ? " · Personalizado" : ""}
-                              </p>
-                            </div>
-                            <div className="col-span-2 flex items-center gap-2 sm:col-span-1">
-                              <Select
-                                value={effective}
-                                onValueChange={(v) => handleSetOne(mk, v as AccessLevel)}
-                                disabled={!canEdit}
-                              >
-                                <SelectTrigger
-                                  className={cn("flex-1 sm:w-[140px] sm:flex-none", overrideLvl && "border-primary/60")}
-                                >
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {LEVELS.map((l) => (
-                                    <SelectItem key={l.value} value={l.value}>
-                                      {l.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              {canEdit && overrideLvl ? (
-                                <Button size="sm" variant="ghost" onClick={() => handleResetOne(mk)}>
-                                  Restablecer
-                                </Button>
-                              ) : null}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : null}
-                </div>
-              );
-            })}
-          </div>
-        )}
-        <DialogFooter>
-          <Button onClick={onClose}>Cerrar</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
