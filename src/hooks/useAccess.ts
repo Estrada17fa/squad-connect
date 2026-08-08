@@ -92,13 +92,13 @@ export function useAccess(userId: string) {
         supabase
           .from("team_memberships")
           .select(
-            "team_id, role_id, team:teams(name, category), role:roles(name, base_role, role_permissions(module_key, access_level))",
+            "team_id, role_id, team:teams(name, category), role:roles(name, base_role, role_permissions(module_key, access_level, level))",
           )
           .eq("user_id", userId),
         supabase.from("super_admins").select("id").eq("user_id", userId).maybeSingle(),
         supabase
           .from("user_permission_overrides")
-          .select("team_id, module_key, access_level")
+          .select("team_id, module_key, access_level, level")
           .eq("user_id", userId),
       ]);
 
@@ -140,37 +140,37 @@ export function useAccess(userId: string) {
 
 
       // Permisos por membresía (por team_id o 'club' si team_id NULL)
-      const byMembership: Record<string, Record<string, AccessLevel>> = {};
+      const byMembership: Record<string, Record<string, PermissionLevel>> = {};
       for (const m of memberships as any[]) {
         const key = m.team_id ?? TEAM_CLUB_KEY;
         byMembership[key] ??= {};
         const perms = m.role?.role_permissions ?? [];
-        for (const p of perms) bumpLevel(byMembership[key], p.module_key, p.access_level as AccessLevel);
+        for (const p of perms) bumpLevel(byMembership[key], p.module_key, normalizeLevel(p.level));
       }
 
       // Overrides
       const overrides = overridesRes.data ?? [];
-      const overridesByTeam: Record<string, Record<string, AccessLevel>> = {};
+      const overridesByTeam: Record<string, Record<string, PermissionLevel>> = {};
       for (const o of overrides as any[]) {
         const key = o.team_id ?? TEAM_CLUB_KEY;
         overridesByTeam[key] ??= {};
-        overridesByTeam[key][o.module_key] = o.access_level as AccessLevel;
+        overridesByTeam[key][o.module_key] = normalizeLevel(o.level);
       }
 
       // Permisos efectivos por equipo: club-wide (membresías con team_id NULL) siempre se suman a cada equipo
       const teamIds = Array.from(new Set(memberships.map((m: any) => m.team_id).filter(Boolean))) as string[];
-      const permissionsByTeam: Record<string, Record<string, AccessLevel>> = {};
+      const permissionsByTeam: Record<string, Record<string, PermissionLevel>> = {};
 
       const clubBase = byMembership[TEAM_CLUB_KEY] ?? {};
       const clubOverride = overridesByTeam[TEAM_CLUB_KEY] ?? {};
       // Contexto 'club' (sin equipo o módulos scope=club)
       {
-        const merged: Record<string, AccessLevel> = { ...clubBase };
+        const merged: Record<string, PermissionLevel> = { ...clubBase };
         for (const [k, v] of Object.entries(clubOverride)) merged[k] = v;
         permissionsByTeam[TEAM_CLUB_KEY] = merged;
       }
       for (const tid of teamIds) {
-        const merged: Record<string, AccessLevel> = { ...clubBase };
+        const merged: Record<string, PermissionLevel> = { ...clubBase };
         for (const [k, v] of Object.entries(byMembership[tid] ?? {})) bumpLevel(merged, k, v);
         // Overrides club-wide primero, luego los específicos del equipo pisan
         for (const [k, v] of Object.entries(clubOverride)) merged[k] = v;
@@ -179,9 +179,13 @@ export function useAccess(userId: string) {
       }
 
       // Unión (para bottom nav): mejor nivel entre todos los contextos
-      const permissions: Record<string, AccessLevel> = {};
+      const permissions: Record<string, PermissionLevel> = {};
+      const globalPermissions: Record<string, PermissionLevel> = {};
       for (const map of Object.values(permissionsByTeam)) {
-        for (const [k, v] of Object.entries(map)) bumpLevel(permissions, k, v);
+        for (const [k, v] of Object.entries(map)) {
+          bumpLevel(permissions, k, v);
+          if (isGlobalLevel(v)) bumpLevel(globalPermissions, k, v);
+        }
       }
 
       return {
@@ -198,6 +202,7 @@ export function useAccess(userId: string) {
 
         permissions,
         permissionsByTeam,
+        globalPermissions,
         isSuperAdmin: !!superRes.data,
         isPlayerOnly:
           !superRes.data &&
@@ -208,7 +213,7 @@ export function useAccess(userId: string) {
   });
 }
 
-export function hasAccess(perms: Record<string, AccessLevel>, key: ModuleKey): boolean {
-  const lvl = perms[key];
-  return !!lvl && lvl !== "none";
+export function hasAccess(perms: Record<string, PermissionLevel>, key: ModuleKey): boolean {
+  return canRead(perms[key]);
 }
+
