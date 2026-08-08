@@ -181,6 +181,13 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
   );
 }
 
+/** Aplica las preferencias del club (zona horaria y formato de fecha) a los formateadores. */
+function ClubPrefsSync() {
+  useClubPrefs();
+  return null;
+}
+
+
 function Header({
   clubName,
   userName,
