@@ -79,7 +79,12 @@ function DesarrolloPage() {
   const { profile, user, teamOptions, isSuperAdmin, accessibleModules } = useApp();
   const clubId = profile?.club_id ?? null;
   const canAccess = isSuperAdmin || accessibleModules.includes("desarrollo");
-  const { canEditTeam, canReadTeam } = useTeamAccess("desarrollo");
+  const { canEditTeam, canReadTeam, onlyOwnRows } = useTeamAccess("desarrollo");
+  // 'vista_jugador' en un módulo personal: solo se ven los registros propios.
+  const seesOwnOnly = React.useCallback(
+    (teamId: string, playerUserId: string) => !onlyOwnRows(teamId) || playerUserId === user.id,
+    [onlyOwnRows, user.id],
+  );
   const editableTeams = useEditableTeams("desarrollo");
 
   const [view, setView] = React.useState<SubView>("resumen");
@@ -109,8 +114,8 @@ function DesarrolloPage() {
   const routinesQ = useRoutines(canAccess ? clubId : null);
 
   const roster = React.useMemo(
-    () => (rosterQ.data ?? []).filter((p) => canReadTeam(p.teamId)),
-    [rosterQ.data, canReadTeam],
+    () => (rosterQ.data ?? []).filter((p) => canReadTeam(p.teamId) && seesOwnOnly(p.teamId, p.userId)),
+    [rosterQ.data, canReadTeam, seesOwnOnly],
   );
   const editablePlayers = React.useMemo(
     () => roster.filter((p) => canEditTeam(p.teamId)),
@@ -124,11 +129,13 @@ function DesarrolloPage() {
 
   const filteredRoster = roster.filter((p) => matchTeam(p.teamId) && byName(p.fullName));
   const feedback = (feedbackQ.data ?? []).filter(
-    (f) => matchTeam(f.team_id) && byName(f.player?.full_name),
+    (f) => matchTeam(f.team_id) && seesOwnOnly(f.team_id, f.player_user_id) && byName(f.player?.full_name),
   );
-  const goals = (goalsQ.data ?? []).filter((g) => matchTeam(g.team_id) && byName(g.player?.full_name));
+  const goals = (goalsQ.data ?? []).filter(
+    (g) => matchTeam(g.team_id) && seesOwnOnly(g.team_id, g.player_user_id) && byName(g.player?.full_name),
+  );
   const assessments = (assessmentsQ.data ?? []).filter(
-    (a) => matchTeam(a.team_id) && byName(a.player?.full_name),
+    (a) => matchTeam(a.team_id) && seesOwnOnly(a.team_id, a.player_user_id) && byName(a.player?.full_name),
   );
   const routines = (routinesQ.data ?? []).filter((r) => matchTeam(r.team_id) && (!q || byName(r.name)));
 

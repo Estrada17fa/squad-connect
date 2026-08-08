@@ -54,6 +54,7 @@ import { useRequestHistory, type RequestRow } from "@/hooks/useRequests";
 import { useRequestTypeApprovers } from "@/hooks/useRequestApprovers";
 
 import { cn } from "@/lib/utils";
+import { canEdit as levelCanEdit } from "@/lib/permissions";
 
 interface Props {
   open: boolean;
@@ -107,7 +108,7 @@ export function RequestDetailSheet({
   // El préstamo es una acción de Inventario: manda el permiso del módulo 'inventario'.
   const { permissions, isSuperAdmin } = useApp();
   const invLevel = permissions.inventario;
-  const canCreateLoan = isSuperAdmin || invLevel === "editor" || invLevel === "approver";
+  const canCreateLoan = isSuperAdmin || levelCanEdit(invLevel);
 
   const isMaterial = request?.type === "material";
   const loanQ = useRequestLoan(open && request && isMaterial ? request.id : null);
@@ -117,7 +118,7 @@ export function RequestDetailSheet({
   const isFinancial =
     request?.type === "compra" || request?.type === "pago_proveedor" || request?.type === "reembolso";
   const expLevel = permissions.compras_facturas;
-  const canCreateExpense = isSuperAdmin || expLevel === "editor" || expLevel === "approver";
+  const canCreateExpense = isSuperAdmin || levelCanEdit(expLevel);
   const expenseQ = useRequestExpense(open && request && isFinancial ? request.id : null);
   const linkedExpense = expenseQ.data ?? null;
 

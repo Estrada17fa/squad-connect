@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { MODULES, MODULE_MAP, type ModuleKey } from "@/lib/modules";
 import { inferBaseRole, groupModulesByPage, type BaseRole } from "@/lib/rolePages";
 import type { AccessLevel } from "@/hooks/useAccess";
+import { legacyToLevel } from "@/lib/permissions";
 import { EmptyState } from "@/components/squad/EmptyState";
 import { LoadingState } from "@/components/squad/LoadingState";
 import { StandardCard } from "@/components/squad/StandardCard";
@@ -694,7 +695,7 @@ function OverridesDialog({
     if (existing) {
       let q = supabase
         .from("user_permission_overrides")
-        .update({ access_level: level })
+        .update({ access_level: level, level: legacyToLevel(level) })
         .eq("user_id", ctx.userId)
         .eq("module_key", moduleKey);
       q = ctx.teamId ? q.eq("team_id", ctx.teamId) : q.is("team_id", null);
@@ -705,6 +706,7 @@ function OverridesDialog({
         team_id: ctx.teamId,
         module_key: moduleKey,
         access_level: level,
+        level: legacyToLevel(level),
       }));
     }
     return error;

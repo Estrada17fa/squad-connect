@@ -41,6 +41,7 @@ import type { AccessLevel } from "@/hooks/useAccess";
 import { REQUEST_TYPES, type RequestType } from "@/lib/requestTypes";
 import { useRoleApprovals, useSaveRoleApprovals } from "@/hooks/useRequestApprovers";
 import { Checkbox } from "@/components/ui/checkbox";
+import { canEdit as levelCanEdit, legacyToLevel, normalizeLevel, type PermissionLevel } from "@/lib/permissions";
 
 
 export const Route = createFileRoute("/_authenticated/m/usuarios")({
@@ -64,6 +65,7 @@ interface PermRow {
   role_id: string;
   module_key: string;
   access_level: AccessLevel;
+  level: PermissionLevel | null;
 }
 
 const LEVELS: { value: AccessLevel; label: string }[] = [
@@ -75,7 +77,7 @@ const LEVELS: { value: AccessLevel; label: string }[] = [
 
 function UsuariosPage() {
   const { user, profile, isSuperAdmin, permissions } = useApp();
-  const canEdit = isSuperAdmin || permissions["usuarios"] === "editor" || permissions["usuarios"] === "approver";
+  const canEdit = isSuperAdmin || levelCanEdit(permissions["usuarios"]);
 
   return (
     <div className="space-y-6">
@@ -133,7 +135,7 @@ function RolesTab({ clubId, canEdit }: { clubId: string | null; canEdit: boolean
       if (roleIds.length === 0) return [];
       const { data, error } = await supabase
         .from("role_permissions")
-        .select("role_id, module_key, access_level")
+        .select("role_id, module_key, access_level, level")
         .in("role_id", roleIds);
       if (error) throw error;
       return (data ?? []) as PermRow[];
@@ -287,6 +289,14 @@ function PermissionsMatrix({
     return map;
   }, [perms]);
 
+  // Nivel nuevo actual por módulo: si el admin no cambia la opción vieja,
+  // conservamos el nivel fino (p. ej. editor_global) tal cual está guardado.
+  const currentLevels = React.useMemo(() => {
+    const map: Record<string, PermissionLevel> = {};
+    for (const p of perms) map[p.module_key] = normalizeLevel(p.level);
+    return map;
+  }, [perms]);
+
   const initialApprovals = React.useMemo(
     () => [...approvalTypes].sort().join(","),
     [approvalTypes],
@@ -317,6 +327,10 @@ function PermissionsMatrix({
         role_id: role.id,
         module_key: m.key,
         access_level: draft[m.key],
+        level:
+          draft[m.key] === initial[m.key]
+            ? (currentLevels[m.key] ?? legacyToLevel(draft[m.key]))
+            : legacyToLevel(draft[m.key]),
       }));
       const { error } = await supabase
         .from("role_permissions")

@@ -5,7 +5,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import { prefetchModule } from "@/lib/prefetch";
 import { ChevronDown, LogOut, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAccess, hasAccess, type TeamOption, type AccessLevel } from "@/hooks/useAccess";
+import { useAccess, hasAccess, type TeamOption } from "@/hooks/useAccess";
+import {
+  canEdit as levelCanEdit,
+  canRead as levelCanRead,
+  maxLevel,
+  type PermissionLevel,
+} from "@/lib/permissions";
+
 import { MODULES, MODULE_MAP, moduleFromPath, type ModuleKey } from "@/lib/modules";
 import { resolvePagesForUser, inferBaseRole, type BaseRole, type ResolvedPage } from "@/lib/rolePages";
 import { LoadingState } from "./LoadingState";
@@ -27,15 +34,22 @@ interface AppCtx {
   user: { id: string };
   accessibleModules: ModuleKey[];
   /** Unión (mejor nivel) — úsalo solo para navegación global. */
-  permissions: Record<string, AccessLevel>;
+  permissions: Record<string, PermissionLevel>;
   /** Permisos efectivos (unión de membresías). */
-  activePermissions: Record<string, AccessLevel>;
+  activePermissions: Record<string, PermissionLevel>;
   /** Devuelve el nivel efectivo para un módulo específico según su scope. */
-  getModuleAccess: (key: ModuleKey) => AccessLevel;
+  getModuleAccess: (key: ModuleKey) => PermissionLevel;
+  /** ¿Puede ver el módulo en cualquier contexto? */
+  canViewModule: (key: ModuleKey) => boolean;
+  /** ¿Puede editar el módulo en algún contexto? */
+  canEditModule: (key: ModuleKey) => boolean;
   /** Equipos a los que el usuario tiene acceso (para filtros y selectores). */
   teamOptions: TeamOption[];
   /** Permisos efectivos por equipo (clave 'club' = ámbito club). */
-  permissionsByTeam: Record<string, Record<string, AccessLevel>>;
+  permissionsByTeam: Record<string, Record<string, PermissionLevel>>;
+  /** Niveles globales (aplican a cualquier equipo del club). */
+  globalPermissions: Record<string, PermissionLevel>;
+
   clubName: string | null;
   isSuperAdmin: boolean;
   /** true si el usuario ve todo el club (no-jugadores + super admin). */
@@ -85,18 +99,31 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
   const clubPerms = data?.permissionsByTeam?.["club"] ?? {};
   const viewsAllClub = !!(data?.isSuperAdmin || (data && !data.isPlayerOnly));
   // Sin equipo activo: los permisos efectivos son la unión de todas las membresías.
-  const activePermissions = React.useMemo<Record<string, AccessLevel>>(
+  const activePermissions = React.useMemo<Record<string, PermissionLevel>>(
     () => data?.permissions ?? {},
     [data?.permissions],
   );
 
+  // Equivalente cliente de max_permission_any_team: el mejor nivel del usuario
+  // en cualquier equipo (los módulos de ámbito club usan el contexto 'club').
   const getModuleAccess = React.useCallback(
-    (key: ModuleKey): AccessLevel => {
+    (key: ModuleKey): PermissionLevel => {
+      if (data?.isSuperAdmin) return "editor_global";
       const scope = MODULE_MAP[key].scope;
-      if (scope === "club" && !viewsAllClub) return clubPerms[key] ?? "none";
-      return data?.permissions?.[key] ?? "none";
+      const globalLvl = data?.globalPermissions?.[key];
+      if (scope === "club" && !viewsAllClub) return maxLevel(clubPerms[key], globalLvl);
+      return maxLevel(data?.permissions?.[key], globalLvl);
     },
-    [viewsAllClub, data?.permissions, clubPerms],
+    [data?.isSuperAdmin, viewsAllClub, data?.permissions, data?.globalPermissions, clubPerms],
+  );
+
+  const canViewModule = React.useCallback(
+    (key: ModuleKey) => levelCanRead(getModuleAccess(key)),
+    [getModuleAccess],
+  );
+  const canEditModule = React.useCallback(
+    (key: ModuleKey) => levelCanEdit(getModuleAccess(key)),
+    [getModuleAccess],
   );
 
 
@@ -121,16 +148,17 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
   // modo que la navegación nunca oculta elementos con display:none — los que no
   // pasan el predicado simplemente no se incluyen en el array renderizado.
   const isModuleAccessible = React.useCallback(
-    (key: ModuleKey) => {
-      if (data?.isSuperAdmin) return true;
-      return getModuleAccess(key) !== "none";
-    },
-    [data?.isSuperAdmin, getModuleAccess],
+    (key: ModuleKey) => canViewModule(key),
+    [canViewModule],
   );
+  // La sección Admin exige EDICIÓN real en `usuarios` (o super admin):
+  // leer documentos u otros módulos nunca abre Admin.
+  const canAccessAdmin = !!data?.isSuperAdmin || canEditModule("usuarios");
   const visiblePages = React.useMemo(
-    () => resolvePagesForUser(effectiveBaseRole, isModuleAccessible),
-    [effectiveBaseRole, isModuleAccessible],
+    () => resolvePagesForUser(effectiveBaseRole, isModuleAccessible, { canAccessAdmin }),
+    [effectiveBaseRole, isModuleAccessible, canAccessAdmin],
   );
+
 
   if (isLoading || !data) {
     return (
@@ -147,8 +175,12 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
     permissions: data.permissions,
     activePermissions,
     getModuleAccess,
+    canViewModule,
+    canEditModule,
     teamOptions,
     permissionsByTeam: data.permissionsByTeam,
+    globalPermissions: data.globalPermissions,
+
     clubName: data.clubName,
     isSuperAdmin: data.isSuperAdmin,
     viewsAllClub,

@@ -92,8 +92,16 @@ export interface ResolvedPage {
 export function resolvePagesForUser(
   baseRole: BaseRole | null,
   accessibleModules: ModuleKey[] | ((key: ModuleKey) => boolean),
+  opts?: {
+    /**
+     * Acceso real a la sección Admin: super admin o EDITOR del módulo
+     * `usuarios`. Nunca basta con leer documentos u otros módulos.
+     */
+    canAccessAdmin?: boolean;
+  },
 ): ResolvedPage[] {
   const role = baseRole ?? "staff";
+
   const roleMap = ROLE_PAGES[role];
 
   // Fuente de verdad única: un predicado `isAccessible(module)` que se aplica
@@ -133,9 +141,11 @@ export function resolvePagesForUser(
   for (const p of PAGES) {
     if (p.key === "home") { out.push({ page: p, modules: [] }); continue; }
     if (p.key === "admin") {
-      if (role === "admin" && perPage.admin.length > 0) out.push({ page: p, modules: perPage.admin });
+      const canAdmin = opts?.canAccessAdmin ?? role === "admin";
+      if (canAdmin && perPage.admin.length > 0) out.push({ page: p, modules: perPage.admin });
       continue;
     }
+
     if (p.key === "coordinacion" && role === "jugador") {
       if (perPage.coordinacion.length > 0) {
         out.push({

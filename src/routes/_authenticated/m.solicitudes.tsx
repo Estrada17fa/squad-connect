@@ -29,6 +29,7 @@ import { RequestFormDialog } from "@/components/solicitudes/RequestFormDialog";
 import { RequestTypePicker } from "@/components/solicitudes/RequestTypePicker";
 import { RequestDetailSheet } from "@/components/solicitudes/RequestDetailSheet";
 import { cn } from "@/lib/utils";
+import { canEdit as levelCanEdit, canRead as levelCanRead } from "@/lib/permissions";
 
 export const Route = createFileRoute("/_authenticated/m/solicitudes")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -50,14 +51,14 @@ function SolicitudesPage() {
   const clubId = profile?.club_id ?? null;
 
   const level = getModuleAccess("solicitudes");
-  const canManage = isSuperAdmin || level === "editor" || level === "approver";
+  const canManage = isSuperAdmin || levelCanEdit(level);
   const myApproverTypes = useMyApproverTypes(clubId, user.id, isSuperAdmin);
   const isApproverOf = React.useCallback(
     (type: RequestType) => myApproverTypes.has(type),
     [myApproverTypes],
   );
   const approvesSomething = REQUEST_TYPES.some((t) => isApproverOf(t.key));
-  const canAccess = isSuperAdmin || level !== "none" || approvesSomething;
+  const canAccess = isSuperAdmin || levelCanRead(level) || approvesSomething;
   const canSeeAll = canManage || approvesSomething;
 
   const isPlayer = activeBaseRole === "jugador" && !isSuperAdmin;

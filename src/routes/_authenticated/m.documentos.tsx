@@ -21,6 +21,7 @@ import {
 import { DocumentFormDialog } from "@/components/documentos/DocumentFormDialog";
 import { DocumentDetailSheet } from "@/components/documentos/DocumentDetailSheet";
 import { cn } from "@/lib/utils";
+import { canEdit as levelCanEdit, canRead as levelCanRead } from "@/lib/permissions";
 
 export const Route = createFileRoute("/_authenticated/m/documentos")({
   head: () => ({
@@ -36,8 +37,8 @@ function DocumentosPage() {
   const { profile, getModuleAccess, isSuperAdmin } = useApp();
   const clubId = profile?.club_id ?? null;
   const level = getModuleAccess("documentos");
-  const canRead = isSuperAdmin || level === "read" || level === "editor" || level === "approver";
-  const canEdit = isSuperAdmin || level === "editor" || level === "approver";
+  const canRead = isSuperAdmin || levelCanRead(level);
+  const canEdit = isSuperAdmin || levelCanEdit(level);
 
   const { data, isLoading } = useDocuments({ clubId });
   const [query, setQuery] = React.useState("");

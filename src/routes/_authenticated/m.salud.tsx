@@ -51,7 +51,12 @@ function SaludPage() {
   const { profile, user, teamOptions, isSuperAdmin, accessibleModules } = useApp();
   const clubId = profile?.club_id ?? null;
   const canAccess = isSuperAdmin || accessibleModules.includes("salud");
-  const { canEditTeam, canReadTeam } = useTeamAccess("salud");
+  const { canEditTeam, canReadTeam, onlyOwnRows } = useTeamAccess("salud");
+  // 'vista_jugador' en un módulo personal: solo se ven los registros propios.
+  const seesOwnOnly = React.useCallback(
+    (teamId: string, playerUserId: string) => !onlyOwnRows(teamId) || playerUserId === user.id,
+    [onlyOwnRows, user.id],
+  );
 
   const [view, setView] = React.useState<SubView>("plantel");
   const [teamFilter, setTeamFilter] = React.useState<string | null>(null);
@@ -70,8 +75,8 @@ function SaludPage() {
 
   // Solo equipos donde el usuario tiene algún nivel en 'salud'.
   const roster = React.useMemo(
-    () => (rosterQ.data ?? []).filter((p) => canReadTeam(p.teamId)),
-    [rosterQ.data, canReadTeam],
+    () => (rosterQ.data ?? []).filter((p) => canReadTeam(p.teamId) && seesOwnOnly(p.teamId, p.userId)),
+    [rosterQ.data, canReadTeam, seesOwnOnly],
   );
   const editablePlayers = React.useMemo(
     () => roster.filter((p) => canEditTeam(p.teamId)),
@@ -95,10 +100,10 @@ function SaludPage() {
     (p) => matchTeam(p.teamId) && (!q || (p.fullName ?? "").toLowerCase().includes(q)),
   );
   const filteredCheckups = (checkupsQ.data ?? []).filter(
-    (c) => matchTeam(c.team_id) && (!q || (c.player?.full_name ?? "").toLowerCase().includes(q)),
+    (c) => matchTeam(c.team_id) && seesOwnOnly(c.team_id, c.player_user_id) && (!q || (c.player?.full_name ?? "").toLowerCase().includes(q)),
   );
   const filteredInjuries = injuries.filter(
-    (i) => matchTeam(i.team_id) && (!q || (i.player?.full_name ?? "").toLowerCase().includes(q)),
+    (i) => matchTeam(i.team_id) && seesOwnOnly(i.team_id, i.player_user_id) && (!q || (i.player?.full_name ?? "").toLowerCase().includes(q)),
   );
 
   const alerts = injuries.filter((i) => {

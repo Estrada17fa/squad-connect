@@ -31,6 +31,7 @@ import { ReturnDialog } from "@/components/inventario/ReturnDialog";
 import { LoanDetailSheet } from "@/components/inventario/LoanDetailSheet";
 import { ItemDetailSheet } from "@/components/inventario/ItemDetailSheet";
 import { cn } from "@/lib/utils";
+import { canEdit as levelCanEdit } from "@/lib/permissions";
 
 export const Route = createFileRoute("/_authenticated/m/inventario")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -54,7 +55,7 @@ function InventarioPage() {
   const clubId = profile?.club_id ?? null;
   const canAccess = isSuperAdmin || accessibleModules.includes("inventario");
   const level = permissions.inventario;
-  const canEdit = isSuperAdmin || level === "editor" || level === "approver";
+  const canEdit = isSuperAdmin || levelCanEdit(level);
 
   const [view, setView] = React.useState<SubView>("catalogo");
   const [search, setSearch] = React.useState("");

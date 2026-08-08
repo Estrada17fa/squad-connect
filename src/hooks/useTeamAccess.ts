@@ -1,46 +1,63 @@
 import * as React from "react";
 import { useApp } from "@/components/squad/AppLayout";
 import type { ModuleKey } from "@/lib/modules";
-import type { AccessLevel } from "@/hooks/useAccess";
-
-const EDITOR_LEVELS = new Set<AccessLevel>(["editor", "approver"]);
+import {
+  canEdit as levelCanEdit,
+  canRead as levelCanRead,
+  isPersonalModule,
+  isPlayerView,
+  maxLevel,
+  type PermissionLevel,
+} from "@/lib/permissions";
 
 /**
- * Nivel efectivo de un módulo POR EQUIPO.
+ * Nivel efectivo de un módulo POR EQUIPO, en la escala de 6 niveles.
  *
- * Resolución: override/rol del equipo > permiso club-wide. Super admin siempre
- * 'approver'.
+ * Resolución: nivel global (lector_global / editor_global, que aplica a
+ * cualquier equipo del club) > override/rol del equipo > permiso club-wide.
+ * Super admin siempre 'editor_global'.
  *
- * Sobre 'approver': solo el módulo `solicitudes` le da un uso propio (aprobar
- * o rechazar). En el resto de los módulos ('plantel', 'viajes', 'agenda',
- * 'mes', 'coordinacion_interna', 'documentos', 'inventario',
- * 'compras_facturas', 'usuarios') 'approver' equivale a 'editor': cuenta como
- * acceso de escritura y nada más. Es el comportamiento esperado, no un hueco:
- * la aprobación vive en Solicitudes y desde ahí dispara acciones en Inventario
- * y Compras.
+ * Ya no existe 'approver': aprobar solicitudes = ser editor del módulo
+ * correspondiente.
  */
 export function useTeamAccess(moduleKey: ModuleKey) {
-  const { permissionsByTeam, isSuperAdmin } = useApp();
+  const { permissionsByTeam, globalPermissions, isSuperAdmin } = useApp();
 
   const levelForTeam = React.useCallback(
-    (teamId: string | null | undefined): AccessLevel => {
-      if (isSuperAdmin) return "approver";
+    (teamId: string | null | undefined): PermissionLevel => {
+      if (isSuperAdmin) return "editor_global";
+      const globalLevel = globalPermissions?.[moduleKey];
       const clubLevel = permissionsByTeam?.["club"]?.[moduleKey];
       const teamLevel = teamId ? permissionsByTeam?.[teamId]?.[moduleKey] : undefined;
-      return (teamLevel ?? clubLevel ?? "none") as AccessLevel;
+      return maxLevel(globalLevel, teamLevel ?? clubLevel);
     },
-    [permissionsByTeam, isSuperAdmin, moduleKey],
+    [permissionsByTeam, globalPermissions, isSuperAdmin, moduleKey],
   );
 
   const canEditTeam = React.useCallback(
-    (teamId: string | null | undefined) => EDITOR_LEVELS.has(levelForTeam(teamId)),
+    (teamId: string | null | undefined) => levelCanEdit(levelForTeam(teamId)),
     [levelForTeam],
   );
 
   const canReadTeam = React.useCallback(
-    (teamId: string | null | undefined) => levelForTeam(teamId) !== "none",
+    (teamId: string | null | undefined) => levelCanRead(levelForTeam(teamId)),
     [levelForTeam],
   );
 
-  return { levelForTeam, canEditTeam, canReadTeam };
+  /**
+   * true cuando el usuario está en 'vista_jugador': en módulos personales
+   * (salud, desarrollo, nutrición) solo debe ver SUS propios registros.
+   */
+  const isPlayerScoped = React.useCallback(
+    (teamId?: string | null) => !isSuperAdmin && isPlayerView(levelForTeam(teamId)),
+    [levelForTeam, isSuperAdmin],
+  );
+
+  /** Atajo: módulo personal + vista_jugador => filtrar "solo lo mío". */
+  const onlyOwnRows = React.useCallback(
+    (teamId?: string | null) => isPersonalModule(moduleKey) && isPlayerScoped(teamId),
+    [isPlayerScoped, moduleKey],
+  );
+
+  return { levelForTeam, canEditTeam, canReadTeam, isPlayerScoped, onlyOwnRows };
 }
