@@ -34,15 +34,22 @@ interface AppCtx {
   user: { id: string };
   accessibleModules: ModuleKey[];
   /** Unión (mejor nivel) — úsalo solo para navegación global. */
-  permissions: Record<string, AccessLevel>;
+  permissions: Record<string, PermissionLevel>;
   /** Permisos efectivos (unión de membresías). */
-  activePermissions: Record<string, AccessLevel>;
+  activePermissions: Record<string, PermissionLevel>;
   /** Devuelve el nivel efectivo para un módulo específico según su scope. */
-  getModuleAccess: (key: ModuleKey) => AccessLevel;
+  getModuleAccess: (key: ModuleKey) => PermissionLevel;
+  /** ¿Puede ver el módulo en cualquier contexto? */
+  canViewModule: (key: ModuleKey) => boolean;
+  /** ¿Puede editar el módulo en algún contexto? */
+  canEditModule: (key: ModuleKey) => boolean;
   /** Equipos a los que el usuario tiene acceso (para filtros y selectores). */
   teamOptions: TeamOption[];
   /** Permisos efectivos por equipo (clave 'club' = ámbito club). */
-  permissionsByTeam: Record<string, Record<string, AccessLevel>>;
+  permissionsByTeam: Record<string, Record<string, PermissionLevel>>;
+  /** Niveles globales (aplican a cualquier equipo del club). */
+  globalPermissions: Record<string, PermissionLevel>;
+
   clubName: string | null;
   isSuperAdmin: boolean;
   /** true si el usuario ve todo el club (no-jugadores + super admin). */
