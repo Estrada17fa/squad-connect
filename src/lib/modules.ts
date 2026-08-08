@@ -49,33 +49,44 @@ export type ModuleKey =
  */
 export type ModuleScope = "team" | "club" | "mixed";
 
+/**
+ * Qué significa el nivel `vista_jugador` en este módulo:
+ * - "mine": solo los registros donde la persona es el sujeto (sus datos,
+ *   sus convocatorias, sus solicitudes).
+ * - "team": contenido de su categoría en modo lectura, sin datos
+ *   administrativos ni de otras personas.
+ */
+export type PlayerViewMode = "mine" | "team";
+
 export interface ModuleDef {
   key: ModuleKey;
   label: string;
   icon: LucideIcon;
   description: string;
   scope: ModuleScope;
+  /** Vista de jugador soportada por el módulo (siempre definida). */
+  playerView: PlayerViewMode;
 }
 
 export const MODULES: ModuleDef[] = [
-  { key: "agenda", label: "Agenda", icon: CalendarClock, description: "Próximos eventos en lista", scope: "mixed" },
-  { key: "mes", label: "Mes", icon: Calendar, description: "Vista mensual de eventos", scope: "mixed" },
-  { key: "plantel", label: "Plantel", icon: Users, description: "Jugadores y cuerpo técnico", scope: "team" },
-  { key: "viajes", label: "Viajes", icon: Plane, description: "Logística de traslados y hospedajes", scope: "mixed" },
-  { key: "inventario", label: "Inventario", icon: Package, description: "Material deportivo y equipamiento", scope: "mixed" },
-  { key: "coordinacion_interna", label: "Coordinación", icon: MessagesSquare, description: "Comunicación interna del staff", scope: "club" },
-  { key: "solicitudes", label: "Solicitudes", icon: ClipboardList, description: "Aprobaciones y peticiones", scope: "club" },
-  { key: "compras_facturas", label: "Compras y facturas", icon: Receipt, description: "Compras, pagos a proveedores y reembolsos", scope: "club" },
-  { key: "documentos", label: "Documentos", icon: FileText, description: "Contratos y archivos del club", scope: "club" },
-  { key: "usuarios", label: "Usuarios", icon: UserCog, description: "Miembros, roles y permisos", scope: "club" },
-  { key: "comunicados", label: "Comunicados", icon: Megaphone, description: "Avisos oficiales del club", scope: "club" },
-  { key: "multimedia", label: "Multimedia", icon: ImageIcon, description: "Fotos y videos", scope: "team" },
-  { key: "torneo", label: "Torneo", icon: Trophy, description: "Competencias y clasificaciones", scope: "club" },
-  { key: "tacticas", label: "Tácticas", icon: LayoutGrid, description: "Formaciones y jugadas", scope: "team" },
-  { key: "salud", label: "Salud", icon: HeartPulse, description: "Parte médico y lesiones", scope: "team" },
-  { key: "desarrollo", label: "Desarrollo", icon: TrendingUp, description: "Evaluaciones y progresos", scope: "team" },
-  { key: "entrenamientos", label: "Entrenamientos", icon: Dumbbell, description: "Sesiones del equipo y biblioteca de ejercicios", scope: "team" },
-  { key: "nutricion", label: "Nutrición", icon: Apple, description: "Planes alimenticios", scope: "team" },
+  { key: "agenda", label: "Agenda", icon: CalendarClock, description: "Próximos eventos en lista", scope: "mixed" , playerView: "mine" },
+  { key: "mes", label: "Mes", icon: Calendar, description: "Vista mensual de eventos", scope: "mixed" , playerView: "mine" },
+  { key: "plantel", label: "Plantel", icon: Users, description: "Jugadores y cuerpo técnico", scope: "team" , playerView: "mine" },
+  { key: "viajes", label: "Viajes", icon: Plane, description: "Logística de traslados y hospedajes", scope: "mixed" , playerView: "mine" },
+  { key: "inventario", label: "Inventario", icon: Package, description: "Material deportivo y equipamiento", scope: "mixed" , playerView: "mine" },
+  { key: "coordinacion_interna", label: "Coordinación", icon: MessagesSquare, description: "Comunicación interna del staff", scope: "club" , playerView: "mine" },
+  { key: "solicitudes", label: "Solicitudes", icon: ClipboardList, description: "Aprobaciones y peticiones", scope: "club" , playerView: "mine" },
+  { key: "compras_facturas", label: "Compras y facturas", icon: Receipt, description: "Compras, pagos a proveedores y reembolsos", scope: "club" , playerView: "mine" },
+  { key: "documentos", label: "Documentos", icon: FileText, description: "Contratos y archivos del club", scope: "club" , playerView: "mine" },
+  { key: "usuarios", label: "Usuarios", icon: UserCog, description: "Miembros, roles y permisos", scope: "club" , playerView: "mine" },
+  { key: "comunicados", label: "Comunicados", icon: Megaphone, description: "Avisos oficiales del club", scope: "club" , playerView: "team" },
+  { key: "multimedia", label: "Multimedia", icon: ImageIcon, description: "Fotos y videos", scope: "team" , playerView: "team" },
+  { key: "torneo", label: "Torneo", icon: Trophy, description: "Competencias y clasificaciones", scope: "club" , playerView: "team" },
+  { key: "tacticas", label: "Tácticas", icon: LayoutGrid, description: "Formaciones y jugadas", scope: "team" , playerView: "team" },
+  { key: "salud", label: "Salud", icon: HeartPulse, description: "Parte médico y lesiones", scope: "team" , playerView: "mine" },
+  { key: "desarrollo", label: "Desarrollo", icon: TrendingUp, description: "Evaluaciones y progresos", scope: "team" , playerView: "mine" },
+  { key: "entrenamientos", label: "Entrenamientos", icon: Dumbbell, description: "Sesiones del equipo y biblioteca de ejercicios", scope: "team" , playerView: "team" },
+  { key: "nutricion", label: "Nutrición", icon: Apple, description: "Planes alimenticios", scope: "team" , playerView: "mine" },
 ];
 
 export const MODULE_MAP: Record<ModuleKey, ModuleDef> = Object.fromEntries(
