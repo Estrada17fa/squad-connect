@@ -1530,42 +1530,81 @@ export type Database = {
       }
       player_profiles: {
         Row: {
+          affiliation_number: string | null
+          archived_at: string | null
           availability_status: Database["public"]["Enums"]["availability_status"]
           birthdate: string | null
+          birthplace: string | null
           created_at: string
           height_cm: number | null
           id: string
+          id_document: string | null
           jersey_number: number | null
+          joined_at: string | null
+          nationality: string | null
           notes: string | null
+          pants_size: string | null
+          player_status: Database["public"]["Enums"]["player_status"]
           position: string | null
+          preferred_foot: Database["public"]["Enums"]["preferred_foot"] | null
+          previous_club: string | null
+          secondary_position: string | null
+          shirt_size: string | null
+          shoe_size: string | null
           team_id: string
           updated_at: string
           user_id: string
           weight_kg: number | null
         }
         Insert: {
+          affiliation_number?: string | null
+          archived_at?: string | null
           availability_status?: Database["public"]["Enums"]["availability_status"]
           birthdate?: string | null
+          birthplace?: string | null
           created_at?: string
           height_cm?: number | null
           id?: string
+          id_document?: string | null
           jersey_number?: number | null
+          joined_at?: string | null
+          nationality?: string | null
           notes?: string | null
+          pants_size?: string | null
+          player_status?: Database["public"]["Enums"]["player_status"]
           position?: string | null
+          preferred_foot?: Database["public"]["Enums"]["preferred_foot"] | null
+          previous_club?: string | null
+          secondary_position?: string | null
+          shirt_size?: string | null
+          shoe_size?: string | null
           team_id: string
           updated_at?: string
           user_id: string
           weight_kg?: number | null
         }
         Update: {
+          affiliation_number?: string | null
+          archived_at?: string | null
           availability_status?: Database["public"]["Enums"]["availability_status"]
           birthdate?: string | null
+          birthplace?: string | null
           created_at?: string
           height_cm?: number | null
           id?: string
+          id_document?: string | null
           jersey_number?: number | null
+          joined_at?: string | null
+          nationality?: string | null
           notes?: string | null
+          pants_size?: string | null
+          player_status?: Database["public"]["Enums"]["player_status"]
           position?: string | null
+          preferred_foot?: Database["public"]["Enums"]["preferred_foot"] | null
+          previous_club?: string | null
+          secondary_position?: string | null
+          shirt_size?: string | null
+          shoe_size?: string | null
           team_id?: string
           updated_at?: string
           user_id?: string
@@ -1595,6 +1634,8 @@ export type Database = {
           birthplace: string | null
           club_id: string | null
           created_at: string
+          deactivated_at: string | null
+          deactivated_by: string | null
           email: string | null
           emergency_contact_name: string | null
           emergency_contact_phone: string | null
@@ -1611,6 +1652,7 @@ export type Database = {
           position: string | null
           shirt_size: string | null
           shoe_size: string | null
+          status: Database["public"]["Enums"]["member_status"]
         }
         Insert: {
           avatar_url?: string | null
@@ -1618,6 +1660,8 @@ export type Database = {
           birthplace?: string | null
           club_id?: string | null
           created_at?: string
+          deactivated_at?: string | null
+          deactivated_by?: string | null
           email?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
@@ -1634,6 +1678,7 @@ export type Database = {
           position?: string | null
           shirt_size?: string | null
           shoe_size?: string | null
+          status?: Database["public"]["Enums"]["member_status"]
         }
         Update: {
           avatar_url?: string | null
@@ -1641,6 +1686,8 @@ export type Database = {
           birthplace?: string | null
           club_id?: string | null
           created_at?: string
+          deactivated_at?: string | null
+          deactivated_by?: string | null
           email?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
@@ -1657,6 +1704,7 @@ export type Database = {
           position?: string | null
           shirt_size?: string | null
           shoe_size?: string | null
+          status?: Database["public"]["Enums"]["member_status"]
         }
         Relationships: [
           {
@@ -3563,6 +3611,7 @@ export type Database = {
         | "otro"
       injury_severity: "leve" | "moderada" | "grave"
       injury_status: "activa" | "en_recuperacion" | "recuperada"
+      member_status: "activo" | "baja"
       payment_status: "pendiente" | "pagado"
       permission_level:
         | "sin_acceso"
@@ -3571,6 +3620,8 @@ export type Database = {
         | "lector_global"
         | "editor_categoria"
         | "editor_global"
+      player_status: "activo" | "baja" | "prestamo"
+      preferred_foot: "derecho" | "izquierdo" | "ambos"
       request_status:
         | "pendiente"
         | "aprobada"
@@ -3767,6 +3818,7 @@ export const Constants = {
       ],
       injury_severity: ["leve", "moderada", "grave"],
       injury_status: ["activa", "en_recuperacion", "recuperada"],
+      member_status: ["activo", "baja"],
       payment_status: ["pendiente", "pagado"],
       permission_level: [
         "sin_acceso",
@@ -3776,6 +3828,8 @@ export const Constants = {
         "editor_categoria",
         "editor_global",
       ],
+      player_status: ["activo", "baja", "prestamo"],
+      preferred_foot: ["derecho", "izquierdo", "ambos"],
       request_status: [
         "pendiente",
         "aprobada",

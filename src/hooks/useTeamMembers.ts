@@ -17,8 +17,9 @@ export function useTeamMembers(teamId: string | null | undefined, clubId: string
     queryFn: async (): Promise<TeamMember[]> => {
       const q = supabase
         .from("team_memberships")
-        .select("user_id, profile:profiles!inner(id, full_name, email, avatar_url, club_id), role:roles(name)")
-        .eq("profile.club_id", clubId!);
+        .select("user_id, profile:profiles!inner(id, full_name, email, avatar_url, club_id, status), role:roles(name)")
+        .eq("profile.club_id", clubId!)
+        .eq("profile.status", "activo");
       if (teamId) {
         // Include club-wide (team_id NULL) + specific team members.
         q.or(`team_id.is.null,team_id.eq.${teamId}`);

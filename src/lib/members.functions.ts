@@ -1,131 +1,37 @@
 import { createServerFn } from "@tanstack/react-start";
-import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-
-export const PLAYER_POSITIONS = ["Portero", "Defensa", "Mediocampista", "Delantero"] as const;
-export type PlayerPosition = (typeof PLAYER_POSITIONS)[number];
-
-const membershipSchema = z.object({
-  role_id: z.string().uuid(),
-  team_id: z.string().uuid().nullable(),
-  job_title: z.string().trim().max(60).optional().nullable(),
-});
-
-const inputSchema = z.object({
-  email: z.string().trim().toLowerCase().email().max(255),
-  password: z.string().min(8).max(128),
-  first_name: z.string().trim().min(1).max(60),
-  paternal_last_name: z.string().trim().min(1).max(60),
-  maternal_last_name: z.string().trim().min(1).max(60),
-  birthdate: z.string().optional().nullable(),
-  nationality: z.string().trim().max(80).optional().nullable(),
-  birthplace: z.string().trim().max(120).optional().nullable(),
-  phone: z.string().trim().max(40).optional().nullable(),
-  // Player-only fields (server enforces they only persist if a Jugador membership exists)
-  shirt_size: z.string().trim().max(20).optional().nullable(),
-  pants_size: z.string().trim().max(20).optional().nullable(),
-  shoe_size: z.string().trim().max(20).optional().nullable(),
-  jersey_number: z.number().int().min(0).max(999).optional().nullable(),
-  position: z.enum(PLAYER_POSITIONS).optional().nullable(),
-  memberships: z.array(membershipSchema).min(1).max(20),
-});
-
-export type CreateClubMemberInput = z.infer<typeof inputSchema>;
+import {
+  createMemberSchema,
+  updateMemberSchema,
+  memberTargetSchema,
+} from "@/lib/members.schemas";
+import {
+  assertNotLastAdmin,
+  authorizeMemberAdmin,
+  fullNameOf,
+  isPlayerRole,
+  linkedDataLabels,
+  loadClubRole,
+  norm,
+  syncMemberships,
+  type MemberCtx,
+} from "@/lib/members.helpers";
+import { validateClubTeams } from "@/lib/members.helpers";
 
 export const createClubMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => inputSchema.parse(data))
+  .inputValidator((data: unknown) => createMemberSchema.parse(data))
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
-
-    // 1. Load caller profile to determine club_id
-    const { data: caller, error: callerErr } = await supabase
-      .from("profiles")
-      .select("club_id")
-      .eq("id", userId)
-      .maybeSingle();
-    if (callerErr) {
-      console.error("[createClubMember] caller lookup", callerErr);
-      throw new Error("No se pudo verificar tu perfil");
-    }
-    if (!caller?.club_id) throw new Error("Tu perfil no está asociado a un club");
-    const clubId = caller.club_id;
-
-    // 2. Authorization: super_admin OR editor/approver on 'usuarios' module
-    const { data: isSuper } = await supabase
-      .from("super_admins")
-      .select("user_id")
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    let authorized = !!isSuper;
-    if (!authorized) {
-      const { data: perms } = await supabase
-        .from("team_memberships")
-        .select("role:roles!inner(role_permissions(module_key, access_level))")
-        .eq("user_id", userId);
-      for (const row of perms ?? []) {
-        const rp = (row as any)?.role?.role_permissions ?? [];
-        for (const p of rp) {
-          if (p.module_key === "usuarios" && (p.access_level === "editor" || p.access_level === "approver")) {
-            authorized = true;
-            break;
-          }
-        }
-        if (authorized) break;
-      }
-    }
-    if (!authorized) throw new Error("No tienes permisos para crear miembros");
-
-    // 3. Validate memberships against club
-    const roleIds = [...new Set(data.memberships.map((m) => m.role_id))];
-    const teamIds = [...new Set(data.memberships.map((m) => m.team_id).filter((x): x is string => !!x))];
-
-    const { data: roles, error: rolesErr } = await supabase
-      .from("roles")
-      .select("id, club_id, name, allows_club_wide")
-      .in("id", roleIds);
-    if (rolesErr) throw new Error("No se pudieron validar los roles");
-    const rolesById = new Map((roles ?? []).map((r) => [r.id, r]));
-    for (const rid of roleIds) {
-      const r = rolesById.get(rid);
-      if (!r || r.club_id !== clubId) throw new Error("Rol inválido para este club");
+    const ctx = context as unknown as MemberCtx;
+    const clubId = await authorizeMemberAdmin(ctx);
+    const role = await loadClubRole(ctx.supabase, data.role_id, clubId);
+    await validateClubTeams(ctx.supabase, data.assignments.map((a) => a.team_id), clubId);
+    if (isPlayerRole(role) && data.assignments.length === 0) {
+      throw new Error("El rol Jugador requiere al menos una categoría");
     }
 
-    if (teamIds.length) {
-      const { data: teams, error: teamsErr } = await supabase
-        .from("teams")
-        .select("id, club_id")
-        .in("id", teamIds);
-      if (teamsErr) throw new Error("No se pudieron validar las categorías");
-      for (const tid of teamIds) {
-        const t = teams?.find((x) => x.id === tid);
-        if (!t || t.club_id !== clubId) throw new Error("Categoría inválida para este club");
-      }
-    }
-
-    for (const m of data.memberships) {
-      if (m.team_id === null) {
-        const r = rolesById.get(m.role_id);
-        // Jugador is the only role that requires a specific team; all other
-        // roles are club-wide by design regardless of the allows_club_wide flag.
-        if (r?.name === "Jugador") {
-          throw new Error("El rol Jugador requiere una categoría específica");
-        }
-      }
-    }
-
-    // Determine whether any membership uses the "Jugador" role.
-    const hasPlayer = (roles ?? []).some((r) => r.name === "Jugador");
-
-    // 4. Load admin client only after authorization
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
-    // 5. Create auth user
-    const fullName = [data.first_name, data.paternal_last_name, data.maternal_last_name]
-      .map((s) => s.trim())
-      .filter(Boolean)
-      .join(" ");
+    const fullName = fullNameOf(data.first_name, data.paternal_last_name, data.maternal_last_name);
 
     const { data: created, error: createErr } = await supabaseAdmin.auth.admin.createUser({
       email: data.email,
@@ -134,58 +40,181 @@ export const createClubMember = createServerFn({ method: "POST" })
       user_metadata: { full_name: fullName },
     });
     if (createErr || !created?.user) {
-      console.error("[createClubMember] auth.admin.createUser", createErr);
-      const msg = createErr?.message ?? "";
-      if (msg.toLowerCase().includes("already") || msg.toLowerCase().includes("registered")) {
+      const msg = (createErr?.message ?? "").toLowerCase();
+      if (msg.includes("already") || msg.includes("registered")) {
         throw new Error("Ya existe un miembro con ese email");
       }
       throw new Error("No se pudo crear el miembro");
     }
     const newUserId = created.user.id;
 
-    // 6. Update profile (trigger already created the row)
-    const norm = <T,>(v: T | null | undefined): T | null =>
-      v === undefined || v === null || (typeof v === "string" && v.trim() === "") ? null : v;
-
-    const profileUpdate = {
-      club_id: clubId,
-      full_name: fullName,
-      first_name: data.first_name.trim(),
-      paternal_last_name: data.paternal_last_name.trim(),
-      maternal_last_name: data.maternal_last_name.trim(),
-      name_completed: true,
-      email: data.email,
-      birthdate: norm(data.birthdate),
-      nationality: norm(data.nationality),
-      birthplace: norm(data.birthplace),
-      phone: norm(data.phone),
-      // Player-only fields — only persisted when at least one membership is Jugador
-      shirt_size: hasPlayer ? norm(data.shirt_size) : null,
-      pants_size: hasPlayer ? norm(data.pants_size) : null,
-      shoe_size: hasPlayer ? norm(data.shoe_size) : null,
-      jersey_number: hasPlayer ? norm(data.jersey_number) : null,
-      position: hasPlayer ? norm(data.position) : null,
-    };
-    const { error: profErr } = await supabaseAdmin
+    const { error: profErr } = await (supabaseAdmin as any)
       .from("profiles")
-      .update(profileUpdate)
+      .update({
+        club_id: clubId,
+        full_name: fullName,
+        first_name: data.first_name.trim(),
+        paternal_last_name: data.paternal_last_name.trim(),
+        maternal_last_name: norm(data.maternal_last_name),
+        name_completed: true,
+        email: data.email,
+        birthdate: norm(data.birthdate),
+        phone: norm(data.phone),
+        avatar_url: norm(data.avatar_url),
+        emergency_contact_name: norm(data.emergency_contact_name),
+        emergency_contact_phone: norm(data.emergency_contact_phone),
+        status: "activo",
+      })
       .eq("id", newUserId);
-    if (profErr) {
-      console.error("[createClubMember] profile update", profErr);
+    if (profErr) console.error("[createClubMember] profile", profErr);
+
+    await syncMemberships(supabaseAdmin, newUserId, role, data.assignments, data.player);
+    return { userId: newUserId, roleName: role.name };
+  });
+
+export const updateClubMember = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => updateMemberSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    const ctx = context as unknown as MemberCtx;
+    const clubId = await authorizeMemberAdmin(ctx);
+
+    const { data: target } = await ctx.supabase
+      .from("profiles")
+      .select("id, club_id")
+      .eq("id", data.user_id)
+      .maybeSingle();
+    if (!target || target.club_id !== clubId) throw new Error("Miembro inválido");
+
+    const role = await loadClubRole(ctx.supabase, data.role_id, clubId);
+    await validateClubTeams(ctx.supabase, data.assignments.map((a) => a.team_id), clubId);
+    if (isPlayerRole(role) && data.assignments.length === 0) {
+      throw new Error("El rol Jugador requiere al menos una categoría");
     }
 
-    // 7. Insert memberships
-    const rows = data.memberships.map((m) => ({
-      user_id: newUserId,
-      role_id: m.role_id,
-      team_id: m.team_id,
-      job_title: m.job_title ? m.job_title : null,
-    }));
-    const { error: memErr } = await supabaseAdmin.from("team_memberships").insert(rows);
-    if (memErr) {
-      console.error("[createClubMember] memberships insert", memErr);
-      throw new Error("Miembro creado pero no se pudieron asignar las membresías");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const fullName = fullNameOf(data.first_name, data.paternal_last_name, data.maternal_last_name);
+
+    const { error: profErr } = await (supabaseAdmin as any)
+      .from("profiles")
+      .update({
+        full_name: fullName,
+        first_name: data.first_name.trim(),
+        paternal_last_name: data.paternal_last_name.trim(),
+        maternal_last_name: norm(data.maternal_last_name),
+        name_completed: true,
+        birthdate: norm(data.birthdate),
+        phone: norm(data.phone),
+        avatar_url: norm(data.avatar_url),
+        emergency_contact_name: norm(data.emergency_contact_name),
+        emergency_contact_phone: norm(data.emergency_contact_phone),
+      })
+      .eq("id", data.user_id);
+    if (profErr) throw new Error("No se pudo actualizar el perfil");
+
+    if (data.password) {
+      const { error } = await supabaseAdmin.auth.admin.updateUserById(data.user_id, {
+        password: data.password,
+      });
+      if (error) throw new Error("No se pudo actualizar la contraseña");
     }
 
-    return { userId: newUserId };
+    await syncMemberships(supabaseAdmin, data.user_id, role, data.assignments, data.player);
+    return { userId: data.user_id, roleName: role.name };
+  });
+
+export const deactivateClubMember = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => memberTargetSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    const ctx = context as unknown as MemberCtx;
+    const clubId = await authorizeMemberAdmin(ctx);
+    if (data.user_id === ctx.userId) throw new Error("No puedes darte de baja a ti mismo");
+
+    const { data: target } = await ctx.supabase
+      .from("profiles")
+      .select("id, club_id")
+      .eq("id", data.user_id)
+      .maybeSingle();
+    if (!target || target.club_id !== clubId) throw new Error("Miembro inválido");
+    await assertNotLastAdmin(ctx.supabase, clubId, data.user_id);
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await (supabaseAdmin as any)
+      .from("profiles")
+      .update({
+        status: "baja",
+        deactivated_at: new Date().toISOString(),
+        deactivated_by: ctx.userId,
+      })
+      .eq("id", data.user_id);
+    if (error) throw new Error("No se pudo dar de baja al miembro");
+
+    await (supabaseAdmin.auth.admin as any).updateUserById(data.user_id, { ban_duration: "876000h" });
+    await (supabaseAdmin.auth.admin as any).signOut?.(data.user_id, "global").catch?.(() => {});
+    return { ok: true };
+  });
+
+export const reactivateClubMember = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => memberTargetSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    const ctx = context as unknown as MemberCtx;
+    const clubId = await authorizeMemberAdmin(ctx);
+    const { data: target } = await ctx.supabase
+      .from("profiles")
+      .select("id, club_id")
+      .eq("id", data.user_id)
+      .maybeSingle();
+    if (!target || target.club_id !== clubId) throw new Error("Miembro inválido");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await (supabaseAdmin as any)
+      .from("profiles")
+      .update({ status: "activo", deactivated_at: null, deactivated_by: null })
+      .eq("id", data.user_id);
+    if (error) throw new Error("No se pudo reactivar al miembro");
+    await (supabaseAdmin.auth.admin as any).updateUserById(data.user_id, { ban_duration: "none" });
+    return { ok: true };
+  });
+
+export const checkMemberReferences = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => memberTargetSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    await authorizeMemberAdmin(context as unknown as MemberCtx);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const labels = await linkedDataLabels(supabaseAdmin, data.user_id);
+    return { hasData: labels.length > 0, labels };
+  });
+
+export const hardDeleteClubMember = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => memberTargetSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    const ctx = context as unknown as MemberCtx;
+    const clubId = await authorizeMemberAdmin(ctx);
+    if (data.user_id === ctx.userId) throw new Error("No puedes eliminarte a ti mismo");
+
+    const { data: target } = await ctx.supabase
+      .from("profiles")
+      .select("id, club_id")
+      .eq("id", data.user_id)
+      .maybeSingle();
+    if (!target || target.club_id !== clubId) throw new Error("Miembro inválido");
+    await assertNotLastAdmin(ctx.supabase, clubId, data.user_id);
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const labels = await linkedDataLabels(supabaseAdmin, data.user_id);
+    if (labels.length) {
+      throw new Error(
+        "Este miembro tiene historial en el club. Usa 'Dar de baja' para conservar sus registros.",
+      );
+    }
+
+    await supabaseAdmin.from("player_profiles").delete().eq("user_id", data.user_id);
+    await supabaseAdmin.from("team_memberships").delete().eq("user_id", data.user_id);
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(data.user_id);
+    if (error) throw new Error("No se pudo eliminar la cuenta");
+    return { ok: true };
   });

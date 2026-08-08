@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, Settings2, Sliders, Trash2, User as UserIcon, UserPlus } from "lucide-react";
+import { Pencil, Plus, RotateCcw, Search, Settings2, Sliders, Trash2, User as UserIcon, UserMinus, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { MODULES, MODULE_MAP, type ModuleKey } from "@/lib/modules";
@@ -32,9 +32,16 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
-import { CreateMemberDialog } from "./CreateMemberDialog";
+import { MemberForm } from "./MemberForm";
+import {
+  deactivateClubMember,
+  hardDeleteClubMember,
+  reactivateClubMember,
+} from "@/lib/members.functions";
+import { useServerFn } from "@tanstack/react-start";
 import { REQUEST_TYPE_MAP, type RequestType } from "@/lib/requestTypes";
 import { useMemberApprovals, useSetApproverOverride } from "@/hooks/useRequestApprovers";
+
 
 
 const LEVELS: { value: AccessLevel; label: string }[] = [
@@ -53,7 +60,9 @@ interface ProfileRow {
   name_completed: boolean | null;
   email: string | null;
   avatar_url: string | null;
+  status?: "activo" | "baja" | null;
 }
+
 
 function displayName(p: Pick<ProfileRow, "first_name" | "paternal_last_name" | "maternal_last_name" | "full_name" | "email">) {
   const composed = [p.first_name, p.paternal_last_name, p.maternal_last_name]
@@ -90,6 +99,8 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
   const [search, setSearch] = React.useState("");
   const [addOpen, setAddOpen] = React.useState(false);
   const [createOpen, setCreateOpen] = React.useState(false);
+  const [editUserId, setEditUserId] = React.useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = React.useState<"activo" | "baja">("activo");
   const [overrideCtx, setOverrideCtx] = React.useState<{
     userId: string;
     teamId: string | null;
@@ -97,17 +108,22 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
     label: string;
   } | null>(null);
 
+  const deactivateFn = useServerFn(deactivateClubMember);
+  const reactivateFn = useServerFn(reactivateClubMember);
+  const hardDeleteFn = useServerFn(hardDeleteClubMember);
+
   const membersQ = useQuery({
     queryKey: ["club-members", clubId],
     queryFn: async (): Promise<ProfileRow[]> => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, full_name, first_name, paternal_last_name, maternal_last_name, name_completed, email, avatar_url")
+        .select("id, full_name, first_name, paternal_last_name, maternal_last_name, name_completed, email, avatar_url, status")
         .eq("club_id", clubId)
         .order("full_name");
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as unknown as ProfileRow[];
     },
+
   });
 
   const rolesQ = useQuery({
@@ -151,14 +167,17 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
 
   const filtered = React.useMemo(() => {
     const q = search.trim().toLowerCase();
-    const rows = membersQ.data ?? [];
+    const rows = (membersQ.data ?? []).filter(
+      (m) => (m.status ?? "activo") === statusFilter,
+    );
     if (!q) return rows;
     return rows.filter(
       (m) =>
         (m.full_name ?? "").toLowerCase().includes(q) ||
         (m.email ?? "").toLowerCase().includes(q),
     );
-  }, [membersQ.data, search]);
+  }, [membersQ.data, search, statusFilter]);
+
 
   const selected = (membersQ.data ?? []).find((m) => m.id === selectedUserId) ?? null;
 
@@ -181,6 +200,43 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
     qc.invalidateQueries({ queryKey: ["user-memberships", selectedUserId] });
   }
 
+  async function handleDeactivate(m: ProfileRow) {
+    if (!confirm(`¿Dar de baja a ${displayName(m)}? Pierde el acceso pero se conserva todo su historial.`)) return;
+    try {
+      await deactivateFn({ data: { user_id: m.id } });
+      toast.success("Miembro dado de baja");
+      qc.invalidateQueries({ queryKey: ["club-members", clubId] });
+      qc.invalidateQueries({ queryKey: ["roster"] });
+    } catch (e: any) {
+      toast.error(e?.message ?? "No se pudo dar de baja");
+    }
+  }
+
+  async function handleReactivate(m: ProfileRow) {
+    try {
+      await reactivateFn({ data: { user_id: m.id } });
+      toast.success("Miembro reactivado");
+      qc.invalidateQueries({ queryKey: ["club-members", clubId] });
+    } catch (e: any) {
+      toast.error(e?.message ?? "No se pudo reactivar");
+    }
+  }
+
+  async function handleHardDelete(m: ProfileRow) {
+    const name = displayName(m);
+    const typed = prompt(`Esto elimina la cuenta de forma permanente.\nEscribe "${name}" para confirmar:`);
+    if (typed?.trim() !== name) return;
+    try {
+      await hardDeleteFn({ data: { user_id: m.id } });
+      toast.success("Miembro eliminado");
+      setSelectedUserId(null);
+      qc.invalidateQueries({ queryKey: ["club-members", clubId] });
+      qc.invalidateQueries({ queryKey: ["roster"] });
+    } catch (e: any) {
+      toast.error(e?.message ?? "No se pudo eliminar");
+    }
+  }
+
   if (membersQ.isLoading) return <LoadingState />;
 
   return (
@@ -200,6 +256,24 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
             className="pl-9"
           />
         </div>
+        <div className="flex gap-1 rounded-lg border border-border/60 p-1">
+          {(["activo", "baja"] as const).map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setStatusFilter(s)}
+              className={cn(
+                "flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+                statusFilter === s
+                  ? "bg-primary/15 text-primary"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {s === "activo" ? "Activos" : "Bajas"}
+            </button>
+          ))}
+        </div>
+
         <div className="grid gap-2">
           {filtered.map((m) => (
             <StandardCard
@@ -221,12 +295,15 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
       <div>
         {selected ? (
           <div className="glass p-4 space-y-5">
-            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+            <div className="space-y-3">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <h3 className="truncate font-display text-lg font-semibold">
                     {displayName(selected)}
                   </h3>
+                  {selected.status === "baja" ? (
+                    <StatusBadge variant="rejected">Baja</StatusBadge>
+                  ) : null}
                   {selected.name_completed === false ? (
                     <StatusBadge variant="pending">Completar nombre</StatusBadge>
                   ) : null}
@@ -234,12 +311,34 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
                 <p className="truncate text-xs text-muted-foreground">{selected.email}</p>
               </div>
               {canEdit ? (
-                <Button size="sm" variant="secondary" onClick={() => setAddOpen(true)}>
-                  <Plus className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Añadir membresía</span>
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm" variant="secondary" onClick={() => setEditUserId(selected.id)}>
+                    <Pencil className="mr-2 h-4 w-4" /> Editar
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setAddOpen(true)}>
+                    <Plus className="mr-2 h-4 w-4" /> Añadir membresía
+                  </Button>
+                  {selected.status === "baja" ? (
+                    <Button size="sm" variant="ghost" onClick={() => handleReactivate(selected)}>
+                      <RotateCcw className="mr-2 h-4 w-4" /> Reactivar
+                    </Button>
+                  ) : (
+                    <Button size="sm" variant="ghost" onClick={() => handleDeactivate(selected)}>
+                      <UserMinus className="mr-2 h-4 w-4" /> Dar de baja
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-destructive"
+                    onClick={() => handleHardDelete(selected)}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" /> Eliminar
+                  </Button>
+                </div>
               ) : null}
             </div>
+
 
             <div className="space-y-2">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -354,18 +453,31 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
         />
       ) : null}
 
-      <CreateMemberDialog
+      <MemberForm
         open={createOpen}
         onOpenChange={setCreateOpen}
         clubId={clubId}
         roles={rolesQ.data ?? []}
         teams={teamsQ.data ?? []}
-        onCreated={(id, dominant) => {
+        onSaved={(id: string, roleName: string | null) => {
           setSelectedUserId(id);
-          const base = inferBaseRole(dominant);
+          const base = inferBaseRole(roleName);
           navigate({ to: "/m/plantel", search: { role: base } as any });
         }}
       />
+
+      {editUserId ? (
+        <MemberForm
+          open={!!editUserId}
+          onOpenChange={(o) => !o && setEditUserId(null)}
+          clubId={clubId}
+          roles={rolesQ.data ?? []}
+          teams={teamsQ.data ?? []}
+          userId={editUserId}
+          onSaved={() => setEditUserId(null)}
+        />
+      ) : null}
+
     </div>
   );
 }
