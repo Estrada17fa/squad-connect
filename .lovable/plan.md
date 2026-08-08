@@ -1,94 +1,146 @@
-# Parte 1 — Base del nuevo sistema de permisos
+# Parte 1 — Nueva escala de permisos en paralelo (sin cambiar el comportamiento actual)
 
-Solo la base: nueva escala de niveles, catálogo de módulos por tipo, cómo se guardan, migración de lo existente y funciones helper. No se toca la UI de crear usuario ni la RLS de cada módulo (Partes 2 y 3).
+Al terminar esta parte, la app funciona **exactamente igual que hoy**: se agrega la escala nueva, se pueblan los datos y se crean funciones nuevas, pero ningún módulo, RLS ni pantalla las consume todavía.
 
-## 1. Nueva escala
+## 1. Estado real verificado hoy
 
-Nuevo tipo en la base de datos `permission_level` con 6 valores, en orden de menor a mayor:
+Consultado en la base de datos:
 
-```text
-sin_acceso < lector_personal < lector_categoria < lector_global < editor_categoria < editor_global
-```
+- Un solo club activo, 5 roles del sistema (Admin, Jugador, Médico, Staff, Técnico), 18 filas de permisos cada uno.
+- Permisos actuales distintos de `none`:
+  - Admin: `editor` en los 18 módulos.
+  - Jugador: `read` en agenda, mes, entrenamientos. Todo lo demás `none` (incluye salud, desarrollo, plantel, nutrición).
+  - Médico: **todo en `none`** (hoy no ve nada).
+  - Staff: `read` en entrenamientos.
+  - Técnico: `editor` en entrenamientos.
+- 5 personas: 3 con rol Admin club-wide (2 son super admins), 1 Médico club-wide, 1 Jugador en la categoría "Liga Premier".
+- 15 overrides personales, todos club-wide: e.estrada (none en plantel/salud/desarrollo) y prueba2@admin.com (varios none, `read` en coordinación e inventario, **`approver` en solicitudes**).
+- Aprobadores por rol: Admin (7 tipos), Técnico (permiso, médica, cortesías), Médico (médica). Sin overrides de aprobador por usuario.
 
-Nota de orden: `lector_global` se considera menor que `editor_categoria` para "poder de escritura", pero mayor en "alcance de lectura". Por eso el nivel efectivo no se resuelve con un solo número: se resuelve con dos ejes derivados del nivel — **alcance** (personal / categoría / global) y **capacidad** (nada / leer / editar). Esa descomposición vive en una función auxiliar y evita comparaciones ambiguas.
+Consecuencia importante: aplicar la tabla de roles predefinidos **amplía** permisos para Médico, Técnico, Staff y Jugador respecto a lo que tienen hoy en la escala vieja. Como en la Parte 1 nada consume la escala nueva, no hay cambio visible; el cambio real de acceso ocurrirá en la Parte 2, módulo por módulo.
 
-El tipo viejo `access_level` (none/read/editor/approver) se conserva durante la Parte 1 y se elimina al cerrar la Parte 3, cuando ya nada lo use.
+## 2. Escala nueva
 
-## 2. Catálogo de módulos por tipo
+Tipo `permission_level`: `sin_acceso`, `vista_jugador`, `lector_categoria`, `lector_global`, `editor_categoria`, `editor_global` (orden de menor a mayor para poder tomar máximos).
 
-Se declara el tipo de cada módulo en dos lugares espejo (misma verdad):
+Sin catálogo de tipos de módulo. El significado concreto de `vista_jugador` se define por módulo en la Parte 2.
 
-- Código: `src/lib/modules.ts` gana `permissionType: "personal" | "categoria" | "club"` por módulo y un helper `levelsForModule(key)` que devuelve los niveles ofrecidos.
-- Base de datos: tabla nueva `module_catalog` (module_key, permission_type, label, orden) para que las funciones SQL y la RLS validen niveles sin duplicar listas en cada policy.
+## 3. Almacenamiento
 
-Clasificación:
+- `role_permissions`: nueva columna `level permission_level` (NOT NULL, default `sin_acceso`).
+- `user_permission_overrides`: nueva columna `level permission_level` (NOT NULL, default `sin_acceso`).
+- `access_level` **se conserva intacta** en ambas tablas durante las Partes 1–3 (comparación y rollback).
 
-| Tipo | Módulos | Niveles ofrecidos |
-| --- | --- | --- |
-| personal | salud, desarrollo, nutricion | los 6 |
-| categoria | plantel, entrenamientos, tacticas, torneo, comunicados, viajes, multimedia, agenda, mes | todos menos `lector_personal` |
-| club | inventario, compras_facturas, documentos, solicitudes, coordinacion_interna, usuarios | `sin_acceso`, `lector_global`, `editor_global` |
+## 4. Tabla de permisos por defecto de los 5 roles
 
-Dos aclaraciones sobre esa tabla:
+Se escriben en `role_permissions.level` para los roles con `is_system_default = true`, quedando editables desde la base (no cableados en código).
 
-- `agenda`, `mes`, `viajes`, `multimedia` no aparecían en tu lista; hoy son de ámbito equipo/mixto, así que quedan como **categoría**. Si prefieres alguno como club, se cambia en una línea del catálogo.
-- Para módulos de club se reutilizan los valores `lector_global` / `editor_global` como "Lector" y "Editor" (la UI los muestra con esas etiquetas). Así no se inventan valores duplicados y la resolución es la misma en todos los casos.
-- `torneo` se clasifica como **categoría** porque un torneo pertenece a una categoría; si en la práctica es del club, se ajusta en el catálogo.
+| módulo | Admin | Jugador | Médico | Técnico | Staff |
+|---|---|---|---|---|---|
+| plantel | editor_global | vista_jugador | lector_categoria | editor_categoria | lector_categoria |
+| salud | editor_global | vista_jugador | editor_categoria | sin_acceso | sin_acceso |
+| desarrollo | editor_global | vista_jugador | sin_acceso | editor_categoria | sin_acceso |
+| nutricion | editor_global | vista_jugador | editor_categoria | sin_acceso | sin_acceso |
+| entrenamientos | editor_global | vista_jugador | lector_categoria | editor_categoria | lector_categoria |
+| tacticas | editor_global | vista_jugador | sin_acceso | editor_categoria | sin_acceso |
+| torneo | editor_global | vista_jugador | lector_categoria | editor_categoria | lector_categoria |
+| comunicados | editor_global | vista_jugador | lector_categoria | editor_categoria | lector_categoria |
+| viajes | editor_global | vista_jugador | lector_categoria | lector_categoria | editor_categoria |
+| agenda | editor_global | vista_jugador | lector_categoria | editor_categoria | lector_categoria |
+| mes | editor_global | vista_jugador | lector_categoria | editor_categoria | lector_categoria |
+| documentos | editor_global | sin_acceso | lector_categoria | lector_categoria | lector_categoria |
+| inventario | editor_global | sin_acceso | lector_global | lector_global | editor_global |
+| compras_facturas | editor_global | sin_acceso | sin_acceso | sin_acceso | editor_global |
+| solicitudes | editor_global | lector_global | lector_global | lector_global | editor_global |
+| usuarios | editor_global | sin_acceso | sin_acceso | sin_acceso | sin_acceso |
+| coordinacion_interna | editor_global | sin_acceso | lector_global | lector_global | lector_global |
+| multimedia | editor_global | vista_jugador | lector_categoria | lector_categoria | lector_categoria |
 
-Regla dura: guardar un nivel no ofrecido por el tipo del módulo se rechaza con un CHECK/trigger contra `module_catalog`.
+Notas de lectura: "lector"/"editor" sin categoría en tu especificación (inventario, compras, solicitudes, coordinación) se interpreta como global, por ser módulos de club. `coordinacion_interna` y `multimedia` no venían en tu lista; propongo esos valores y los ajusto si prefieres otros.
 
-## 3. Cómo se guardan los permisos
+## 5. Migración de datos, en una sola transacción
 
-Se mantienen las tablas actuales, cambiando la columna de nivel:
+Orden y reglas:
 
-- `role_permissions(role_id, module_key, level permission_level)` — se agrega la columna nueva `level`, se llena por migración y se deja de escribir `access_level`.
-- `user_permission_overrides(user_id, team_id, module_key, level permission_level)` — misma operación. `team_id NULL` = override de ámbito club.
+1. Se crea el tipo y las columnas.
+2. Roles con `base_role` en (admin, jugador, medico, tecnico, staff) → se les escribe la tabla del punto 4 tal cual (esto cubre los 5 roles existentes).
+3. Roles personalizados futuros/otros (hoy no hay ninguno) → traducción determinista desde `access_level`: `none`→`sin_acceso`; `read`→`lector_categoria`; `editor`/`approver`→`editor_categoria`; y para módulos de club (inventario, compras_facturas, solicitudes, documentos, usuarios, coordinacion_interna, torneo, comunicados) se eleva a `lector_global`/`editor_global`.
+4. `user_permission_overrides` → misma traducción determinista por fila, con una salvedad: en salud, desarrollo y nutrición, un `read` de un usuario cuyo único rol base es jugador se traduce a `vista_jugador`, nunca a `lector_categoria`.
+5. `approver` viejo → `editor_*`. `role_request_approvals` y `request_type_user_overrides` no se tocan.
+6. Membresías club-wide (`team_id NULL`) se conservan; el alcance amplio lo resuelve la función efectiva.
 
-No cambia la forma de las asignaciones: `team_memberships` (persona ↔ equipo ↔ rol) ya soporta varias asignaciones por persona; una asignación de un rol a varias categorías son varias filas con el mismo `role_id`. El admin es la fila con `team_id NULL` y rol de base `admin` (Editor Global).
+Verificaciones que abortan la transacción:
 
-## 4. Migración de lo existente
+- Ninguna fila de `role_permissions` ni de `user_permission_overrides` con `level` nulo.
+- Ninguna fila con `access_level <> 'none'` que quede en `sin_acceso`, salvo la excepción explícita de Jugador → documentos (que hoy ya está en `none`, así que no debe dispararse).
+- Todo rol o usuario con aprobaciones vigentes queda como `editor_categoria` o `editor_global` en el módulo del tipo de solicitud; si alguno queda por debajo, se eleva y se vuelve a verificar.
+- Conteo de filas antes/después idéntico.
 
-Traducción determinista, aplicada por tipo de módulo:
+## 6. Lista de privacidad para tu confirmación (módulos personales)
 
-| Valor viejo | Módulo personal | Módulo categoría | Módulo club |
-| --- | --- | --- | --- |
-| `none` | sin_acceso | sin_acceso | sin_acceso |
-| `read` | lector_categoria | lector_categoria | lector_global (Lector) |
-| `editor` | editor_categoria | editor_categoria | editor_global (Editor) |
-| `approver` | editor_categoria | editor_categoria | editor_global |
+Resultado que produciría la migración en salud, desarrollo y nutrición, persona por persona (datos reales de hoy):
 
-Excepciones y refuerzos aplicados encima de la tabla:
+| persona | rol / alcance | salud | desarrollo | nutricion |
+|---|---|---|---|---|
+| estradaemilio7@gmail.com | Admin club-wide + super admin | editor_global | editor_global | editor_global |
+| e.estrada@loscabosunited.mx | Admin club-wide + super admin, con overrides `none` | override sin_acceso (super admin lo sobrepasa) | override sin_acceso (super admin lo sobrepasa) | editor_global |
+| prueba2@admin.com | Admin club-wide, con overrides `none` | **sin_acceso** | **sin_acceso** | **sin_acceso** |
+| prueba@doctor.com | Médico club-wide | editor_categoria | sin_acceso | editor_categoria |
+| prueba1@jugador.com | Jugador, categoría Liga Premier | **vista_jugador** | **vista_jugador** | **vista_jugador** |
 
-- **Rol con `base_role = 'admin'`**: todo lo que tenía `read`/`editor`/`approver` pasa a `lector_global` / `editor_global` / `editor_global`. Lo que tenía `none` sigue en `sin_acceso` (no se regala acceso nuevo).
-- **`approver`**: pasa a editor y además se conserva intacta su configuración de aprobación en `role_request_approvals` y `request_type_user_overrides`. Se añade una verificación posterior a la migración: todo rol/persona que hoy figura como aprobador de algún tipo de solicitud debe quedar con nivel editor en el módulo correspondiente (`request_approver_module`); si alguno queda por debajo, la migración lo sube a editor. Así nadie pierde su capacidad de aprobar.
-- **Rol de base `jugador`**: en módulos personales, `read` se traduce a `lector_personal` (el jugador ve lo suyo, no toda la categoría). En cualquier otro caso el jugador conserva la traducción de la tabla.
-- **Membresías club-wide** (`team_id NULL`): no se cambia el nivel guardado. El alcance amplio ya lo aporta la asignación al resolver (una membresía sin equipo aplica a todas las categorías del club), igual que hoy.
+Ningún jugador queda en `lector_categoria` o superior en módulos personales. Ningún usuario no-médico y no-admin queda viendo salud ajena. Puntos a confirmar:
 
-Con los datos actuales el volumen es chico y verificable: 5 roles, 5 membresías, 15 overrides, 11 aprobaciones por rol, 0 overrides de aprobador; y no existe hoy ningún `approver` guardado en `role_permissions` (solo `none`, `read`, `editor`).
+- Los 2 super admins siguen viendo todo por ser super admin, aunque tengan overrides en `none`. ¿Lo dejamos así?
+- El Médico hoy no tiene ningún permiso; con la tabla nueva pasa a editor de salud y nutrición de sus categorías. Como es club-wide, eso alcanza todas las categorías. ¿Correcto?
 
-Garantías de que nadie queda sin acceso indebidamente:
+No aplico nada hasta que confirmes esta tabla.
 
-1. La traducción nunca produce `sin_acceso` a partir de algo distinto de `none`.
-2. La migración corre en una sola transacción, y termina con comprobaciones que abortan si fallan: ninguna fila queda con `level` nulo; ninguna fila con nivel viejo distinto de `none` quedó en `sin_acceso`; todo aprobador vigente quedó como editor.
-3. `access_level` se conserva en la misma fila durante Partes 1–3, así que la comparación viejo/nuevo es auditable y se puede revertir sin pérdida.
-4. Un query de verificación posterior lista, por usuario, el nivel efectivo antes y después por módulo y categoría, y solo debe mostrar diferencias esperadas (ampliaciones controladas del admin y aprobadores).
+## 7. Funciones helper nuevas (no reemplazan a ninguna vieja)
 
-## 5. Funciones helper
+- `effective_permission(_user uuid, _module text, _team uuid) → permission_level`: super admin → `editor_global`; si no, máximo entre el nivel del rol de cada membresía aplicable (club-wide aplica a cualquier `team_id`), luego se aplican overrides club y después overrides de esa categoría (el override pisa, no se suma).
+- `can_view_module(_user, _module, _team) → bool`: nivel distinto de `sin_acceso`.
+- `can_edit_module(_user, _module, _team) → bool`: nivel en (`editor_categoria`, `editor_global`).
+- `can_view_own_row(_user, _module, _owner uuid, _team) → bool`: true si el nivel es de lectura amplia, o si es `vista_jugador` y `_owner = _user`.
+- `max_permission_any_team(_user, _module) → permission_level`: máximo sobre todas las membresías, para navegación y chips.
 
-Todas `security definer`, `stable`, con `search_path = public`:
+Todas `security definer`, `stable`, `set search_path = public`, con nombres nuevos que no chocan con los actuales.
 
-- `permission_scope(_level)` → `'ninguno' | 'personal' | 'categoria' | 'global'`
-- `permission_can_edit(_level)` → boolean
-- `effective_permission(_user_id, _module_key, _team_id)` → `permission_level`: recorre las asignaciones del usuario (`team_memberships`), toma el nivel del rol para el módulo, aplica overrides (club primero, categoría después), y devuelve el máximo efectivo para esa categoría. Membresía club-wide aplica a cualquier `_team_id`. Super admin devuelve siempre `editor_global`.
-- `can_view_module(_user_id, _module_key, _team_id)` → boolean
-- `can_edit_module(_user_id, _module_key, _team_id)` → boolean
-- `can_view_own_row(_user_id, _module_key, _owner_id, _team_id)` → boolean: cubre `lector_personal` (ve la fila si es suya) y niveles superiores.
-- `max_permission_any_team(_user_id, _module_key)` → `permission_level`: para navegación y menús (¿aparece el módulo?).
+## 8. Inventario de lo que tocará la Parte 2 (no se cambia ahora)
 
-La UI de la Parte 2 consumirá los mismos conceptos desde un hook espejo en el cliente, alimentado por la misma tabla `module_catalog`.
+Funciones SQL viejas y quién las usa:
 
-## Alcance técnico de esta parte
+| función vieja | módulos / tablas que dependen |
+|---|---|
+| `has_module_access` | navegación y RLS genéricas |
+| `has_module_editor`, `has_module_editor_any` | documentos, inventario, compras, coordinación, tareas, juntas |
+| `has_module_approver_any`, `can_approve_request_type`, `request_type_approver_ids`, `request_approver_module` | solicitudes |
+| `can_access_health`, `can_edit_health`, `health_level` | salud: injuries, injury_progress, medical_checkups, medical_prescriptions, player_medical_profile |
+| `can_edit_development`, `development_level` | desarrollo: development_goals/feedback/assessments, assessment_scores, training_routines, routine_assignments, routine_exercises |
+| `can_view_training`, `can_edit_training`, `can_view_training_club`, `can_edit_training_club`, `training_level` | entrenamientos: exercises, training_sessions, session_exercises |
+| `can_view_trip`, `can_edit_trip` | viajes y sus 13 tablas de logística |
+| `can_view_request` | solicitudes, request_comments, request_status_history |
+| `has_team_access`, `has_team_scope`, `has_club_access`, `user_sees_all_club`, `is_player_only`, `has_event_access` | plantel, agenda/mes, calendar_events, event_attendees, notificaciones |
 
-- Migración SQL: crear `permission_level`, crear y poblar `module_catalog`, agregar y poblar `level` en `role_permissions` y `user_permission_overrides`, crear las 7 funciones helper, y las verificaciones de la sección 4.
-- Código: `src/lib/modules.ts` gana el tipo de permiso y `levelsForModule`; se añade un módulo de utilidades de nivel (etiquetas y orden) para que Parte 2 lo use.
-- Sin cambios en RLS de módulos, sin cambios en la UI de usuarios/roles: las funciones viejas (`has_module_access`, `has_module_editor`, `health_level`, `training_level`, `development_level`) siguen leyendo `access_level` y siguen funcionando igual hasta la Parte 3.
+Frontend a reemplazar en la Parte 2:
+
+- `src/hooks/useAccess.ts` (construye `permissions` y `permissionsByTeam` con la escala vieja).
+- `src/hooks/useTeamAccess.ts` (`levelForTeam`, `canEditTeam`, `canReadTeam`).
+- `src/hooks/useEditableTeams.ts`.
+- `src/components/squad/AppLayout.tsx`: `getModuleAccess`, `isModuleAccessible`, navegación y chips.
+- `src/lib/rolePages.ts` (mapa de páginas por rol base).
+- Vistas de módulo que hoy comparan contra `editor`/`approver`: plantel, salud, desarrollo, entrenamientos, viajes, inventario, compras, solicitudes, documentos, coordinación, agenda/mes, usuarios.
+- Matriz de permisos en `/m/usuarios` (pasa a los 6 niveles en la Parte 3).
+
+## 9. Cómo garantizo que la app siga igual
+
+- No se elimina ni se modifica ninguna función SQL existente.
+- No se cambia ninguna política RLS.
+- No se modifica ningún archivo de `src/`: la escala nueva vive solo en la base.
+- `access_level` sigue siendo la única columna leída por el código actual; `level` queda como dato inerte.
+- Rollback: borrar las columnas `level` y las 5 funciones nuevas devuelve el sistema a su estado exacto de hoy.
+
+## 10. Orden de ejecución al aprobar
+
+1. Confirmas la tabla de privacidad del punto 6 y las dos preguntas abiertas.
+2. Migración única: tipo, columnas, poblado, verificaciones, funciones helper.
+3. Reporte posterior: nivel resultante por rol y por usuario en los 18 módulos, para revisión antes de arrancar la Parte 2.
