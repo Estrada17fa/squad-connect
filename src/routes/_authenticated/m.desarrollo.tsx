@@ -129,11 +129,13 @@ function DesarrolloPage() {
 
   const filteredRoster = roster.filter((p) => matchTeam(p.teamId) && byName(p.fullName));
   const feedback = (feedbackQ.data ?? []).filter(
-    (f) => matchTeam(f.team_id) && byName(f.player?.full_name),
+    (f) => matchTeam(f.team_id) && seesOwnOnly(f.team_id, f.player_user_id) && byName(f.player?.full_name),
   );
-  const goals = (goalsQ.data ?? []).filter((g) => matchTeam(g.team_id) && byName(g.player?.full_name));
+  const goals = (goalsQ.data ?? []).filter(
+    (g) => matchTeam(g.team_id) && seesOwnOnly(g.team_id, g.player_user_id) && byName(g.player?.full_name),
+  );
   const assessments = (assessmentsQ.data ?? []).filter(
-    (a) => matchTeam(a.team_id) && byName(a.player?.full_name),
+    (a) => matchTeam(a.team_id) && seesOwnOnly(a.team_id, a.player_user_id) && byName(a.player?.full_name),
   );
   const routines = (routinesQ.data ?? []).filter((r) => matchTeam(r.team_id) && (!q || byName(r.name)));
 
