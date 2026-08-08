@@ -3297,6 +3297,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      can_edit_club_module: {
+        Args: { _club_id: string; _module_key: string; _user_id: string }
+        Returns: boolean
+      }
       can_edit_development: {
         Args: { _team_id: string; _user_id: string }
         Returns: boolean
@@ -3323,6 +3327,10 @@ export type Database = {
       }
       can_edit_trip_new: {
         Args: { _trip_id: string; _user_id: string }
+        Returns: boolean
+      }
+      can_view_club_module: {
+        Args: { _club_id: string; _module_key: string; _user_id: string }
         Returns: boolean
       }
       can_view_event_new: {
