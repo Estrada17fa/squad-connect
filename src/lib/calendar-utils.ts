@@ -42,19 +42,62 @@ export function monthLabel(d: Date) {
   return `${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
 }
 
+/**
+ * Preferencias de visualización del club (zona horaria y formato de fecha).
+ * Se actualizan desde `useClubPrefs()` y las usan los formateadores de abajo.
+ */
+let clubTimeZone: string | undefined;
+let clubDateFormat = "dd/MM/yyyy";
+
+export function setClubDatePrefs(prefs: { timezone?: string | null; dateFormat?: string | null }) {
+  clubTimeZone = prefs.timezone || undefined;
+  clubDateFormat = prefs.dateFormat || "dd/MM/yyyy";
+}
+
+export function getClubTimeZone() {
+  return clubTimeZone;
+}
+
+/** Fecha corta respetando el formato configurado por el club. */
+export function formatShortDate(value: string | Date) {
+  const d = typeof value === "string" ? new Date(value) : value;
+  const parts = new Intl.DateTimeFormat("es-MX", {
+    timeZone: clubTimeZone,
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  })
+    .formatToParts(d)
+    .reduce<Record<string, string>>((acc, p) => ({ ...acc, [p.type]: p.value }), {});
+  if (clubDateFormat === "MM/dd/yyyy") return `${parts.month}/${parts.day}/${parts.year}`;
+  if (clubDateFormat === "yyyy-MM-dd") return `${parts.year}-${parts.month}-${parts.day}`;
+  return `${parts.day}/${parts.month}/${parts.year}`;
+}
+
 export function formatDayLabel(d: Date) {
-  return d.toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long" });
+  return d.toLocaleDateString("es-MX", {
+    timeZone: clubTimeZone,
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
 }
 
 export function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
+  return new Date(iso).toLocaleTimeString("es-MX", {
+    timeZone: clubTimeZone,
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 export function formatDateTime(iso: string) {
   return new Date(iso).toLocaleString("es-MX", {
+    timeZone: clubTimeZone,
     weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
   });
 }
+
 
 /** Convert an ISO timestamptz to a value acceptable by <input type="datetime-local"> (local time). */
 export function toLocalInputValue(iso: string | null | undefined) {
