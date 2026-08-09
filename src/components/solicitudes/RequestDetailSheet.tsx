@@ -288,7 +288,11 @@ export function RequestDetailSheet({
           </span>
           <div className="min-w-0 flex-1">
             <p className="text-xs text-muted-foreground">Creada el {formatDateTime(request.created_at)}</p>
+            <p className="truncate text-xs text-muted-foreground">
+              Categoría: <span className="text-foreground">{request.team?.name ?? "Todo el club"}</span>
+            </p>
           </div>
+
           <StatusBadge
             variant={STATUS_VARIANT[request.status]}
             className={STATUS_EXTRA_CLASS[request.status]}
