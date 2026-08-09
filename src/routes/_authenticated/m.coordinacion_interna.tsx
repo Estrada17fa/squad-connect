@@ -212,14 +212,17 @@ function CoordinacionPage() {
               icon={ClipboardList}
               title="Sin tareas"
               message="No hay tareas con estos filtros."
-              actionLabel={canCreate ? "Nueva tarea" : undefined}
-              onAction={
-                canCreate
-                  ? () => {
+              action={
+                canCreate ? (
+                  <Button
+                    onClick={() => {
                       setEditingTask(null);
                       setTaskDialog(true);
-                    }
-                  : undefined
+                    }}
+                  >
+                    <Plus className="mr-2 h-4 w-4" /> Nueva tarea
+                  </Button>
+                ) : undefined
               }
             />
           ) : (
