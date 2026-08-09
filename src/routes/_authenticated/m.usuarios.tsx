@@ -36,7 +36,7 @@ import { useApp } from "@/components/squad/AppLayout";
 import { cn } from "@/lib/utils";
 import type { RequestType } from "@/lib/requestTypes";
 import { useRoleApprovals } from "@/hooks/useRequestApprovers";
-import { canEdit as levelCanEdit, type PermissionLevel } from "@/lib/permissions";
+import { canManageUsers, canSeeUsers, type PermissionLevel } from "@/lib/permissions";
 
 
 export const Route = createFileRoute("/_authenticated/m/usuarios")({
