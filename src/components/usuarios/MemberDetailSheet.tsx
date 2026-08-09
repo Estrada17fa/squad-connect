@@ -18,6 +18,7 @@ import {
   DetailField,
   DetailGrid,
   DetailValue,
+  DetailLink,
 } from "@/components/squad/DetailSheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -118,13 +119,15 @@ export function MemberDetailSheet({
       }
     >
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Avatar className="h-16 w-16">
+        <div className="flex items-start gap-4">
+          <Avatar className="h-16 w-16 shrink-0">
             {member.avatar_url ? <AvatarImage src={member.avatar_url} alt={name} /> : null}
             <AvatarFallback className="text-base font-semibold">{initials(name)}</AvatarFallback>
           </Avatar>
-          <div className="min-w-0 space-y-1.5">
-            <p className="truncate font-display text-lg font-semibold leading-tight">{name}</p>
+          <div className="min-w-0 flex-1 space-y-1.5">
+            <p className="break-words font-display text-lg font-semibold leading-tight [overflow-wrap:anywhere]">
+              {name}
+            </p>
             <div className="flex flex-wrap gap-1.5">
               <StatusBadge variant={isBaja ? "rejected" : "approved"}>
                 {isBaja ? "Baja" : "Activo"}
@@ -143,11 +146,11 @@ export function MemberDetailSheet({
 
         <DetailSection title="Contacto">
           <DetailGrid>
-            <DetailField label="Correo" icon={Mail}>
-              <DetailValue value={member.email} />
+            <DetailField label="Correo" icon={Mail} full>
+              <DetailLink value={member.email} type="email" />
             </DetailField>
             <DetailField label="Teléfono" icon={Phone}>
-              <DetailValue value={member.phone ?? null} />
+              <DetailLink value={member.phone ?? null} type="tel" />
             </DetailField>
             {member.created_at ? (
               <DetailField label="Alta" icon={CalendarDays}>
@@ -156,6 +159,7 @@ export function MemberDetailSheet({
             ) : null}
           </DetailGrid>
         </DetailSection>
+
 
         <DetailSection title="Membresías">
           {memberships.length === 0 ? (
@@ -167,14 +171,20 @@ export function MemberDetailSheet({
           ) : (
             <div className="grid gap-2">
               {memberships.map((m) => (
-                <div key={m.id} className="glass flex items-center gap-3 rounded-lg p-3">
+                <div key={m.id} className="glass flex items-start gap-3 rounded-lg p-3">
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{m.teamName ?? "Todo el club"}</p>
+                    <p className="break-words text-sm font-medium [overflow-wrap:anywhere]">
+                      {m.teamName ?? "Todo el club"}
+                    </p>
                     {m.job_title ? (
-                      <p className="truncate text-xs text-muted-foreground">{m.job_title}</p>
+                      <p className="break-words text-xs text-muted-foreground [overflow-wrap:anywhere]">
+                        {m.job_title}
+                      </p>
                     ) : null}
                   </div>
-                  <StatusBadge variant={roleVariant(m.roleName)}>{m.roleName ?? "—"}</StatusBadge>
+                  <div className="shrink-0">
+                    <StatusBadge variant={roleVariant(m.roleName)}>{m.roleName ?? "—"}</StatusBadge>
+                  </div>
                 </div>
               ))}
             </div>
