@@ -204,6 +204,7 @@ export function MemberForm({
     setEmgPhone("");
     setRoleId("");
     setAssignments({});
+    setClubJobTitle("");
     setPlayer(emptyPlayer);
     setSaving(false);
   }, []);
