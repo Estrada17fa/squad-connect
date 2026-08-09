@@ -125,25 +125,28 @@ export function DetailField({
   icon: Icon,
   children,
   className,
+  full,
 }: {
   label: React.ReactNode;
   icon?: React.ComponentType<{ className?: string }>;
   children: React.ReactNode;
   className?: string;
+  /** Ocupa el ancho completo de la rejilla (correo, dirección, notas…). */
+  full?: boolean;
 }) {
   return (
-    <div className={cn("space-y-1.5", className)}>
-      <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-        {Icon ? <Icon className="h-3.5 w-3.5" /> : null}
-        {label}
+    <div className={cn("min-w-0 space-y-1.5", full && "sm:col-span-2", className)}>
+      <div className="flex min-w-0 items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        {Icon ? <Icon className="h-3.5 w-3.5 shrink-0" /> : null}
+        <span className="truncate">{label}</span>
       </div>
-      <div className="text-sm text-foreground">{children}</div>
+      <div className="min-w-0 break-words text-sm text-foreground [overflow-wrap:anywhere]">{children}</div>
     </div>
   );
 }
 
 export function DetailGrid({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <div className={cn("grid grid-cols-2 gap-3", className)}>{children}</div>;
+  return <div className={cn("grid grid-cols-1 gap-3 sm:grid-cols-2", className)}>{children}</div>;
 }
 
 export function DetailEmpty({ children = "—" }: { children?: React.ReactNode }) {
@@ -152,5 +155,30 @@ export function DetailEmpty({ children = "—" }: { children?: React.ReactNode }
 
 export function DetailValue({ value }: { value?: string | number | null }) {
   if (value === null || value === undefined || value === "") return <DetailEmpty />;
-  return <span className="whitespace-pre-wrap">{String(value)}</span>;
+  return <span className="block whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{String(value)}</span>;
+}
+
+/** Dato accionable (correo/teléfono) con el mismo corte de palabras largas. */
+export function DetailLink({
+  value,
+  type = "email",
+  className,
+}: {
+  value?: string | null;
+  type?: "email" | "tel";
+  className?: string;
+}) {
+  if (!value) return <DetailEmpty />;
+  const href = type === "email" ? `mailto:${value}` : `tel:${value.replace(/\s+/g, "")}`;
+  return (
+    <a
+      href={href}
+      className={cn(
+        "block break-words text-primary underline-offset-4 hover:underline [overflow-wrap:anywhere]",
+        className,
+      )}
+    >
+      {value}
+    </a>
+  );
 }
