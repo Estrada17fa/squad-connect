@@ -39,7 +39,7 @@ interface EditableProfile {
 }
 
 function MiPerfilPage() {
-  const { user } = useApp();
+  const { user, profile } = useApp();
   const qc = useQueryClient();
 
   const { data, isLoading } = useQuery({
