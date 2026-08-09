@@ -223,7 +223,19 @@ function SolicitudesPage() {
                   ...STATUS_ORDER.map((s) => ({ key: s, label: STATUS_LABEL[s] })),
                 ]}
               />
+              <Chips
+                value={teamFilter}
+                onChange={setTeamFilter}
+                options={[
+                  { key: "all", label: "Todas las categorías" },
+                  { key: "club", label: "Todo el club" },
+                  ...teamOptions
+                    .filter((t) => t.id)
+                    .map((t) => ({ key: t.id as string, label: t.name })),
+                ]}
+              />
             </div>
+
             <RequestList
               requests={filtered}
               isLoading={requestsQ.isLoading}
