@@ -58,7 +58,12 @@ interface AppCtx {
   viewsAllClub: boolean;
   /** true si el usuario es exclusivamente jugador. */
   isPlayerOnly: boolean;
-  profile: { full_name: string | null; email: string | null; club_id: string | null } | null;
+  profile: {
+    full_name: string | null;
+    email: string | null;
+    avatar_url: string | null;
+    club_id: string | null;
+  } | null;
   /** Rol base derivado del equipo activo (para el mapping de páginas). */
   activeBaseRole: BaseRole;
   /** Páginas visibles con los módulos que caen dentro de cada una. */
