@@ -473,8 +473,19 @@ export function MemberForm({
               ) : null}
             </Section>
           ) : (
-            <Section title="Categorías y puesto" hint="Admin es global: no se asigna a categorías.">
-              <p className="text-xs text-muted-foreground">Este rol tiene alcance de todo el club.</p>
+            <Section
+              title="Puesto"
+              hint="Este rol tiene alcance de todo el club: no se asigna a categorías."
+            >
+              <Field label="Puesto (opcional)" htmlFor="mf-club-job">
+                <Input
+                  id="mf-club-job"
+                  value={clubJobTitle}
+                  onChange={(e) => setClubJobTitle(e.target.value)}
+                  placeholder="ej. Director deportivo, Presidente, Gerente"
+                  maxLength={60}
+                />
+              </Field>
             </Section>
           )}
 
