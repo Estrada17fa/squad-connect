@@ -10,7 +10,6 @@ import { ClubIdentityTab } from "@/components/admin/ClubIdentityTab";
 import { ClubLeagueTab } from "@/components/admin/ClubLeagueTab";
 import { ClubPreferencesTab } from "@/components/admin/ClubPreferencesTab";
 import { useApp } from "@/components/squad/AppLayout";
-import { canEdit as levelCanEdit } from "@/lib/permissions";
 
 export const Route = createFileRoute("/_authenticated/admin/configuracion")({
   head: () => ({
