@@ -1,8 +1,16 @@
 import * as React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Download, Trash2, FileText, User as UserIcon } from "lucide-react";
-import { DetailSheet, DetailField, DetailGrid, DetailEmpty } from "@/components/squad/DetailSheet";
+import { Download, FileText, Trash2, User as UserIcon } from "lucide-react";
+import {
+  DetailSheet,
+  DetailField,
+  DetailGrid,
+  DetailEmpty,
+  DetailSection,
+} from "@/components/squad/DetailSheet";
+import { StatusBadge } from "@/components/squad/StatusBadge";
+import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,12 +21,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import { StatusBadge } from "@/components/squad/StatusBadge";
 import { supabase } from "@/integrations/supabase/client";
+import { DocumentForm } from "./DocumentForm";
 import {
   CATEGORY_LABEL,
+  expiryStateOf,
   fileExtOf,
+  formatDocDate,
+  formatFileSize,
   isImageExt,
   isPdfExt,
   type DocumentRow,
@@ -26,14 +36,15 @@ import {
 
 interface Props {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
+  onOpenChange: (v: boolean) => void;
   doc: DocumentRow | null;
-  canEdit: boolean;
-  onEdit?: (doc: DocumentRow) => void;
+  /** Puede editar/eliminar este documento (según su categoría). */
+  canEdit?: boolean;
+  lockPerson?: boolean;
 }
 
-/** Ficha de lectura de un documento: vista previa + descarga. Editar abre el DocumentFormDialog existente. */
-export function DocumentDetailSheet({ open, onOpenChange, doc, canEdit, onEdit }: Props) {
+/** Ficha del documento: siempre abre en lectura, con previa y descarga. */
+export function DocumentDetailSheet({ open, onOpenChange, doc, canEdit, lockPerson }: Props) {
   const qc = useQueryClient();
   const [confirmDel, setConfirmDel] = React.useState(false);
 
@@ -42,9 +53,7 @@ export function DocumentDetailSheet({ open, onOpenChange, doc, canEdit, onEdit }
     enabled: !!doc && open,
     staleTime: 45_000,
     queryFn: async () => {
-      const { data, error } = await supabase.storage
-        .from("documents")
-        .createSignedUrl(doc!.file_path, 60);
+      const { data, error } = await supabase.storage.from("documents").createSignedUrl(doc!.file_path, 60);
       if (error) throw error;
       return data.signedUrl;
     },
@@ -67,13 +76,17 @@ export function DocumentDetailSheet({ open, onOpenChange, doc, canEdit, onEdit }
   });
 
   if (!doc) return null;
+
   const ext = doc.file_type ?? fileExtOf(doc.file_path);
-  const uploaderName = doc.uploader?.full_name ?? null;
-  const uploadedAt = new Date(doc.created_at).toLocaleDateString("es-MX", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+  const state = expiryStateOf(doc.expiry_date);
+  const vigencia =
+    state === "expired"
+      ? { label: "Vencido", variant: "rejected" as const }
+      : state === "soon"
+        ? { label: "Por vencer", variant: "pending" as const }
+        : state === "ok"
+          ? { label: "Vigente", variant: "approved" as const }
+          : null;
 
   return (
     <>
@@ -81,19 +94,18 @@ export function DocumentDetailSheet({ open, onOpenChange, doc, canEdit, onEdit }
         open={open}
         onOpenChange={onOpenChange}
         size="xl"
+        canEdit={canEdit}
         title={
-          <span className="flex items-center gap-2">
+          <span className="flex min-w-0 items-center gap-2">
             <FileText className="h-5 w-5 shrink-0 text-primary" />
-            <span className="truncate">{doc.title}</span>
+            <span className="break-words [overflow-wrap:anywhere]">{doc.title}</span>
           </span>
         }
         description={
-          <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+          <span className="flex flex-wrap items-center gap-1.5">
             <StatusBadge variant="info">{CATEGORY_LABEL[doc.category]}</StatusBadge>
-            {doc.related_user?.full_name ? <span>· {doc.related_user.full_name}</span> : null}
-            {doc.team?.name ? <span>· {doc.team.name}</span> : null}
-            {doc.issue_date ? <span>· Emitido {doc.issue_date}</span> : null}
-            {doc.expiry_date ? <span>· Vence {doc.expiry_date}</span> : null}
+            {vigencia ? <StatusBadge variant={vigencia.variant}>{vigencia.label}</StatusBadge> : null}
+            <span className="text-xs text-muted-foreground">{doc.team?.name ?? "Todo el club"}</span>
           </span>
         }
         headerActions={
@@ -110,18 +122,20 @@ export function DocumentDetailSheet({ open, onOpenChange, doc, canEdit, onEdit }
             </Button>
           ) : null
         }
+        renderEdit={
+          canEdit
+            ? ({ done, cancel }) => (
+                <DocumentForm key={doc.id} existing={doc} lockPerson={lockPerson} onDone={done} onCancel={cancel} />
+              )
+            : undefined
+        }
         footer={
           <>
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
               Cerrar
             </Button>
-            {canEdit ? (
-              <Button type="button" variant="secondary" onClick={() => onEdit?.(doc)}>
-                Editar
-              </Button>
-            ) : null}
             {signedUrl ? (
-              <Button asChild>
+              <Button asChild className="glow-primary">
                 <a href={signedUrl} target="_blank" rel="noreferrer" download>
                   <Download className="mr-2 h-4 w-4" /> Descargar
                 </a>
@@ -130,12 +144,6 @@ export function DocumentDetailSheet({ open, onOpenChange, doc, canEdit, onEdit }
           </>
         }
       >
-        {doc.description ? (
-          <DetailField label="Descripción">
-            <span className="whitespace-pre-wrap">{doc.description}</span>
-          </DetailField>
-        ) : null}
-
         <div className="w-full max-w-full overflow-hidden rounded-xl border border-white/10 bg-black/40">
           {!signedUrl ? (
             <p className="p-6 text-center text-sm text-muted-foreground">Cargando vista previa…</p>
@@ -149,7 +157,7 @@ export function DocumentDetailSheet({ open, onOpenChange, doc, canEdit, onEdit }
             />
           ) : (
             <div className="space-y-3 p-6 text-center">
-              <p className="text-sm text-muted-foreground">Vista previa no disponible para este tipo de archivo.</p>
+              <p className="text-sm text-muted-foreground">Vista previa no disponible para este archivo.</p>
               <Button asChild variant="secondary">
                 <a href={signedUrl} target="_blank" rel="noreferrer">
                   <Download className="mr-2 h-4 w-4" /> Descargar
@@ -159,29 +167,52 @@ export function DocumentDetailSheet({ open, onOpenChange, doc, canEdit, onEdit }
           )}
         </div>
 
-        <DetailGrid>
-          <DetailField label="Categoría">{CATEGORY_LABEL[doc.category]}</DetailField>
-          <DetailField label="Equipo">{doc.team?.name ?? <DetailEmpty>Todo el club</DetailEmpty>}</DetailField>
-          <DetailField label="Fecha de emisión">{doc.issue_date ?? <DetailEmpty />}</DetailField>
-          <DetailField label="Fecha de vencimiento">{doc.expiry_date ?? <DetailEmpty />}</DetailField>
-        </DetailGrid>
+        <DetailSection title="Clasificación">
+          <DetailGrid>
+            <DetailField label="Tipo">{CATEGORY_LABEL[doc.category]}</DetailField>
+            <DetailField label="Categoría">{doc.team?.name ?? <DetailEmpty>Todo el club</DetailEmpty>}</DetailField>
+            <DetailField label="Asignado a" icon={UserIcon}>
+              {doc.related_user?.full_name ?? <DetailEmpty>Documento general</DetailEmpty>}
+            </DetailField>
+            <DetailField label="Archivo">
+              {(ext ? ext.toUpperCase() : "Archivo") +
+                (formatFileSize(doc.file_size) ? ` · ${formatFileSize(doc.file_size)}` : "")}
+            </DetailField>
+          </DetailGrid>
+        </DetailSection>
+
+        <DetailSection title="Vigencia">
+          <DetailGrid>
+            <DetailField label="Emisión">{formatDocDate(doc.issue_date) ?? <DetailEmpty />}</DetailField>
+            <DetailField label="Vencimiento">{formatDocDate(doc.expiry_date) ?? <DetailEmpty />}</DetailField>
+          </DetailGrid>
+        </DetailSection>
+
+        {doc.description || (doc.tags && doc.tags.length) ? (
+          <DetailSection title="Detalles">
+            {doc.description ? (
+              <DetailField label="Notas" full>
+                <span className="whitespace-pre-wrap">{doc.description}</span>
+              </DetailField>
+            ) : null}
+            {doc.tags && doc.tags.length ? (
+              <div className="flex flex-wrap gap-1.5">
+                {doc.tags.map((t) => (
+                  <span
+                    key={t}
+                    className="rounded-full bg-white/5 px-2 py-0.5 text-xs text-muted-foreground ring-1 ring-inset ring-white/5"
+                  >
+                    {t}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+          </DetailSection>
+        ) : null}
 
         <DetailField label="Subido por" icon={UserIcon}>
-          {uploaderName ?? "—"} · {uploadedAt}
+          {(doc.uploader?.full_name ?? "—") + " · " + (formatDocDate(doc.created_at) ?? "")}
         </DetailField>
-
-        {doc.tags && doc.tags.length ? (
-          <div className="flex flex-wrap gap-1.5">
-            {doc.tags.map((t) => (
-              <span
-                key={t}
-                className="rounded-full bg-white/5 px-2 py-0.5 text-xs text-muted-foreground ring-1 ring-inset ring-white/5"
-              >
-                #{t}
-              </span>
-            ))}
-          </div>
-        ) : null}
       </DetailSheet>
 
       <AlertDialog open={confirmDel} onOpenChange={setConfirmDel}>
