@@ -9,9 +9,11 @@ import { useAccess, hasAccess, type TeamOption } from "@/hooks/useAccess";
 import {
   canEdit as levelCanEdit,
   canRead as levelCanRead,
+  canSeeUsers,
   maxLevel,
   type PermissionLevel,
 } from "@/lib/permissions";
+
 
 import { MODULES, MODULE_MAP, moduleFromPath, type ModuleKey } from "@/lib/modules";
 import { resolvePagesForUser, inferBaseRole, type BaseRole, type ResolvedPage } from "@/lib/rolePages";
@@ -148,12 +150,14 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
   // modo que la navegación nunca oculta elementos con display:none — los que no
   // pasan el predicado simplemente no se incluyen en el array renderizado.
   const isModuleAccessible = React.useCallback(
-    (key: ModuleKey) => canViewModule(key),
-    [canViewModule],
+    (key: ModuleKey) =>
+      key === "usuarios" ? canSeeUsers(getModuleAccess("usuarios")) : canViewModule(key),
+    [canViewModule, getModuleAccess],
   );
-  // La sección Admin exige EDICIÓN real en `usuarios` (o super admin):
+  // La sección Admin exige nivel global en `usuarios` (o super admin):
   // leer documentos u otros módulos nunca abre Admin.
-  const canAccessAdmin = !!data?.isSuperAdmin || canEditModule("usuarios");
+  const canAccessAdmin = !!data?.isSuperAdmin || canSeeUsers(getModuleAccess("usuarios"));
+
   const visiblePages = React.useMemo(
     () => resolvePagesForUser(effectiveBaseRole, isModuleAccessible, { canAccessAdmin }),
     [effectiveBaseRole, isModuleAccessible, canAccessAdmin],

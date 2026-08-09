@@ -36,7 +36,7 @@ import { useApp } from "@/components/squad/AppLayout";
 import { cn } from "@/lib/utils";
 import type { RequestType } from "@/lib/requestTypes";
 import { useRoleApprovals } from "@/hooks/useRequestApprovers";
-import { canEdit as levelCanEdit, type PermissionLevel } from "@/lib/permissions";
+import { canManageUsers, canSeeUsers, type PermissionLevel } from "@/lib/permissions";
 
 
 export const Route = createFileRoute("/_authenticated/m/usuarios")({
@@ -63,22 +63,34 @@ interface PermRow {
 }
 
 function UsuariosPage() {
-  const { user, profile, isSuperAdmin, permissions } = useApp();
-  const canEdit = isSuperAdmin || levelCanEdit(permissions["usuarios"]);
+  const { profile, isSuperAdmin, permissions } = useApp();
+  // Gestionar personas es sensible: solo tiene sentido en ámbito global.
+  const puedeVer = isSuperAdmin || canSeeUsers(permissions["usuarios"]);
+  const canEdit = isSuperAdmin || canManageUsers(permissions["usuarios"]);
+
+  if (!puedeVer) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Usuarios" subtitle="Miembros del club, roles y permisos" />
+        <EmptyState
+          icon={ShieldCheck}
+          title="Sin acceso"
+          message="No tienes permiso para ver la administración de usuarios."
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <ModuleTabs activeKey="usuarios" />
       <PageHeader hideTitle title="Usuarios" subtitle="Miembros del club, roles y permisos" />
 
-      <Tabs defaultValue="roles" className="space-y-4">
+      <Tabs defaultValue="miembros" className="space-y-4">
         <TabsList className="glass w-full sm:w-auto">
-          <TabsTrigger value="roles" className="flex-1 sm:flex-none">Roles</TabsTrigger>
           <TabsTrigger value="miembros" className="flex-1 sm:flex-none">Miembros</TabsTrigger>
+          <TabsTrigger value="roles" className="flex-1 sm:flex-none">Roles</TabsTrigger>
         </TabsList>
-        <TabsContent value="roles">
-          <RolesTab clubId={profile?.club_id ?? null} canEdit={canEdit} />
-        </TabsContent>
         <TabsContent value="miembros">
           {profile?.club_id ? (
             <MembersTab clubId={profile.club_id} canEdit={canEdit} />
@@ -86,11 +98,14 @@ function UsuariosPage() {
             <EmptyState title="Sin club" message="Tu perfil aún no está asociado a un club." />
           )}
         </TabsContent>
-
+        <TabsContent value="roles">
+          <RolesTab clubId={profile?.club_id ?? null} canEdit={canEdit} />
+        </TabsContent>
       </Tabs>
     </div>
   );
 }
+
 
 
 function RolesTab({ clubId, canEdit }: { clubId: string | null; canEdit: boolean }) {
