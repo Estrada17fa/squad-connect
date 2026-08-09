@@ -382,7 +382,13 @@ function RequestList({
             onClick={() => onOpen(r)}
             className={cn(highlighted.has(r.id) && "border-primary/40 ring-1 ring-primary/25")}
           >
+            <div className="mb-2">
+              <span className="inline-flex rounded-full border border-border/60 bg-white/[0.04] px-2 py-0.5 text-[11px] text-muted-foreground">
+                {r.team?.name ?? "Todo el club"}
+              </span>
+            </div>
             <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+
               <span className="flex min-w-0 items-center gap-2">
                 <Avatar className="h-6 w-6">
                   <AvatarImage src={r.requester?.avatar_url ?? undefined} alt={who} />
