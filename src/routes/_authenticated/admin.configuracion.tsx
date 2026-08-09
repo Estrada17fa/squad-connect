@@ -51,13 +51,14 @@ function ClubSettingsPage() {
         <EmptyState title="Sin club" message="Tu perfil aún no está asociado a un club." />
       ) : (
         <Tabs defaultValue="identidad" className="space-y-4">
-          <TabsList className="glass w-full justify-start overflow-x-auto sm:w-auto">
-            <TabsTrigger value="identidad">Identidad</TabsTrigger>
-            <TabsTrigger value="ubicaciones">Ubicaciones</TabsTrigger>
-            <TabsTrigger value="categorias">Categorías</TabsTrigger>
-            <TabsTrigger value="liga">Torneo / Liga</TabsTrigger>
-            <TabsTrigger value="preferencias">Preferencias</TabsTrigger>
+          <TabsList className="glass w-full justify-start overflow-x-auto overflow-y-hidden touch-pan-x overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:w-auto">
+            <TabsTrigger value="identidad" className="shrink-0">Identidad</TabsTrigger>
+            <TabsTrigger value="ubicaciones" className="shrink-0">Ubicaciones</TabsTrigger>
+            <TabsTrigger value="categorias" className="shrink-0">Categorías</TabsTrigger>
+            <TabsTrigger value="liga" className="shrink-0">Torneo / Liga</TabsTrigger>
+            <TabsTrigger value="preferencias" className="shrink-0">Preferencias</TabsTrigger>
           </TabsList>
+
 
           <TabsContent value="identidad">
             <ClubIdentityTab clubId={clubId} canEdit={canEdit} />
