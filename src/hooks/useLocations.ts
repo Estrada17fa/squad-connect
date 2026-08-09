@@ -117,6 +117,7 @@ export function useResolveLocation() {
       return data as LocationRow;
     },
     onSuccess: (row) => {
+      qc.invalidateQueries({ queryKey: ["locations-all"] });
       qc.invalidateQueries({ queryKey: ["location", row.id] });
     },
   });
@@ -138,6 +139,7 @@ export function usePromoteLocation() {
     },
     onSuccess: (row) => {
       qc.invalidateQueries({ queryKey: ["locations"] });
+      qc.invalidateQueries({ queryKey: ["locations-all"] });
       qc.invalidateQueries({ queryKey: ["location", row.id] });
     },
   });
@@ -192,6 +194,7 @@ export function useSaveLocation() {
     },
     onSuccess: (row) => {
       qc.invalidateQueries({ queryKey: ["locations"] });
+      qc.invalidateQueries({ queryKey: ["locations-all"] });
       qc.invalidateQueries({ queryKey: ["location", row.id] });
     },
 
@@ -221,6 +224,9 @@ export function useDeleteLocation() {
       const { error } = await db.from("locations").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["locations"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["locations"] });
+      qc.invalidateQueries({ queryKey: ["locations-all"] });
+    },
   });
 }
