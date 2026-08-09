@@ -158,6 +158,7 @@ export function MemberForm({
   const [emgPhone, setEmgPhone] = React.useState("");
   const [roleId, setRoleId] = React.useState("");
   const [assignments, setAssignments] = React.useState<Record<string, string>>({});
+  const [clubJobTitle, setClubJobTitle] = React.useState("");
   const [player, setPlayer] = React.useState<PlayerState>(emptyPlayer);
   const [saving, setSaving] = React.useState(false);
 
@@ -203,6 +204,7 @@ export function MemberForm({
     setEmgPhone("");
     setRoleId("");
     setAssignments({});
+    setClubJobTitle("");
     setPlayer(emptyPlayer);
     setSaving(false);
   }, []);
@@ -229,6 +231,7 @@ export function MemberForm({
     const map: Record<string, string> = {};
     for (const m of memberships) if (m.team_id) map[m.team_id] = m.job_title ?? "";
     setAssignments(map);
+    setClubJobTitle(memberships.find((m: any) => !m.team_id)?.job_title ?? "");
     const p = players[0];
     if (p) {
       setPlayer({
@@ -308,6 +311,7 @@ export function MemberForm({
         assignments: isAdmin
           ? []
           : selectedTeams.map((tid) => ({ team_id: tid, job_title: assignments[tid]?.trim() || null })),
+        club_job_title: clubJobTitle.trim() || null,
         player: playerPayload,
       };
 
@@ -469,8 +473,19 @@ export function MemberForm({
               ) : null}
             </Section>
           ) : (
-            <Section title="Categorías y puesto" hint="Admin es global: no se asigna a categorías.">
-              <p className="text-xs text-muted-foreground">Este rol tiene alcance de todo el club.</p>
+            <Section
+              title="Puesto"
+              hint="Este rol tiene alcance de todo el club: no se asigna a categorías."
+            >
+              <Field label="Puesto (opcional)" htmlFor="mf-club-job">
+                <Input
+                  id="mf-club-job"
+                  value={clubJobTitle}
+                  onChange={(e) => setClubJobTitle(e.target.value)}
+                  placeholder="ej. Director deportivo, Presidente, Gerente"
+                  maxLength={60}
+                />
+              </Field>
             </Section>
           )}
 

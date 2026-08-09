@@ -100,6 +100,7 @@ export async function syncMemberships(
   role: RoleLite,
   assignments: { team_id: string; job_title?: string | null }[],
   player: PlayerInput | null | undefined,
+  clubJobTitle?: string | null,
 ) {
   await admin.from("team_memberships").delete().eq("user_id", userId);
 
@@ -110,7 +111,7 @@ export async function syncMemberships(
         team_id: a.team_id,
         job_title: a.job_title ? a.job_title : null,
       }))
-    : [{ user_id: userId, role_id: role.id, team_id: null, job_title: null }];
+    : [{ user_id: userId, role_id: role.id, team_id: null, job_title: clubJobTitle || null }];
 
   const { error: memErr } = await admin.from("team_memberships").insert(rows);
   if (memErr) throw new Error("No se pudieron asignar las categorías");
