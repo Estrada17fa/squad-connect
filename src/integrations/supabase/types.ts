@@ -1310,6 +1310,7 @@ export type Database = {
           started_at: string | null
           starts_at: string
           status: string
+          team_id: string | null
           title: string
           updated_at: string
         }
@@ -1327,6 +1328,7 @@ export type Database = {
           started_at?: string | null
           starts_at: string
           status?: string
+          team_id?: string | null
           title: string
           updated_at?: string
         }
@@ -1344,6 +1346,7 @@ export type Database = {
           started_at?: string | null
           starts_at?: string
           status?: string
+          team_id?: string | null
           title?: string
           updated_at?: string
         }
@@ -1360,6 +1363,13 @@ export type Database = {
             columns: ["location_id"]
             isOneToOne: false
             referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meetings_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
             referencedColumns: ["id"]
           },
         ]
@@ -2356,6 +2366,54 @@ export type Database = {
           },
         ]
       }
+      task_checklist_items: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string | null
+          done: boolean
+          id: string
+          order_index: number
+          task_id: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          created_by?: string | null
+          done?: boolean
+          id?: string
+          order_index?: number
+          task_id: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          done?: boolean
+          id?: string
+          order_index?: number
+          task_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_checklist_items_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_checklist_items_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           club_id: string
@@ -2367,6 +2425,7 @@ export type Database = {
           id: string
           priority: Database["public"]["Enums"]["task_priority"]
           status: Database["public"]["Enums"]["task_status"]
+          team_id: string | null
           title: string
           updated_at: string
         }
@@ -2380,6 +2439,7 @@ export type Database = {
           id?: string
           priority?: Database["public"]["Enums"]["task_priority"]
           status?: Database["public"]["Enums"]["task_status"]
+          team_id?: string | null
           title: string
           updated_at?: string
         }
@@ -2393,6 +2453,7 @@ export type Database = {
           id?: string
           priority?: Database["public"]["Enums"]["task_priority"]
           status?: Database["public"]["Enums"]["task_status"]
+          team_id?: string | null
           title?: string
           updated_at?: string
         }
@@ -2402,6 +2463,13 @@ export type Database = {
             columns: ["club_id"]
             isOneToOne: false
             referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
             referencedColumns: ["id"]
           },
         ]
@@ -3370,8 +3438,16 @@ export type Database = {
         Args: { _team_id: string; _user_id: string }
         Returns: boolean
       }
+      can_edit_meeting: {
+        Args: { _meeting_id: string; _user_id: string }
+        Returns: boolean
+      }
       can_edit_module: {
         Args: { _module_key: string; _team_id: string; _user_id: string }
+        Returns: boolean
+      }
+      can_edit_task: {
+        Args: { _task_id: string; _user_id: string }
         Returns: boolean
       }
       can_edit_training: {
@@ -3398,6 +3474,10 @@ export type Database = {
         Args: { _event_id: string; _user_id: string }
         Returns: boolean
       }
+      can_view_meeting: {
+        Args: { _meeting_id: string; _user_id: string }
+        Returns: boolean
+      }
       can_view_module: {
         Args: { _module_key: string; _team_id: string; _user_id: string }
         Returns: boolean
@@ -3415,6 +3495,10 @@ export type Database = {
         Args: { _request_id: string; _user_id: string }
         Returns: boolean
       }
+      can_view_task: {
+        Args: { _task_id: string; _user_id: string }
+        Returns: boolean
+      }
       can_view_training: {
         Args: { _team_id: string; _user_id: string }
         Returns: boolean
@@ -3429,6 +3513,10 @@ export type Database = {
       }
       can_view_trip_new: {
         Args: { _trip_id: string; _user_id: string }
+        Returns: boolean
+      }
+      coord_scope_ok: {
+        Args: { _min_edit: boolean; _team_id: string; _user_id: string }
         Returns: boolean
       }
       development_level: {
@@ -3523,8 +3611,16 @@ export type Database = {
           unit: string
         }[]
       }
+      is_meeting_attendee: {
+        Args: { _meeting_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_player_only: { Args: { _user_id: string }; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_task_assignee: {
+        Args: { _task_id: string; _user_id: string }
+        Returns: boolean
+      }
       max_permission_any_team: {
         Args: { _module_key: string; _user_id: string }
         Returns: Database["public"]["Enums"]["permission_level"]
@@ -3656,7 +3752,7 @@ export type Database = {
         | "otro"
       routine_assignment_status: "asignada" | "en_progreso" | "completada"
       session_phase: "calentamiento" | "principal" | "vuelta_calma"
-      task_priority: "baja" | "media" | "alta"
+      task_priority: "baja" | "media" | "alta" | "urgente"
       task_status: "pendiente" | "en_progreso" | "completada" | "en_pausa"
       trip_leg: "ida" | "regreso"
       trip_meal_type: "desayuno" | "comida" | "cena" | "snack"
@@ -3866,7 +3962,7 @@ export const Constants = {
       ],
       routine_assignment_status: ["asignada", "en_progreso", "completada"],
       session_phase: ["calentamiento", "principal", "vuelta_calma"],
-      task_priority: ["baja", "media", "alta"],
+      task_priority: ["baja", "media", "alta", "urgente"],
       task_status: ["pendiente", "en_progreso", "completada", "en_pausa"],
       trip_leg: ["ida", "regreso"],
       trip_meal_type: ["desayuno", "comida", "cena", "snack"],
