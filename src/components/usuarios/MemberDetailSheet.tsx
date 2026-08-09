@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   DetailSheet,
   DetailSection,
+
   DetailField,
   DetailGrid,
   DetailValue,
