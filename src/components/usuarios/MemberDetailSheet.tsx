@@ -18,6 +18,7 @@ import {
   DetailField,
   DetailGrid,
   DetailValue,
+  DetailLink,
 } from "@/components/squad/DetailSheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
