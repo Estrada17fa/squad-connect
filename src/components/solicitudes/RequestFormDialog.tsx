@@ -37,8 +37,13 @@ interface Props {
   /** Tipo elegido en el paso previo (creación) o tipo de la solicitud editada. */
   type: RequestType;
   request?: RequestRow | null;
+  /** Categoría sugerida al crear (null = todo el club). */
+  defaultTeamId?: string | null;
+  /** Categorías donde la persona puede crear; vacío = solo "Todo el club". */
+  allowedTeamIds?: string[] | null;
   onSaved?: (info: { isEdit: boolean; type: RequestType }) => void;
 }
+
 
 function emptyValues(def: RequestTypeDef, request?: RequestRow | null) {
   const out: Record<string, string> = {};
