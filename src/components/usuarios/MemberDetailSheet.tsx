@@ -143,11 +143,11 @@ export function MemberDetailSheet({
 
         <DetailSection title="Contacto">
           <DetailGrid>
-            <DetailField label="Correo" icon={Mail}>
-              <DetailValue value={member.email} />
+            <DetailField label="Correo" icon={Mail} full>
+              <DetailLink value={member.email} type="email" />
             </DetailField>
             <DetailField label="Teléfono" icon={Phone}>
-              <DetailValue value={member.phone ?? null} />
+              <DetailLink value={member.phone ?? null} type="tel" />
             </DetailField>
             {member.created_at ? (
               <DetailField label="Alta" icon={CalendarDays}>
@@ -156,6 +156,7 @@ export function MemberDetailSheet({
             ) : null}
           </DetailGrid>
         </DetailSection>
+
 
         <DetailSection title="Membresías">
           {memberships.length === 0 ? (
