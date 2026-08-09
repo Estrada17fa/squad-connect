@@ -101,7 +101,26 @@ export function ClubPreferencesTab({ clubId, canEdit }: { clubId: string; canEdi
             ))}
           </SelectContent>
         </Select>
+        <p className="text-xs text-muted-foreground">Se aplica a las fechas mostradas en todos los módulos.</p>
       </div>
+
+      <div className="space-y-1.5">
+        <Label>Primer día de la semana</Label>
+        <Select value={weekStart} onValueChange={setWeekStart} disabled={!canEdit}>
+          <SelectTrigger>
+            <SelectValue placeholder="Primer día" />
+          </SelectTrigger>
+          <SelectContent>
+            {WEEK_STARTS.map((w) => (
+              <SelectItem key={w.value} value={String(w.value)}>
+                {w.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground">Se aplica a la vista de Mes del calendario.</p>
+      </div>
+
 
       {canEdit ? (
         <Button onClick={save} disabled={update.isPending} className="w-full glow-primary">
