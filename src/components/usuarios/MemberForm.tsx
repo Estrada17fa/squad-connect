@@ -311,6 +311,7 @@ export function MemberForm({
         assignments: isAdmin
           ? []
           : selectedTeams.map((tid) => ({ team_id: tid, job_title: assignments[tid]?.trim() || null })),
+        club_job_title: clubJobTitle.trim() || null,
         player: playerPayload,
       };
 
