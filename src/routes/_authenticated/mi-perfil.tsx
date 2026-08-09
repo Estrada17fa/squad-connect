@@ -15,6 +15,8 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useApp } from "@/components/squad/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
+import { PersonDocumentsSection } from "@/components/documentos/PersonDocumentsSection";
+
 
 export const Route = createFileRoute("/_authenticated/mi-perfil")({
   head: () => ({
@@ -37,7 +39,7 @@ interface EditableProfile {
 }
 
 function MiPerfilPage() {
-  const { user } = useApp();
+  const { user, profile } = useApp();
   const qc = useQueryClient();
 
   const { data, isLoading } = useQuery({
@@ -161,16 +163,8 @@ function MiPerfilPage() {
       />
 
 
-      <section className="space-y-2">
-        <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-          Documentos asignados
-        </h3>
-        <EmptyState
-          icon={FileText}
-          title="Sin documentos"
-          message="Cuando el club te asigne documentos, aparecerán aquí."
-        />
-      </section>
+      <PersonDocumentsSection clubId={profile?.club_id ?? null} userId={user.id} />
+
     </div>
   );
 }

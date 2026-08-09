@@ -20,6 +20,8 @@ import {
   DetailValue,
   DetailLink,
 } from "@/components/squad/DetailSheet";
+import { PersonDocumentsSection } from "@/components/documentos/PersonDocumentsSection";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/squad/StatusBadge";
@@ -221,6 +223,15 @@ export function MemberDetailSheet({
             </DetailGrid>
           </DetailSection>
         ) : null}
+
+        <PersonDocumentsSection
+          clubId={clubId}
+          userId={member.id}
+          canEdit={canManage}
+          title="Documentos personales"
+        />
+
+
 
         {canManage ? (
           <UserAdvancedSettings
