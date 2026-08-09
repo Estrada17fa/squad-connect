@@ -39,6 +39,24 @@ export function useLocations(clubId: string | null | undefined) {
   });
 }
 
+/** Todas las ubicaciones del club, incluidas las creadas desde otros módulos (borradores). */
+export function useAllLocations(clubId: string | null | undefined) {
+  return useQuery({
+    queryKey: ["locations-all", clubId ?? "none"],
+    enabled: !!clubId,
+    staleTime: 60_000,
+    queryFn: async (): Promise<LocationRow[]> => {
+      const { data, error } = await db
+        .from("locations")
+        .select("*")
+        .eq("club_id", clubId!)
+        .order("name", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as LocationRow[];
+    },
+  });
+}
+
 /** Una ubicación por id (esté o no en el catálogo visible). */
 export function useLocation(locationId: string | null | undefined) {
   return useQuery({
@@ -99,6 +117,7 @@ export function useResolveLocation() {
       return data as LocationRow;
     },
     onSuccess: (row) => {
+      qc.invalidateQueries({ queryKey: ["locations-all"] });
       qc.invalidateQueries({ queryKey: ["location", row.id] });
     },
   });
@@ -120,6 +139,7 @@ export function usePromoteLocation() {
     },
     onSuccess: (row) => {
       qc.invalidateQueries({ queryKey: ["locations"] });
+      qc.invalidateQueries({ queryKey: ["locations-all"] });
       qc.invalidateQueries({ queryKey: ["location", row.id] });
     },
   });
@@ -174,6 +194,7 @@ export function useSaveLocation() {
     },
     onSuccess: (row) => {
       qc.invalidateQueries({ queryKey: ["locations"] });
+      qc.invalidateQueries({ queryKey: ["locations-all"] });
       qc.invalidateQueries({ queryKey: ["location", row.id] });
     },
 
@@ -203,6 +224,9 @@ export function useDeleteLocation() {
       const { error } = await db.from("locations").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["locations"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["locations"] });
+      qc.invalidateQueries({ queryKey: ["locations-all"] });
+    },
   });
 }

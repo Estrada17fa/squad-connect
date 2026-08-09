@@ -1,13 +1,19 @@
 import * as React from "react";
 import { toast } from "sonner";
-import { Filter, Loader2, MapPin, Plus, Search, Trash2 } from "lucide-react";
+import { Filter, Loader2, MapPin, Navigation, Plus, Search, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LocationMap } from "@/components/calendar/LocationMap";
-import { useDeleteLocation, useLocations, useSaveLocation, type LocationRow } from "@/hooks/useLocations";
+import { googleMapsUrl } from "@/components/calendar/LocationDisplay";
+import {
+  useAllLocations,
+  useDeleteLocation,
+  useSaveLocation,
+  type LocationRow,
+} from "@/hooks/useLocations";
 import { useGeocodeSearch } from "@/hooks/useGeocodeSearch";
 import { EmptyState } from "@/components/squad/EmptyState";
 import { LoadingState } from "@/components/squad/LoadingState";
@@ -20,7 +26,6 @@ import {
   DetailSheet,
   DetailValue,
 } from "@/components/squad/DetailSheet";
-import { EntitySheetBody, EntitySheetFooter } from "@/components/squad/EntitySheet";
 import { supabase } from "@/integrations/supabase/client";
 
 const db = supabase as any;
@@ -53,19 +58,23 @@ export function LocationsTab({
   userId: string;
   canEdit: boolean;
 }) {
-  const locationsQ = useLocations(clubId);
+  const locationsQ = useAllLocations(clubId);
   const del = useDeleteLocation();
   const [search, setSearch] = React.useState("");
   const [mapFilter, setMapFilter] = React.useState<string>(ALL);
+  const [originFilter, setOriginFilter] = React.useState<string>(ALL);
   const [formOpen, setFormOpen] = React.useState(false);
   const [editRow, setEditRow] = React.useState<LocationRow | null>(null);
   const [detail, setDetail] = React.useState<LocationRow | null>(null);
   const [toDelete, setToDelete] = React.useState<LocationRow | null>(null);
   const [deleting, setDeleting] = React.useState(false);
 
+  const rowsAll = locationsQ.data ?? [];
+  const detailRow = detail ? (rowsAll.find((r) => r.id === detail.id) ?? detail) : null;
+
   const list = React.useMemo(() => {
     const q = search.trim().toLowerCase();
-    let rows = locationsQ.data ?? [];
+    let rows = rowsAll;
     if (q) {
       rows = rows.filter(
         (l) => l.name.toLowerCase().includes(q) || (l.address ?? "").toLowerCase().includes(q),
@@ -73,10 +82,12 @@ export function LocationsTab({
     }
     if (mapFilter === "con") rows = rows.filter((l) => l.latitude != null && l.longitude != null);
     if (mapFilter === "sin") rows = rows.filter((l) => l.latitude == null || l.longitude == null);
+    if (originFilter === "catalogo") rows = rows.filter((l) => l.is_catalog);
+    if (originFilter === "modulos") rows = rows.filter((l) => !l.is_catalog);
     return rows;
-  }, [locationsQ.data, search, mapFilter]);
+  }, [rowsAll, search, mapFilter, originFilter]);
 
-  const activeFilters = mapFilter === ALL ? 0 : 1;
+  const activeFilters = (mapFilter === ALL ? 0 : 1) + (originFilter === ALL ? 0 : 1);
 
   async function confirmDelete() {
     if (!toDelete) return;
@@ -154,8 +165,28 @@ export function LocationsTab({
                   </SelectContent>
                 </Select>
               </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Origen</Label>
+                <Select value={originFilter} onValueChange={setOriginFilter}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={ALL}>Todas</SelectItem>
+                    <SelectItem value="catalogo">Del catálogo</SelectItem>
+                    <SelectItem value="modulos">Usadas en módulos</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               {activeFilters > 0 ? (
-                <Button variant="ghost" className="w-full" onClick={() => setMapFilter(ALL)}>
+                <Button
+                  variant="ghost"
+                  className="w-full"
+                  onClick={() => {
+                    setMapFilter(ALL);
+                    setOriginFilter(ALL);
+                  }}
+                >
                   Limpiar filtros
                 </Button>
               ) : null}
@@ -182,48 +213,72 @@ export function LocationsTab({
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           {list.map((l) => (
-            <button
-              key={l.id}
-              type="button"
-              onClick={() => setDetail(l)}
-              className="glass overflow-hidden text-left transition-colors hover:bg-white/[0.06]"
-            >
-              {l.latitude != null && l.longitude != null ? (
-                <LocationMap latitude={l.latitude} longitude={l.longitude} className="h-28 w-full" />
-              ) : (
-                <div className="flex h-28 w-full items-center justify-center bg-white/[0.03] text-muted-foreground">
-                  <MapPin className="h-5 w-5" />
+            <div key={l.id} className="glass overflow-hidden">
+              <button type="button" onClick={() => setDetail(l)} className="block w-full text-left">
+                {l.latitude != null && l.longitude != null ? (
+                  <LocationMap latitude={l.latitude} longitude={l.longitude} className="h-28 w-full" />
+                ) : (
+                  <div className="flex h-28 w-full items-center justify-center bg-white/[0.03] text-muted-foreground">
+                    <MapPin className="h-5 w-5" />
+                  </div>
+                )}
+                <div className="space-y-1.5 p-3">
+                  <p className="font-display text-base font-semibold leading-tight text-foreground [overflow-wrap:anywhere]">
+                    {l.name}
+                  </p>
+                  <p className="text-sm text-muted-foreground [overflow-wrap:anywhere]">
+                    {l.address || "Sin dirección"}
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    <StatusBadge variant={l.latitude != null ? "approved" : "pending"}>
+                      {l.latitude != null ? "Con mapa" : "Sin mapa"}
+                    </StatusBadge>
+                    {!l.is_catalog ? <StatusBadge variant="pending">Usada en módulos</StatusBadge> : null}
+                  </div>
                 </div>
-              )}
-              <div className="space-y-1.5 p-3">
-                <p className="font-display text-base font-semibold leading-tight text-foreground [overflow-wrap:anywhere]">
-                  {l.name}
-                </p>
-                <p className="text-sm text-muted-foreground [overflow-wrap:anywhere]">
-                  {l.address || "Sin dirección"}
-                </p>
-                <StatusBadge variant={l.latitude != null ? "approved" : "pending"}>
-                  {l.latitude != null ? "Con mapa" : "Sin mapa"}
-                </StatusBadge>
+              </button>
+              <div className="flex gap-2 border-t border-white/10 p-2">
+                <Button size="sm" variant="ghost" className="flex-1" onClick={() => setDetail(l)}>
+                  <MapPin className="mr-2 h-3.5 w-3.5" /> Ver en mapa
+                </Button>
+                {l.latitude != null && l.longitude != null ? (
+                  <Button asChild size="sm" variant="ghost" className="flex-1">
+                    <a href={googleMapsUrl(l.latitude, l.longitude)} target="_blank" rel="noreferrer">
+                      <Navigation className="mr-2 h-3.5 w-3.5" /> Google Maps
+                    </a>
+                  </Button>
+                ) : canEdit ? (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="flex-1"
+                    onClick={() => {
+                      setEditRow(l);
+                      setFormOpen(true);
+                    }}
+                  >
+                    Corregir ubicación
+                  </Button>
+                ) : null}
               </div>
-            </button>
+            </div>
           ))}
         </div>
       )}
 
       <DetailSheet
-        open={!!detail}
+        open={!!detailRow}
         onOpenChange={(o) => !o && setDetail(null)}
-        title={detail?.name ?? ""}
+        title={detailRow?.name ?? ""}
         description="Ubicación del catálogo del club"
         canEdit={canEdit}
         renderEdit={
-          detail && canEdit
+          detailRow && canEdit
             ? ({ done }) => (
                 <LocationForm
                   clubId={clubId}
                   userId={userId}
-                  row={detail}
+                  row={detailRow}
                   onDone={(saved) => {
                     if (saved) setDetail(saved);
                     done();
@@ -234,41 +289,65 @@ export function LocationsTab({
             : undefined
         }
         headerActions={
-          canEdit && detail ? (
-            <Button size="sm" variant="ghost" onClick={() => setToDelete(detail)}>
+          canEdit && detailRow ? (
+            <Button size="sm" variant="ghost" onClick={() => setToDelete(detailRow)}>
               <Trash2 className="mr-2 h-3.5 w-3.5 text-destructive" /> Eliminar
             </Button>
           ) : null
         }
       >
-        {detail ? (
+        {detailRow ? (
           <div className="space-y-5">
-            {detail.latitude != null && detail.longitude != null ? (
-              <LocationMap
-                latitude={detail.latitude}
-                longitude={detail.longitude}
-                className="h-40 w-full rounded-xl"
-              />
-            ) : null}
+            {detailRow.latitude != null && detailRow.longitude != null ? (
+              <>
+                <LocationMap
+                  latitude={detailRow.latitude}
+                  longitude={detailRow.longitude}
+                  className="h-40 w-full overflow-hidden rounded-xl"
+                />
+                <Button asChild variant="secondary" className="w-full">
+                  <a
+                    href={googleMapsUrl(detailRow.latitude, detailRow.longitude)}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <Navigation className="mr-2 h-4 w-4" /> Abrir en Google Maps
+                  </a>
+                </Button>
+              </>
+            ) : (
+              <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3 text-sm text-muted-foreground">
+                Esta ubicación no tiene punto en el mapa, por eso no se ve el mapa en los módulos.
+                {canEdit ? " Usa el botón Editar para buscarla y asignarle su punto." : ""}
+              </div>
+            )}
             <DetailSection title="Información">
               <DetailGrid>
                 <DetailField label="Nombre">
-                  <DetailValue value={detail.name} />
+                  <DetailValue value={detailRow.name} />
                 </DetailField>
                 <DetailField label="Dirección" full>
-                  <DetailValue value={detail.address ?? ""} />
+                  <DetailValue value={detailRow.address ?? ""} />
                 </DetailField>
                 <DetailField label="Coordenadas">
                   <DetailValue
                     value={
-                      detail.latitude != null && detail.longitude != null
-                        ? `${detail.latitude.toFixed(5)}, ${detail.longitude.toFixed(5)}`
+                      detailRow.latitude != null && detailRow.longitude != null
+                        ? `${detailRow.latitude.toFixed(5)}, ${detailRow.longitude.toFixed(5)}`
                         : ""
                     }
                   />
                 </DetailField>
                 <DetailField label="Origen">
-                  <DetailValue value={detail.source === "osm" ? "Buscada en mapa" : "Manual"} />
+                  <DetailValue
+                    value={
+                      detailRow.is_catalog
+                        ? detailRow.source === "osm"
+                          ? "Catálogo · buscada en mapa"
+                          : "Catálogo · manual"
+                        : "Usada en un módulo"
+                    }
+                  />
                 </DetailField>
               </DetailGrid>
             </DetailSection>
@@ -281,14 +360,13 @@ export function LocationsTab({
           open={formOpen}
           onOpenChange={setFormOpen}
           title={editRow ? "Editar ubicación" : "Nueva ubicación"}
-          description="Busca el lugar en el mapa o captura los datos manualmente."
+          description="Busca el lugar en el mapa, ajusta el pin y ponle un nombre corto."
           footer={null}
         >
           <LocationForm
             clubId={clubId}
             userId={userId}
             row={editRow}
-            embedded
             onDone={() => setFormOpen(false)}
             onCancel={() => setFormOpen(false)}
           />
@@ -313,18 +391,17 @@ function LocationForm({
   row,
   onDone,
   onCancel,
-  embedded,
 }: {
   clubId: string;
   userId: string;
   row: LocationRow | null;
   onDone: (saved?: LocationRow) => void;
   onCancel: () => void;
-  embedded?: boolean;
 }) {
   const save = useSaveLocation();
   const [name, setName] = React.useState(row?.name ?? "");
   const [address, setAddress] = React.useState(row?.address ?? "");
+  const [placeId, setPlaceId] = React.useState<string | null>(row?.place_id ?? null);
   const [coords, setCoords] = React.useState<{ lat: number; lng: number } | null>(
     row && row.latitude != null && row.longitude != null
       ? { lat: row.latitude, lng: row.longitude }
@@ -334,16 +411,32 @@ function LocationForm({
   const geo = useGeocodeSearch(query, true);
 
   async function submit() {
+    if (!coords) {
+      return toast.error("Elige el lugar en el buscador para guardar sus coordenadas.");
+    }
     if (!name.trim()) return toast.error("Escribe el nombre de la ubicación");
     try {
+      // Evita duplicar: reutiliza la fila del club con el mismo lugar (incluidos borradores).
+      let targetId = row?.id ?? undefined;
+      if (!targetId && placeId) {
+        const { data: existing } = await db
+          .from("locations")
+          .select("id")
+          .eq("club_id", clubId)
+          .eq("place_id", placeId)
+          .maybeSingle();
+        if (existing?.id) targetId = existing.id as string;
+      }
       const saved = await save.mutateAsync({
-        id: row?.id ?? undefined,
+        id: targetId,
         club_id: clubId,
         name,
         address,
-        latitude: coords?.lat ?? null,
-        longitude: coords?.lng ?? null,
-        source: coords ? "osm" : "manual",
+        latitude: coords.lat,
+        longitude: coords.lng,
+        place_id: placeId,
+        source: "osm",
+        is_catalog: true,
         created_by: userId,
       });
       toast.success(row ? "Ubicación actualizada" : "Ubicación creada");
@@ -353,31 +446,37 @@ function LocationForm({
     }
   }
 
-  const body = (
+  return (
     <div className="space-y-4">
       <div className="space-y-1.5">
-        <Label htmlFor="admin-loc-search">Buscar en el mapa</Label>
+        <Label htmlFor="admin-loc-search">Buscar el lugar en el mapa</Label>
         <Input
           id="admin-loc-search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Estadio, cancha, dirección…"
         />
+        <p className="text-xs text-muted-foreground">
+          Elige un resultado para guardar las coordenadas. Después puedes cambiar el nombre.
+        </p>
         {query.trim().length >= 3 ? (
           <div className="max-h-52 overflow-y-auto rounded-xl border border-border bg-popover p-1">
             {geo.isFetching ? (
               <p className="flex items-center gap-2 px-2 py-2 text-sm text-muted-foreground">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" /> Buscando…
               </p>
+            ) : (geo.data ?? []).length === 0 ? (
+              <p className="px-2 py-2 text-sm text-muted-foreground">Sin resultados para esa búsqueda.</p>
             ) : (
               (geo.data ?? []).map((r) => (
                 <button
                   key={r.placeId}
                   type="button"
                   onClick={() => {
-                    setName(r.name);
+                    setName((prev) => (prev.trim() ? prev : r.name));
                     setAddress(r.address);
                     setCoords({ lat: r.latitude, lng: r.longitude });
+                    setPlaceId(r.placeId);
                     setQuery("");
                   }}
                   className="flex w-full items-start gap-2 rounded-md px-2 py-2 text-left hover:bg-white/[0.06]"
@@ -394,58 +493,48 @@ function LocationForm({
         ) : null}
       </div>
 
+      {coords ? (
+        <div className="space-y-1.5">
+          <Label>Ajusta el pin</Label>
+          <LocationMap
+            latitude={coords.lat}
+            longitude={coords.lng}
+            draggable
+            onMove={(lat, lng) => setCoords({ lat, lng })}
+            className="h-44 w-full overflow-hidden rounded-xl"
+          />
+          <p className="text-xs text-muted-foreground">
+            {coords.lat.toFixed(5)}, {coords.lng.toFixed(5)} · arrastra el pin para afinarlo.
+          </p>
+        </div>
+      ) : (
+        <div className="rounded-xl border border-dashed border-white/15 p-4 text-center text-sm text-muted-foreground">
+          Aún no hay punto en el mapa. Busca el lugar arriba y elige un resultado.
+        </div>
+      )}
+
       <div className="space-y-1.5">
-        <Label htmlFor="admin-loc-name">Nombre</Label>
+        <Label htmlFor="admin-loc-name">Nombre corto</Label>
         <Input
           id="admin-loc-name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="p.ej. Cancha 2"
+          placeholder="p.ej. Estadio Don Koll"
         />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="admin-loc-addr">Dirección (opcional)</Label>
+        <Label htmlFor="admin-loc-addr">Dirección</Label>
         <Input id="admin-loc-addr" value={address} onChange={(e) => setAddress(e.target.value)} />
       </div>
 
-      {coords ? (
-        <LocationMap
-          latitude={coords.lat}
-          longitude={coords.lng}
-          draggable
-          onMove={(lat, lng) => setCoords({ lat, lng })}
-          className="h-40 w-full rounded-xl"
-        />
-      ) : null}
-    </div>
-  );
-
-  const footer = (
-    <>
-      <Button variant="ghost" onClick={onCancel} disabled={save.isPending}>
-        Cancelar
-      </Button>
-      <Button onClick={submit} disabled={save.isPending} className="glow-primary">
-        {save.isPending ? "Guardando…" : row ? "Guardar cambios" : "Agregar ubicación"}
-      </Button>
-    </>
-  );
-
-  if (embedded) {
-    return (
-      <div className="space-y-4">
-        {body}
-        <div className="flex flex-col-reverse gap-2 border-t border-white/10 pt-4 sm:flex-row sm:justify-end">
-          {footer}
-        </div>
+      <div className="flex flex-col-reverse gap-2 border-t border-white/10 pt-4 sm:flex-row sm:justify-end">
+        <Button variant="ghost" onClick={onCancel} disabled={save.isPending}>
+          Cancelar
+        </Button>
+        <Button onClick={submit} disabled={save.isPending || !coords} className="glow-primary">
+          {save.isPending ? "Guardando…" : row ? "Guardar cambios" : "Agregar ubicación"}
+        </Button>
       </div>
-    );
-  }
-
-  return (
-    <>
-      <EntitySheetBody>{body}</EntitySheetBody>
-      <EntitySheetFooter>{footer}</EntitySheetFooter>
-    </>
+    </div>
   );
 }
