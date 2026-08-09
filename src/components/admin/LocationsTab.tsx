@@ -1,13 +1,42 @@
 import * as React from "react";
 import { toast } from "sonner";
-import { Loader2, MapPin, Trash2 } from "lucide-react";
+import { Loader2, MapPin, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { LocationMap } from "@/components/calendar/LocationMap";
-import { useDeleteLocation, useLocations, useSaveLocation } from "@/hooks/useLocations";
+import { useDeleteLocation, useLocations, useSaveLocation, type LocationRow } from "@/hooks/useLocations";
 import { useGeocodeSearch } from "@/hooks/useGeocodeSearch";
 import { EmptyState } from "@/components/squad/EmptyState";
+import { LoadingState } from "@/components/squad/LoadingState";
+import { supabase } from "@/integrations/supabase/client";
+
+const db = supabase as any;
+
+/** Cuenta dónde se está usando una ubicación antes de permitir borrarla. */
+async function locationUsage(id: string): Promise<string[]> {
+  const checks: Array<{ table: string; column: string; label: string }> = [
+    { table: "calendar_events", column: "location_id", label: "eventos" },
+    { table: "meetings", column: "location_id", label: "juntas" },
+    { table: "trip_hotels", column: "location_id", label: "hoteles de viaje" },
+    { table: "trips", column: "meeting_location_id", label: "puntos de reunión de viajes" },
+  ];
+  const results = await Promise.all(
+    checks.map(async (c) => {
+      const { count } = await db.from(c.table).select("id", { count: "exact", head: true }).eq(c.column, id);
+      return (count ?? 0) > 0 ? `${count} ${c.label}` : null;
+    }),
+  );
+  return results.filter(Boolean) as string[];
+}
 
 /** Gestor del catálogo de ubicaciones del club (sedes, canchas, salas). */
 export function LocationsTab({
@@ -20,28 +49,173 @@ export function LocationsTab({
   canEdit: boolean;
 }) {
   const locationsQ = useLocations(clubId);
-  const save = useSaveLocation();
   const del = useDeleteLocation();
+  const [search, setSearch] = React.useState("");
+  const [formOpen, setFormOpen] = React.useState(false);
+  const [editRow, setEditRow] = React.useState<LocationRow | null>(null);
+
+  const list = React.useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const rows = locationsQ.data ?? [];
+    if (!q) return rows;
+    return rows.filter(
+      (l) => l.name.toLowerCase().includes(q) || (l.address ?? "").toLowerCase().includes(q),
+    );
+  }, [locationsQ.data, search]);
+
+  async function remove(l: LocationRow) {
+    try {
+      const usage = await locationUsage(l.id);
+      if (usage.length > 0) {
+        toast.error(`No se puede eliminar "${l.name}": está en uso en ${usage.join(", ")}.`);
+        return;
+      }
+      if (!confirm(`¿Eliminar la ubicación "${l.name}"?`)) return;
+      await del.mutateAsync(l.id);
+      toast.success("Ubicación eliminada");
+    } catch (e: any) {
+      toast.error(e.message ?? "No se pudo eliminar");
+    }
+  }
+
+  if (locationsQ.isLoading) return <LoadingState />;
+
+  return (
+    <div className="space-y-4">
+      {canEdit ? (
+        <Button
+          onClick={() => {
+            setEditRow(null);
+            setFormOpen(true);
+          }}
+          className="w-full glow-primary"
+        >
+          <Plus className="mr-2 h-4 w-4" /> Nueva ubicación
+        </Button>
+      ) : null}
+
+      <div className="relative">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Buscar por nombre o dirección"
+          className="pl-9"
+          aria-label="Buscar ubicaciones"
+        />
+      </div>
+
+      {list.length === 0 ? (
+        <EmptyState
+          icon={MapPin}
+          title={search ? "Sin resultados" : "Sin ubicaciones guardadas"}
+          message={
+            search
+              ? "Prueba con otro nombre o dirección."
+              : canEdit
+                ? "Agrega sedes, canchas o salas para reutilizarlas al crear eventos."
+                : "El club aún no tiene ubicaciones en el catálogo."
+          }
+        />
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {list.map((l) => (
+            <div key={l.id} className="glass overflow-hidden">
+              {l.latitude != null && l.longitude != null ? (
+                <LocationMap latitude={l.latitude} longitude={l.longitude} className="h-28 w-full" />
+              ) : (
+                <div className="flex h-28 w-full items-center justify-center bg-white/[0.03] text-muted-foreground">
+                  <MapPin className="h-5 w-5" />
+                </div>
+              )}
+              <div className="flex items-start gap-2 p-3">
+                <div className="min-w-0 flex-1">
+                  <p className="font-display text-base font-semibold leading-tight text-foreground [overflow-wrap:anywhere]">
+                    {l.name}
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground [overflow-wrap:anywhere]">
+                    {l.address || "Sin dirección"}
+                  </p>
+                </div>
+                {canEdit ? (
+                  <div className="flex shrink-0 gap-1">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      aria-label={`Editar ${l.name}`}
+                      onClick={() => {
+                        setEditRow(l);
+                        setFormOpen(true);
+                      }}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      aria-label={`Eliminar ${l.name}`}
+                      onClick={() => remove(l)}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {canEdit ? (
+        <LocationFormDialog
+          open={formOpen}
+          onOpenChange={setFormOpen}
+          clubId={clubId}
+          userId={userId}
+          row={editRow}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function LocationFormDialog({
+  open,
+  onOpenChange,
+  clubId,
+  userId,
+  row,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  clubId: string;
+  userId: string;
+  row: LocationRow | null;
+}) {
+  const save = useSaveLocation();
   const [name, setName] = React.useState("");
   const [address, setAddress] = React.useState("");
   const [coords, setCoords] = React.useState<{ lat: number; lng: number } | null>(null);
   const [query, setQuery] = React.useState("");
-  const [editingId, setEditingId] = React.useState<string | null>(null);
-  const geo = useGeocodeSearch(query, canEdit);
+  const geo = useGeocodeSearch(query, open);
 
-  function reset() {
-    setName("");
-    setAddress("");
-    setCoords(null);
+  React.useEffect(() => {
+    if (!open) return;
+    setName(row?.name ?? "");
+    setAddress(row?.address ?? "");
+    setCoords(
+      row && row.latitude != null && row.longitude != null
+        ? { lat: row.latitude, lng: row.longitude }
+        : null,
+    );
     setQuery("");
-    setEditingId(null);
-  }
+  }, [open, row]);
 
   async function submit() {
     if (!name.trim()) return toast.error("Escribe el nombre de la ubicación");
     try {
       await save.mutateAsync({
-        id: editingId ?? undefined,
+        id: row?.id ?? undefined,
         club_id: clubId,
         name,
         address,
@@ -50,29 +224,24 @@ export function LocationsTab({
         source: coords ? "osm" : "manual",
         created_by: userId,
       });
-      toast.success(editingId ? "Ubicación actualizada" : "Ubicación creada");
-      reset();
+      toast.success(row ? "Ubicación actualizada" : "Ubicación creada");
+      onOpenChange(false);
     } catch (e: any) {
       toast.error(e.message ?? "No se pudo guardar");
     }
   }
 
-  async function remove(id: string) {
-    try {
-      await del.mutateAsync(id);
-      toast.success("Ubicación eliminada");
-      if (editingId === id) reset();
-    } catch (e: any) {
-      toast.error(e.message ?? "No se pudo eliminar");
-    }
-  }
-
-  const list = locationsQ.data ?? [];
-
   return (
-    <div className="space-y-4">
-      {canEdit ? (
-        <div className="glass space-y-3 p-4">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{row ? "Editar ubicación" : "Nueva ubicación"}</DialogTitle>
+          <DialogDescription>
+            Busca el lugar en el mapa o captura los datos manualmente.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-3">
           <div className="space-y-1.5">
             <Label htmlFor="admin-loc-search">Buscar en el mapa</Label>
             <Input
@@ -135,68 +304,17 @@ export function LocationsTab({
               className="h-40 w-full rounded-xl"
             />
           ) : null}
+        </div>
 
-          <Button type="button" onClick={submit} disabled={save.isPending} className="w-full glow-primary">
-            {editingId ? "Guardar cambios" : "Agregar ubicación"}
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            Cancelar
           </Button>
-          {editingId ? (
-            <Button type="button" variant="ghost" onClick={reset} className="w-full">
-              Cancelar edición
-            </Button>
-          ) : null}
-        </div>
-      ) : null}
-
-      {list.length === 0 ? (
-        <EmptyState
-          icon={MapPin}
-          title="Sin ubicaciones guardadas"
-          message={
-            canEdit
-              ? "Agrega sedes, canchas o salas para reutilizarlas al crear eventos."
-              : "El club aún no tiene ubicaciones en el catálogo."
-          }
-        />
-      ) : (
-        <div className="divide-y divide-border/60 rounded-lg border border-border/60">
-          {list.map((l) => (
-            <div key={l.id} className="flex items-center gap-2 px-3 py-2 text-sm">
-              {canEdit ? (
-                <button
-                  type="button"
-                  className="min-w-0 flex-1 truncate text-left text-foreground"
-                  onClick={() => {
-                    setEditingId(l.id);
-                    setName(l.name);
-                    setAddress(l.address ?? "");
-                    setCoords(
-                      l.latitude != null && l.longitude != null ? { lat: l.latitude, lng: l.longitude } : null,
-                    );
-                  }}
-                >
-                  {l.name}
-                  {l.address ? <span className="ml-2 text-xs text-muted-foreground">{l.address}</span> : null}
-                </button>
-              ) : (
-                <span className="min-w-0 flex-1 truncate text-foreground">
-                  {l.name}
-                  {l.address ? <span className="ml-2 text-xs text-muted-foreground">{l.address}</span> : null}
-                </span>
-              )}
-              {canEdit ? (
-                <button
-                  type="button"
-                  onClick={() => remove(l.id)}
-                  className="p-1 text-destructive"
-                  aria-label={`Eliminar ${l.name}`}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              ) : null}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+          <Button onClick={submit} disabled={save.isPending} className="glow-primary">
+            {row ? "Guardar cambios" : "Agregar ubicación"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
