@@ -61,6 +61,7 @@ export function RequestFormDialog({ open, onOpenChange, clubId, userId, type, re
 
   const [description, setDescription] = React.useState("");
   const [values, setValues] = React.useState<Record<string, string>>({});
+  const [teamId, setTeamId] = React.useState<string | null>(null);
   const [itemId, setItemId] = React.useState<string | null>(null);
   const [itemAvailable, setItemAvailable] = React.useState<number | null>(null);
   const [photoFile, setPhotoFile] = React.useState<File | null>(null);
@@ -70,11 +71,13 @@ export function RequestFormDialog({ open, onOpenChange, clubId, userId, type, re
     if (!open) return;
     setDescription(request?.description ?? "");
     setValues(emptyValues(def, request));
+    setTeamId(request?.team_id ?? defaultTeamId ?? null);
     setItemId((request?.details?.item_id as string) ?? null);
     setItemAvailable(null);
     setPhotoFile(null);
     setPhotoPath((request?.details?.referencia_foto as string) ?? null);
-  }, [open, request, def]);
+  }, [open, request, def, defaultTeamId]);
+
 
   function setField(key: string, v: string) {
     setValues((prev) => ({ ...prev, [key]: v }));
