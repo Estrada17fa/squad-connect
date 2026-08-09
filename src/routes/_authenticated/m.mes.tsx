@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { useApp } from "@/components/squad/AppLayout";
 import { useCalendarEvents, type CalendarEventRow } from "@/hooks/useCalendarEvents";
 import { EVENT_TYPES, EVENT_TYPE_MAP } from "@/lib/eventTypes";
-import { addMonths, isSameDay, monthGrid, monthLabel, startOfDay } from "@/lib/calendar-utils";
+import { addMonths, isSameDay, monthGrid, monthLabel, startOfDay, weekdayLabels } from "@/lib/calendar-utils";
+import { useClubPrefs } from "@/hooks/useClubSettings";
 import { EventFormDialog } from "@/components/calendar/EventFormDialog";
 import { DaySheet } from "@/components/calendar/DaySheet";
 import { EventDetailSheet } from "@/components/calendar/EventDetailSheet";
@@ -27,10 +28,9 @@ export const Route = createFileRoute("/_authenticated/m/mes")({
   component: MesModulePage,
 });
 
-const WEEKDAYS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
-
 function MesModulePage() {
   const { user, profile, teamOptions } = useApp();
+  const { weekStart } = useClubPrefs();
   const editableTeams = useEditableTeams("mes");
   const { canEditTeam } = useTeamAccess("mes");
   const canEdit = editableTeams.length > 0;
@@ -60,7 +60,8 @@ function MesModulePage() {
     return map;
   }, [events]);
 
-  const grid = monthGrid(anchor);
+  const grid = React.useMemo(() => monthGrid(anchor), [anchor, weekStart]);
+  const weekdays = React.useMemo(() => weekdayLabels(), [weekStart]);
   const today = startOfDay(new Date());
   const selectedEvents = selectedDay
     ? eventsByDay.get(startOfDay(selectedDay).toISOString()) ?? []
@@ -107,7 +108,7 @@ function MesModulePage() {
         </div>
 
         <div className="grid grid-cols-7 gap-1 text-center text-xs text-muted-foreground">
-          {WEEKDAYS.map((d) => <div key={d} className="py-1">{d}</div>)}
+          {weekdays.map((d) => <div key={d} className="py-1">{d}</div>)}
         </div>
         <div className="mt-1 grid grid-cols-7 gap-1">
           {grid.map((day) => {
