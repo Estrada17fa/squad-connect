@@ -68,7 +68,7 @@ export const createClubMember = createServerFn({ method: "POST" })
       .eq("id", newUserId);
     if (profErr) console.error("[createClubMember] profile", profErr);
 
-    await syncMemberships(supabaseAdmin, newUserId, role, data.assignments, data.player);
+    await syncMemberships(supabaseAdmin, newUserId, role, data.assignments, data.player, data.club_job_title);
     return { userId: newUserId, roleName: role.name };
   });
 
@@ -119,7 +119,7 @@ export const updateClubMember = createServerFn({ method: "POST" })
       if (error) throw new Error("No se pudo actualizar la contraseña");
     }
 
-    await syncMemberships(supabaseAdmin, data.user_id, role, data.assignments, data.player);
+    await syncMemberships(supabaseAdmin, data.user_id, role, data.assignments, data.player, data.club_job_title);
     return { userId: data.user_id, roleName: role.name };
   });
 
