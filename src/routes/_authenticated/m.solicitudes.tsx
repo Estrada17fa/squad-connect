@@ -47,11 +47,41 @@ export const Route = createFileRoute("/_authenticated/m/solicitudes")({
 });
 
 function SolicitudesPage() {
-  const { user, profile, isSuperAdmin, getModuleAccess, activeBaseRole } = useApp();
+  const { user, profile, isSuperAdmin, getModuleAccess, activeBaseRole, permissionsByTeam, teamOptions } = useApp();
   const clubId = profile?.club_id ?? null;
 
   const level = getModuleAccess("solicitudes");
   const canManage = isSuperAdmin || levelCanEdit(level);
+  const { levelForTeam } = useTeamAccess("solicitudes");
+
+  /** Categorías donde la persona tiene membresía (alcance de los niveles "categoría"). */
+  const scopeOk = React.useCallback(
+    (teamId: string | null) =>
+      isSuperAdmin || teamId === null || Boolean(permissionsByTeam?.[teamId]),
+    [isSuperAdmin, permissionsByTeam],
+  );
+  const rowLevel = React.useCallback(
+    (teamId: string | null) => levelForTeam(teamId),
+    [levelForTeam],
+  );
+  const canReadRow = React.useCallback(
+    (teamId: string | null) => {
+      const lvl = rowLevel(teamId);
+      if (isSuperAdmin || isGlobalLevel(lvl)) return isSuperAdmin || levelCanRead(lvl);
+      return levelCanRead(lvl) && scopeOk(teamId);
+    },
+    [rowLevel, isSuperAdmin, scopeOk],
+  );
+  const canManageRow = React.useCallback(
+    (teamId: string | null) => {
+      const lvl = rowLevel(teamId);
+      if (isSuperAdmin) return true;
+      if (isGlobalLevel(lvl)) return levelCanEdit(lvl);
+      return levelCanEdit(lvl) && scopeOk(teamId);
+    },
+    [rowLevel, isSuperAdmin, scopeOk],
+  );
+
   const myApproverTypes = useMyApproverTypes(clubId, user.id, isSuperAdmin, getModuleAccess);
   const isApproverOf = React.useCallback(
     (type: RequestType) => myApproverTypes.has(type),
@@ -59,7 +89,7 @@ function SolicitudesPage() {
   );
   const approvesSomething = REQUEST_TYPES.some((t) => isApproverOf(t.key));
   const canAccess = isSuperAdmin || levelCanRead(level) || approvesSomething;
-  const canSeeAll = canManage || approvesSomething;
+  const canSeeAll = canManage || levelCanRead(level) || approvesSomething;
 
   const isPlayer = activeBaseRole === "jugador" && !isSuperAdmin;
   const allowedTypes = React.useMemo<RequestType[]>(
@@ -76,6 +106,8 @@ function SolicitudesPage() {
   const [detailId, setDetailId] = React.useState<string | null>(null);
   const [typeFilter, setTypeFilter] = React.useState<"all" | RequestType>("all");
   const [statusFilter, setStatusFilter] = React.useState<"all" | RequestStatus>("all");
+  const [teamFilter, setTeamFilter] = React.useState<string>("all");
+
 
   // Deep-link desde el centro de notificaciones: /m/solicitudes?open=<id>
   const { open: openParam } = Route.useSearch();
