@@ -161,16 +161,8 @@ function MiPerfilPage() {
       />
 
 
-      <section className="space-y-2">
-        <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-          Documentos asignados
-        </h3>
-        <EmptyState
-          icon={FileText}
-          title="Sin documentos"
-          message="Cuando el club te asigne documentos, aparecerán aquí."
-        />
-      </section>
+      <PersonDocumentsSection clubId={clubId} userId={user.id} />
+
     </div>
   );
 }
