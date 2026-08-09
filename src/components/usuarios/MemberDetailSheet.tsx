@@ -222,6 +222,15 @@ export function MemberDetailSheet({
           </DetailSection>
         ) : null}
 
+        <PersonDocumentsSection
+          clubId={clubId}
+          userId={member.id}
+          canEdit={canManage}
+          title="Documentos personales"
+        />
+
+
+
         {canManage ? (
           <UserAdvancedSettings
             clubId={clubId}
