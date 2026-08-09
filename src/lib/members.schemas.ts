@@ -50,6 +50,8 @@ export const baseMemberSchema = z.object({
   emergency_contact_phone: z.string().trim().max(40).optional().nullable(),
   role_id: z.string().uuid(),
   assignments: z.array(assignmentSchema).max(30).default([]),
+  /** Puesto de la membresía global ("Todo el club"), p. ej. para Admin. */
+  club_job_title: z.string().trim().max(60).optional().nullable(),
   player: playerSchema.optional().nullable(),
 });
 
