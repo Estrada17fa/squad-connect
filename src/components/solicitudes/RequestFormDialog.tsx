@@ -56,12 +56,29 @@ function emptyValues(def: RequestTypeDef, request?: RequestRow | null) {
   return out;
 }
 
-export function RequestFormDialog({ open, onOpenChange, clubId, userId, type, request, onSaved }: Props) {
+export function RequestFormDialog({
+  open,
+  onOpenChange,
+  clubId,
+  userId,
+  type,
+  request,
+  defaultTeamId = null,
+  allowedTeamIds = null,
+  onSaved,
+}: Props) {
   const isEdit = !!request;
   const def = REQUEST_TYPE_MAP[type];
   const qc = useQueryClient();
   const teamsQ = useClubTeams(clubId);
   const { currency: clubCurrency } = useClubPrefs();
+  const categoryTeams = React.useMemo(() => {
+    const all = teamsQ.data ?? [];
+    if (!allowedTeamIds) return all;
+    const set = new Set(allowedTeamIds);
+    return all.filter((t: any) => set.has(t.id));
+  }, [teamsQ.data, allowedTeamIds]);
+
 
 
   const [description, setDescription] = React.useState("");
