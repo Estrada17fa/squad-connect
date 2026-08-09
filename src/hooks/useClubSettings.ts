@@ -2,7 +2,7 @@ import * as React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useApp } from "@/components/squad/AppLayout";
-import { setClubDatePrefs } from "@/lib/calendar-utils";
+import { setClubDatePrefs, setClubWeekStart } from "@/lib/calendar-utils";
 
 export interface ClubRow {
   id: string;
@@ -15,6 +15,7 @@ export interface ClubRow {
   timezone: string | null;
   currency: string | null;
   date_format: string | null;
+  week_start: number | null;
 }
 
 const db = supabase as any;
@@ -22,6 +23,13 @@ const db = supabase as any;
 export const DEFAULT_CURRENCY = "MXN";
 export const DEFAULT_TIMEZONE = "America/Mazatlan";
 export const DEFAULT_DATE_FORMAT = "dd/MM/yyyy";
+/** 1 = lunes, 0 = domingo. */
+export const DEFAULT_WEEK_START = 1;
+
+export const WEEK_STARTS = [
+  { value: 1, label: "Lunes" },
+  { value: 0, label: "Domingo" },
+];
 
 export const CURRENCIES = [
   { value: "MXN", label: "Peso mexicano (MXN)" },
@@ -119,10 +127,19 @@ export function useClubPrefs() {
   const currency = clubQ.data?.currency || DEFAULT_CURRENCY;
   const timezone = clubQ.data?.timezone || DEFAULT_TIMEZONE;
   const dateFormat = clubQ.data?.date_format || DEFAULT_DATE_FORMAT;
+  const weekStart = clubQ.data?.week_start ?? DEFAULT_WEEK_START;
 
   React.useEffect(() => {
     setClubDatePrefs({ timezone, dateFormat });
-  }, [timezone, dateFormat]);
+    setClubWeekStart(weekStart);
+  }, [timezone, dateFormat, weekStart]);
 
-  return { currency, timezone, dateFormat, club: clubQ.data ?? null, isLoading: clubQ.isLoading };
+  return {
+    currency,
+    timezone,
+    dateFormat,
+    weekStart,
+    club: clubQ.data ?? null,
+    isLoading: clubQ.isLoading,
+  };
 }

@@ -43,19 +43,41 @@ export function CategoriesTab({ clubId, canEdit }: { clubId: string; canEdit: bo
   });
 
   async function handleDelete(t: TeamRow) {
-    const [{ count: members }, { count: players }] = await Promise.all([
-      supabase
-        .from("team_memberships")
-        .select("id", { count: "exact", head: true })
-        .eq("team_id", t.id),
-      supabase
-        .from("player_profiles")
-        .select("user_id", { count: "exact", head: true })
-        .eq("team_id", t.id),
-    ]);
-    if ((members ?? 0) > 0 || (players ?? 0) > 0) {
+    const checks: Array<{ table: string; column: string; label: string }> = [
+      { table: "team_memberships", column: "team_id", label: "miembros" },
+      { table: "player_profiles", column: "team_id", label: "jugadores" },
+      { table: "calendar_events", column: "team_id", label: "eventos" },
+      { table: "documents", column: "team_id", label: "documentos" },
+      { table: "requests", column: "team_id", label: "solicitudes" },
+      { table: "trips", column: "team_id", label: "viajes" },
+      { table: "training_sessions", column: "team_id", label: "sesiones de entrenamiento" },
+      { table: "exercises", column: "team_id", label: "ejercicios" },
+      { table: "training_routines", column: "team_id", label: "rutinas" },
+      { table: "injuries", column: "team_id", label: "lesiones" },
+      { table: "medical_checkups", column: "team_id", label: "revisiones médicas" },
+      { table: "player_medical_profile", column: "team_id", label: "expedientes médicos" },
+      { table: "development_goals", column: "team_id", label: "objetivos de desarrollo" },
+      { table: "development_feedback", column: "team_id", label: "feedback de desarrollo" },
+      { table: "development_assessments", column: "team_id", label: "evaluaciones" },
+      { table: "inventory_loans", column: "team_id", label: "préstamos de inventario" },
+    ];
+    const db = supabase as any;
+    const used = (
+      await Promise.all(
+        checks.map(async (c) => {
+          const { count } = await db
+            .from(c.table)
+            .select("id", { count: "exact", head: true })
+            .eq(c.column, t.id);
+          return (count ?? 0) > 0 ? `${count} ${c.label}` : null;
+        }),
+      )
+    ).filter(Boolean) as string[];
+
+    if (used.length > 0) {
       toast.error(
-        `No se puede eliminar: tiene ${members ?? 0} miembros y ${players ?? 0} jugadores asignados.`,
+        `No se puede eliminar "${t.name}": tiene ${used.join(", ")}. Reasigna o quita esos registros primero.`,
+        { duration: 8000 },
       );
       return;
     }

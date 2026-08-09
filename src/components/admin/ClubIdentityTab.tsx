@@ -12,13 +12,11 @@ import {
   uploadClubLogo,
 } from "@/hooks/useClubSettings";
 
-/** Identidad del club: nombre, logo y colores de marca. */
+/** Identidad del club: nombre y logo. */
 export function ClubIdentityTab({ clubId, canEdit }: { clubId: string; canEdit: boolean }) {
   const clubQ = useClub(clubId);
   const update = useUpdateClub();
   const [name, setName] = React.useState("");
-  const [primary, setPrimary] = React.useState("#00ff9d");
-  const [secondary, setSecondary] = React.useState("#111111");
   const [logoPath, setLogoPath] = React.useState<string | null>(null);
   const [uploading, setUploading] = React.useState(false);
   const logoUrlQ = useClubLogoUrl(logoPath);
@@ -26,13 +24,15 @@ export function ClubIdentityTab({ clubId, canEdit }: { clubId: string; canEdit: 
   React.useEffect(() => {
     if (!clubQ.data) return;
     setName(clubQ.data.name ?? "");
-    setPrimary(clubQ.data.primary_color || "#00ff9d");
-    setSecondary(clubQ.data.secondary_color || "#111111");
     setLogoPath(clubQ.data.logo_url ?? null);
   }, [clubQ.data]);
 
   async function onFile(file: File | undefined) {
     if (!file) return;
+    if (file.type !== "image/png" || !file.name.toLowerCase().endsWith(".png")) {
+      toast.error("El logo debe ser un archivo PNG");
+      return;
+    }
     setUploading(true);
     try {
       const path = await uploadClubLogo(clubId, file);
@@ -52,8 +52,6 @@ export function ClubIdentityTab({ clubId, canEdit }: { clubId: string; canEdit: 
         id: clubId,
         name: name.trim(),
         logo_url: logoPath,
-        primary_color: primary,
-        secondary_color: secondary,
       });
       toast.success("Identidad del club actualizada");
     } catch (e: any) {
@@ -89,7 +87,7 @@ export function ClubIdentityTab({ clubId, canEdit }: { clubId: string; canEdit: 
             <label className="cursor-pointer text-sm text-primary">
               <input
                 type="file"
-                accept="image/*"
+                accept="image/png"
                 className="hidden"
                 onChange={(e) => onFile(e.target.files?.[0])}
               />
@@ -97,37 +95,7 @@ export function ClubIdentityTab({ clubId, canEdit }: { clubId: string; canEdit: 
             </label>
           ) : null}
         </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1.5">
-          <Label htmlFor="club-primary">Color primario</Label>
-          <div className="flex items-center gap-2">
-            <input
-              id="club-primary"
-              type="color"
-              value={primary}
-              disabled={!canEdit}
-              onChange={(e) => setPrimary(e.target.value)}
-              className="h-9 w-10 rounded-md border border-border bg-transparent"
-            />
-            <Input value={primary} onChange={(e) => setPrimary(e.target.value)} disabled={!canEdit} />
-          </div>
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="club-secondary">Color secundario</Label>
-          <div className="flex items-center gap-2">
-            <input
-              id="club-secondary"
-              type="color"
-              value={secondary}
-              disabled={!canEdit}
-              onChange={(e) => setSecondary(e.target.value)}
-              className="h-9 w-10 rounded-md border border-border bg-transparent"
-            />
-            <Input value={secondary} onChange={(e) => setSecondary(e.target.value)} disabled={!canEdit} />
-          </div>
-        </div>
+        <p className="text-xs text-muted-foreground">Solo archivos PNG. Se muestra en la vista previa.</p>
       </div>
 
       {canEdit ? (

@@ -34,7 +34,7 @@ interface ModuleTabsProps {
  * del módulo, preservando URL, back button y deep-linking.
  */
 export function ModuleTabs({ activeKey, hubKey, extraActiveKey }: ModuleTabsProps) {
-  const { visiblePages, isSuperAdmin, profile, accessibleModules } = useApp();
+  const { visiblePages, isSuperAdmin, profile, accessibleModules, permissions } = useApp();
   const qc = useQueryClient();
   const prefetchCtx = React.useMemo(
     () => ({ clubId: profile?.club_id ?? null, teamId: null }),
@@ -50,7 +50,8 @@ export function ModuleTabs({ activeKey, hubKey, extraActiveKey }: ModuleTabsProp
 
   const extras: ExtraTab[] = React.useMemo(() => {
     const out: ExtraTab[] = [];
-    if (hub?.page.key === "admin") {
+    const isEditorGlobal = isSuperAdmin || permissions["usuarios"] === "editor_global";
+    if (hub?.page.key === "admin" && isEditorGlobal) {
       out.push({
         key: "admin-config",
         label: "Configuración del club",
@@ -80,7 +81,7 @@ export function ModuleTabs({ activeKey, hubKey, extraActiveKey }: ModuleTabsProp
       });
     }
     return out;
-  }, [hub?.page.key, isSuperAdmin, accessibleModules, extraActiveKey]);
+  }, [hub?.page.key, isSuperAdmin, accessibleModules, extraActiveKey, permissions]);
 
 
   const total = modules.length + extras.length;

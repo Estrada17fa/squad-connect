@@ -19,11 +19,28 @@ export function addMonths(d: Date, n: number) {
   return x;
 }
 
-/** Returns a 6x7 grid of days for the month containing `anchor`, starting Monday. */
+/** Primer día de la semana configurado por el club: 1 = lunes, 0 = domingo. */
+let clubWeekStart: 0 | 1 = 1;
+
+export function setClubWeekStart(value: number | null | undefined) {
+  clubWeekStart = value === 0 ? 0 : 1;
+}
+
+export function getClubWeekStart(): 0 | 1 {
+  return clubWeekStart;
+}
+
+const WEEKDAY_LABELS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+
+/** Cabeceras de días respetando el primer día de la semana del club. */
+export function weekdayLabels(): string[] {
+  return Array.from({ length: 7 }, (_, i) => WEEKDAY_LABELS[(clubWeekStart + i) % 7]);
+}
+
+/** Returns a 6x7 grid of days for the month containing `anchor`. */
 export function monthGrid(anchor: Date): Date[] {
   const first = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
-  // Convert Sunday=0 → Monday=0
-  const dow = (first.getDay() + 6) % 7;
+  const dow = (first.getDay() - clubWeekStart + 7) % 7;
   const start = new Date(first);
   start.setDate(first.getDate() - dow);
   return Array.from({ length: 42 }, (_, i) => {
