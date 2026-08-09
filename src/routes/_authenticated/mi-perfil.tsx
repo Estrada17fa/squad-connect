@@ -15,6 +15,8 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useApp } from "@/components/squad/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
+import { PersonDocumentsSection } from "@/components/documentos/PersonDocumentsSection";
+
 
 export const Route = createFileRoute("/_authenticated/mi-perfil")({
   head: () => ({
