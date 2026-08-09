@@ -158,6 +158,7 @@ export function MemberForm({
   const [emgPhone, setEmgPhone] = React.useState("");
   const [roleId, setRoleId] = React.useState("");
   const [assignments, setAssignments] = React.useState<Record<string, string>>({});
+  const [clubJobTitle, setClubJobTitle] = React.useState("");
   const [player, setPlayer] = React.useState<PlayerState>(emptyPlayer);
   const [saving, setSaving] = React.useState(false);
 
