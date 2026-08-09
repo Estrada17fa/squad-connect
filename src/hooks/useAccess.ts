@@ -27,7 +27,12 @@ export interface TeamOption {
 }
 
 export interface AccessData {
-  profile: { full_name: string | null; email: string | null; club_id: string | null } | null;
+  profile: {
+    full_name: string | null;
+    email: string | null;
+    avatar_url: string | null;
+    club_id: string | null;
+  } | null;
   clubName: string | null;
   teams: TeamOption[];
   /** Equipos reales seleccionables en el header (club-wide => todos los del club). */
