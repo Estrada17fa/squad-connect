@@ -193,6 +193,7 @@ export function useAccess(userId: string) {
           ? {
               full_name: profileRes.data.full_name,
               email: profileRes.data.email,
+              avatar_url: profileRes.data.avatar_url,
               club_id: profileRes.data.club_id,
             }
           : null,
