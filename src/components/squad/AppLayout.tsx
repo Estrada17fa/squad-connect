@@ -31,6 +31,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { initials } from "@/components/usuarios/memberUtils";
 
 interface AppCtx {
   user: { id: string };
@@ -58,7 +60,12 @@ interface AppCtx {
   viewsAllClub: boolean;
   /** true si el usuario es exclusivamente jugador. */
   isPlayerOnly: boolean;
-  profile: { full_name: string | null; email: string | null; club_id: string | null } | null;
+  profile: {
+    full_name: string | null;
+    email: string | null;
+    avatar_url: string | null;
+    club_id: string | null;
+  } | null;
   /** Rol base derivado del equipo activo (para el mapping de páginas). */
   activeBaseRole: BaseRole;
   /** Páginas visibles con los módulos que caen dentro de cada una. */
@@ -202,6 +209,7 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
         <Header
           clubName={data.clubName}
           userName={data.profile?.full_name ?? user.email ?? ""}
+          avatarUrl={data.profile?.avatar_url ?? null}
           userId={user.id}
           isSuperAdmin={data.isSuperAdmin}
           canOpenModule={(key) => isModuleAccessible(key as ModuleKey)}
@@ -228,6 +236,7 @@ function ClubPrefsSync() {
 function Header({
   clubName,
   userName,
+  avatarUrl,
   userId,
   isSuperAdmin,
   canOpenModule,
@@ -235,11 +244,13 @@ function Header({
 }: {
   clubName: string | null;
   userName: string;
+  avatarUrl: string | null;
   userId: string;
   isSuperAdmin: boolean;
   canOpenModule: (key: string) => boolean;
   onSignOut: () => void;
 }) {
+  const fallback = initials(userName || "?");
   return (
     <header className="sticky top-0 z-30 border-b border-border/60 bg-background/70 backdrop-blur-xl">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
@@ -256,11 +267,22 @@ function Header({
 
           <NotificationBell userId={userId} canOpenModule={canOpenModule} />
           <DropdownMenu>
-            <DropdownMenuTrigger className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-sm font-medium text-foreground hover:bg-white/10">
-              {(userName || "?").slice(0, 1).toUpperCase()}
+            <DropdownMenuTrigger className="rounded-full outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring">
+              <Avatar className="h-9 w-9 border border-border/60">
+                {avatarUrl ? <AvatarImage src={avatarUrl} alt={userName || "Mi perfil"} /> : null}
+                <AvatarFallback className="bg-white/5 text-sm font-medium">
+                  {fallback}
+                </AvatarFallback>
+              </Avatar>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel className="truncate">{userName || "Cuenta"}</DropdownMenuLabel>
+              <DropdownMenuLabel className="flex items-center gap-2">
+                <Avatar className="h-7 w-7 shrink-0">
+                  {avatarUrl ? <AvatarImage src={avatarUrl} alt={userName || "Mi perfil"} /> : null}
+                  <AvatarFallback className="text-[11px]">{fallback}</AvatarFallback>
+                </Avatar>
+                <span className="truncate">{userName || "Cuenta"}</span>
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link to="/mi-perfil">

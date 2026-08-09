@@ -27,7 +27,12 @@ export interface TeamOption {
 }
 
 export interface AccessData {
-  profile: { full_name: string | null; email: string | null; club_id: string | null } | null;
+  profile: {
+    full_name: string | null;
+    email: string | null;
+    avatar_url: string | null;
+    club_id: string | null;
+  } | null;
   clubName: string | null;
   teams: TeamOption[];
   /** Equipos reales seleccionables en el header (club-wide => todos los del club). */
@@ -86,7 +91,7 @@ export function useAccess(userId: string) {
       const [profileRes, membershipsRes, superRes, overridesRes] = await Promise.all([
         supabase
           .from("profiles")
-          .select("full_name, email, club_id, club:clubs(name)")
+          .select("full_name, email, avatar_url, club_id, club:clubs(name)")
           .eq("id", userId)
           .maybeSingle(),
         supabase
@@ -193,6 +198,7 @@ export function useAccess(userId: string) {
           ? {
               full_name: profileRes.data.full_name,
               email: profileRes.data.email,
+              avatar_url: profileRes.data.avatar_url,
               club_id: profileRes.data.club_id,
             }
           : null,
