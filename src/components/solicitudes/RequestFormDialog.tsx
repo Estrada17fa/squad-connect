@@ -37,8 +37,13 @@ interface Props {
   /** Tipo elegido en el paso previo (creación) o tipo de la solicitud editada. */
   type: RequestType;
   request?: RequestRow | null;
+  /** Categoría sugerida al crear (null = todo el club). */
+  defaultTeamId?: string | null;
+  /** Categorías donde la persona puede crear; vacío = solo "Todo el club". */
+  allowedTeamIds?: string[] | null;
   onSaved?: (info: { isEdit: boolean; type: RequestType }) => void;
 }
+
 
 function emptyValues(def: RequestTypeDef, request?: RequestRow | null) {
   const out: Record<string, string> = {};
@@ -51,16 +56,34 @@ function emptyValues(def: RequestTypeDef, request?: RequestRow | null) {
   return out;
 }
 
-export function RequestFormDialog({ open, onOpenChange, clubId, userId, type, request, onSaved }: Props) {
+export function RequestFormDialog({
+  open,
+  onOpenChange,
+  clubId,
+  userId,
+  type,
+  request,
+  defaultTeamId = null,
+  allowedTeamIds = null,
+  onSaved,
+}: Props) {
   const isEdit = !!request;
   const def = REQUEST_TYPE_MAP[type];
   const qc = useQueryClient();
   const teamsQ = useClubTeams(clubId);
   const { currency: clubCurrency } = useClubPrefs();
+  const categoryTeams = React.useMemo(() => {
+    const all = teamsQ.data ?? [];
+    if (!allowedTeamIds) return all;
+    const set = new Set(allowedTeamIds);
+    return all.filter((t: any) => set.has(t.id));
+  }, [teamsQ.data, allowedTeamIds]);
+
 
 
   const [description, setDescription] = React.useState("");
   const [values, setValues] = React.useState<Record<string, string>>({});
+  const [teamId, setTeamId] = React.useState<string | null>(null);
   const [itemId, setItemId] = React.useState<string | null>(null);
   const [itemAvailable, setItemAvailable] = React.useState<number | null>(null);
   const [photoFile, setPhotoFile] = React.useState<File | null>(null);
@@ -70,11 +93,13 @@ export function RequestFormDialog({ open, onOpenChange, clubId, userId, type, re
     if (!open) return;
     setDescription(request?.description ?? "");
     setValues(emptyValues(def, request));
+    setTeamId(request?.team_id ?? defaultTeamId ?? null);
     setItemId((request?.details?.item_id as string) ?? null);
     setItemAvailable(null);
     setPhotoFile(null);
     setPhotoPath((request?.details?.referencia_foto as string) ?? null);
-  }, [open, request, def]);
+  }, [open, request, def, defaultTeamId]);
+
 
   function setField(key: string, v: string) {
     setValues((prev) => ({ ...prev, [key]: v }));
@@ -143,6 +168,7 @@ export function RequestFormDialog({ open, onOpenChange, clubId, userId, type, re
       const amount = def.amountKey ? (details[def.amountKey] ?? null) : null;
       const payload = {
         club_id: clubId,
+        team_id: teamId,
         type,
         title: requestSummary({ type, details, amount, currency: amount !== null ? clubCurrency : null }),
         description: description.trim() || null,
@@ -150,6 +176,7 @@ export function RequestFormDialog({ open, onOpenChange, clubId, userId, type, re
         amount,
         currency: amount !== null ? clubCurrency : null,
       };
+
       if (isEdit && request) {
         const { error } = await supabase.from("requests").update(payload).eq("id", request.id);
         if (error) throw error;
@@ -181,6 +208,43 @@ export function RequestFormDialog({ open, onOpenChange, clubId, userId, type, re
       </EntitySheetHeader>
 
       <EntitySheetBody>
+        <div className="space-y-1.5">
+          <Label>Categoría</Label>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setTeamId(null)}
+              className={cn(
+                "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                teamId === null
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border/60 text-muted-foreground hover:bg-white/[0.04]",
+              )}
+            >
+              Todo el club
+            </button>
+            {categoryTeams.map((t: any) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setTeamId(t.id)}
+                className={cn(
+                  "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                  teamId === t.id
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border/60 text-muted-foreground hover:bg-white/[0.04]",
+                )}
+              >
+                {t.name}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Define quién puede verla: quien tenga permiso de esa categoría, o de todo el club.
+          </p>
+        </div>
+
+
 
         {def.fields.map((f: RequestFieldDef) => (
           <div key={f.key} className="space-y-1.5">

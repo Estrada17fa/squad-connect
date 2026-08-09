@@ -13,6 +13,9 @@ export interface RequestProfile {
 export interface RequestRow {
   id: string;
   club_id: string;
+  /** Categoría/equipo dueño de la solicitud. null = todo el club. */
+  team_id: string | null;
+  team: { id: string; name: string; category: string | null } | null;
   type: RequestType;
   status: RequestStatus;
   requester_id: string;
@@ -45,7 +48,8 @@ export interface RequestHistoryRow {
 }
 
 const SELECT =
-  "id, club_id, type, status, requester_id, title, description, details, amount, currency, needed_at, decided_at, decided_by, decision_note, related_item_id, related_loan_id, created_at, updated_at, requester:profiles!requests_requester_id_profiles_fkey(id, full_name, email, avatar_url), decider:profiles!requests_decided_by_profiles_fkey(id, full_name, email, avatar_url)";
+  "id, club_id, team_id, type, status, requester_id, title, description, details, amount, currency, needed_at, decided_at, decided_by, decision_note, related_item_id, related_loan_id, created_at, updated_at, team:teams(id, name, category), requester:profiles!requests_requester_id_profiles_fkey(id, full_name, email, avatar_url), decider:profiles!requests_decided_by_profiles_fkey(id, full_name, email, avatar_url)";
+
 
 export const requestsQueryOptions = (clubId: string | null | undefined) =>
   queryOptions({

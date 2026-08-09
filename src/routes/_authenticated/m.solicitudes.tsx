@@ -29,7 +29,9 @@ import { RequestFormDialog } from "@/components/solicitudes/RequestFormDialog";
 import { RequestTypePicker } from "@/components/solicitudes/RequestTypePicker";
 import { RequestDetailSheet } from "@/components/solicitudes/RequestDetailSheet";
 import { cn } from "@/lib/utils";
-import { canEdit as levelCanEdit, canRead as levelCanRead } from "@/lib/permissions";
+import { canEdit as levelCanEdit, canRead as levelCanRead, isGlobalLevel } from "@/lib/permissions";
+import { useTeamAccess } from "@/hooks/useTeamAccess";
+
 
 export const Route = createFileRoute("/_authenticated/m/solicitudes")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -47,11 +49,41 @@ export const Route = createFileRoute("/_authenticated/m/solicitudes")({
 });
 
 function SolicitudesPage() {
-  const { user, profile, isSuperAdmin, getModuleAccess, activeBaseRole } = useApp();
+  const { user, profile, isSuperAdmin, getModuleAccess, activeBaseRole, permissionsByTeam, teamOptions } = useApp();
   const clubId = profile?.club_id ?? null;
 
   const level = getModuleAccess("solicitudes");
   const canManage = isSuperAdmin || levelCanEdit(level);
+  const { levelForTeam } = useTeamAccess("solicitudes");
+
+  /** Categorías donde la persona tiene membresía (alcance de los niveles "categoría"). */
+  const scopeOk = React.useCallback(
+    (teamId: string | null) =>
+      isSuperAdmin || teamId === null || Boolean(permissionsByTeam?.[teamId]),
+    [isSuperAdmin, permissionsByTeam],
+  );
+  const rowLevel = React.useCallback(
+    (teamId: string | null) => levelForTeam(teamId),
+    [levelForTeam],
+  );
+  const canReadRow = React.useCallback(
+    (teamId: string | null) => {
+      const lvl = rowLevel(teamId);
+      if (isSuperAdmin || isGlobalLevel(lvl)) return isSuperAdmin || levelCanRead(lvl);
+      return levelCanRead(lvl) && scopeOk(teamId);
+    },
+    [rowLevel, isSuperAdmin, scopeOk],
+  );
+  const canManageRow = React.useCallback(
+    (teamId: string | null) => {
+      const lvl = rowLevel(teamId);
+      if (isSuperAdmin) return true;
+      if (isGlobalLevel(lvl)) return levelCanEdit(lvl);
+      return levelCanEdit(lvl) && scopeOk(teamId);
+    },
+    [rowLevel, isSuperAdmin, scopeOk],
+  );
+
   const myApproverTypes = useMyApproverTypes(clubId, user.id, isSuperAdmin, getModuleAccess);
   const isApproverOf = React.useCallback(
     (type: RequestType) => myApproverTypes.has(type),
@@ -59,7 +91,7 @@ function SolicitudesPage() {
   );
   const approvesSomething = REQUEST_TYPES.some((t) => isApproverOf(t.key));
   const canAccess = isSuperAdmin || levelCanRead(level) || approvesSomething;
-  const canSeeAll = canManage || approvesSomething;
+  const canSeeAll = canManage || levelCanRead(level) || approvesSomething;
 
   const isPlayer = activeBaseRole === "jugador" && !isSuperAdmin;
   const allowedTypes = React.useMemo<RequestType[]>(
@@ -76,6 +108,8 @@ function SolicitudesPage() {
   const [detailId, setDetailId] = React.useState<string | null>(null);
   const [typeFilter, setTypeFilter] = React.useState<"all" | RequestType>("all");
   const [statusFilter, setStatusFilter] = React.useState<"all" | RequestStatus>("all");
+  const [teamFilter, setTeamFilter] = React.useState<string>("all");
+
 
   // Deep-link desde el centro de notificaciones: /m/solicitudes?open=<id>
   const { open: openParam } = Route.useSearch();
@@ -99,20 +133,35 @@ function SolicitudesPage() {
 
   if (!clubId) return <LoadingState />;
 
-  const all = requestsQ.data ?? [];
+  const rows = requestsQ.data ?? [];
+  // Visibilidad por categoría: propio, nivel global, o nivel de categoría con alcance.
+  const all = rows.filter(
+    (r) =>
+      r.requester_id === user.id ||
+      canReadRow(r.team_id) ||
+      (isApproverOf(r.type) && scopeOk(r.team_id)),
+  );
   const mine = all.filter((r) => r.requester_id === user.id);
   const filtered = all.filter(
     (r) =>
       (typeFilter === "all" || r.type === typeFilter) &&
-      (statusFilter === "all" || r.status === statusFilter),
+      (statusFilter === "all" || r.status === statusFilter) &&
+      (teamFilter === "all" ||
+        (teamFilter === "club" ? r.team_id === null : r.team_id === teamFilter)),
   );
   const detail = detailId ? all.find((r) => r.id === detailId) ?? null : null;
 
   // Pendientes que a mí me toca aprobar (resaltadas).
   const toApprove = all.filter(
-    (r) => r.status === "pendiente" && r.requester_id !== user.id && isApproverOf(r.type),
+    (r) =>
+      r.status === "pendiente" &&
+      r.requester_id !== user.id &&
+      isApproverOf(r.type) &&
+      scopeOk(r.team_id),
   );
   const toApproveIds = new Set(toApprove.map((r) => r.id));
+  const myTeamIds = teamOptions.map((t) => t.id).filter(Boolean) as string[];
+
 
   function openCreate() {
     setEditing(null);
@@ -174,7 +223,19 @@ function SolicitudesPage() {
                   ...STATUS_ORDER.map((s) => ({ key: s, label: STATUS_LABEL[s] })),
                 ]}
               />
+              <Chips
+                value={teamFilter}
+                onChange={setTeamFilter}
+                options={[
+                  { key: "all", label: "Todas las categorías" },
+                  { key: "club", label: "Todo el club" },
+                  ...teamOptions
+                    .filter((t) => t.id)
+                    .map((t) => ({ key: t.id as string, label: t.name })),
+                ]}
+              />
             </div>
+
             <RequestList
               requests={filtered}
               isLoading={requestsQ.isLoading}
@@ -205,6 +266,14 @@ function SolicitudesPage() {
         userId={user.id}
         type={formType ?? "otro"}
         request={editing}
+        defaultTeamId={
+          teamFilter !== "all" && teamFilter !== "club"
+            ? teamFilter
+            : myTeamIds.length === 1
+              ? myTeamIds[0]
+              : null
+        }
+        allowedTeamIds={isSuperAdmin || isGlobalLevel(level) ? null : myTeamIds}
         onSaved={({ isEdit, type }) => {
           if (isEdit) return;
           if (tab === "todas" && (typeFilter !== "all" && typeFilter !== type)) {
@@ -222,8 +291,8 @@ function SolicitudesPage() {
         request={detail}
         userId={user.id}
         clubId={clubId}
-        canDecide={detail ? isApproverOf(detail.type) : false}
-        canManage={canManage}
+        canDecide={detail ? isApproverOf(detail.type) && scopeOk(detail.team_id) : false}
+        canManage={detail ? canManageRow(detail.team_id) : false}
         onEdit={() => {
           if (!detail) return;
           setEditing(detail);
@@ -231,6 +300,7 @@ function SolicitudesPage() {
           setFormType(detail.type);
         }}
       />
+
     </div>
   );
 }
@@ -312,7 +382,13 @@ function RequestList({
             onClick={() => onOpen(r)}
             className={cn(highlighted.has(r.id) && "border-primary/40 ring-1 ring-primary/25")}
           >
+            <div className="mb-2">
+              <span className="inline-flex rounded-full border border-border/60 bg-white/[0.04] px-2 py-0.5 text-[11px] text-muted-foreground">
+                {r.team?.name ?? "Todo el club"}
+              </span>
+            </div>
             <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+
               <span className="flex min-w-0 items-center gap-2">
                 <Avatar className="h-6 w-6">
                   <AvatarImage src={r.requester?.avatar_url ?? undefined} alt={who} />
