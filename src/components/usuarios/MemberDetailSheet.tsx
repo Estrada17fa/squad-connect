@@ -171,14 +171,20 @@ export function MemberDetailSheet({
           ) : (
             <div className="grid gap-2">
               {memberships.map((m) => (
-                <div key={m.id} className="glass flex items-center gap-3 rounded-lg p-3">
+                <div key={m.id} className="glass flex items-start gap-3 rounded-lg p-3">
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{m.teamName ?? "Todo el club"}</p>
+                    <p className="break-words text-sm font-medium [overflow-wrap:anywhere]">
+                      {m.teamName ?? "Todo el club"}
+                    </p>
                     {m.job_title ? (
-                      <p className="truncate text-xs text-muted-foreground">{m.job_title}</p>
+                      <p className="break-words text-xs text-muted-foreground [overflow-wrap:anywhere]">
+                        {m.job_title}
+                      </p>
                     ) : null}
                   </div>
-                  <StatusBadge variant={roleVariant(m.roleName)}>{m.roleName ?? "—"}</StatusBadge>
+                  <div className="shrink-0">
+                    <StatusBadge variant={roleVariant(m.roleName)}>{m.roleName ?? "—"}</StatusBadge>
+                  </div>
                 </div>
               ))}
             </div>
