@@ -265,18 +265,9 @@ function Header({
               <DropdownMenuItem asChild>
                 <Link to="/mi-perfil">
                   <User className="mr-2 h-4 w-4" />
-                  Ver mi perfil
+                  Mi perfil
                 </Link>
               </DropdownMenuItem>
-              {isSuperAdmin ? (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link to="/admin/clubs">Administrar clubes</Link>
-                  </DropdownMenuItem>
-                </>
-              ) : null}
-              <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={onSignOut}>
                 <LogOut className="mr-2 h-4 w-4" />
                 Cerrar sesión
