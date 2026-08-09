@@ -231,6 +231,7 @@ export function MemberForm({
     const map: Record<string, string> = {};
     for (const m of memberships) if (m.team_id) map[m.team_id] = m.job_title ?? "";
     setAssignments(map);
+    setClubJobTitle(memberships.find((m: any) => !m.team_id)?.job_title ?? "");
     const p = players[0];
     if (p) {
       setPlayer({
