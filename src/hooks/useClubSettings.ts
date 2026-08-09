@@ -79,10 +79,16 @@ export function useClub(clubId: string | null | undefined) {
 export function useUpdateClub() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...patch }: Partial<ClubRow> & { id: string }): Promise<ClubRow> => {
-      const { data, error } = await db.from("clubs").update(patch).eq("id", id).select("*").single();
+    mutationFn: async ({ id, ...patch }: Partial<ClubRow> & { id: string }): Promise<{ id: string }> => {
+      const { data, error } = await db
+        .from("clubs")
+        .update(patch)
+        .eq("id", id)
+        .select("id")
+        .maybeSingle();
       if (error) throw error;
-      return data as ClubRow;
+      if (!data) throw new Error("No tienes permiso para editar la configuración del club.");
+      return { id };
     },
     onSuccess: (row) => {
       qc.invalidateQueries({ queryKey: ["club", row.id] });
