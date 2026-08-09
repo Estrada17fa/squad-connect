@@ -1,23 +1,19 @@
 import * as React from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Trash2, Pencil, AlertTriangle, CalendarClock } from "lucide-react";
-import { DetailSheet, DetailField } from "@/components/squad/DetailSheet";
-import { StatusBadge, type StatusVariant } from "@/components/squad/StatusBadge";
+import { Trash2, Pencil, AlertTriangle, CalendarClock, Layers, ListChecks } from "lucide-react";
+import { DetailSheet, DetailField, DetailGrid, DetailSection, DetailValue } from "@/components/squad/DetailSheet";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/squad/ConfirmDialog";
+import { AvatarStack } from "./AvatarStack";
+import { TaskChecklist } from "./TaskChecklist";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDateTime } from "@/lib/calendar-utils";
-import type { TaskRow, TaskStatus, TaskPriority } from "@/hooks/useCoordinacion";
+import type { TaskRow, TaskStatus } from "@/hooks/useCoordinacion";
+import { PRIORITY_DOT, PRIORITY_LABEL, STATUS_LABEL } from "@/lib/coordinacion";
 import { cn } from "@/lib/utils";
 
-const PRIORITY_LABEL: Record<TaskPriority, string> = { alta: "Alta", media: "Media", baja: "Baja" };
-const PRIORITY_VARIANT: Record<TaskPriority, StatusVariant> = { alta: "rejected", media: "pending", baja: "info" };
-const STATUSES: { key: TaskStatus; label: string }[] = [
-  { key: "pendiente", label: "Pendiente" },
-  { key: "en_progreso", label: "En progreso" },
-  { key: "en_pausa", label: "En pausa" },
-  { key: "completada", label: "Completada" },
-];
+const STATUSES: TaskStatus[] = ["pendiente", "en_progreso", "en_pausa", "completada"];
 
 interface Props {
   open: boolean;
@@ -31,6 +27,7 @@ interface Props {
 
 export function TaskDetailSheet({ open, onOpenChange, task, userId, clubId, canEdit, onEdit }: Props) {
   const qc = useQueryClient();
+  const [confirmDelete, setConfirmDelete] = React.useState(false);
   const isMine = !!task && task.assignees.some((a) => a.id === userId);
   const canChangeStatus = !!task && (canEdit || isMine);
   const overdue = !!task?.due_at && task.status !== "completada" && new Date(task.due_at) < new Date();
@@ -57,6 +54,7 @@ export function TaskDetailSheet({ open, onOpenChange, task, userId, clubId, canE
     onSuccess: () => {
       toast.success("Tarea eliminada");
       qc.invalidateQueries({ queryKey: ["coord-tasks", clubId] });
+      setConfirmDelete(false);
       onOpenChange(false);
     },
     onError: (e: any) => toast.error(e.message ?? "No se pudo eliminar"),
@@ -65,115 +63,126 @@ export function TaskDetailSheet({ open, onOpenChange, task, userId, clubId, canE
   if (!task) return null;
 
   return (
-    <DetailSheet
-      open={open}
-      onOpenChange={onOpenChange}
-      title={task.title}
-      description="Detalle de la tarea"
-      headerActions={
-        canEdit ? (
-          <>
-            <Button size="sm" variant="secondary" onClick={onEdit}>
-              <Pencil className="mr-2 h-3.5 w-3.5" /> Editar
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-              onClick={() => {
-                if (confirm("¿Eliminar esta tarea?")) deleteMutation.mutate();
-              }}
-              disabled={deleteMutation.isPending}
-            >
-              <Trash2 className="mr-2 h-3.5 w-3.5" /> Eliminar
-            </Button>
-          </>
-        ) : undefined
-      }
-    >
-      <DetailField label="Estado">
-        <div className="flex flex-wrap gap-1.5">
-          {STATUSES.map((s) => {
-            const active = task.status === s.key;
-            const disabled = !canChangeStatus || setStatus.isPending;
-            return (
-              <button
-                key={s.key}
-                type="button"
-                disabled={disabled}
-                onClick={() => setStatus.mutate(s.key)}
-                className={cn(
-                  "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
-                  active
-                    ? "border-primary bg-primary/15 text-primary"
-                    : "border-border/60 text-muted-foreground hover:bg-white/[0.04]",
-                  disabled && !active && "opacity-50 cursor-not-allowed",
-                )}
+    <>
+      <DetailSheet
+        open={open}
+        onOpenChange={onOpenChange}
+        title={task.title}
+        description={task.team?.name ?? "Todo el club"}
+        headerActions={
+          canEdit ? (
+            <>
+              <Button size="sm" variant="secondary" onClick={onEdit}>
+                <Pencil className="mr-2 h-3.5 w-3.5" /> Editar
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                onClick={() => setConfirmDelete(true)}
               >
-                {s.label}
-              </button>
-            );
-          })}
-        </div>
-        {!canChangeStatus ? (
-          <p className="mt-1 text-xs text-muted-foreground">Solo asignados o editores pueden cambiar el estado.</p>
-        ) : null}
-      </DetailField>
+                <Trash2 className="mr-2 h-3.5 w-3.5" /> Eliminar
+              </Button>
+            </>
+          ) : undefined
+        }
+      >
+        <DetailSection title="Estado">
+          <div className="flex flex-wrap gap-1.5">
+            {STATUSES.map((s) => {
+              const active = task.status === s;
+              const disabled = !canChangeStatus || setStatus.isPending;
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => setStatus.mutate(s)}
+                  className={cn(
+                    "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                    active
+                      ? "border-primary bg-primary/15 text-primary"
+                      : "border-border/60 text-muted-foreground hover:bg-white/[0.04]",
+                    disabled && !active && "cursor-not-allowed opacity-50",
+                  )}
+                >
+                  {STATUS_LABEL[s]}
+                </button>
+              );
+            })}
+          </div>
+          {!canChangeStatus ? (
+            <p className="text-xs text-muted-foreground">Solo asignados o editores pueden cambiar el estado.</p>
+          ) : null}
+        </DetailSection>
 
-      <DetailField label="Prioridad">
-        <StatusBadge variant={PRIORITY_VARIANT[task.priority]}>{PRIORITY_LABEL[task.priority]}</StatusBadge>
-      </DetailField>
+        <DetailGrid>
+          <DetailField label="Prioridad">
+            <span className="inline-flex items-center gap-2">
+              <span className={cn("h-2.5 w-2.5 rounded-full", PRIORITY_DOT[task.priority])} />
+              {PRIORITY_LABEL[task.priority]}
+            </span>
+          </DetailField>
 
-      <DetailField label="Fecha límite" icon={CalendarClock}>
-        {task.due_at ? (
-          <div className="flex items-center gap-2">
-            <span className="text-foreground">{formatDateTime(task.due_at)}</span>
-            {overdue ? (
-              <span className="inline-flex items-center gap-1 text-xs text-destructive">
-                <AlertTriangle className="h-3.5 w-3.5" /> Vencida
+          <DetailField label="Alcance" icon={Layers}>
+            {task.team?.name ?? "Todo el club"}
+          </DetailField>
+
+          <DetailField label="Fecha límite" icon={CalendarClock} full>
+            {task.due_at ? (
+              <span className="inline-flex flex-wrap items-center gap-2">
+                <span>{formatDateTime(task.due_at)}</span>
+                {overdue ? (
+                  <span className="inline-flex items-center gap-1 text-xs text-destructive">
+                    <AlertTriangle className="h-3.5 w-3.5" /> Vencida
+                  </span>
+                ) : null}
               </span>
-            ) : null}
-          </div>
-        ) : (
-          <span className="text-muted-foreground">Sin fecha límite</span>
-        )}
-      </DetailField>
+            ) : (
+              <span className="text-muted-foreground">Sin fecha límite</span>
+            )}
+          </DetailField>
 
-      {task.description ? (
-        <DetailField label="Descripción">
-          <p className="whitespace-pre-wrap text-sm text-foreground/90">{task.description}</p>
-        </DetailField>
-      ) : null}
+          {task.description ? (
+            <DetailField label="Descripción" full>
+              <DetailValue value={task.description} />
+            </DetailField>
+          ) : null}
+        </DetailGrid>
 
-      <DetailField label={`Asignados (${task.assignees.length})`}>
-        {task.assignees.length === 0 ? (
-          <span className="text-muted-foreground">Sin asignados</span>
-        ) : (
-          <ul className="space-y-1.5">
-            {task.assignees.map((a) => (
-              <li key={a.id} className="flex items-center gap-2 text-sm">
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-[11px] font-medium">
-                  {(a.full_name ?? a.email ?? "?").slice(0, 1).toUpperCase()}
-                </span>
-                <span className="text-foreground">{a.full_name ?? a.email ?? "—"}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </DetailField>
+        <DetailSection title={`Asignados (${task.assignees.length})`}>
+          <AvatarStack people={task.assignees} max={8} size="md" />
+          {task.assignees.length > 0 ? (
+            <ul className="space-y-1 text-sm">
+              {task.assignees.map((a) => (
+                <li key={a.id} className="text-foreground [overflow-wrap:anywhere]">
+                  {a.full_name ?? a.email ?? "—"}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </DetailSection>
 
-      <div className="grid grid-cols-2 gap-3 pt-1 text-xs text-muted-foreground">
-        <div>
-          <div className="uppercase tracking-wider">Creada</div>
-          <div className="mt-0.5 text-foreground/80">{formatDateTime(task.created_at)}</div>
-        </div>
-        {task.completed_at ? (
-          <div>
-            <div className="uppercase tracking-wider">Completada</div>
-            <div className="mt-0.5 text-foreground/80">{formatDateTime(task.completed_at)}</div>
-          </div>
-        ) : null}
-      </div>
-    </DetailSheet>
+        <DetailSection title={<span className="inline-flex items-center gap-1.5"><ListChecks className="h-3.5 w-3.5" /> Subtareas</span>}>
+          <TaskChecklist taskId={task.id} canEdit={canChangeStatus} />
+        </DetailSection>
+
+        <DetailGrid className="pt-1 text-xs">
+          <DetailField label="Creada">{formatDateTime(task.created_at)}</DetailField>
+          {task.completed_at ? (
+            <DetailField label="Completada">{formatDateTime(task.completed_at)}</DetailField>
+          ) : null}
+        </DetailGrid>
+      </DetailSheet>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        title="¿Eliminar esta tarea?"
+        description="Se eliminarán también sus subtareas y asignaciones."
+        loading={deleteMutation.isPending}
+        onConfirm={() => deleteMutation.mutate()}
+      />
+    </>
   );
 }
