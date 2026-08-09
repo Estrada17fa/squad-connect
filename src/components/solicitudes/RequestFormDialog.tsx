@@ -208,6 +208,43 @@ export function RequestFormDialog({
       </EntitySheetHeader>
 
       <EntitySheetBody>
+        <div className="space-y-1.5">
+          <Label>Categoría</Label>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setTeamId(null)}
+              className={cn(
+                "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                teamId === null
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border/60 text-muted-foreground hover:bg-white/[0.04]",
+              )}
+            >
+              Todo el club
+            </button>
+            {categoryTeams.map((t: any) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setTeamId(t.id)}
+                className={cn(
+                  "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                  teamId === t.id
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border/60 text-muted-foreground hover:bg-white/[0.04]",
+                )}
+              >
+                {t.name}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Define quién puede verla: quien tenga permiso de esa categoría, o de todo el club.
+          </p>
+        </div>
+
+
 
         {def.fields.map((f: RequestFieldDef) => (
           <div key={f.key} className="space-y-1.5">
