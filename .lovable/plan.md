@@ -1,28 +1,59 @@
-# Todos los niveles disponibles en cada módulo
+# Niveles por categoría de verdad — empezando por Solicitudes
 
-Hoy, en la matriz de roles y en los ajustes por usuario, los módulos de ámbito club (inventario, compras y facturas, solicitudes, coordinación interna, usuarios) solo ofrecen 4 opciones: Sin acceso, Vista Jugador, Lector Global y Editor Global. Los de categoría sí muestran los 6.
+Dos entregas: una regla general de interfaz (todos los módulos muestran los 6 niveles) y el primer módulo que de verdad respeta "por categoría": **Solicitudes**.
 
-## Cambio
+## 1. Todos los niveles, en todos los módulos
 
-Todos los módulos, sin excepción, ofrecen los 6 niveles:
+Hoy los módulos de ámbito club (Coordinación, Solicitudes, Compras, Usuarios) solo ofrecen 4 opciones. Pasan a ofrecer siempre los 6, tanto en la matriz de roles como en la configuración avanzada por usuario:
 
-1. Sin acceso
-2. Vista Jugador
-3. Lector Categoría
-4. Lector Global
-5. Editor Categoría
-6. Editor Global
+Sin acceso · Vista Jugador · Lector Categoría · Lector Global · Editor Categoría · Editor Global
 
-Sin catalogar por ámbito: la misma lista en cada renglón, tanto en la matriz de roles como en la configuración avanzada por usuario. Se conservan los textos de ayuda por nivel (y el de Vista Jugador sigue adaptándose a lo que muestra ese módulo).
+Sin catalogar por ámbito, sin recortes. Los textos de ayuda por nivel se conservan.
 
-Nota: en un módulo de club, "Lector Categoría" y "Editor Categoría" se comportan igual que sus equivalentes globales, porque el contenido no está dividido por categorías. La opción existe para elegirla libremente, pero no cambia lo que la persona ve.
+## 2. Solicitudes con categoría real
 
-## Detalles técnicos
+Hoy una solicitud no guarda a qué equipo pertenece, así que "Lector Categoría" no puede filtrar nada. Se añade la categoría al registro.
 
-- `src/lib/permissions.ts`: `levelOptionsFor(key)` deja de ramificar por `scope` y devuelve siempre `PERMISSION_LEVELS`; `coerceLevelFor` queda sin recorte (cualquier nivel guardado es opción válida).
-- `RolePermissionsMatrix.tsx` y `UserAdvancedSettings.tsx` no necesitan cambios: ya consumen `levelOptionsFor`.
-- Sin migraciones, sin cambios de RLS ni de funciones SQL.
+- Cada solicitud se crea con **Categoría/equipo**, o con **Todo el club** cuando no pertenece a una categoría concreta.
+- Valor por defecto al crear: el equipo activo del filtro si hay uno; si la persona solo tiene una categoría, esa; si es global, "Todo el club".
+- Las solicitudes existentes quedan como "Todo el club" (no se inventa categoría).
+- La tarjeta y la ficha muestran un badge con la categoría (o "Todo el club").
+- Los filtros ganan Categoría dentro del panel de filtros ya existente.
 
-## Cómo verificamos
+Qué ve y qué puede cada nivel en Solicitudes:
 
-Abrir Usuarios → Roles y comprobar que inventario, compras, solicitudes, coordinación y usuarios muestran las 6 opciones; guardar `editor_categoria` en uno de ellos y ver que se persiste y se relee igual.
+| Nivel | Ve | Puede |
+|---|---|---|
+| Sin acceso | nada | — |
+| Vista Jugador | solo sus propias solicitudes | crear las suyas |
+| Lector Categoría | las de sus categorías + las de "Todo el club" + las suyas | nada más |
+| Lector Global | todas las del club | nada más |
+| Editor Categoría | las de sus categorías + "Todo el club" + las suyas | crear, editar y **aprobar/rechazar** solo dentro de sus categorías |
+| Editor Global | todas | gestión y aprobación en todo el club |
+
+Regla que se mantiene: nadie aprueba su propia solicitud.
+
+## 3. Detalles técnicos
+
+**Base de datos** (una migración):
+- `requests.team_id uuid null references teams(id)` (NULL = todo el club) + índice.
+- `can_view_request` y `can_approve_request_type` pasan a evaluar `effective_permission(user,'solicitudes', requests.team_id)`: los niveles `*_categoria` exigen `has_team_scope(user, team_id)` y aceptan las filas con `team_id IS NULL`; los `*_global` siguen viendo todo el club. `vista_jugador` queda limitado a `requester_id = auth.uid()`.
+- Se reescriben las policies SELECT/INSERT/UPDATE de `requests` (y las de `request_comments` / `request_status_history`, que cuelgan de `can_view_request`) contra esas funciones. Sin cambios en otras tablas.
+
+**Frontend**:
+- `src/lib/permissions.ts`: `levelOptionsFor` devuelve siempre los 6 niveles; `coerceLevelFor` deja de recortar. `RolePermissionsMatrix` y `UserAdvancedSettings` no cambian (ya consumen ese helper).
+- `src/hooks/useRequests.ts`: `team_id` en lectura, creación y edición; filtro por categoría.
+- `src/components/solicitudes/RequestFormDialog.tsx`: campo `TeamSelectField` con opción "Todo el club".
+- `src/components/solicitudes/RequestDetailSheet.tsx`: badge de categoría; botones de decisión visibles solo si el nivel efectivo **en esa categoría** es editor.
+- `src/routes/_authenticated/m.solicitudes.tsx`: usa `useTeamAccess('solicitudes').levelForTeam(row.team_id)` para decidir vista y acciones fila por fila.
+
+## 4. Cómo verificamos
+
+- Un rol con `lector_categoria` en solicitudes: ve solo las de su categoría y las de "Todo el club", sin botones.
+- Un rol con `editor_categoria`: aprueba las de su categoría y no ve acciones en las de otra.
+- Un `editor_global`: todo igual que hoy.
+- Recorrido en navegador con sesión real, y consulta directa a la base para confirmar el `team_id` guardado.
+
+## 5. Después
+
+Con el patrón validado en Solicitudes, se replica igual en Coordinación (tareas y juntas), Compras y facturas, e Inventario.
