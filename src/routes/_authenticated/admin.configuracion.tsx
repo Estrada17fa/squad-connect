@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Shield } from "lucide-react";
-import { PageHeader } from "@/components/squad/PageHeader";
+
 import { ModuleTabs } from "@/components/squad/ModuleTabs";
 import { EmptyState } from "@/components/squad/EmptyState";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
