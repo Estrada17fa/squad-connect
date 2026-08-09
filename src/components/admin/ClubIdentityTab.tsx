@@ -12,7 +12,7 @@ import {
   uploadClubLogo,
 } from "@/hooks/useClubSettings";
 
-/** Identidad del club: nombre, logo y colores de marca. */
+/** Identidad del club: nombre y logo. */
 export function ClubIdentityTab({ clubId, canEdit }: { clubId: string; canEdit: boolean }) {
   const clubQ = useClub(clubId);
   const update = useUpdateClub();
@@ -95,6 +95,7 @@ export function ClubIdentityTab({ clubId, canEdit }: { clubId: string; canEdit: 
             </label>
           ) : null}
         </div>
+        <p className="text-xs text-muted-foreground">Solo archivos PNG. Se muestra en la vista previa.</p>
       </div>
 
       {canEdit ? (
