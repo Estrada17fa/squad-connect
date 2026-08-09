@@ -1887,6 +1887,7 @@ export type Database = {
           related_loan_id: string | null
           requester_id: string
           status: Database["public"]["Enums"]["request_status"]
+          team_id: string | null
           title: string
           type: Database["public"]["Enums"]["request_type"]
           updated_at: string
@@ -1908,6 +1909,7 @@ export type Database = {
           related_loan_id?: string | null
           requester_id: string
           status?: Database["public"]["Enums"]["request_status"]
+          team_id?: string | null
           title: string
           type: Database["public"]["Enums"]["request_type"]
           updated_at?: string
@@ -1929,6 +1931,7 @@ export type Database = {
           related_loan_id?: string | null
           requester_id?: string
           status?: Database["public"]["Enums"]["request_status"]
+          team_id?: string | null
           title?: string
           type?: Database["public"]["Enums"]["request_type"]
           updated_at?: string
@@ -1974,6 +1977,13 @@ export type Database = {
             columns: ["requester_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "requests_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
             referencedColumns: ["id"]
           },
         ]
@@ -3549,6 +3559,10 @@ export type Database = {
       request_approver_module: {
         Args: { _type: Database["public"]["Enums"]["request_type"] }
         Returns: string
+      }
+      request_scope_ok: {
+        Args: { _min_edit: boolean; _team_id: string; _user_id: string }
+        Returns: boolean
       }
       request_type_approver_ids: {
         Args: {
