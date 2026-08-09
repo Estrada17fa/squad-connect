@@ -29,7 +29,9 @@ import { RequestFormDialog } from "@/components/solicitudes/RequestFormDialog";
 import { RequestTypePicker } from "@/components/solicitudes/RequestTypePicker";
 import { RequestDetailSheet } from "@/components/solicitudes/RequestDetailSheet";
 import { cn } from "@/lib/utils";
-import { canEdit as levelCanEdit, canRead as levelCanRead } from "@/lib/permissions";
+import { canEdit as levelCanEdit, canRead as levelCanRead, isGlobalLevel } from "@/lib/permissions";
+import { useTeamAccess } from "@/hooks/useTeamAccess";
+
 
 export const Route = createFileRoute("/_authenticated/m/solicitudes")({
   validateSearch: (search: Record<string, unknown>) => ({
