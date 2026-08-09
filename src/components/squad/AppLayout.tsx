@@ -234,6 +234,7 @@ function ClubPrefsSync() {
 function Header({
   clubName,
   userName,
+  avatarUrl,
   userId,
   isSuperAdmin,
   canOpenModule,
@@ -241,11 +242,13 @@ function Header({
 }: {
   clubName: string | null;
   userName: string;
+  avatarUrl: string | null;
   userId: string;
   isSuperAdmin: boolean;
   canOpenModule: (key: string) => boolean;
   onSignOut: () => void;
 }) {
+  const fallback = initials(userName || "?");
   return (
     <header className="sticky top-0 z-30 border-b border-border/60 bg-background/70 backdrop-blur-xl">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
@@ -262,11 +265,22 @@ function Header({
 
           <NotificationBell userId={userId} canOpenModule={canOpenModule} />
           <DropdownMenu>
-            <DropdownMenuTrigger className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-sm font-medium text-foreground hover:bg-white/10">
-              {(userName || "?").slice(0, 1).toUpperCase()}
+            <DropdownMenuTrigger className="rounded-full outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring">
+              <Avatar className="h-9 w-9 border border-border/60">
+                {avatarUrl ? <AvatarImage src={avatarUrl} alt={userName || "Mi perfil"} /> : null}
+                <AvatarFallback className="bg-white/5 text-sm font-medium">
+                  {fallback}
+                </AvatarFallback>
+              </Avatar>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel className="truncate">{userName || "Cuenta"}</DropdownMenuLabel>
+              <DropdownMenuLabel className="flex items-center gap-2">
+                <Avatar className="h-7 w-7 shrink-0">
+                  {avatarUrl ? <AvatarImage src={avatarUrl} alt={userName || "Mi perfil"} /> : null}
+                  <AvatarFallback className="text-[11px]">{fallback}</AvatarFallback>
+                </Avatar>
+                <span className="truncate">{userName || "Cuenta"}</span>
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link to="/mi-perfil">
