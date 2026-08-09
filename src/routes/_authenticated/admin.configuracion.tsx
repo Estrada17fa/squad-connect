@@ -26,16 +26,17 @@ export const Route = createFileRoute("/_authenticated/admin/configuracion")({
 });
 
 function ClubSettingsPage() {
-  const { user, profile, isSuperAdmin, activeBaseRole, permissions } = useApp();
-  const isAdmin = isSuperAdmin || activeBaseRole === "admin";
-  const canEdit = isSuperAdmin || levelCanEdit(permissions["usuarios"]);
+  const { user, profile, isSuperAdmin, permissions } = useApp();
+  // Configuración del club: solo Editor global (o super admin).
+  const isEditorGlobal = isSuperAdmin || permissions["usuarios"] === "editor_global";
+  const canEdit = isEditorGlobal;
 
-  if (!isAdmin) {
+  if (!isEditorGlobal) {
     return (
       <EmptyState
         icon={Shield}
         title="Acceso restringido"
-        message="Esta sección está disponible solo para administradores del club."
+        message="Esta sección está disponible solo para editores globales del club."
       />
     );
   }
