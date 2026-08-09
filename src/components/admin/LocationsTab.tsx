@@ -416,8 +416,19 @@ function LocationForm({
     }
     if (!name.trim()) return toast.error("Escribe el nombre de la ubicación");
     try {
+      // Evita duplicar: reutiliza la fila del club con el mismo lugar (incluidos borradores).
+      let targetId = row?.id ?? undefined;
+      if (!targetId && placeId) {
+        const { data: existing } = await db
+          .from("locations")
+          .select("id")
+          .eq("club_id", clubId)
+          .eq("place_id", placeId)
+          .maybeSingle();
+        if (existing?.id) targetId = existing.id as string;
+      }
       const saved = await save.mutateAsync({
-        id: row?.id ?? undefined,
+        id: targetId,
         club_id: clubId,
         name,
         address,
