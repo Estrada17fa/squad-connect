@@ -1,235 +1,149 @@
 import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { FileText, Plus, Search, AlertTriangle, CalendarClock, User as UserIcon, Users as UsersIcon } from "lucide-react";
+import { FileText, Plus } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { ModuleTabs } from "@/components/squad/ModuleTabs";
 import { EmptyState } from "@/components/squad/EmptyState";
-import { LoadingState, CardGridSkeleton } from "@/components/squad/LoadingState";
-import { StandardCard } from "@/components/squad/StandardCard";
-import { StatusBadge } from "@/components/squad/StatusBadge";
+import { CardGridSkeleton } from "@/components/squad/LoadingState";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useApp } from "@/components/squad/AppLayout";
+import { useTeamAccess } from "@/hooks/useTeamAccess";
+import { useDocuments, expiryStateOf, type DocumentRow } from "@/hooks/useDocuments";
+import { DocumentCard } from "@/components/documentos/DocumentCard";
 import {
-  useDocuments,
-  DOCUMENT_CATEGORIES,
-  CATEGORY_LABEL,
-  expiryStateOf,
-  type DocumentCategory,
-  type DocumentRow,
-} from "@/hooks/useDocuments";
+  DocumentsFilters,
+  EMPTY_DOC_FILTERS,
+  applyDocumentFilters,
+  type DocumentsFilterState,
+} from "@/components/documentos/DocumentsFilters";
 import { DocumentFormDialog } from "@/components/documentos/DocumentFormDialog";
 import { DocumentDetailSheet } from "@/components/documentos/DocumentDetailSheet";
-import { cn } from "@/lib/utils";
-import { canEdit as levelCanEdit, canRead as levelCanRead } from "@/lib/permissions";
 
 export const Route = createFileRoute("/_authenticated/m/documentos")({
   head: () => ({
     meta: [
       { title: "Squad — Documentos" },
-      { name: "description", content: "Biblioteca de documentos del club: contratos, permisos, actas y más." },
+      {
+        name: "description",
+        content: "Biblioteca de documentos del club: reglamentos, oficios, formatos y más.",
+      },
+      { property: "og:title", content: "Squad — Documentos" },
+      {
+        property: "og:description",
+        content: "Consulta y administra los documentos generales del club por categoría.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: DocumentosPage,
 });
 
 function DocumentosPage() {
-  const { profile, getModuleAccess, isSuperAdmin } = useApp();
+  const { profile, teamOptions, isSuperAdmin } = useApp();
   const clubId = profile?.club_id ?? null;
-  const level = getModuleAccess("documentos");
-  const canRead = isSuperAdmin || levelCanRead(level);
-  const canEdit = isSuperAdmin || levelCanEdit(level);
+  const { canEditTeam, canReadTeam, levelForTeam } = useTeamAccess("documentos");
 
-  const { data, isLoading } = useDocuments({ clubId });
-  const [query, setQuery] = React.useState("");
-  const [activeCats, setActiveCats] = React.useState<Set<DocumentCategory>>(new Set());
+  // Vista Jugador: los documentos personales viven en el perfil, no aquí.
+  const playerOnly =
+    !isSuperAdmin &&
+    levelForTeam(null) === "vista_jugador" &&
+    teamOptions.every((t) => levelForTeam(t.id) === "vista_jugador");
+
+  const readableTeams = React.useMemo(
+    () => teamOptions.filter((t) => canReadTeam(t.id)),
+    [teamOptions, canReadTeam],
+  );
+  const canReadAny = canReadTeam(null) || readableTeams.length > 0;
+  const canCreate = canEditTeam(null) || teamOptions.some((t) => canEditTeam(t.id));
+
+  const { data, isLoading } = useDocuments({ clubId, scope: "general" });
+  const [filters, setFilters] = React.useState<DocumentsFilterState>(EMPTY_DOC_FILTERS);
   const [formOpen, setFormOpen] = React.useState(false);
-  const [editing, setEditing] = React.useState<DocumentRow | null>(null);
-  const [preview, setPreview] = React.useState<DocumentRow | null>(null);
-  const [previewOpen, setPreviewOpen] = React.useState(false);
+  const [selected, setSelected] = React.useState<DocumentRow | null>(null);
+  const [detailOpen, setDetailOpen] = React.useState(false);
 
-  const filtered = React.useMemo(() => {
-    const list = data ?? [];
-    const q = query.trim().toLowerCase();
-    return list.filter((d) => {
-      if (activeCats.size && !activeCats.has(d.category)) return false;
-      if (!q) return true;
-      const hay = [
-        d.title,
-        d.description ?? "",
-        d.related_user?.full_name ?? "",
-        d.team?.name ?? "",
-        ...(d.tags ?? []),
-      ]
-        .join(" ")
-        .toLowerCase();
-      return hay.includes(q);
-    });
-  }, [data, query, activeCats]);
+  const visible = React.useMemo(() => {
+    const list = (data ?? []).filter((d) => canReadTeam(d.team_id));
+    return applyDocumentFilters(list, filters, expiryStateOf);
+  }, [data, filters, canReadTeam]);
 
-  const toggleCat = (c: DocumentCategory) => {
-    setActiveCats((prev) => {
-      const next = new Set(prev);
-      if (next.has(c)) next.delete(c);
-      else next.add(c);
-      return next;
-    });
+  const openDoc = (doc: DocumentRow) => {
+    setSelected(doc);
+    setDetailOpen(true);
   };
 
-  const openEdit = (doc: DocumentRow) => {
-    setEditing(doc);
-    setFormOpen(true);
-    setPreviewOpen(false);
-  };
-  const openNew = () => {
-    setEditing(null);
-    setFormOpen(true);
-  };
+  if (playerOnly || !canReadAny) {
+    return (
+      <div className="space-y-4">
+        <PageHeader hideTitle title="Documentos" subtitle="Biblioteca del club" />
+        <ModuleTabs activeKey="documentos" />
+        <EmptyState
+          icon={FileText}
+          title="Sin acceso"
+          message="Tus documentos personales aparecen en tu perfil."
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
       <PageHeader hideTitle title="Documentos" subtitle="Biblioteca del club" />
       <ModuleTabs activeKey="documentos" />
 
-      {!canRead ? (
-        <EmptyState icon={FileText} title="Sin acceso" message="Tu rol actual no tiene permisos para ver documentos." />
+      <DocumentsFilters
+        value={filters}
+        onChange={setFilters}
+        teams={readableTeams.filter((t) => !!t.id).map((t) => ({ id: t.id!, name: t.name }))}
+        count={visible.length}
+      />
+
+      {isLoading ? (
+        <CardGridSkeleton count={4} />
+      ) : visible.length === 0 ? (
+        <EmptyState
+          icon={FileText}
+          title="Sin documentos"
+          message={
+            filters.search || filters.type || filters.teamId || filters.vigencia !== "todos"
+              ? "Ningún documento coincide con el filtro."
+              : "Aún no hay documentos generales en tus categorías."
+          }
+          action={
+            canCreate ? (
+              <Button className="glow-primary" onClick={() => setFormOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" /> Subir documento
+              </Button>
+            ) : undefined
+          }
+        />
       ) : (
-        <>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Buscar por título, persona, etiqueta…"
-              className="pl-9"
-            />
-          </div>
-
-          <div className="-mx-1 overflow-x-auto no-scrollbar">
-            <div className="flex gap-2 px-1 pb-1">
-              {DOCUMENT_CATEGORIES.map((c) => {
-                const active = activeCats.has(c.value);
-                return (
-                  <button
-                    key={c.value}
-                    type="button"
-                    onClick={() => toggleCat(c.value)}
-                    className={cn(
-                      "rounded-full px-3 py-1.5 text-xs font-medium ring-1 ring-inset transition-colors whitespace-nowrap",
-                      active
-                        ? "bg-primary text-primary-foreground ring-primary/40"
-                        : "bg-white/5 text-muted-foreground ring-white/10 hover:bg-white/[0.08]",
-                    )}
-                  >
-                    {c.label}
-                  </button>
-                );
-              })}
-              {activeCats.size ? (
-                <button
-                  type="button"
-                  onClick={() => setActiveCats(new Set())}
-                  className="rounded-full px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground"
-                >
-                  Limpiar
-                </button>
-              ) : null}
-            </div>
-          </div>
-
-          {canEdit ? (
-            <Button onClick={openNew} className="w-full glow-primary">
-              <Plus className="h-4 w-4 mr-2" /> Subir documento
-            </Button>
-          ) : null}
-
-
-          {isLoading ? (
-            <CardGridSkeleton count={6} />
-          ) : filtered.length === 0 ? (
-            <EmptyState
-              icon={FileText}
-              title={data && data.length ? "Sin resultados" : "Sin documentos"}
-              message={
-                data && data.length
-                  ? "Ajusta la búsqueda o quita filtros."
-                  : canEdit
-                    ? "Sube el primer documento del club."
-                    : "Aún no hay documentos disponibles."
-              }
-              action={
-                canEdit && !(data && data.length) ? (
-                  <Button onClick={openNew}>
-                    <Plus className="h-4 w-4 mr-2" /> Subir documento
-                  </Button>
-                ) : undefined
-              }
-            />
-          ) : (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {filtered.map((doc) => (
-                <DocCard
-                  key={doc.id}
-                  doc={doc}
-                  onOpen={() => {
-                    setPreview(doc);
-                    setPreviewOpen(true);
-                  }}
-                />
-              ))}
-            </div>
-          )}
-        </>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          {visible.map((d) => (
+            <DocumentCard key={d.id} doc={d} onOpen={openDoc} />
+          ))}
+        </div>
       )}
 
-      <DocumentFormDialog open={formOpen} onOpenChange={setFormOpen} existing={editing} />
+      {canCreate ? (
+        <button
+          type="button"
+          onClick={() => setFormOpen(true)}
+          aria-label="Subir documento"
+          className="glow-primary fixed bottom-24 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform active:scale-95"
+        >
+          <Plus className="h-6 w-6" />
+        </button>
+      ) : null}
+
+      <DocumentFormDialog open={formOpen} onOpenChange={setFormOpen} />
       <DocumentDetailSheet
-        open={previewOpen}
-        onOpenChange={setPreviewOpen}
-        doc={preview}
-        canEdit={canEdit}
-        onEdit={openEdit}
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+        doc={selected}
+        canEdit={selected ? canEditTeam(selected.team_id) : false}
       />
     </div>
-  );
-}
-
-function DocCard({ doc, onOpen }: { doc: DocumentRow; onOpen: () => void }) {
-  const expiry = expiryStateOf(doc.expiry_date);
-  const status =
-    expiry === "expired"
-      ? { label: "Vencido", variant: "rejected" as const }
-      : expiry === "soon"
-        ? { label: "Vence pronto", variant: "pending" as const }
-        : { label: CATEGORY_LABEL[doc.category], variant: "info" as const };
-
-  return (
-    <StandardCard
-      interactive
-      onClick={onOpen}
-      icon={FileText}
-      title={doc.title}
-      subtitle={doc.description ?? CATEGORY_LABEL[doc.category]}
-      status={status}
-    >
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-        {doc.related_user?.full_name ? (
-          <span className="inline-flex items-center gap-1">
-            <UserIcon className="h-3 w-3" /> {doc.related_user.full_name}
-          </span>
-        ) : null}
-        {doc.team?.name ? (
-          <span className="inline-flex items-center gap-1">
-            <UsersIcon className="h-3 w-3" /> {doc.team.name}
-          </span>
-        ) : null}
-        {doc.expiry_date ? (
-          <span className={cn("inline-flex items-center gap-1", expiry === "expired" && "text-status-rejected")}>
-            {expiry === "expired" ? <AlertTriangle className="h-3 w-3" /> : <CalendarClock className="h-3 w-3" />}
-            Vence {doc.expiry_date}
-          </span>
-        ) : null}
-      </div>
-    </StandardCard>
   );
 }
