@@ -1,0 +1,1 @@
+ALTER TABLE public.clubs ADD COLUMN IF NOT EXISTS week_start smallint NOT NULL DEFAULT 1;

@@ -220,6 +220,7 @@ export type Database = {
           primary_color: string | null
           secondary_color: string | null
           timezone: string
+          week_start: number
         }
         Insert: {
           created_at?: string
@@ -233,6 +234,7 @@ export type Database = {
           primary_color?: string | null
           secondary_color?: string | null
           timezone?: string
+          week_start?: number
         }
         Update: {
           created_at?: string
@@ -246,6 +248,7 @@ export type Database = {
           primary_color?: string | null
           secondary_color?: string | null
           timezone?: string
+          week_start?: number
         }
         Relationships: []
       }
