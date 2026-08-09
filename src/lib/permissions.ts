@@ -139,19 +139,13 @@ const HINTS: Record<PermissionLevel, string> = {
 };
 
 /**
- * Niveles que tienen sentido en cada módulo:
- * - 'vista_jugador' está disponible SIEMPRE (todos los módulos tienen una
- *   vista de jugador definida en `playerView`).
- * - En módulos de ámbito club, la distinción categoría/global no aplica:
- *   se ofrecen únicamente los niveles globales.
+ * Niveles disponibles: TODOS los módulos ofrecen los 6 niveles, sin recortes
+ * por ámbito. Elegir un nivel de categoría en un módulo de club limita lo que
+ * la persona ve a los registros de sus categorías (y a los marcados como
+ * "Todo el club").
  */
 export function levelOptionsFor(key: ModuleKey): LevelOption[] {
-  const scope = MODULE_MAP[key]?.scope ?? "team";
-  const values: PermissionLevel[] =
-    scope === "club"
-      ? ["sin_acceso", "vista_jugador", "lector_global", "editor_global"]
-      : PERMISSION_LEVELS;
-  return values.map((value) => ({
+  return PERMISSION_LEVELS.map((value) => ({
     value,
     label: LEVEL_LABEL[value],
     hint: value === "vista_jugador" ? playerViewHint(key) : HINTS[value],
@@ -166,12 +160,10 @@ export function playerViewHint(key: ModuleKey): string {
 }
 
 /** Ajusta un nivel guardado a una opción válida del módulo (para el <Select>). */
-export function coerceLevelFor(key: ModuleKey, level: PermissionLevel): PermissionLevel {
-  const opts = levelOptionsFor(key);
-  if (opts.some((o) => o.value === level)) return level;
-  if (level === "sin_acceso") return "sin_acceso";
-  return canEdit(level) ? "editor_global" : "lector_global";
+export function coerceLevelFor(_key: ModuleKey, level: PermissionLevel): PermissionLevel {
+  return level;
 }
+
 
 /* ------------------------------------------------------------------ */
 /* Valores por defecto de los roles del sistema                        */
