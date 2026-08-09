@@ -127,10 +127,19 @@ export function useClubPrefs() {
   const currency = clubQ.data?.currency || DEFAULT_CURRENCY;
   const timezone = clubQ.data?.timezone || DEFAULT_TIMEZONE;
   const dateFormat = clubQ.data?.date_format || DEFAULT_DATE_FORMAT;
+  const weekStart = clubQ.data?.week_start ?? DEFAULT_WEEK_START;
 
   React.useEffect(() => {
     setClubDatePrefs({ timezone, dateFormat });
-  }, [timezone, dateFormat]);
+    setClubWeekStart(weekStart);
+  }, [timezone, dateFormat, weekStart]);
 
-  return { currency, timezone, dateFormat, club: clubQ.data ?? null, isLoading: clubQ.isLoading };
+  return {
+    currency,
+    timezone,
+    dateFormat,
+    weekStart,
+    club: clubQ.data ?? null,
+    isLoading: clubQ.isLoading,
+  };
 }
