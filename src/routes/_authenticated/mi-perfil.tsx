@@ -163,7 +163,7 @@ function MiPerfilPage() {
       />
 
 
-      <PersonDocumentsSection clubId={clubId} userId={user.id} />
+      <PersonDocumentsSection clubId={profile?.club_id ?? null} userId={user.id} />
 
     </div>
   );
