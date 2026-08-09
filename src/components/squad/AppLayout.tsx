@@ -207,6 +207,7 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
         <Header
           clubName={data.clubName}
           userName={data.profile?.full_name ?? user.email ?? ""}
+          avatarUrl={data.profile?.avatar_url ?? null}
           userId={user.id}
           isSuperAdmin={data.isSuperAdmin}
           canOpenModule={(key) => isModuleAccessible(key as ModuleKey)}
