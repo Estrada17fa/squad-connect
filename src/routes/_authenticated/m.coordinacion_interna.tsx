@@ -267,14 +267,17 @@ function CoordinacionPage() {
               icon={MessagesSquare}
               title="Sin juntas"
               message="No hay juntas con estos filtros."
-              actionLabel={canCreate ? "Nueva junta" : undefined}
-              onAction={
-                canCreate
-                  ? () => {
+              action={
+                canCreate ? (
+                  <Button
+                    onClick={() => {
                       setEditingMeeting(null);
                       setMeetingDialog(true);
-                    }
-                  : undefined
+                    }}
+                  >
+                    <Plus className="mr-2 h-4 w-4" /> Nueva junta
+                  </Button>
+                ) : undefined
               }
             />
           ) : (
