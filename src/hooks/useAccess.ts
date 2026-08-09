@@ -86,7 +86,7 @@ export function useAccess(userId: string) {
       const [profileRes, membershipsRes, superRes, overridesRes] = await Promise.all([
         supabase
           .from("profiles")
-          .select("full_name, email, club_id, club:clubs(name)")
+          .select("full_name, email, avatar_url, club_id, club:clubs(name)")
           .eq("id", userId)
           .maybeSingle(),
         supabase
