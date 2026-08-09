@@ -15,12 +15,13 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   DetailSheet,
   DetailSection,
-
   DetailField,
   DetailGrid,
   DetailValue,
   DetailLink,
 } from "@/components/squad/DetailSheet";
+import { PersonDocumentsSection } from "@/components/documentos/PersonDocumentsSection";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/squad/StatusBadge";
