@@ -266,6 +266,14 @@ function SolicitudesPage() {
         userId={user.id}
         type={formType ?? "otro"}
         request={editing}
+        defaultTeamId={
+          teamFilter !== "all" && teamFilter !== "club"
+            ? teamFilter
+            : myTeamIds.length === 1
+              ? myTeamIds[0]
+              : null
+        }
+        allowedTeamIds={isSuperAdmin || isGlobalLevel(level) ? null : myTeamIds}
         onSaved={({ isEdit, type }) => {
           if (isEdit) return;
           if (tab === "todas" && (typeFilter !== "all" && typeFilter !== type)) {
@@ -283,8 +291,8 @@ function SolicitudesPage() {
         request={detail}
         userId={user.id}
         clubId={clubId}
-        canDecide={detail ? isApproverOf(detail.type) : false}
-        canManage={canManage}
+        canDecide={detail ? isApproverOf(detail.type) && scopeOk(detail.team_id) : false}
+        canManage={detail ? canManageRow(detail.team_id) : false}
         onEdit={() => {
           if (!detail) return;
           setEditing(detail);
@@ -292,6 +300,7 @@ function SolicitudesPage() {
           setFormType(detail.type);
         }}
       />
+
     </div>
   );
 }
