@@ -133,20 +133,35 @@ function SolicitudesPage() {
 
   if (!clubId) return <LoadingState />;
 
-  const all = requestsQ.data ?? [];
+  const rows = requestsQ.data ?? [];
+  // Visibilidad por categoría: propio, nivel global, o nivel de categoría con alcance.
+  const all = rows.filter(
+    (r) =>
+      r.requester_id === user.id ||
+      canReadRow(r.team_id) ||
+      (isApproverOf(r.type) && scopeOk(r.team_id)),
+  );
   const mine = all.filter((r) => r.requester_id === user.id);
   const filtered = all.filter(
     (r) =>
       (typeFilter === "all" || r.type === typeFilter) &&
-      (statusFilter === "all" || r.status === statusFilter),
+      (statusFilter === "all" || r.status === statusFilter) &&
+      (teamFilter === "all" ||
+        (teamFilter === "club" ? r.team_id === null : r.team_id === teamFilter)),
   );
   const detail = detailId ? all.find((r) => r.id === detailId) ?? null : null;
 
   // Pendientes que a mí me toca aprobar (resaltadas).
   const toApprove = all.filter(
-    (r) => r.status === "pendiente" && r.requester_id !== user.id && isApproverOf(r.type),
+    (r) =>
+      r.status === "pendiente" &&
+      r.requester_id !== user.id &&
+      isApproverOf(r.type) &&
+      scopeOk(r.team_id),
   );
   const toApproveIds = new Set(toApprove.map((r) => r.id));
+  const myTeamIds = teamOptions.map((t) => t.id).filter(Boolean) as string[];
+
 
   function openCreate() {
     setEditing(null);
