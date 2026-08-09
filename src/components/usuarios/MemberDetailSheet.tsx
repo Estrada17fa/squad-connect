@@ -119,13 +119,15 @@ export function MemberDetailSheet({
       }
     >
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Avatar className="h-16 w-16">
+        <div className="flex items-start gap-4">
+          <Avatar className="h-16 w-16 shrink-0">
             {member.avatar_url ? <AvatarImage src={member.avatar_url} alt={name} /> : null}
             <AvatarFallback className="text-base font-semibold">{initials(name)}</AvatarFallback>
           </Avatar>
-          <div className="min-w-0 space-y-1.5">
-            <p className="truncate font-display text-lg font-semibold leading-tight">{name}</p>
+          <div className="min-w-0 flex-1 space-y-1.5">
+            <p className="break-words font-display text-lg font-semibold leading-tight [overflow-wrap:anywhere]">
+              {name}
+            </p>
             <div className="flex flex-wrap gap-1.5">
               <StatusBadge variant={isBaja ? "rejected" : "approved"}>
                 {isBaja ? "Baja" : "Activo"}
