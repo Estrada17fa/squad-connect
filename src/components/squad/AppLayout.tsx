@@ -9,9 +9,11 @@ import { useAccess, hasAccess, type TeamOption } from "@/hooks/useAccess";
 import {
   canEdit as levelCanEdit,
   canRead as levelCanRead,
+  canSeeUsers,
   maxLevel,
   type PermissionLevel,
 } from "@/lib/permissions";
+
 
 import { MODULES, MODULE_MAP, moduleFromPath, type ModuleKey } from "@/lib/modules";
 import { resolvePagesForUser, inferBaseRole, type BaseRole, type ResolvedPage } from "@/lib/rolePages";
