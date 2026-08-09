@@ -39,6 +39,24 @@ export function useLocations(clubId: string | null | undefined) {
   });
 }
 
+/** Todas las ubicaciones del club, incluidas las creadas desde otros módulos (borradores). */
+export function useAllLocations(clubId: string | null | undefined) {
+  return useQuery({
+    queryKey: ["locations-all", clubId ?? "none"],
+    enabled: !!clubId,
+    staleTime: 60_000,
+    queryFn: async (): Promise<LocationRow[]> => {
+      const { data, error } = await db
+        .from("locations")
+        .select("*")
+        .eq("club_id", clubId!)
+        .order("name", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as LocationRow[];
+    },
+  });
+}
+
 /** Una ubicación por id (esté o no en el catálogo visible). */
 export function useLocation(locationId: string | null | undefined) {
   return useQuery({
