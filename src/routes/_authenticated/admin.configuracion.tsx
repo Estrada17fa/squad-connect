@@ -45,7 +45,7 @@ function ClubSettingsPage() {
   return (
     <div className="space-y-6">
       <ModuleTabs hubKey="admin" extraActiveKey="admin-config" />
-      <PageHeader title="Configuración del club" subtitle="Ajustes y catálogos que definen cómo opera el club" />
+
 
       {!clubId ? (
         <EmptyState title="Sin club" message="Tu perfil aún no está asociado a un club." />
