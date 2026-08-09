@@ -33,6 +33,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { AvatarUploadField } from "@/components/perfil/AvatarUploadField";
 
 export interface RoleOpt {
   id: string;
@@ -398,14 +399,13 @@ export function MemberForm({
                 <Input id="mf-birth" type="date" value={birthdate} onChange={(e) => setBirthdate(e.target.value)} />
               </Field>
             </div>
-            <Field label="Foto (URL)" htmlFor="mf-avatar">
-              <Input
-                id="mf-avatar"
-                value={avatarUrl}
-                onChange={(e) => setAvatarUrl(e.target.value)}
-                placeholder="https://…"
-              />
-            </Field>
+            <AvatarUploadField
+              label="Foto de perfil"
+              value={avatarUrl || null}
+              onChange={(url) => setAvatarUrl(url ?? "")}
+              userId={userId ?? "nuevos"}
+              name={`${firstName} ${paternal}`.trim() || null}
+            />
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Contacto de emergencia" htmlFor="mf-emg">
                 <Input id="mf-emg" value={emgName} onChange={(e) => setEmgName(e.target.value)} />

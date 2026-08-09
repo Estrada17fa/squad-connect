@@ -2,53 +2,75 @@ import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { FileText, HeartPulse, Save, TrendingUp, User } from "lucide-react";
+import {
+  CalendarDays,
+  Flag,
+  HeartPulse,
+  Mail,
+  MapPin,
+  Phone,
+  Shield,
+  TrendingUp,
+  User,
+} from "lucide-react";
 import { PlayerMedicalSheet } from "@/components/salud/PlayerMedicalSheet";
 import { PlayerDevelopmentSheet } from "@/components/desarrollo/PlayerDevelopmentSheet";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { StandardCard } from "@/components/squad/StandardCard";
 import { EmptyState } from "@/components/squad/EmptyState";
 import { LoadingState } from "@/components/squad/LoadingState";
+import { StatusBadge } from "@/components/squad/StatusBadge";
+import {
+  DetailSection,
+  DetailField,
+  DetailGrid,
+  DetailValue,
+  DetailLink,
+} from "@/components/squad/DetailSheet";
+import {
+  EntitySheet,
+  EntitySheetBody,
+  EntitySheetDescription,
+  EntitySheetFooter,
+  EntitySheetHeader,
+  EntitySheetTitle,
+} from "@/components/squad/EntitySheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { AvatarUploadField } from "@/components/perfil/AvatarUploadField";
 import { useApp } from "@/components/squad/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { PersonDocumentsSection } from "@/components/documentos/PersonDocumentsSection";
-
+import { formatShortDate } from "@/lib/calendar-utils";
+import { PLAYER_STATUS_LABEL, type PlayerStatus } from "@/lib/members.schemas";
+import { initials, roleVariant } from "@/components/usuarios/memberUtils";
 
 export const Route = createFileRoute("/_authenticated/mi-perfil")({
   head: () => ({
     meta: [
       { title: "Squad — Mi Perfil" },
-      { name: "description", content: "Tus datos personales, contacto de emergencia y documentos." },
+      {
+        name: "description",
+        content: "Tus datos personales, contacto de emergencia y documentos.",
+      },
     ],
   }),
   component: MiPerfilPage,
 });
 
-interface EditableProfile {
-  avatar_url: string | null;
-  phone: string | null;
-  birthdate: string | null;
-  nationality: string | null;
-  birthplace: string | null;
-  emergency_contact_name: string | null;
-  emergency_contact_phone: string | null;
-}
-
 function MiPerfilPage() {
   const { user, profile } = useApp();
-  const qc = useQueryClient();
+  const [editOpen, setEditOpen] = React.useState(false);
 
-  const { data, isLoading } = useQuery({
+  const profileQ = useQuery({
     queryKey: ["mi-perfil", user.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
         .select(
-          "id, full_name, first_name, paternal_last_name, maternal_last_name, email, avatar_url, phone, birthdate, nationality, birthplace, emergency_contact_name, emergency_contact_phone",
+          "id, full_name, first_name, paternal_last_name, maternal_last_name, email, avatar_url, phone, birthdate, nationality, birthplace, emergency_contact_name, emergency_contact_phone, status, created_at",
         )
         .eq("id", user.id)
         .maybeSingle();
@@ -57,115 +79,379 @@ function MiPerfilPage() {
     },
   });
 
-  const [form, setForm] = React.useState<EditableProfile | null>(null);
+  const membershipsQ = useQuery({
+    queryKey: ["mi-perfil-memberships", user.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("team_memberships")
+        .select("id, job_title, team:teams(name), role:roles(name)")
+        .eq("user_id", user.id);
+      if (error) throw error;
+      return (data ?? []) as any[];
+    },
+  });
+
+  const playerQ = useQuery({
+    queryKey: ["mi-perfil-player", user.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("player_profiles")
+        .select(
+          "jersey_number, position, secondary_position, preferred_foot, height_cm, weight_kg, player_status, shirt_size, pants_size, shoe_size",
+        )
+        .eq("user_id", user.id)
+        .is("archived_at", null)
+        .maybeSingle();
+      if (error) throw error;
+      return data as any | null;
+    },
+  });
+
+  const data = profileQ.data;
+  if (profileQ.isLoading || !data) return <LoadingState />;
+
+  const name = data.full_name ?? data.email ?? "Mi perfil";
+  const memberships = membershipsQ.data ?? [];
+  const player = playerQ.data;
+  const isBaja = (data.status ?? "activo") === "baja";
+
+  return (
+    <div className="space-y-6">
+      <PageHeader hideTitle title="Mi Perfil" subtitle={name} />
+
+      <div className="glass space-y-5 rounded-xl p-4">
+        <div className="flex items-start gap-4">
+          <Avatar className="h-16 w-16 shrink-0">
+            {data.avatar_url ? <AvatarImage src={data.avatar_url} alt={name} /> : null}
+            <AvatarFallback className="text-base font-semibold">{initials(name)}</AvatarFallback>
+          </Avatar>
+          <div className="min-w-0 flex-1 space-y-1.5">
+            <p className="break-words font-display text-lg font-semibold leading-tight [overflow-wrap:anywhere]">
+              {name}
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              <StatusBadge variant={isBaja ? "rejected" : "approved"}>
+                {isBaja ? "Baja" : "Activo"}
+              </StatusBadge>
+              {Array.from(
+                new Set(memberships.map((m) => m.role?.name).filter(Boolean) as string[]),
+              ).map((r) => (
+                <StatusBadge key={r} variant={roleVariant(r)}>
+                  {r}
+                </StatusBadge>
+              ))}
+            </div>
+          </div>
+          <Button size="sm" variant="secondary" onClick={() => setEditOpen(true)}>
+            Editar
+          </Button>
+        </div>
+
+        <DetailSection title="Datos personales">
+          <DetailGrid>
+            <DetailField label="Correo" icon={Mail} full>
+              <DetailLink value={data.email} type="email" />
+            </DetailField>
+            <DetailField label="Teléfono" icon={Phone}>
+              <DetailLink value={data.phone} type="tel" />
+            </DetailField>
+            <DetailField label="Fecha de nacimiento" icon={CalendarDays}>
+              <DetailValue value={data.birthdate ? formatShortDate(data.birthdate) : null} />
+            </DetailField>
+            <DetailField label="Nacionalidad" icon={Flag}>
+              <DetailValue value={data.nationality} />
+            </DetailField>
+            <DetailField label="Lugar de nacimiento" icon={MapPin}>
+              <DetailValue value={data.birthplace} />
+            </DetailField>
+          </DetailGrid>
+        </DetailSection>
+
+        <DetailSection title="Contacto de emergencia">
+          <DetailGrid>
+            <DetailField label="Nombre" icon={User}>
+              <DetailValue value={data.emergency_contact_name} />
+            </DetailField>
+            <DetailField label="Teléfono" icon={Phone}>
+              <DetailLink value={data.emergency_contact_phone} type="tel" />
+            </DetailField>
+          </DetailGrid>
+        </DetailSection>
+
+        <DetailSection title="Rol y categorías">
+          {memberships.length === 0 ? (
+            <EmptyState
+              icon={Shield}
+              title="Sin membresías"
+              message="Aún no perteneces a ninguna categoría."
+            />
+          ) : (
+            <div className="grid gap-2">
+              {memberships.map((m) => (
+                <div key={m.id} className="glass flex items-start gap-3 rounded-lg p-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="break-words text-sm font-medium [overflow-wrap:anywhere]">
+                      {m.team?.name ?? "Todo el club"}
+                    </p>
+                    {m.job_title ? (
+                      <p className="break-words text-xs text-muted-foreground [overflow-wrap:anywhere]">
+                        {m.job_title}
+                      </p>
+                    ) : null}
+                  </div>
+                  <div className="shrink-0">
+                    <StatusBadge variant={roleVariant(m.role?.name ?? null)}>
+                      {m.role?.name ?? "—"}
+                    </StatusBadge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </DetailSection>
+
+        {player ? (
+          <DetailSection title="Datos deportivos">
+            <DetailGrid>
+              <DetailField label="Dorsal">
+                <DetailValue value={player.jersey_number} />
+              </DetailField>
+              <DetailField label="Posición">
+                <DetailValue value={player.position} />
+              </DetailField>
+              <DetailField label="Posición secundaria">
+                <DetailValue value={player.secondary_position} />
+              </DetailField>
+              <DetailField label="Pie hábil">
+                <DetailValue value={player.preferred_foot} />
+              </DetailField>
+              <DetailField label="Estatura">
+                <DetailValue value={player.height_cm ? `${player.height_cm} cm` : null} />
+              </DetailField>
+              <DetailField label="Peso">
+                <DetailValue value={player.weight_kg ? `${player.weight_kg} kg` : null} />
+              </DetailField>
+              <DetailField label="Estatus">
+                {player.player_status ? (
+                  <StatusBadge variant={player.player_status === "activo" ? "approved" : "pending"}>
+                    {PLAYER_STATUS_LABEL[player.player_status as PlayerStatus] ??
+                      player.player_status}
+                  </StatusBadge>
+                ) : (
+                  <DetailValue value={null} />
+                )}
+              </DetailField>
+              <DetailField label="Tallas">
+                <DetailValue
+                  value={
+                    [player.shirt_size, player.pants_size, player.shoe_size]
+                      .filter(Boolean)
+                      .join(" · ") || null
+                  }
+                />
+              </DetailField>
+            </DetailGrid>
+          </DetailSection>
+        ) : null}
+
+        <p className="text-[11px] text-muted-foreground">
+          Tu rol, categorías, puesto y datos deportivos solo los puede cambiar quien administra
+          usuarios en el club.
+        </p>
+      </div>
+
+      <MiSaludSection userId={user.id} fullName={data.full_name} avatarUrl={data.avatar_url} />
+
+      <MiDesarrolloSection userId={user.id} fullName={data.full_name} avatarUrl={data.avatar_url} />
+
+      <PersonDocumentsSection clubId={profile?.club_id ?? null} userId={user.id} />
+
+      <EditMyProfileSheet
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        userId={user.id}
+        name={name}
+        initial={{
+          avatar_url: data.avatar_url,
+          email: data.email,
+          phone: data.phone,
+          emergency_contact_name: data.emergency_contact_name,
+          emergency_contact_phone: data.emergency_contact_phone,
+        }}
+      />
+    </div>
+  );
+}
+
+interface EditableProfile {
+  avatar_url: string | null;
+  email: string | null;
+  phone: string | null;
+  emergency_contact_name: string | null;
+  emergency_contact_phone: string | null;
+}
+
+/** Solo lo que cada quien puede cambiar de sí mismo. */
+function EditMyProfileSheet({
+  open,
+  onOpenChange,
+  userId,
+  name,
+  initial,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  userId: string;
+  name: string;
+  initial: EditableProfile;
+}) {
+  const qc = useQueryClient();
+  const [form, setForm] = React.useState<EditableProfile>(initial);
+  const [password, setPassword] = React.useState("");
+
   React.useEffect(() => {
-    if (data && !form) {
-      setForm({
-        avatar_url: data.avatar_url,
-        phone: data.phone,
-        birthdate: data.birthdate,
-        nationality: data.nationality,
-        birthplace: data.birthplace,
-        emergency_contact_name: (data as any).emergency_contact_name ?? null,
-        emergency_contact_phone: (data as any).emergency_contact_phone ?? null,
-      });
+    if (open) {
+      setForm(initial);
+      setPassword("");
     }
-  }, [data, form]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  const set = <K extends keyof EditableProfile>(k: K, v: EditableProfile[K]) =>
+    setForm((f) => ({ ...f, [k]: v }));
+
+  const emailChanged = (form.email ?? "").trim().toLowerCase() !== (initial.email ?? "").toLowerCase();
+  const emailOk = !emailChanged || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((form.email ?? "").trim());
+  const passOk = password === "" || password.length >= 8;
 
   const save = useMutation({
-    mutationFn: async (payload: EditableProfile) => {
-      const { error } = await supabase.from("profiles").update(payload).eq("id", user.id);
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          avatar_url: form.avatar_url,
+          phone: form.phone,
+          emergency_contact_name: form.emergency_contact_name,
+          emergency_contact_phone: form.emergency_contact_phone,
+        })
+        .eq("id", userId);
       if (error) throw error;
+
+      if (emailChanged) {
+        const { error: e } = await supabase.auth.updateUser({
+          email: (form.email ?? "").trim().toLowerCase(),
+        });
+        if (e) throw e;
+      }
+      if (password) {
+        const { error: e } = await supabase.auth.updateUser({ password });
+        if (e) throw e;
+      }
     },
     onSuccess: () => {
-      toast.success("Perfil actualizado");
-      qc.invalidateQueries({ queryKey: ["mi-perfil", user.id] });
-      qc.invalidateQueries({ queryKey: ["squad-access", user.id] });
+      toast.success(
+        emailChanged
+          ? "Perfil actualizado. Confirma el cambio de correo desde tu bandeja."
+          : "Perfil actualizado",
+      );
+      qc.invalidateQueries({ queryKey: ["mi-perfil", userId] });
+      qc.invalidateQueries({ queryKey: ["squad-access", userId] });
+      qc.invalidateQueries({ queryKey: ["club-members"] });
+      onOpenChange(false);
     },
     onError: (e: any) => toast.error(e?.message ?? "No se pudo guardar"),
   });
 
-  if (isLoading || !form || !data) return <LoadingState />;
-
-  const displayName = data.full_name ?? data.email ?? "Mi perfil";
-  const set = <K extends keyof EditableProfile>(k: K, v: EditableProfile[K]) =>
-    setForm((f) => (f ? { ...f, [k]: v } : f));
-
   return (
-    <div className="space-y-6">
-      <PageHeader hideTitle title="Mi Perfil" subtitle={displayName} />
+    <EntitySheet open={open} onOpenChange={onOpenChange} size="md">
+      <EntitySheetHeader>
+        <EntitySheetTitle>Editar mi perfil</EntitySheetTitle>
+        <EntitySheetDescription>
+          Puedes cambiar tu foto, correo, teléfono, contacto de emergencia y contraseña.
+        </EntitySheetDescription>
+      </EntitySheetHeader>
 
-      <StandardCard icon={User} title={displayName} subtitle={data.email ?? undefined}>
-        <div className="flex items-center gap-4">
-          <Avatar className="h-16 w-16">
-            <AvatarImage src={form.avatar_url ?? undefined} />
-            <AvatarFallback>{(displayName ?? "?").slice(0, 1).toUpperCase()}</AvatarFallback>
-          </Avatar>
-          <div className="min-w-0 flex-1">
-            <Label htmlFor="avatar_url">Foto de perfil (URL)</Label>
+      <EntitySheetBody>
+        <div className="space-y-4">
+          <AvatarUploadField
+            value={form.avatar_url}
+            onChange={(url) => set("avatar_url", url)}
+            userId={userId}
+            name={name}
+          />
+
+          <div className="space-y-1.5">
+            <Label htmlFor="mp-email">Correo</Label>
             <Input
-              id="avatar_url"
-              placeholder="https://…"
-              value={form.avatar_url ?? ""}
-              onChange={(e) => set("avatar_url", e.target.value || null)}
+              id="mp-email"
+              type="email"
+              value={form.email ?? ""}
+              onChange={(e) => set("email", e.target.value || null)}
+            />
+            {emailChanged ? (
+              <p className="text-[11px] text-muted-foreground">
+                Recibirás un correo para confirmar el cambio.
+              </p>
+            ) : null}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="mp-phone">Teléfono</Label>
+            <Input
+              id="mp-phone"
+              value={form.phone ?? ""}
+              placeholder="+52 …"
+              onChange={(e) => set("phone", e.target.value || null)}
             />
           </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="mp-emg">Contacto de emergencia</Label>
+              <Input
+                id="mp-emg"
+                value={form.emergency_contact_name ?? ""}
+                onChange={(e) => set("emergency_contact_name", e.target.value || null)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="mp-emgp">Teléfono de emergencia</Label>
+              <Input
+                id="mp-emgp"
+                value={form.emergency_contact_phone ?? ""}
+                placeholder="+52 …"
+                onChange={(e) => set("emergency_contact_phone", e.target.value || null)}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="mp-pass">Nueva contraseña (opcional)</Label>
+            <Input
+              id="mp-pass"
+              type="password"
+              autoComplete="new-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <p className="text-[11px] text-muted-foreground">Mínimo 8 caracteres.</p>
+          </div>
         </div>
-      </StandardCard>
+      </EntitySheetBody>
 
-      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Field label="Teléfono" value={form.phone} onChange={(v) => set("phone", v)} placeholder="+52 …" />
-        <Field label="Fecha de nacimiento" type="date" value={form.birthdate} onChange={(v) => set("birthdate", v)} />
-        <Field label="Nacionalidad" value={form.nationality} onChange={(v) => set("nationality", v)} />
-        <Field label="Lugar de nacimiento" value={form.birthplace} onChange={(v) => set("birthplace", v)} />
-      </section>
-
-      <section className="space-y-2">
-        <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-          Contacto de emergencia
-        </h3>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <Field
-            label="Nombre"
-            value={form.emergency_contact_name}
-            onChange={(v) => set("emergency_contact_name", v)}
-          />
-          <Field
-            label="Teléfono"
-            value={form.emergency_contact_phone}
-            onChange={(v) => set("emergency_contact_phone", v)}
-            placeholder="+52 …"
-          />
-        </div>
-      </section>
-
-      <div className="flex justify-end">
+      <EntitySheetFooter>
+        <Button variant="ghost" onClick={() => onOpenChange(false)}>
+          Cancelar
+        </Button>
         <Button
-          onClick={() => save.mutate(form)}
-          disabled={save.isPending}
           className="glow-primary"
+          disabled={!emailOk || !passOk || save.isPending}
+          onClick={() => save.mutate()}
         >
-          <Save className="mr-2 h-4 w-4" />
           {save.isPending ? "Guardando…" : "Guardar cambios"}
         </Button>
-      </div>
-
-      <MiSaludSection
-        userId={user.id}
-        fullName={data?.full_name ?? null}
-        avatarUrl={form.avatar_url}
-      />
-
-      <MiDesarrolloSection
-        userId={user.id}
-        fullName={data?.full_name ?? null}
-        avatarUrl={form.avatar_url}
-      />
-
-
-      <PersonDocumentsSection clubId={profile?.club_id ?? null} userId={user.id} />
-
-    </div>
+      </EntitySheetFooter>
+    </EntitySheet>
   );
 }
 
@@ -262,29 +548,5 @@ function MiDesarrolloSection({
         isSelf
       />
     </section>
-  );
-}
-
-
-
-function Field({
-  label, value, onChange, type = "text", placeholder,
-}: {
-  label: string;
-  value: string | null;
-  onChange: (v: string | null) => void;
-  type?: string;
-  placeholder?: string;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <Label>{label}</Label>
-      <Input
-        type={type}
-        value={value ?? ""}
-        placeholder={placeholder}
-        onChange={(e) => onChange(e.target.value || null)}
-      />
-    </div>
   );
 }
