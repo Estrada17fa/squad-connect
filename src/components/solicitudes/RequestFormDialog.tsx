@@ -168,6 +168,7 @@ export function RequestFormDialog({
       const amount = def.amountKey ? (details[def.amountKey] ?? null) : null;
       const payload = {
         club_id: clubId,
+        team_id: teamId,
         type,
         title: requestSummary({ type, details, amount, currency: amount !== null ? clubCurrency : null }),
         description: description.trim() || null,
@@ -175,6 +176,7 @@ export function RequestFormDialog({
         amount,
         currency: amount !== null ? clubCurrency : null,
       };
+
       if (isEdit && request) {
         const { error } = await supabase.from("requests").update(payload).eq("id", request.id);
         if (error) throw error;
