@@ -44,6 +44,7 @@ function ViajesPage() {
   const clubId = profile?.club_id ?? null;
   const editableTeams = useEditableTeams("viajes");
   const [teamFilter, setTeamFilter] = React.useState<string | null>(null);
+  const [filters, setFilters] = React.useState<TripFilterState>(EMPTY_TRIP_FILTERS);
   const teamNameById = React.useMemo(() => {
     const m: Record<string, string> = {};
     for (const t of teamOptions) if (t.id) m[t.id] = t.name;
@@ -57,8 +58,9 @@ function ViajesPage() {
   const [detailId, setDetailId] = React.useState<string | null>(null);
 
   const tripsQ = useTrips(canAccess ? clubId : null, teamFilter);
-  const trips = tripsQ.data ?? [];
-  const detail = trips.find((t) => t.id === detailId) ?? null;
+  const allTrips = tripsQ.data ?? [];
+  const trips = applyTripFilters(allTrips, filters);
+  const detail = allTrips.find((t) => t.id === detailId) ?? null;
 
   const nowIso = new Date().toISOString();
   const upcoming = trips
@@ -71,10 +73,10 @@ function ViajesPage() {
   const navigate = useNavigate();
   React.useEffect(() => {
     if (!openParam) return;
-    if (!trips.some((t) => t.id === openParam)) return;
+    if (!allTrips.some((t) => t.id === openParam)) return;
     setDetailId(openParam);
     navigate({ to: "/m/viajes", search: () => ({ open: undefined }), replace: true });
-  }, [openParam, trips, navigate]);
+  }, [openParam, allTrips, navigate]);
 
   if (!canAccess) {
     return (
@@ -91,6 +93,7 @@ function ViajesPage() {
       <PageHeader hideTitle title="Viajes" subtitle="Todos tus equipos" />
       <ModuleTabs activeKey="viajes" />
       <TeamFilter teams={teamOptions} value={teamFilter} onChange={setTeamFilter} />
+      <TripFilters value={filters} onChange={setFilters} count={trips.length} />
 
       {editableTeams.length > 0 ? (
         <Button
@@ -110,7 +113,11 @@ function ViajesPage() {
         <EmptyState
           icon={Plane}
           title="Sin viajes"
-          message="Aún no hay viajes planeados para este equipo."
+          message={
+            allTrips.length === 0
+              ? "Aún no hay viajes planeados para este equipo."
+              : "Ningún viaje coincide con los filtros."
+          }
         />
       ) : (
         <>
@@ -128,6 +135,7 @@ function ViajesPage() {
           defaultTeamId={editing?.team_id ?? teamFilter ?? null}
           userId={user.id}
           trip={editing}
+          onCreated={(id) => setDetailId(id)}
         />
       ) : null}
 
