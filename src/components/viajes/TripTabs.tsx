@@ -8,7 +8,6 @@ import { useTripFlights } from "@/hooks/useTripFlights";
 import { useTripTransports } from "@/hooks/useTripTransports";
 import { useTripHotels } from "@/hooks/useTripHotels";
 import { useTripMeals } from "@/hooks/useTripMeals";
-import { useTripLuggage } from "@/hooks/useTripLuggage";
 import { useTripMaterial } from "@/hooks/useTripMaterial";
 import { FlightsSection } from "./logistica/FlightsSection";
 import { TransportsSection } from "./logistica/TransportsSection";
@@ -54,7 +53,6 @@ export function TripTabs({ trip, canEdit, generalHeader }: Props) {
   const transports = useTripTransports(trip.id).data ?? [];
   const hotels = useTripHotels(trip.id).data ?? [];
   const meals = useTripMeals(trip.id).data ?? [];
-  const luggage = useTripLuggage(trip.id).data ?? [];
   const material = useTripMaterial(trip.id).data ?? [];
 
   // Solo los convocados pueden asignarse a vuelos, transportes o cuartos.
@@ -131,7 +129,6 @@ export function TripTabs({ trip, canEdit, generalHeader }: Props) {
             teamId={trip.team_id}
             userId={uid}
             defaultReturnAt={trip.return_at}
-            items={luggage}
             loans={material}
             travelers={travelers.map((t) => ({ user_id: t.user_id, profile: t.profile }))}
             canEdit={editable}
