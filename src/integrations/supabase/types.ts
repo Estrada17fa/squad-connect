@@ -3741,6 +3741,7 @@ export type Database = {
         | "rechazada"
         | "cancelada"
         | "completada"
+        | "requiere_info"
       request_type:
         | "material"
         | "compra"
@@ -3949,6 +3950,7 @@ export const Constants = {
         "rechazada",
         "cancelada",
         "completada",
+        "requiere_info",
       ],
       request_type: [
         "material",
