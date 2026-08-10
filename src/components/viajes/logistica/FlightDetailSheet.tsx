@@ -178,8 +178,14 @@ export function FlightDetailSheet({ open, onOpenChange, flight, allFlights, trip
         />
       ) : null}
 
-      {canEdit && passesOpen ? (
-        <BoardingPassDialog open onOpenChange={(v) => !v && setPassesOpen(false)} tripId={tripId} flight={current} />
+      {passesOpen ? (
+        <BoardingPassesSheet
+          open
+          onOpenChange={(v: boolean) => !v && setPassesOpen(false)}
+          tripId={tripId}
+          flight={current}
+          canEdit={canEdit}
+        />
       ) : null}
 
       {canEdit && baggageOpen ? (
