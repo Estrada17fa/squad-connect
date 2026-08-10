@@ -223,8 +223,8 @@ export function BoardingPassesSheet({ open, onOpenChange, tripId, flight, canEdi
         title="Eliminar pase de abordar"
         description="Se eliminará el archivo del pase. Esta acción no se puede deshacer."
         loading={remove.isPending}
-        onConfirm={() =>
-          toDelete &&
+        onConfirm={() => {
+          if (!toDelete) return;
           remove.mutate(
             { id: toDelete.id, filePath: toDelete.file_path },
             {
