@@ -2713,6 +2713,7 @@ export type Database = {
       }
       trip_boarding_passes: {
         Row: {
+          boarding_group: string | null
           created_at: string
           created_by: string | null
           file_path: string
@@ -2720,10 +2721,12 @@ export type Database = {
           id: string
           notes: string | null
           seat: string | null
+          terminal: string | null
           updated_at: string
           user_id: string | null
         }
         Insert: {
+          boarding_group?: string | null
           created_at?: string
           created_by?: string | null
           file_path: string
@@ -2731,10 +2734,12 @@ export type Database = {
           id?: string
           notes?: string | null
           seat?: string | null
+          terminal?: string | null
           updated_at?: string
           user_id?: string | null
         }
         Update: {
+          boarding_group?: string | null
           created_at?: string
           created_by?: string | null
           file_path?: string
@@ -2742,6 +2747,7 @@ export type Database = {
           id?: string
           notes?: string | null
           seat?: string | null
+          terminal?: string | null
           updated_at?: string
           user_id?: string | null
         }
