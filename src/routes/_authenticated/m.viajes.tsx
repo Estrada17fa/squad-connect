@@ -20,6 +20,12 @@ import { TripDetailSheet } from "@/components/viajes/TripDetailSheet";
 import { TeamFilter, TeamBadge } from "@/components/squad/TeamFilter";
 import { useEditableTeams } from "@/hooks/useEditableTeams";
 import { useTeamAccess } from "@/hooks/useTeamAccess";
+import {
+  TripFilters,
+  applyTripFilters,
+  EMPTY_TRIP_FILTERS,
+  type TripFilterState,
+} from "@/components/viajes/TripFilters";
 
 export const Route = createFileRoute("/_authenticated/m/viajes")({
   validateSearch: (search: Record<string, unknown>) => ({
