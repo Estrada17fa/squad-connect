@@ -152,6 +152,12 @@ export function RequestDetailSheet({
         patch.decided_at = new Date().toISOString();
         patch.decision_note = note.trim() || null;
       }
+      if (next === "requiere_info") {
+        patch.decision_note = note.trim() || null;
+      }
+      if (next === "pendiente") {
+        patch.decision_note = null;
+      }
       const { error } = await supabase.from("requests").update(patch as never).eq("id", request!.id);
       if (error) throw error;
       return next;
