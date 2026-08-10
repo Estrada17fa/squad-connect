@@ -204,9 +204,12 @@ export function RequestDetailSheet({
   const Icon = def.icon;
   const isOwner = request.requester_id === userId;
   const isPending = request.status === "pendiente";
+  const needsInfo = request.status === "requiere_info";
+  const isOpenState = isPending || needsInfo;
   // Regla infranqueable: nadie decide su propia solicitud (también forzado en el servidor).
-  const showDecision = canDecide && isPending && !isOwner;
-  const canCancel = isOwner && isPending;
+  const showDecision = canDecide && isOpenState && !isOwner;
+  const canCancel = isOwner && isOpenState;
+  const canResubmit = isOwner && needsInfo;
   const isApproved = request.status === "aprobada";
   // El material se completa registrando el préstamo real, no a mano.
   const showLoanButton = isMaterial && isApproved && !linkedLoan && canCreateLoan;
@@ -216,7 +219,7 @@ export function RequestDetailSheet({
   const showCheckupButton = isMedical && isApproved && !linkedCheckup && canCreateCheckup;
   const canComplete =
     canManage && def.completable && isApproved && !isMaterial && !isFinancial && !isMedical;
-  const canEditRow = isOwner && isPending;
+  const canEditRow = isOwner && isOpenState;
 
 
   const headerActions = (canManage || canCancel || showLoanButton || showExpenseButton || showCheckupButton) ? (
