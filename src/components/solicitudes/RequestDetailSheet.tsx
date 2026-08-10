@@ -385,11 +385,23 @@ export function RequestDetailSheet({
           </div>
         ) : null}
 
+        {needsInfo ? (
+          <div className="flex items-start gap-2 rounded-lg border border-amber-400/40 bg-amber-400/10 p-3 text-xs text-amber-200">
+            <MessageCircleQuestion className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>
+              {isOwner
+                ? "Te piden más información. Edita la solicitud y reenvíala a revisión."
+                : "Se pidió más información al solicitante; queda en espera de su respuesta."}
+              {request.decision_note ? ` · ${request.decision_note}` : ""}
+            </span>
+          </div>
+        ) : null}
+
         {showDecision ? (
           <div className="glass space-y-2 p-3">
             <Label htmlFor="req-note">Nota de la decisión (opcional)</Label>
             <Textarea id="req-note" rows={2} value={note} onChange={(e) => setNote(e.target.value)} />
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button
                 type="button"
                 className="flex-1"
@@ -407,11 +419,22 @@ export function RequestDetailSheet({
               >
                 <XIcon className="mr-2 h-4 w-4" /> Rechazar
               </Button>
+              {isPending ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setStatus.mutate("requiere_info")}
+                  disabled={setStatus.isPending}
+                >
+                  <MessageCircleQuestion className="mr-2 h-4 w-4" /> Pedir más información
+                </Button>
+              ) : null}
             </div>
           </div>
         ) : null}
 
-        {canDecide && isPending && isOwner ? (
+        {canDecide && isOpenState && isOwner ? (
           <p className="text-xs text-muted-foreground">
             No puedes aprobar tu propia solicitud; otro aprobador debe decidirla.
           </p>
