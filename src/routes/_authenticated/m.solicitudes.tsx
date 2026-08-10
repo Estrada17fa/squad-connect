@@ -1,37 +1,40 @@
 import * as React from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Plus, ClipboardList, BellRing } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { ModuleTabs } from "@/components/squad/ModuleTabs";
 import { EmptyState } from "@/components/squad/EmptyState";
 import { LoadingState, CardGridSkeleton } from "@/components/squad/LoadingState";
-import { StandardCard } from "@/components/squad/StandardCard";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
 import { useApp } from "@/components/squad/AppLayout";
 import { useRequests, type RequestRow } from "@/hooks/useRequests";
 import { useMyApproverTypes } from "@/hooks/useRequestApprovers";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   REQUEST_TYPES,
   REQUEST_TYPE_MAP,
-  STATUS_LABEL,
-  STATUS_VARIANT,
-  STATUS_ORDER,
-  formatMoney,
   requestSummary,
   type RequestStatus,
   type RequestType,
 } from "@/lib/requestTypes";
-import { formatDateTime } from "@/lib/calendar-utils";
 import { RequestFormDialog } from "@/components/solicitudes/RequestFormDialog";
 import { RequestTypePicker } from "@/components/solicitudes/RequestTypePicker";
 import { RequestDetailSheet } from "@/components/solicitudes/RequestDetailSheet";
-import { cn } from "@/lib/utils";
-import { canEdit as levelCanEdit, canRead as levelCanRead, isGlobalLevel } from "@/lib/permissions";
+import {
+  RequestFilters,
+  EMPTY_REQUEST_FILTERS,
+  type RequestFilterState,
+} from "@/components/solicitudes/RequestFilters";
+import { RequestGroupList, type RequestGroup } from "@/components/solicitudes/RequestGroupList";
+import {
+  canEdit as levelCanEdit,
+  canRead as levelCanRead,
+  isGlobalLevel,
+  isPlayerView,
+} from "@/lib/permissions";
 import { useTeamAccess } from "@/hooks/useTeamAccess";
-
 
 export const Route = createFileRoute("/_authenticated/m/solicitudes")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -51,6 +54,7 @@ export const Route = createFileRoute("/_authenticated/m/solicitudes")({
 function SolicitudesPage() {
   const { user, profile, isSuperAdmin, getModuleAccess, activeBaseRole, permissionsByTeam, teamOptions } = useApp();
   const clubId = profile?.club_id ?? null;
+  const qc = useQueryClient();
 
   const level = getModuleAccess("solicitudes");
   const canManage = isSuperAdmin || levelCanEdit(level);
@@ -58,18 +62,16 @@ function SolicitudesPage() {
 
   /** Categorías donde la persona tiene membresía (alcance de los niveles "categoría"). */
   const scopeOk = React.useCallback(
-    (teamId: string | null) =>
-      isSuperAdmin || teamId === null || Boolean(permissionsByTeam?.[teamId]),
+    (teamId: string | null) => isSuperAdmin || teamId === null || Boolean(permissionsByTeam?.[teamId]),
     [isSuperAdmin, permissionsByTeam],
   );
-  const rowLevel = React.useCallback(
-    (teamId: string | null) => levelForTeam(teamId),
-    [levelForTeam],
-  );
+  const rowLevel = React.useCallback((teamId: string | null) => levelForTeam(teamId), [levelForTeam]);
   const canReadRow = React.useCallback(
     (teamId: string | null) => {
       const lvl = rowLevel(teamId);
-      if (isSuperAdmin || isGlobalLevel(lvl)) return isSuperAdmin || levelCanRead(lvl);
+      if (isSuperAdmin) return true;
+      if (isPlayerView(lvl)) return false; // vista jugador: solo lo suyo
+      if (isGlobalLevel(lvl)) return levelCanRead(lvl);
       return levelCanRead(lvl) && scopeOk(teamId);
     },
     [rowLevel, isSuperAdmin, scopeOk],
@@ -85,13 +87,11 @@ function SolicitudesPage() {
   );
 
   const myApproverTypes = useMyApproverTypes(clubId, user.id, isSuperAdmin, getModuleAccess);
-  const isApproverOf = React.useCallback(
-    (type: RequestType) => myApproverTypes.has(type),
-    [myApproverTypes],
-  );
+  const isApproverOf = React.useCallback((type: RequestType) => myApproverTypes.has(type), [myApproverTypes]);
   const approvesSomething = REQUEST_TYPES.some((t) => isApproverOf(t.key));
   const canAccess = isSuperAdmin || levelCanRead(level) || approvesSomething;
-  const canSeeAll = canManage || levelCanRead(level) || approvesSomething;
+  /** Alcance más allá de lo propio: cualquier nivel de lectura que no sea vista jugador. */
+  const canSeeAll = isSuperAdmin || (levelCanRead(level) && !isPlayerView(level)) || approvesSomething;
 
   const isPlayer = activeBaseRole === "jugador" && !isSuperAdmin;
   const allowedTypes = React.useMemo<RequestType[]>(
@@ -101,15 +101,11 @@ function SolicitudesPage() {
 
   const requestsQ = useRequests(clubId);
 
-  const [tab, setTab] = React.useState<"mias" | "todas">("mias");
   const [picker, setPicker] = React.useState(false);
   const [formType, setFormType] = React.useState<RequestType | null>(null);
   const [editing, setEditing] = React.useState<RequestRow | null>(null);
   const [detailId, setDetailId] = React.useState<string | null>(null);
-  const [typeFilter, setTypeFilter] = React.useState<"all" | RequestType>("all");
-  const [statusFilter, setStatusFilter] = React.useState<"all" | RequestStatus>("all");
-  const [teamFilter, setTeamFilter] = React.useState<string>("all");
-
+  const [filters, setFilters] = React.useState<RequestFilterState>(EMPTY_REQUEST_FILTERS);
 
   // Deep-link desde el centro de notificaciones: /m/solicitudes?open=<id>
   const { open: openParam } = Route.useSearch();
@@ -120,7 +116,28 @@ function SolicitudesPage() {
     navigate({ to: "/m/solicitudes", search: () => ({ open: undefined }), replace: true });
   }, [openParam, navigate]);
 
-
+  const decide = useMutation({
+    mutationFn: async ({ id, next }: { id: string; next: RequestStatus }) => {
+      const patch: Record<string, any> = { status: next };
+      if (next === "aprobada" || next === "rechazada") {
+        patch.decided_by = user.id;
+        patch.decided_at = new Date().toISOString();
+      }
+      const { error } = await supabase.from("requests").update(patch as never).eq("id", id);
+      if (error) throw error;
+      return next;
+    },
+    onSuccess: (next) => {
+      const msg: Record<string, string> = {
+        aprobada: "Solicitud aprobada",
+        rechazada: "Solicitud rechazada",
+        requiere_info: "Se pidió más información al solicitante",
+      };
+      toast.success(msg[next] ?? "Solicitud actualizada");
+      qc.invalidateQueries({ queryKey: ["requests", clubId] });
+    },
+    onError: (e: any) => toast.error(e.message ?? "No se pudo actualizar"),
+  });
 
   if (!canAccess) {
     return (
@@ -134,34 +151,60 @@ function SolicitudesPage() {
   if (!clubId) return <LoadingState />;
 
   const rows = requestsQ.data ?? [];
-  // Visibilidad por categoría: propio, nivel global, o nivel de categoría con alcance.
+  // Visibilidad: propio, alcance de lectura del nivel, o aprobador con alcance.
   const all = rows.filter(
     (r) =>
       r.requester_id === user.id ||
       canReadRow(r.team_id) ||
       (isApproverOf(r.type) && scopeOk(r.team_id)),
   );
-  const mine = all.filter((r) => r.requester_id === user.id);
-  const filtered = all.filter(
-    (r) =>
-      (typeFilter === "all" || r.type === typeFilter) &&
-      (statusFilter === "all" || r.status === statusFilter) &&
-      (teamFilter === "all" ||
-        (teamFilter === "club" ? r.team_id === null : r.team_id === teamFilter)),
-  );
-  const detail = detailId ? all.find((r) => r.id === detailId) ?? null : null;
 
-  // Pendientes que a mí me toca aprobar (resaltadas).
-  const toApprove = all.filter(
-    (r) =>
-      r.status === "pendiente" &&
-      r.requester_id !== user.id &&
-      isApproverOf(r.type) &&
-      scopeOk(r.team_id),
-  );
+  const scoped = canSeeAll && !filters.mine ? all : all.filter((r) => r.requester_id === user.id);
+  const term = filters.search.trim().toLowerCase();
+  const visible = scoped.filter((r) => {
+    if (filters.type && r.type !== filters.type) return false;
+    if (filters.status && r.status !== filters.status) return false;
+    if (filters.teamId) {
+      if (filters.teamId === "__club__" ? r.team_id !== null : r.team_id !== filters.teamId) return false;
+    }
+    if (!term) return true;
+    const who = `${r.requester?.full_name ?? ""} ${r.requester?.email ?? ""}`.toLowerCase();
+    return (
+      requestSummary(r).toLowerCase().includes(term) ||
+      r.title.toLowerCase().includes(term) ||
+      REQUEST_TYPE_MAP[r.type].label.toLowerCase().includes(term) ||
+      who.includes(term)
+    );
+  });
+
+  const canDecideRow = (r: RequestRow) =>
+    r.requester_id !== user.id && isApproverOf(r.type) && scopeOk(r.team_id) && canManageRow(r.team_id);
+
+  const toApprove = visible.filter((r) => r.status === "pendiente" && canDecideRow(r));
   const toApproveIds = new Set(toApprove.map((r) => r.id));
-  const myTeamIds = teamOptions.map((t) => t.id).filter(Boolean) as string[];
+  const allToApprove = all.filter((r) => r.status === "pendiente" && canDecideRow(r));
 
+  const byStatus = (s: RequestStatus, exclude?: Set<string>) =>
+    visible.filter((r) => r.status === s && !(exclude?.has(r.id) ?? false));
+
+  const quick = {
+    onApprove: (r: RequestRow) => decide.mutate({ id: r.id, next: "aprobada" }),
+    onReject: (r: RequestRow) => decide.mutate({ id: r.id, next: "rechazada" }),
+    onAskInfo: (r: RequestRow) => decide.mutate({ id: r.id, next: "requiere_info" }),
+  };
+
+  const groups: RequestGroup[] = [
+    { key: "por_aprobar", label: "Por aprobar", requests: toApprove, quick, accent: true },
+    { key: "pendiente", label: "Pendientes", requests: byStatus("pendiente", toApproveIds) },
+    { key: "requiere_info", label: "Requieren información", requests: byStatus("requiere_info") },
+    { key: "aprobada", label: "Aprobadas", requests: byStatus("aprobada") },
+    { key: "rechazada", label: "Rechazadas", requests: byStatus("rechazada") },
+    { key: "completada", label: "Completadas", requests: byStatus("completada") },
+    { key: "cancelada", label: "Canceladas", requests: byStatus("cancelada") },
+  ].filter((g) => g.requests.length > 0);
+
+  const detail = detailId ? all.find((r) => r.id === detailId) ?? null : null;
+  const myTeamIds = teamOptions.map((t) => t.id).filter(Boolean) as string[];
 
   function openCreate() {
     setEditing(null);
@@ -177,76 +220,47 @@ function SolicitudesPage() {
         <Plus className="mr-2 h-4 w-4" /> Nueva solicitud
       </Button>
 
-      {toApprove.length > 0 ? (
+      {allToApprove.length > 0 ? (
         <div className="glass flex items-center gap-3 border-primary/30 p-3">
           <BellRing className="h-4 w-4 shrink-0 text-primary" />
           <p className="text-sm text-foreground">
-            Tienes <span className="font-semibold text-primary">{toApprove.length}</span>{" "}
-            {toApprove.length === 1 ? "solicitud pendiente" : "solicitudes pendientes"} por aprobar.
+            Tienes <span className="font-semibold text-primary">{allToApprove.length}</span>{" "}
+            {allToApprove.length === 1 ? "solicitud pendiente" : "solicitudes pendientes"} por aprobar.
           </p>
         </div>
       ) : null}
 
-      <Tabs value={tab} onValueChange={(v) => setTab(v as any)} className="w-full">
-        <TabsList>
-          <TabsTrigger value="mias">Mis solicitudes</TabsTrigger>
-          {canSeeAll ? <TabsTrigger value="todas">Todas</TabsTrigger> : null}
-        </TabsList>
+      <RequestFilters
+        value={filters}
+        onChange={setFilters}
+        teams={teamOptions.filter((t) => t.id).map((t) => ({ id: t.id as string, name: t.name }))}
+        count={visible.length}
+        showScope={canSeeAll}
+      />
 
-        <TabsContent value="mias" className="mt-4 space-y-3">
-          <RequestList
-            requests={mine}
-            isLoading={requestsQ.isLoading}
-            highlighted={toApproveIds}
-            onOpen={(r) => setDetailId(r.id)}
-            onCreate={openCreate}
-            emptyMessage="Aún no has creado ninguna solicitud."
-          />
-        </TabsContent>
-
-        {canSeeAll ? (
-          <TabsContent value="todas" className="mt-4 space-y-3">
-            <div className="space-y-2">
-              <Chips
-                value={typeFilter}
-                onChange={(v) => setTypeFilter(v as any)}
-                options={[
-                  { key: "all", label: "Todos los tipos" },
-                  ...REQUEST_TYPES.map((t) => ({ key: t.key, label: t.label })),
-                ]}
-              />
-              <Chips
-                value={statusFilter}
-                onChange={(v) => setStatusFilter(v as any)}
-                options={[
-                  { key: "all", label: "Todos los estatus" },
-                  ...STATUS_ORDER.map((s) => ({ key: s, label: STATUS_LABEL[s] })),
-                ]}
-              />
-              <Chips
-                value={teamFilter}
-                onChange={setTeamFilter}
-                options={[
-                  { key: "all", label: "Todas las categorías" },
-                  { key: "club", label: "Todo el club" },
-                  ...teamOptions
-                    .filter((t) => t.id)
-                    .map((t) => ({ key: t.id as string, label: t.name })),
-                ]}
-              />
-            </div>
-
-            <RequestList
-              requests={filtered}
-              isLoading={requestsQ.isLoading}
-              highlighted={toApproveIds}
-              onOpen={(r) => setDetailId(r.id)}
-              onCreate={openCreate}
-              emptyMessage="No hay solicitudes con estos filtros."
-            />
-          </TabsContent>
-        ) : null}
-      </Tabs>
+      {requestsQ.isLoading ? (
+        <CardGridSkeleton />
+      ) : groups.length === 0 ? (
+        <EmptyState
+          icon={ClipboardList}
+          title="Sin solicitudes"
+          message={
+            filters.mine ? "Aún no has creado ninguna solicitud." : "No hay solicitudes con estos filtros."
+          }
+          action={
+            <Button onClick={openCreate} className="glow-primary">
+              <Plus className="mr-2 h-4 w-4" /> Nueva solicitud
+            </Button>
+          }
+        />
+      ) : (
+        <RequestGroupList
+          groups={groups}
+          onOpen={(r) => setDetailId(r.id)}
+          highlighted={toApproveIds}
+          busy={decide.isPending}
+        />
+      )}
 
       <RequestTypePicker
         open={picker}
@@ -267,8 +281,8 @@ function SolicitudesPage() {
         type={formType ?? "otro"}
         request={editing}
         defaultTeamId={
-          teamFilter !== "all" && teamFilter !== "club"
-            ? teamFilter
+          filters.teamId && filters.teamId !== "__club__"
+            ? filters.teamId
             : myTeamIds.length === 1
               ? myTeamIds[0]
               : null
@@ -276,12 +290,10 @@ function SolicitudesPage() {
         allowedTeamIds={isSuperAdmin || isGlobalLevel(level) ? null : myTeamIds}
         onSaved={({ isEdit, type }) => {
           if (isEdit) return;
-          if (tab === "todas" && (typeFilter !== "all" && typeFilter !== type)) {
-            setTypeFilter("all");
-            setStatusFilter("all");
+          if (filters.type && filters.type !== type) {
+            setFilters((f) => ({ ...f, type: null, status: null }));
             toast.info("Ajusté los filtros para que veas la solicitud que acabas de crear");
           }
-          if (tab !== "mias" && tab !== "todas") setTab("mias");
         }}
       />
 
@@ -291,7 +303,7 @@ function SolicitudesPage() {
         request={detail}
         userId={user.id}
         clubId={clubId}
-        canDecide={detail ? isApproverOf(detail.type) && scopeOk(detail.team_id) : false}
+        canDecide={detail ? isApproverOf(detail.type) && scopeOk(detail.team_id) && canManageRow(detail.team_id) : false}
         canManage={detail ? canManageRow(detail.team_id) : false}
         onEdit={() => {
           if (!detail) return;
@@ -300,112 +312,6 @@ function SolicitudesPage() {
           setFormType(detail.type);
         }}
       />
-
-    </div>
-  );
-}
-
-function Chips({
-  value,
-  onChange,
-  options,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  options: { key: string; label: string }[];
-}) {
-  return (
-    <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      {options.map((o) => (
-        <button
-          key={o.key}
-          type="button"
-          onClick={() => onChange(o.key)}
-          className={cn(
-            "shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
-            value === o.key
-              ? "border-primary bg-primary/10 text-primary"
-              : "border-border/60 text-muted-foreground hover:bg-white/[0.04]",
-          )}
-        >
-          {o.label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function RequestList({
-  requests,
-  isLoading,
-  highlighted,
-  onOpen,
-  onCreate,
-  emptyMessage,
-}: {
-  requests: RequestRow[];
-  isLoading: boolean;
-  highlighted: Set<string>;
-  onOpen: (r: RequestRow) => void;
-  onCreate: () => void;
-  emptyMessage: string;
-}) {
-  if (isLoading) return <CardGridSkeleton />;
-  if (requests.length === 0) {
-    return (
-      <EmptyState
-        icon={ClipboardList}
-        title="Sin solicitudes"
-        message={emptyMessage}
-        action={
-          <Button onClick={onCreate} className="glow-primary">
-            <Plus className="mr-2 h-4 w-4" /> Nueva solicitud
-          </Button>
-        }
-      />
-    );
-  }
-  return (
-    <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-      {requests.map((r) => {
-        const def = REQUEST_TYPE_MAP[r.type];
-        const money = formatMoney(r.amount, r.currency);
-        const who = r.requester?.full_name ?? r.requester?.email ?? "—";
-        return (
-          <StandardCard
-            key={r.id}
-            interactive
-            icon={def.icon}
-            title={def.label}
-            subtitle={requestSummary(r)}
-            status={{ label: STATUS_LABEL[r.status], variant: STATUS_VARIANT[r.status] }}
-            onClick={() => onOpen(r)}
-            className={cn(highlighted.has(r.id) && "border-primary/40 ring-1 ring-primary/25")}
-          >
-            <div className="mb-2">
-              <span className="inline-flex rounded-full border border-border/60 bg-white/[0.04] px-2 py-0.5 text-[11px] text-muted-foreground">
-                {r.team?.name ?? "Todo el club"}
-              </span>
-            </div>
-            <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
-
-              <span className="flex min-w-0 items-center gap-2">
-                <Avatar className="h-6 w-6">
-                  <AvatarImage src={r.requester?.avatar_url ?? undefined} alt={who} />
-                  <AvatarFallback className="text-[10px]">
-                    {who.slice(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="truncate text-foreground">{who}</span>
-              </span>
-              <span className="flex shrink-0 items-center gap-3">
-                <span>{formatDateTime(r.created_at)}</span>
-                {money ? <span className="text-foreground">{money}</span> : null}
-              </span>
-            </div>
-          </StandardCard>
-        );
-      })}
     </div>
   );
 }
