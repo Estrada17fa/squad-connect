@@ -12,6 +12,7 @@ import {
 } from "@/components/squad/EntitySheet";
 import { DetailField, DetailGrid, DetailSection } from "@/components/squad/DetailSheet";
 import { formatDateTime } from "@/lib/calendar-utils";
+import { LocationDisplay } from "@/components/calendar/LocationDisplay";
 import { LEG_LABEL, TRANSPORT_TYPE_LABEL, type MiniProfile } from "@/lib/tripLogistics";
 import { useTransportMutations, type TripTransport } from "@/hooks/useTripTransports";
 import { PersonChips } from "./PersonChips";
@@ -22,6 +23,7 @@ interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   transport: TripTransport | null;
+  clubId: string;
   allTransports: TripTransport[];
   tripId: string;
   userId: string;
@@ -30,7 +32,7 @@ interface Props {
 }
 
 /** Ficha de lectura de un transporte del viaje. */
-export function TransportDetailSheet({ open, onOpenChange, transport, allTransports, tripId, userId, travelers, canEdit }: Props) {
+export function TransportDetailSheet({ open, onOpenChange, transport, allTransports, tripId, clubId, userId, travelers, canEdit }: Props) {
   const { setPassengers } = useTransportMutations(tripId);
   const [editOpen, setEditOpen] = React.useState(false);
   const [passengersOpen, setPassengersOpen] = React.useState(false);
@@ -76,7 +78,17 @@ export function TransportDetailSheet({ open, onOpenChange, transport, allTranspo
             <DetailGrid>
               <DetailField label="Tipo">{TRANSPORT_TYPE_LABEL[current.transport_type]}</DetailField>
               <DetailField label="Sale">{formatDateTime(current.departs_at)}</DetailField>
+              <DetailField label="Destino">{current.destination}</DetailField>
+              <DetailField label="Pasajeros">{current.passengers.length}</DetailField>
             </DetailGrid>
+          </DetailSection>
+
+          <DetailSection title="Punto de encuentro">
+            <LocationDisplay
+              clubId={clubId}
+              locationId={current.pickup_location_id}
+              text={current.pickup_location}
+            />
           </DetailSection>
 
           {current.notes ? (
@@ -106,7 +118,7 @@ export function TransportDetailSheet({ open, onOpenChange, transport, allTranspo
       </EntitySheet>
 
       {canEdit ? (
-        <TransportFormDialog open={editOpen} onOpenChange={setEditOpen} tripId={tripId} userId={userId} transport={current} defaultLeg={current.leg} />
+        <TransportFormDialog open={editOpen} onOpenChange={setEditOpen} tripId={tripId} clubId={clubId} userId={userId} transport={current} defaultLeg={current.leg} />
       ) : null}
 
       {canEdit && passengersOpen ? (
