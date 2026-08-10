@@ -168,6 +168,8 @@ export function RequestDetailSheet({
         rechazada: "Solicitud rechazada",
         cancelada: "Solicitud cancelada",
         completada: "Solicitud completada",
+        requiere_info: "Se pidió más información al solicitante",
+        pendiente: "Solicitud reenviada a revisión",
       };
       toast.success(msg[next] ?? "Solicitud actualizada");
       qc.invalidateQueries({ queryKey: ["requests", clubId] });
