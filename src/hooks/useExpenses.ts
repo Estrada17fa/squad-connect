@@ -31,12 +31,22 @@ export interface ExpenseRow {
   request_id: string | null;
   created_by: string | null;
   created_at: string;
+  /** Factura recibida del proveedor (opcional). */
+  has_invoice: boolean;
+  invoice_pdf_path: string | null;
+  invoice_xml_path: string | null;
+  invoice_folio: string | null;
+  invoice_uuid: string | null;
+  issuer_rfc: string | null;
+  invoice_total: number | null;
+  invoice_tax: number | null;
+  invoice_date: string | null;
   supplier: { id: string; name: string } | null;
   creator: { id: string; full_name: string | null; email: string | null } | null;
 }
 
 const EXPENSE_SELECT =
-  "id, club_id, concept, amount, currency, category, supplier_id, supplier_name, expense_date, payment_status, paid_at, receipt_path, notes, request_id, created_by, created_at, supplier:suppliers(id, name), creator:profiles!expenses_created_by_fkey(id, full_name, email)";
+  "id, club_id, concept, amount, currency, category, supplier_id, supplier_name, expense_date, payment_status, paid_at, receipt_path, notes, request_id, created_by, created_at, has_invoice, invoice_pdf_path, invoice_xml_path, invoice_folio, invoice_uuid, issuer_rfc, invoice_total, invoice_tax, invoice_date, supplier:suppliers(id, name), creator:profiles!expenses_created_by_fkey(id, full_name, email)";
 
 export const expensesQueryOptions = (clubId: string | null | undefined) =>
   queryOptions({
