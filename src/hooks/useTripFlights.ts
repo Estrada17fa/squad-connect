@@ -9,6 +9,8 @@ export interface TripBoardingPass {
   user_id: string | null;
   file_path: string;
   seat: string | null;
+  boarding_group: string | null;
+  terminal: string | null;
   notes: string | null;
   profile: MiniProfile | null;
 }
@@ -56,7 +58,7 @@ export interface FlightInput {
 const SELECT =
   `id, trip_id, leg, flight_code, airline, departs_at, arrives_at, origin, destination, gate, notes, baggage_instructions, ` +
   `passengers:trip_flight_passengers(id, user_id, profile:profiles(${MINI_PROFILE_SELECT})), ` +
-  `boarding_passes:trip_boarding_passes(id, flight_id, user_id, file_path, seat, notes, profile:profiles(${MINI_PROFILE_SELECT})), ` +
+  `boarding_passes:trip_boarding_passes(id, flight_id, user_id, file_path, seat, boarding_group, terminal, notes, profile:profiles(${MINI_PROFILE_SELECT})), ` +
   `baggage_handlers:trip_flight_baggage_handlers(id, flight_id, user_id, pieces, profile:profiles(${MINI_PROFILE_SELECT}))`;
 
 export const tripFlightsKey = (tripId: string | null | undefined) => ["trip-flights", tripId ?? "none"] as const;

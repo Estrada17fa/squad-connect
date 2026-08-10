@@ -56,6 +56,9 @@ export function FlightsSection({ tripId, userId, leg, flights, allFlights, trave
               </p>
               <p className="text-xs text-primary">
                 {f.passengers.length} pasajero{f.passengers.length === 1 ? "" : "s"}
+                {f.passengers.length > 0
+                  ? ` · ${f.passengers.filter((p) => f.boarding_passes.some((bp) => bp.user_id === p.user_id)).length} con pase`
+                  : ""}
               </p>
             </div>
 
