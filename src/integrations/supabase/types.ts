@@ -671,7 +671,16 @@ export type Database = {
           created_by: string | null
           currency: string
           expense_date: string
+          has_invoice: boolean
           id: string
+          invoice_date: string | null
+          invoice_folio: string | null
+          invoice_pdf_path: string | null
+          invoice_tax: number | null
+          invoice_total: number | null
+          invoice_uuid: string | null
+          invoice_xml_path: string | null
+          issuer_rfc: string | null
           notes: string | null
           paid_at: string | null
           payment_status: Database["public"]["Enums"]["payment_status"]
@@ -690,7 +699,16 @@ export type Database = {
           created_by?: string | null
           currency?: string
           expense_date?: string
+          has_invoice?: boolean
           id?: string
+          invoice_date?: string | null
+          invoice_folio?: string | null
+          invoice_pdf_path?: string | null
+          invoice_tax?: number | null
+          invoice_total?: number | null
+          invoice_uuid?: string | null
+          invoice_xml_path?: string | null
+          issuer_rfc?: string | null
           notes?: string | null
           paid_at?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"]
@@ -709,7 +727,16 @@ export type Database = {
           created_by?: string | null
           currency?: string
           expense_date?: string
+          has_invoice?: boolean
           id?: string
+          invoice_date?: string | null
+          invoice_folio?: string | null
+          invoice_pdf_path?: string | null
+          invoice_tax?: number | null
+          invoice_total?: number | null
+          invoice_uuid?: string | null
+          invoice_xml_path?: string | null
+          issuer_rfc?: string | null
           notes?: string | null
           paid_at?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"]
@@ -3430,6 +3457,10 @@ export type Database = {
         Args: { _club_id: string; _module_key: string; _user_id: string }
         Returns: boolean
       }
+      can_edit_compras: {
+        Args: { _club_id: string; _user_id: string }
+        Returns: boolean
+      }
       can_edit_development: {
         Args: { _team_id: string; _user_id: string }
         Returns: boolean
@@ -3468,6 +3499,10 @@ export type Database = {
       }
       can_view_club_module: {
         Args: { _club_id: string; _module_key: string; _user_id: string }
+        Returns: boolean
+      }
+      can_view_compras: {
+        Args: { _club_id: string; _user_id: string }
         Returns: boolean
       }
       can_view_event_new: {
@@ -3532,9 +3567,11 @@ export type Database = {
         Returns: {
           category: Database["public"]["Enums"]["expense_category"]
           expense_count: number
+          invoiced_total: number
           paid_total: number
           pending_total: number
           total: number
+          uninvoiced_total: number
         }[]
       }
       expense_summary: {
@@ -3543,6 +3580,7 @@ export type Database = {
           month_total: number
           pending_count: number
           pending_total: number
+          uninvoiced_total: number
         }[]
       }
       get_invitation_by_token: {
