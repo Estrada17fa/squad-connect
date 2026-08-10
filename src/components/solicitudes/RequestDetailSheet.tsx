@@ -222,8 +222,19 @@ export function RequestDetailSheet({
   const canEditRow = isOwner && isOpenState;
 
 
-  const headerActions = (canManage || canCancel || showLoanButton || showExpenseButton || showCheckupButton) ? (
+  const headerActions = (canManage || canCancel || canResubmit || showLoanButton || showExpenseButton || showCheckupButton) ? (
     <>
+            {canResubmit ? (
+              <Button
+                type="button"
+                size="sm"
+                className="glow-primary"
+                onClick={() => setStatus.mutate("pendiente")}
+                disabled={setStatus.isPending}
+              >
+                <Send className="mr-2 h-4 w-4" /> Reenviar a revisión
+              </Button>
+            ) : null}
             {canCancel ? (
               <Button
                 type="button"
