@@ -16,7 +16,7 @@ import { LEG_LABEL, personLabel, type MiniProfile, type TripLeg } from "@/lib/tr
 import { useFlightMutations, type TripFlight } from "@/hooks/useTripFlights";
 import { PersonChips } from "./PersonChips";
 import { FlightFormDialog } from "./FlightFormDialog";
-import { BoardingPassDialog } from "./BoardingPassDialog";
+import { BoardingPassesSheet } from "./BoardingPassesSheet";
 import { BaggageHandlersDialog } from "./BaggageHandlersDialog";
 import { PassengerAssignDialog, type AssignCandidate } from "./PassengerAssignDialog";
 
