@@ -5,6 +5,7 @@ import type { ModuleKey } from "@/lib/modules";
 import {
   LEVEL_RANK,
   canRead,
+  canSeeModule,
   isGlobalLevel,
   normalizeLevel,
   type PermissionLevel,
@@ -220,6 +221,6 @@ export function useAccess(userId: string) {
 }
 
 export function hasAccess(perms: Record<string, PermissionLevel>, key: ModuleKey): boolean {
-  return canRead(perms[key]);
+  return canSeeModule(key, perms[key]);
 }
 

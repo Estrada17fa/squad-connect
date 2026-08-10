@@ -25,17 +25,13 @@ import {
   type TripRow,
 } from "@/hooks/useTrips";
 import { TravelerPicker, initialsOf, type TeamMemberOption } from "./TravelerPicker";
-import { TripLogisticsTimeline } from "./TripLogisticsTimeline";
-import { MyTripView } from "./MyTripView";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-
+import { TripTabs } from "./TripTabs";
 
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   trip: TripRow | null;
-  /** 'editor' de viajes. En la futura pestaña de Agenda se usará readOnly. */
+  /** 'editor' de viajes en la categoría del viaje. */
   canEdit?: boolean;
   /** Modo consulta (pestaña Agenda): oculta toda acción de edición. */
   readOnly?: boolean;
@@ -52,9 +48,10 @@ const MILESTONE_ICON = {
 } as const;
 
 /**
- * Detalle del viaje, reutilizable en Coordinación (con edición) y, más adelante,
- * en la pestaña "Viajes" de Agenda (readOnly). La línea de tiempo está preparada
- * para recibir transporte, vuelos, hotel, comidas y equipaje en los próximos prompts.
+ * Detalle del viaje en modo lectura + "Editar viaje" para editores.
+ * La logística vive en tres pestañas (Ida / Regreso / General) que las
+ * Partes 2 y 3 siguen llenando. La vista personal del jugador no vive aquí:
+ * se construirá en Agenda/Inicio con los mismos datos por usuario.
  */
 export function TripDetailSheet({
   open,
@@ -70,20 +67,6 @@ export function TripDetailSheet({
   const [busyId, setBusyId] = React.useState<string | null>(null);
   const editable = canEdit && !readOnly;
 
-  const { data: currentUserId } = useQuery({
-    queryKey: ["current-user-id"],
-    queryFn: async () => (await supabase.auth.getUser()).data.user?.id ?? "",
-    staleTime: 5 * 60 * 1000,
-  });
-  const uid = currentUserId ?? "";
-  const isTraveler = !!trip && !!uid && trip.travelers.some((t) => t.user_id === uid);
-  // Un convocado sin permisos de edición arranca en "Mi viaje"; el staff, en el completo.
-  const [showFull, setShowFull] = React.useState(false);
-  React.useEffect(() => {
-    if (open) setShowFull(!isTraveler || editable);
-  }, [open, isTraveler, editable, trip?.id]);
-
-
   React.useEffect(() => {
     if (openPickerSignal > 0 && editable) setPicker(true);
   }, [openPickerSignal, editable]);
@@ -93,7 +76,7 @@ export function TripDetailSheet({
   }, [open]);
 
   const invalidate = () => {
-    if (trip) qc.invalidateQueries({ queryKey: ["trips", trip.club_id, trip.team_id] });
+    if (trip) qc.invalidateQueries({ queryKey: ["trips"] });
   };
 
   const toggle = useMutation({
@@ -117,6 +100,128 @@ export function TripDetailSheet({
   const milestones = trip ? tripMilestones(trip) : [];
   const selectedIds = new Set((trip?.travelers ?? []).map((t) => t.user_id));
 
+  const generalHeader = !trip ? null : (
+    <div className="space-y-5">
+      {/* Cronología del viaje */}
+      <section className="space-y-3">
+        <h3 className="font-display text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          Cronología
+        </h3>
+        <ol className="relative space-y-3 border-l border-white/10 pl-5">
+          {milestones.map((m) => {
+            const Icon = MILESTONE_ICON[m.kind];
+            return (
+              <li key={m.id} className="relative">
+                <span className="absolute -left-[27px] top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary/20 ring-2 ring-background">
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                </span>
+                <div className="glass p-3">
+                  <p className="flex items-center gap-2 text-sm font-medium text-foreground">
+                    <Icon className="h-4 w-4 text-primary" />
+                    {m.label}
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">{formatDateTime(m.at)}</p>
+                  {m.detail ? <p className="mt-1 text-xs text-muted-foreground">{m.detail}</p> : null}
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      </section>
+
+      {trip.meeting_point || (trip as any).meeting_location_id || trip.notes ? (
+        <section className="space-y-2">
+          {trip.meeting_point || (trip as any).meeting_location_id ? (
+            <div className="space-y-1.5 text-sm text-muted-foreground">
+              <p className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 shrink-0 text-primary" /> Punto de reunión
+              </p>
+              <LocationDisplay
+                clubId={trip.club_id}
+                locationId={(trip as any).meeting_location_id ?? null}
+                text={trip.meeting_point}
+              />
+            </div>
+          ) : null}
+          {trip.notes ? <p className="whitespace-pre-wrap text-sm text-muted-foreground">{trip.notes}</p> : null}
+        </section>
+      ) : null}
+
+      {/* Convocatoria */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="flex items-center gap-2 font-display text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            <Users className="h-4 w-4" /> Convocatoria
+          </h3>
+          {editable ? (
+            <Button type="button" size="sm" variant="ghost" onClick={() => setPicker((v) => !v)}>
+              <UserPlus className="mr-2 h-4 w-4" />
+              {picker ? "Cerrar" : "Agregar"}
+            </Button>
+          ) : null}
+        </div>
+
+        {picker && editable ? (
+          <TravelerPicker
+            clubId={trip.club_id}
+            teamId={trip.team_id}
+            selectedIds={selectedIds}
+            busyId={busyId}
+            onToggle={(m) => toggle.mutate(m)}
+          />
+        ) : null}
+
+        {trip.travelers.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Aún no hay convocados para este viaje.</p>
+        ) : (
+          <ul className="space-y-1">
+            {[...trip.travelers]
+              .sort((a, b) => (a.profile?.full_name ?? "").localeCompare(b.profile?.full_name ?? "", "es"))
+              .map((t) => (
+                <li key={t.id} className="flex items-center gap-3 rounded-xl border border-border/60 px-3 py-2">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={t.profile?.avatar_url ?? undefined} alt="" />
+                    <AvatarFallback className="text-xs">
+                      {initialsOf(t.profile?.full_name ?? null, t.profile?.email ?? null)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm text-foreground">
+                      {t.profile?.full_name ?? t.profile?.email ?? "Miembro"}
+                    </span>
+                    {t.role_note ? (
+                      <span className="block truncate text-xs text-muted-foreground">{t.role_note}</span>
+                    ) : null}
+                  </span>
+                  {editable ? (
+                    <button
+                      type="button"
+                      aria-label="Quitar del viaje"
+                      className="rounded-full p-1.5 text-muted-foreground hover:bg-white/10 hover:text-foreground"
+                      onClick={() => {
+                        setBusyId(t.user_id);
+                        removeTraveler(t.id)
+                          .then(() => {
+                            invalidate();
+                            setBusyId(null);
+                          })
+                          .catch((e) => {
+                            setBusyId(null);
+                            toast.error(e.message ?? "No se pudo quitar");
+                          });
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  ) : null}
+                </li>
+              ))}
+          </ul>
+        )}
+      </section>
+    </div>
+  );
+
   return (
     <EntitySheet open={open} onOpenChange={onOpenChange} size="xl">
       <EntitySheetHeader>
@@ -136,164 +241,20 @@ export function TripDetailSheet({
       <EntitySheetBody>
         {!trip ? null : (
           <>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
               <StatusBadge variant={TRIP_STATUS_VARIANT[trip.status]}>{TRIP_STATUS_LABEL[trip.status]}</StatusBadge>
+              <span className="text-xs text-muted-foreground">
+                Salida {formatDateTime(trip.departure_at)}
+                {trip.return_at ? ` · Regreso ${formatDateTime(trip.return_at)}` : ""}
+              </span>
               <span className="text-xs text-muted-foreground">
                 {trip.travelers.length} convocado{trip.travelers.length === 1 ? "" : "s"}
               </span>
             </div>
 
-            {isTraveler ? (
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={showFull ? "outline" : "default"}
-                  className={showFull ? "flex-1" : "flex-1 glow-primary"}
-                  onClick={() => setShowFull(false)}
-                >
-                  Mi viaje
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={showFull ? "default" : "outline"}
-                  className={showFull ? "flex-1 glow-primary" : "flex-1"}
-                  onClick={() => setShowFull(true)}
-                >
-                  Itinerario completo
-                </Button>
-              </div>
-            ) : null}
-
-            {!showFull ? <MyTripView trip={trip} userId={uid} /> : (
-            <>
-            {/* Línea de tiempo — aquí se insertarán transportes, vuelos, hotel y comidas */}
-
-            <section className="space-y-3">
-              <h3 className="font-display text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                Cronología
-              </h3>
-              <ol className="relative space-y-3 border-l border-white/10 pl-5">
-                {milestones.map((m) => {
-                  const Icon = MILESTONE_ICON[m.kind];
-                  return (
-                    <li key={m.id} className="relative">
-                      <span className="absolute -left-[27px] top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary/20 ring-2 ring-background">
-                        <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                      </span>
-                      <div className="glass p-3">
-                        <p className="flex items-center gap-2 text-sm font-medium text-foreground">
-                          <Icon className="h-4 w-4 text-primary" />
-                          {m.label}
-                        </p>
-                        <p className="mt-0.5 text-xs text-muted-foreground">{formatDateTime(m.at)}</p>
-                        {m.detail ? <p className="mt-1 text-xs text-muted-foreground">{m.detail}</p> : null}
-                      </div>
-                    </li>
-                  );
-                })}
-              </ol>
-            </section>
-
-            {trip.meeting_point || trip.notes ? (
-              <section className="space-y-2">
-                {trip.meeting_point || (trip as any).meeting_location_id ? (
-                  <div className="space-y-1.5 text-sm text-muted-foreground">
-                    <p className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 shrink-0 text-primary" /> Punto de reunión
-                    </p>
-                    <LocationDisplay
-                      clubId={trip.club_id}
-                      locationId={(trip as any).meeting_location_id ?? null}
-                      text={trip.meeting_point}
-                    />
-                  </div>
-                ) : null}
-                {trip.notes ? <p className="whitespace-pre-wrap text-sm text-muted-foreground">{trip.notes}</p> : null}
-              </section>
-            ) : null}
-
-            {/* Convocatoria */}
-            <section className="space-y-3">
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="flex items-center gap-2 font-display text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                  <Users className="h-4 w-4" /> Convocatoria
-                </h3>
-                {editable ? (
-                  <Button type="button" size="sm" variant="ghost" onClick={() => setPicker((v) => !v)}>
-                    <UserPlus className="mr-2 h-4 w-4" />
-                    {picker ? "Cerrar" : "Agregar"}
-                  </Button>
-                ) : null}
-              </div>
-
-              {picker && editable ? (
-                <TravelerPicker
-                  clubId={trip.club_id}
-                  teamId={trip.team_id}
-                  selectedIds={selectedIds}
-                  busyId={busyId}
-                  onToggle={(m) => toggle.mutate(m)}
-                />
-              ) : null}
-
-              {trip.travelers.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Aún no hay convocados para este viaje.</p>
-              ) : (
-                <ul className="space-y-1">
-                  {[...trip.travelers]
-                    .sort((a, b) => (a.profile?.full_name ?? "").localeCompare(b.profile?.full_name ?? "", "es"))
-                    .map((t) => (
-                      <li key={t.id} className="flex items-center gap-3 rounded-xl border border-border/60 px-3 py-2">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={t.profile?.avatar_url ?? undefined} alt="" />
-                          <AvatarFallback className="text-xs">
-                            {initialsOf(t.profile?.full_name ?? null, t.profile?.email ?? null)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate text-sm text-foreground">
-                            {t.profile?.full_name ?? t.profile?.email ?? "Miembro"}
-                          </span>
-                          {t.role_note ? (
-                            <span className="block truncate text-xs text-muted-foreground">{t.role_note}</span>
-                          ) : null}
-                        </span>
-                        {editable ? (
-                          <button
-                            type="button"
-                            aria-label="Quitar del viaje"
-                            className="rounded-full p-1.5 text-muted-foreground hover:bg-white/10 hover:text-foreground"
-                            onClick={() => {
-                              setBusyId(t.user_id);
-                              removeTraveler(t.id)
-                                .then(() => {
-                                  invalidate();
-                                  setBusyId(null);
-                                })
-                                .catch((e) => {
-                                  setBusyId(null);
-                                  toast.error(e.message ?? "No se pudo quitar");
-                                });
-                            }}
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
-                        ) : null}
-                      </li>
-                    ))}
-                </ul>
-              )}
-            </section>
-
-            {/* Logística del viaje: vuelos, transporte, hotel, comidas y equipaje */}
-            <TripLogisticsTimeline trip={trip} canEdit={editable} />
-            </>
-            )}
+            <TripTabs trip={trip} canEdit={editable} generalHeader={generalHeader} />
           </>
         )}
-
       </EntitySheetBody>
 
       <EntitySheetFooter>
