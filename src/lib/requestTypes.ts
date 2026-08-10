@@ -21,7 +21,13 @@ export type RequestType =
   | "medica"
   | "otro";
 
-export type RequestStatus = "pendiente" | "aprobada" | "rechazada" | "cancelada" | "completada";
+export type RequestStatus =
+  | "pendiente"
+  | "requiere_info"
+  | "aprobada"
+  | "rechazada"
+  | "cancelada"
+  | "completada";
 
 export type FieldType =
   | "text"
@@ -223,6 +229,7 @@ export function approverModuleFor(type: RequestType): ModuleKey {
 
 export const STATUS_LABEL: Record<RequestStatus, string> = {
   pendiente: "Pendiente",
+  requiere_info: "Requiere información",
   aprobada: "Aprobada",
   rechazada: "Rechazada",
   completada: "Completada",
@@ -232,6 +239,7 @@ export const STATUS_LABEL: Record<RequestStatus, string> = {
 /** Colores de estatus: ámbar, azul, rojo, neutro, gris. */
 export const STATUS_VARIANT: Record<RequestStatus, "pending" | "approved" | "rejected" | "info"> = {
   pendiente: "pending",
+  requiere_info: "pending",
   aprobada: "info",
   rechazada: "rejected",
   completada: "approved",
@@ -241,11 +249,13 @@ export const STATUS_VARIANT: Record<RequestStatus, "pending" | "approved" | "rej
 /** Clase extra para estatus neutros/grises. */
 export const STATUS_EXTRA_CLASS: Partial<Record<RequestStatus, string>> = {
   cancelada: "!bg-white/5 !text-muted-foreground",
+  requiere_info: "!bg-amber-400/15 !text-amber-200",
   completada: "opacity-80",
 };
 
 export const STATUS_ORDER: RequestStatus[] = [
   "pendiente",
+  "requiere_info",
   "aprobada",
   "completada",
   "rechazada",

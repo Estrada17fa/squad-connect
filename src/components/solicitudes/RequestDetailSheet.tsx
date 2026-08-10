@@ -13,6 +13,8 @@ import {
   Link as LinkIcon,
   Receipt,
   Stethoscope,
+  Send,
+  MessageCircleQuestion,
 } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
@@ -152,6 +154,12 @@ export function RequestDetailSheet({
         patch.decided_at = new Date().toISOString();
         patch.decision_note = note.trim() || null;
       }
+      if (next === "requiere_info") {
+        patch.decision_note = note.trim() || null;
+      }
+      if (next === "pendiente") {
+        patch.decision_note = null;
+      }
       const { error } = await supabase.from("requests").update(patch as never).eq("id", request!.id);
       if (error) throw error;
       return next;
@@ -162,6 +170,8 @@ export function RequestDetailSheet({
         rechazada: "Solicitud rechazada",
         cancelada: "Solicitud cancelada",
         completada: "Solicitud completada",
+        requiere_info: "Se pidió más información al solicitante",
+        pendiente: "Solicitud reenviada a revisión",
       };
       toast.success(msg[next] ?? "Solicitud actualizada");
       qc.invalidateQueries({ queryKey: ["requests", clubId] });
@@ -196,9 +206,12 @@ export function RequestDetailSheet({
   const Icon = def.icon;
   const isOwner = request.requester_id === userId;
   const isPending = request.status === "pendiente";
+  const needsInfo = request.status === "requiere_info";
+  const isOpenState = isPending || needsInfo;
   // Regla infranqueable: nadie decide su propia solicitud (también forzado en el servidor).
-  const showDecision = canDecide && isPending && !isOwner;
-  const canCancel = isOwner && isPending;
+  const showDecision = canDecide && isOpenState && !isOwner;
+  const canCancel = isOwner && isOpenState;
+  const canResubmit = isOwner && needsInfo;
   const isApproved = request.status === "aprobada";
   // El material se completa registrando el préstamo real, no a mano.
   const showLoanButton = isMaterial && isApproved && !linkedLoan && canCreateLoan;
@@ -208,11 +221,22 @@ export function RequestDetailSheet({
   const showCheckupButton = isMedical && isApproved && !linkedCheckup && canCreateCheckup;
   const canComplete =
     canManage && def.completable && isApproved && !isMaterial && !isFinancial && !isMedical;
-  const canEditRow = isOwner && isPending;
+  const canEditRow = isOwner && isOpenState;
 
 
-  const headerActions = (canManage || canCancel || showLoanButton || showExpenseButton || showCheckupButton) ? (
+  const headerActions = (canManage || canCancel || canResubmit || showLoanButton || showExpenseButton || showCheckupButton) ? (
     <>
+            {canResubmit ? (
+              <Button
+                type="button"
+                size="sm"
+                className="glow-primary"
+                onClick={() => setStatus.mutate("pendiente")}
+                disabled={setStatus.isPending}
+              >
+                <Send className="mr-2 h-4 w-4" /> Reenviar a revisión
+              </Button>
+            ) : null}
             {canCancel ? (
               <Button
                 type="button"
@@ -361,11 +385,23 @@ export function RequestDetailSheet({
           </div>
         ) : null}
 
+        {needsInfo ? (
+          <div className="flex items-start gap-2 rounded-lg border border-amber-400/40 bg-amber-400/10 p-3 text-xs text-amber-200">
+            <MessageCircleQuestion className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>
+              {isOwner
+                ? "Te piden más información. Edita la solicitud y reenvíala a revisión."
+                : "Se pidió más información al solicitante; queda en espera de su respuesta."}
+              {request.decision_note ? ` · ${request.decision_note}` : ""}
+            </span>
+          </div>
+        ) : null}
+
         {showDecision ? (
           <div className="glass space-y-2 p-3">
             <Label htmlFor="req-note">Nota de la decisión (opcional)</Label>
             <Textarea id="req-note" rows={2} value={note} onChange={(e) => setNote(e.target.value)} />
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button
                 type="button"
                 className="flex-1"
@@ -383,11 +419,22 @@ export function RequestDetailSheet({
               >
                 <XIcon className="mr-2 h-4 w-4" /> Rechazar
               </Button>
+              {isPending ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setStatus.mutate("requiere_info")}
+                  disabled={setStatus.isPending}
+                >
+                  <MessageCircleQuestion className="mr-2 h-4 w-4" /> Pedir más información
+                </Button>
+              ) : null}
             </div>
           </div>
         ) : null}
 
-        {canDecide && isPending && isOwner ? (
+        {canDecide && isOpenState && isOwner ? (
           <p className="text-xs text-muted-foreground">
             No puedes aprobar tu propia solicitud; otro aprobador debe decidirla.
           </p>
