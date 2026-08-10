@@ -134,12 +134,14 @@ export function FlightDetailSheet({ open, onOpenChange, flight, allFlights, trip
           </DetailSection>
 
           <DetailSection title="Pases de abordar">
-            <p className="text-sm text-muted-foreground">{current.boarding_passes.length} pase(s) registrado(s)</p>
-            {canEdit ? (
-              <Button type="button" size="sm" variant="outline" onClick={() => setPassesOpen(true)}>
-                <FileText className="mr-1.5 h-4 w-4" /> Pases ({current.boarding_passes.length})
-              </Button>
-            ) : null}
+            <p className="text-sm text-muted-foreground">
+              {current.passengers.filter((p) => current.boarding_passes.some((bp) => bp.user_id === p.user_id)).length}{" "}
+              de {current.passengers.length} con pase
+            </p>
+            <Button type="button" size="sm" variant="outline" onClick={() => setPassesOpen(true)}>
+              <FileText className="mr-1.5 h-4 w-4" /> {canEdit ? "Gestionar pases" : "Ver pases"} (
+              {current.boarding_passes.length})
+            </Button>
           </DetailSection>
         </EntitySheetBody>
 
