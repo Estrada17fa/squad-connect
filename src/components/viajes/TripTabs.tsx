@@ -8,13 +8,13 @@ import { useTripFlights } from "@/hooks/useTripFlights";
 import { useTripTransports } from "@/hooks/useTripTransports";
 import { useTripHotels } from "@/hooks/useTripHotels";
 import { useTripMeals } from "@/hooks/useTripMeals";
-import { useTripLuggage } from "@/hooks/useTripLuggage";
 import { useTripMaterial } from "@/hooks/useTripMaterial";
 import { FlightsSection } from "./logistica/FlightsSection";
 import { TransportsSection } from "./logistica/TransportsSection";
 import { HotelsSection } from "./logistica/HotelsSection";
 import { MealsSection } from "./logistica/MealsSection";
 import { LuggageSection } from "./logistica/LuggageSection";
+import { TravelerLuggageSection } from "./logistica/TravelerLuggageSection";
 import { TripDocumentsSection } from "./logistica/TripDocumentsSection";
 import { TimelineSection } from "./logistica/TimelineSection";
 import type { AssignCandidate } from "./logistica/PassengerAssignDialog";
@@ -53,7 +53,6 @@ export function TripTabs({ trip, canEdit, generalHeader }: Props) {
   const transports = useTripTransports(trip.id).data ?? [];
   const hotels = useTripHotels(trip.id).data ?? [];
   const meals = useTripMeals(trip.id).data ?? [];
-  const luggage = useTripLuggage(trip.id).data ?? [];
   const material = useTripMaterial(trip.id).data ?? [];
 
   // Solo los convocados pueden asignarse a vuelos, transportes o cuartos.
@@ -117,13 +116,19 @@ export function TripTabs({ trip, canEdit, generalHeader }: Props) {
 
           <MealsSection tripId={trip.id} userId={uid} meals={meals} canEdit={editable} />
 
+          <TravelerLuggageSection
+            tripId={trip.id}
+            userId={uid}
+            travelers={travelers.map((t) => ({ user_id: t.user_id, profile: t.profile }))}
+            canEdit={editable}
+          />
+
           <LuggageSection
             tripId={trip.id}
             clubId={trip.club_id}
             teamId={trip.team_id}
             userId={uid}
             defaultReturnAt={trip.return_at}
-            items={luggage}
             loans={material}
             travelers={travelers.map((t) => ({ user_id: t.user_id, profile: t.profile }))}
             canEdit={editable}
@@ -167,6 +172,7 @@ function LegPanel({
     <div className="space-y-5">
       <TransportsSection
         tripId={trip.id}
+        clubId={trip.club_id}
         userId={uid}
         leg={leg}
         transports={legTransports}

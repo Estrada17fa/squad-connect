@@ -54,6 +54,9 @@ export function FlightsSection({ tripId, userId, leg, flights, allFlights, trave
                 Sale {formatDateTime(f.departs_at)}
                 {f.arrives_at ? ` · Llega ${formatDateTime(f.arrives_at)}` : ""}
               </p>
+              <p className="text-xs text-primary">
+                {f.passengers.length} pasajero{f.passengers.length === 1 ? "" : "s"}
+              </p>
             </div>
 
             {f.baggage_handlers.length > 0 ? (

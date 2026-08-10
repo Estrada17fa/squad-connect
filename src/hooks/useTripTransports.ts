@@ -11,6 +11,7 @@ export interface TripTransport {
   label: string | null;
   departs_at: string;
   pickup_location: string;
+  pickup_location_id: string | null;
   destination: string;
   notes: string | null;
   passengers: { id: string; user_id: string; profile: MiniProfile | null }[];
@@ -22,12 +23,13 @@ export interface TransportInput {
   label: string | null;
   departs_at: string;
   pickup_location: string;
+  pickup_location_id: string | null;
   destination: string;
   notes: string | null;
 }
 
 const SELECT =
-  `id, trip_id, leg, transport_type, label, departs_at, pickup_location, destination, notes, ` +
+  `id, trip_id, leg, transport_type, label, departs_at, pickup_location, pickup_location_id, destination, notes, ` +
   `passengers:trip_transport_passengers(id, user_id, profile:profiles(${MINI_PROFILE_SELECT}))`;
 
 export const tripTransportsKey = (tripId: string | null | undefined) =>

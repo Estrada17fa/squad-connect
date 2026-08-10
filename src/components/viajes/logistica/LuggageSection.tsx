@@ -1,14 +1,11 @@
 import * as React from "react";
-import { Luggage, Package, RotateCcw } from "lucide-react";
+import { Package, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { personLabel, type MiniProfile } from "@/lib/tripLogistics";
 import { categoryIcon } from "@/lib/inventory";
-import type { TripLuggage } from "@/hooks/useTripLuggage";
 import { materialOutstanding, type TripMaterialLoan } from "@/hooks/useTripMaterial";
 import { TimelineSection } from "./TimelineSection";
-import { LuggageItemDetailSheet } from "./LuggageItemDetailSheet";
 import { MaterialLoanDetailSheet } from "./MaterialLoanDetailSheet";
-import { LuggageFormDialog } from "./LuggageFormDialog";
 import { TripMaterialDialog } from "./TripMaterialDialog";
 import { TripMaterialReturnDialog } from "./TripMaterialReturnDialog";
 
@@ -18,8 +15,6 @@ interface Props {
   teamId: string | null;
   userId: string;
   defaultReturnAt: string | null;
-  /** Ítems libres (texto), para cosas que no salen del inventario. */
-  items: TripLuggage[];
   /** Material del inventario, como préstamos ligados al viaje. */
   loans: TripMaterialLoan[];
   travelers: { user_id: string; profile: MiniProfile | null }[];
@@ -27,10 +22,9 @@ interface Props {
 }
 
 /**
- * Equipaje y material del viaje: mezcla el material del inventario
- * (préstamo real, la disponibilidad baja sola) con ítems libres de texto.
- * El clic en un ítem abre su ficha de lectura; editar es una acción
- * deliberada disponible solo para quien puede editar el viaje.
+ * Material del club en el viaje: préstamos reales del inventario
+ * (la disponibilidad baja sola). El equipaje personal de cada convocado
+ * vive en su propio bloque.
  */
 export function LuggageSection({
   tripId,
@@ -38,15 +32,12 @@ export function LuggageSection({
   teamId,
   userId,
   defaultReturnAt,
-  items,
   loans,
   travelers,
   canEdit,
 }: Props) {
-  const [freeFormOpen, setFreeFormOpen] = React.useState(false);
   const [matFormOpen, setMatFormOpen] = React.useState(false);
   const [returnOpen, setReturnOpen] = React.useState(false);
-  const [detailItem, setDetailItem] = React.useState<TripLuggage | null>(null);
   const [detailLoan, setDetailLoan] = React.useState<TripMaterialLoan | null>(null);
 
   const pendientes = loans.reduce((acc, l) => acc + materialOutstanding(l), 0);
@@ -54,10 +45,10 @@ export function LuggageSection({
   return (
     <>
       <TimelineSection
-        icon={Luggage}
-        title="Equipaje y material"
-        count={items.length + loans.length}
-        emptyLabel="Sin material registrado."
+        icon={Package}
+        title="Material del club"
+        count={loans.length}
+        emptyLabel="Sin material del inventario en este viaje."
       >
         {loans.map((l) => {
           const Icon = categoryIcon(l.item?.category);
@@ -88,32 +79,10 @@ export function LuggageSection({
           );
         })}
 
-        {items.map((it) => (
-          <button
-            key={it.id}
-            type="button"
-            className="glass flex w-full items-start gap-2 p-3 text-left transition-colors hover:bg-white/[0.04]"
-            onClick={() => setDetailItem(it)}
-          >
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium text-foreground">
-                {it.description}
-                {it.quantity ? <span className="text-muted-foreground"> ×{it.quantity}</span> : null}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {it.responsible_user_id ? `Lleva: ${personLabel(it.responsible)}` : "Sin responsable"}
-              </p>
-            </div>
-          </button>
-        ))}
-
         {canEdit ? (
           <div className="flex flex-wrap gap-2 pt-1">
             <Button type="button" size="sm" variant="outline" className="flex-1" onClick={() => setMatFormOpen(true)}>
               <Package className="mr-1.5 h-4 w-4" /> Material de inventario
-            </Button>
-            <Button type="button" size="sm" variant="outline" className="flex-1" onClick={() => setFreeFormOpen(true)}>
-              <Luggage className="mr-1.5 h-4 w-4" /> Ítem libre
             </Button>
             {pendientes > 0 ? (
               <Button type="button" size="sm" variant="outline" className="w-full" onClick={() => setReturnOpen(true)}>
@@ -123,16 +92,6 @@ export function LuggageSection({
           </div>
         ) : null}
       </TimelineSection>
-
-      <LuggageItemDetailSheet
-        open={!!detailItem}
-        onOpenChange={(v) => !v && setDetailItem(null)}
-        item={detailItem}
-        tripId={tripId}
-        userId={userId}
-        travelers={travelers}
-        canEdit={canEdit}
-      />
 
       <MaterialLoanDetailSheet
         open={!!detailLoan}
@@ -149,14 +108,6 @@ export function LuggageSection({
 
       {canEdit ? (
         <>
-          <LuggageFormDialog
-            open={freeFormOpen}
-            onOpenChange={setFreeFormOpen}
-            tripId={tripId}
-            userId={userId}
-            item={null}
-            travelers={travelers}
-          />
           <TripMaterialDialog
             open={matFormOpen}
             onOpenChange={setMatFormOpen}

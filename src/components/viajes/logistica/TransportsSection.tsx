@@ -11,6 +11,7 @@ import { type AssignCandidate } from "./PassengerAssignDialog";
 
 interface Props {
   tripId: string;
+  clubId: string;
   userId: string;
   leg: TripLeg;
   transports: TripTransport[];
@@ -19,7 +20,7 @@ interface Props {
   canEdit: boolean;
 }
 
-export function TransportsSection({ tripId, userId, leg, transports, allTransports, travelers, canEdit }: Props) {
+export function TransportsSection({ tripId, clubId, userId, leg, transports, allTransports, travelers, canEdit }: Props) {
   const [formOpen, setFormOpen] = React.useState(false);
   const [detailFor, setDetailFor] = React.useState<TripTransport | null>(null);
 
@@ -50,6 +51,9 @@ export function TransportsSection({ tripId, userId, leg, transports, allTranspor
                 {t.pickup_location} → {t.destination}
               </p>
               <p className="text-xs text-muted-foreground">Sale {formatDateTime(t.departs_at)}</p>
+              <p className="text-xs text-primary">
+                {t.passengers.length} pasajero{t.passengers.length === 1 ? "" : "s"}
+              </p>
             </div>
 
             <PersonChips
@@ -61,7 +65,7 @@ export function TransportsSection({ tripId, userId, leg, transports, allTranspor
       </TimelineSection>
 
       {canEdit ? (
-        <TransportFormDialog open={formOpen} onOpenChange={setFormOpen} tripId={tripId} userId={userId} transport={null} defaultLeg={leg} />
+        <TransportFormDialog open={formOpen} onOpenChange={setFormOpen} tripId={tripId} clubId={clubId} userId={userId} transport={null} defaultLeg={leg} />
       ) : null}
 
       <TransportDetailSheet
@@ -70,6 +74,7 @@ export function TransportsSection({ tripId, userId, leg, transports, allTranspor
         transport={detailFor}
         allTransports={allTransports}
         tripId={tripId}
+        clubId={clubId}
         userId={userId}
         travelers={travelers}
         canEdit={canEdit}

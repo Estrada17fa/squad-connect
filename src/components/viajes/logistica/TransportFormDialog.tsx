@@ -23,18 +23,20 @@ import {
   type TripLeg,
   type TripTransportType,
 } from "@/lib/tripLogistics";
+import { LocationPicker } from "@/components/calendar/LocationPicker";
 import { useTransportMutations, type TransportInput, type TripTransport } from "@/hooks/useTripTransports";
 
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   tripId: string;
+  clubId: string;
   userId: string;
   transport?: TripTransport | null;
   defaultLeg?: TripLeg;
 }
 
-export function TransportFormDialog({ open, onOpenChange, tripId, userId, transport, defaultLeg = "ida" }: Props) {
+export function TransportFormDialog({ open, onOpenChange, tripId, clubId, userId, transport, defaultLeg = "ida" }: Props) {
   const isEdit = !!transport;
   const { save, remove } = useTransportMutations(tripId);
 
@@ -43,6 +45,7 @@ export function TransportFormDialog({ open, onOpenChange, tripId, userId, transp
   const [label, setLabel] = React.useState("");
   const [departsAt, setDepartsAt] = React.useState("");
   const [pickup, setPickup] = React.useState("");
+  const [pickupLocationId, setPickupLocationId] = React.useState<string | null>(null);
   const [destination, setDestination] = React.useState("");
   const [notes, setNotes] = React.useState("");
 
@@ -53,6 +56,7 @@ export function TransportFormDialog({ open, onOpenChange, tripId, userId, transp
     setLabel(transport?.label ?? "");
     setDepartsAt(transport?.departs_at ? toLocalInputValue(transport.departs_at) : "");
     setPickup(transport?.pickup_location ?? "");
+    setPickupLocationId(transport?.pickup_location_id ?? null);
     setDestination(transport?.destination ?? "");
     setNotes(transport?.notes ?? "");
   }, [open, transport, defaultLeg]);
@@ -66,6 +70,7 @@ export function TransportFormDialog({ open, onOpenChange, tripId, userId, transp
       label: label.trim() || null,
       departs_at: fromLocalInputValue(departsAt),
       pickup_location: pickup.trim(),
+      pickup_location_id: pickupLocationId,
       destination: destination.trim(),
       notes: notes.trim() || null,
     };
@@ -132,10 +137,17 @@ export function TransportFormDialog({ open, onOpenChange, tripId, userId, transp
           <Input id="t-dep" type="datetime-local" value={departsAt} onChange={(e) => setDepartsAt(e.target.value)} />
         </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="t-pickup">Punto de encuentro *</Label>
-          <Input id="t-pickup" value={pickup} onChange={(e) => setPickup(e.target.value)} placeholder="Estadio" />
-        </div>
+        <LocationPicker
+          id="t-pickup"
+          label="Punto de encuentro *"
+          placeholder="Estadio, Don Koll…"
+          clubId={clubId}
+          userId={userId}
+          value={pickup}
+          onChange={setPickup}
+          locationId={pickupLocationId}
+          onLocationIdChange={setPickupLocationId}
+        />
 
         <div className="space-y-1.5">
           <Label htmlFor="t-dest">Destino *</Label>
