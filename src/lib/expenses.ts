@@ -51,6 +51,53 @@ export const PAYMENT_VARIANT: Record<PaymentStatus, StatusVariant> = {
   pagado: "info",
 };
 
+/* ------------------------------- Estado fiscal ------------------------------ */
+
+/** Se deriva del gasto: no se captura a mano. */
+export type FiscalStatus = "sin_factura" | "factura_pendiente" | "facturado";
+
+export const FISCAL_LABEL: Record<FiscalStatus, string> = {
+  sin_factura: "Sin factura",
+  factura_pendiente: "Factura pendiente",
+  facturado: "Facturado",
+};
+
+export const FISCAL_VARIANT: Record<FiscalStatus, StatusVariant> = {
+  sin_factura: "neutral",
+  factura_pendiente: "pending",
+  facturado: "approved",
+};
+
+export interface InvoiceLike {
+  has_invoice?: boolean | null;
+  invoice_pdf_path?: string | null;
+  invoice_xml_path?: string | null;
+  invoice_uuid?: string | null;
+  invoice_folio?: string | null;
+}
+
+/** ¿La factura ya tiene sustento (archivo o folio/UUID)? */
+export function hasInvoiceEvidence(e: InvoiceLike): boolean {
+  return !!(e.invoice_pdf_path || e.invoice_xml_path || e.invoice_uuid || e.invoice_folio);
+}
+
+export function fiscalStatus(e: InvoiceLike): FiscalStatus {
+  if (!e.has_invoice) return "sin_factura";
+  return hasInvoiceEvidence(e) ? "facturado" : "factura_pendiente";
+}
+
+export const FISCAL_OPTIONS: { key: FiscalStatus; label: string }[] = (
+  ["sin_factura", "factura_pendiente", "facturado"] as FiscalStatus[]
+).map((k) => ({ key: k, label: FISCAL_LABEL[k] }));
+
+/** RFC mexicano (persona física o moral). Vacío = válido (campo opcional). */
+export function isValidRfc(rfc: string): boolean {
+  const v = rfc.trim().toUpperCase();
+  if (!v) return true;
+  return /^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/.test(v);
+}
+
+
 export function formatMoney(amount: number | null | undefined, currency?: string | null) {
   if (amount === null || amount === undefined) return "—";
   try {
