@@ -50,6 +50,15 @@ export function TransportDetailSheet({ open, onOpenChange, transport, allTranspo
     [allTransports, current?.id],
   );
 
+  const assignedElsewhere = React.useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const t of allTransports) {
+      if (t.id === current?.id || t.leg !== current?.leg) continue;
+      for (const p of t.passengers) map[p.user_id] = t.label ?? TRANSPORT_TYPE_LABEL[t.transport_type];
+    }
+    return map;
+  }, [allTransports, current?.id, current?.leg]);
+
   if (!current) {
     return <EntitySheet open={open} onOpenChange={onOpenChange}><EntitySheetHeader><EntitySheetTitle>Transporte</EntitySheetTitle></EntitySheetHeader><EntitySheetBody /></EntitySheet>;
   }
@@ -129,6 +138,7 @@ export function TransportDetailSheet({ open, onOpenChange, transport, allTranspo
           candidates={travelers}
           selectedIds={current.passengers.map((p) => p.user_id)}
           importSources={importSources}
+          assignedElsewhere={assignedElsewhere}
           saving={setPassengers.isPending}
           onSave={(ids) =>
             setPassengers.mutate(

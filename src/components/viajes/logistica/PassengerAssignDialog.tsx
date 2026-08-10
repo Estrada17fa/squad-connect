@@ -35,6 +35,8 @@ interface Props {
   selectedIds: string[];
   /** Otras unidades/tramos desde donde copiar la selección. */
   importSources?: ImportSource[];
+  /** Personas que ya van asignadas en otra unidad del mismo tramo. */
+  assignedElsewhere?: Record<string, string>;
   saving?: boolean;
   onSave: (userIds: string[]) => void;
 }
@@ -52,6 +54,7 @@ export function PassengerAssignDialog({
   candidates,
   selectedIds,
   importSources = [],
+  assignedElsewhere = {},
   saving = false,
   onSave,
 }: Props) {
@@ -151,7 +154,13 @@ export function PassengerAssignDialog({
                       </Avatar>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm text-foreground">{personLabel(c.profile)}</span>
-                        {c.note ? <span className="block truncate text-xs text-muted-foreground">{c.note}</span> : null}
+                        {assignedElsewhere[c.user_id] ? (
+                          <span className="block truncate text-xs text-amber-400">
+                            Ya va en {assignedElsewhere[c.user_id]}
+                          </span>
+                        ) : c.note ? (
+                          <span className="block truncate text-xs text-muted-foreground">{c.note}</span>
+                        ) : null}
                       </span>
                       {active ? <Check className="h-4 w-4 text-primary" /> : null}
                     </button>
