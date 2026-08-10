@@ -134,6 +134,8 @@ export interface ExpenseReportRow {
   total: number;
   pending_total: number;
   paid_total: number;
+  invoiced_total: number;
+  uninvoiced_total: number;
   expense_count: number;
 }
 
@@ -159,6 +161,8 @@ export function useExpenseReport(
         total: Number(r.total),
         pending_total: Number(r.pending_total),
         paid_total: Number(r.paid_total),
+        invoiced_total: Number(r.invoiced_total ?? 0),
+        uninvoiced_total: Number(r.uninvoiced_total ?? 0),
         expense_count: Number(r.expense_count),
       }));
     },
@@ -169,6 +173,7 @@ export interface ExpenseSummary {
   pending_total: number;
   month_total: number;
   pending_count: number;
+  uninvoiced_total: number;
 }
 
 /** Resumen ligero para Home: pendiente por pagar y gasto del mes. */
@@ -185,9 +190,15 @@ export function useExpenseSummary(clubId: string | null | undefined, enabled = t
         pending_total: Number(row?.pending_total ?? 0),
         month_total: Number(row?.month_total ?? 0),
         pending_count: Number(row?.pending_count ?? 0),
+        uninvoiced_total: Number(row?.uninvoiced_total ?? 0),
       };
     },
   });
+}
+
+/** URL firmada de cualquier archivo del bucket `expense-receipts`. */
+export function useExpenseFileUrl(path: string | null | undefined) {
+  return useReceiptUrl(path);
 }
 
 /** URL firmada del comprobante en el bucket privado `expense-receipts`. */
