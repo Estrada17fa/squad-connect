@@ -156,7 +156,7 @@ function LegPanel({
   uid: string;
   editable: boolean;
   travelers: AssignCandidate[];
-  flights: ReturnType<typeof useTripFlights>["data"] extends infer T ? any[] : any[];
+  flights: any[];
   transports: any[];
 }) {
   const legFlights = (flights ?? []).filter((f: any) => f.leg === leg);
