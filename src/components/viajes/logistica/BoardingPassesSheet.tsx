@@ -234,8 +234,8 @@ export function BoardingPassesSheet({ open, onOpenChange, tripId, flight, canEdi
               },
               onError: (e: any) => toast.error(e.message ?? "No se pudo eliminar"),
             },
-          )
-        }
+          );
+        }}
       />
     </>
   );
