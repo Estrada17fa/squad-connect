@@ -5,6 +5,7 @@ import type { ModuleKey } from "@/lib/modules";
 import {
   LEVEL_RANK,
   canRead,
+  canSeeModule,
   isGlobalLevel,
   normalizeLevel,
   type PermissionLevel,
