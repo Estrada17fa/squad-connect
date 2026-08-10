@@ -9,6 +9,8 @@ export interface TripBoardingPass {
   user_id: string | null;
   file_path: string;
   seat: string | null;
+  boarding_group: string | null;
+  terminal: string | null;
   notes: string | null;
   profile: MiniProfile | null;
 }
