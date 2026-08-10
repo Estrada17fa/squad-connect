@@ -3207,6 +3207,7 @@ export type Database = {
           leg: Database["public"]["Enums"]["trip_leg"]
           notes: string | null
           pickup_location: string
+          pickup_location_id: string | null
           transport_type: Database["public"]["Enums"]["trip_transport_type"]
           trip_id: string
           updated_at: string
@@ -3221,6 +3222,7 @@ export type Database = {
           leg?: Database["public"]["Enums"]["trip_leg"]
           notes?: string | null
           pickup_location: string
+          pickup_location_id?: string | null
           transport_type?: Database["public"]["Enums"]["trip_transport_type"]
           trip_id: string
           updated_at?: string
@@ -3235,6 +3237,7 @@ export type Database = {
           leg?: Database["public"]["Enums"]["trip_leg"]
           notes?: string | null
           pickup_location?: string
+          pickup_location_id?: string | null
           transport_type?: Database["public"]["Enums"]["trip_transport_type"]
           trip_id?: string
           updated_at?: string
@@ -3248,10 +3251,65 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "trip_transports_pickup_location_id_fkey"
+            columns: ["pickup_location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "trip_transports_trip_id_fkey"
             columns: ["trip_id"]
             isOneToOne: false
             referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trip_traveler_luggage: {
+        Row: {
+          carry_on: boolean
+          checked_bag: boolean
+          created_at: string
+          created_by: string | null
+          id: string
+          trip_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          carry_on?: boolean
+          checked_bag?: boolean
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          trip_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          carry_on?: boolean
+          checked_bag?: boolean
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          trip_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_traveler_luggage_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_traveler_luggage_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
