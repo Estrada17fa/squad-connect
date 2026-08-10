@@ -1,13 +1,14 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-export type StatusVariant = "pending" | "approved" | "rejected" | "info";
+export type StatusVariant = "pending" | "approved" | "rejected" | "info" | "neutral";
 
 const styles: Record<StatusVariant, string> = {
   pending: "bg-status-pending text-status-pending-foreground",
   approved: "bg-status-approved text-status-approved-foreground",
   rejected: "bg-status-rejected text-status-rejected-foreground",
   info: "bg-status-info text-status-info-foreground",
+  neutral: "bg-white/[0.06] text-muted-foreground",
 };
 
 export function StatusBadge({

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Plus, Receipt, Search, Building2, TrendingUp } from "lucide-react";
+import { Plus, Receipt, Building2, TrendingUp, FileCheck2 } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { ModuleTabs } from "@/components/squad/ModuleTabs";
 import { EmptyState } from "@/components/squad/EmptyState";
@@ -26,22 +26,23 @@ import {
   type SupplierRow,
 } from "@/hooks/useExpenses";
 import {
-  EXPENSE_CATEGORIES,
   EXPENSE_CATEGORY_MAP,
-  PAYMENT_LABEL,
-  PAYMENT_VARIANT,
-  formatDay,
+  fiscalStatus,
   formatMoney,
   monthPeriod,
-  type ExpenseCategory,
-  type PaymentStatus,
 } from "@/lib/expenses";
 import { ExpenseFormDialog } from "@/components/compras/ExpenseFormDialog";
 import { ExpenseDetailSheet } from "@/components/compras/ExpenseDetailSheet";
+import { ExpenseCard } from "@/components/compras/ExpenseCard";
+import {
+  ExpenseFilters,
+  EMPTY_EXPENSE_FILTERS,
+  type ExpenseFilterState,
+} from "@/components/compras/ExpenseFilters";
 import { SupplierFormDialog } from "@/components/compras/SupplierFormDialog";
 import { SupplierDetailSheet } from "@/components/compras/SupplierDetailSheet";
 import { cn } from "@/lib/utils";
-import { canEdit as levelCanEdit } from "@/lib/permissions";
+import { LEVEL_RANK, normalizeLevel } from "@/lib/permissions";
 
 export const Route = createFileRoute("/_authenticated/m/compras_facturas")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -50,11 +51,11 @@ export const Route = createFileRoute("/_authenticated/m/compras_facturas")({
   head: () => ({
     meta: [
       { title: "Squad — Compras y facturas" },
-      { name: "description", content: "Gastos del club, comprobantes, proveedores y reportes." },
+      { name: "description", content: "Gastos del club, facturas recibidas, proveedores y reportes." },
       { property: "og:title", content: "Squad — Compras y facturas" },
       {
         property: "og:description",
-        content: "Registro de gastos con comprobante, catálogo de proveedores y reportes del club.",
+        content: "Gastos con comprobante y factura, catálogo de proveedores y reportes del club.",
       },
     ],
   }),
@@ -64,18 +65,16 @@ export const Route = createFileRoute("/_authenticated/m/compras_facturas")({
 type SubView = "gastos" | "proveedores" | "reportes";
 
 function ComprasPage() {
-  const { permissions, isSuperAdmin, accessibleModules, profile, user } = useApp();
+  const { permissions, isSuperAdmin, profile, user } = useApp();
   const clubId = profile?.club_id ?? null;
-  const canAccess = isSuperAdmin || accessibleModules.includes("compras_facturas");
-  const level = permissions.compras_facturas;
-  const canEdit = isSuperAdmin || levelCanEdit(level);
+
+  // Módulo de club: se comporta con Sin acceso / Lector global / Editor global.
+  const level = normalizeLevel(permissions.compras_facturas);
+  const canAccess = isSuperAdmin || LEVEL_RANK[level] >= LEVEL_RANK.lector_global;
+  const canEdit = isSuperAdmin || level === "editor_global";
 
   const [view, setView] = React.useState<SubView>("gastos");
-  const [search, setSearch] = React.useState("");
-  const [cat, setCat] = React.useState<"all" | ExpenseCategory>("all");
-  const [pay, setPay] = React.useState<"all" | PaymentStatus>("all");
-  const [from, setFrom] = React.useState("");
-  const [to, setTo] = React.useState("");
+  const [filters, setFilters] = React.useState<ExpenseFilterState>(EMPTY_EXPENSE_FILTERS);
 
   const [formOpen, setFormOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<ExpenseRow | null>(null);
@@ -109,24 +108,25 @@ function ComprasPage() {
   }, [expenses, detail]);
 
   const filtered = React.useMemo(() => {
-    const q = search.trim().toLowerCase();
+    const q = filters.search.trim().toLowerCase();
     return expenses.filter((e) => {
-      if (cat !== "all" && e.category !== cat) return false;
-      if (pay !== "all" && e.payment_status !== pay) return false;
-      if (from && e.expense_date < from) return false;
-      if (to && e.expense_date > to) return false;
+      if (filters.category && e.category !== filters.category) return false;
+      if (filters.payment && e.payment_status !== filters.payment) return false;
+      if (filters.fiscal && fiscalStatus(e) !== filters.fiscal) return false;
+      if (filters.from && e.expense_date < filters.from) return false;
+      if (filters.to && e.expense_date > filters.to) return false;
       if (q) {
         const supplier = (e.supplier?.name ?? e.supplier_name ?? "").toLowerCase();
         if (!e.concept.toLowerCase().includes(q) && !supplier.includes(q)) return false;
       }
       return true;
     });
-  }, [expenses, search, cat, pay, from, to]);
+  }, [expenses, filters]);
 
   if (!canAccess) {
     return (
       <div className="space-y-6">
-        <PageHeader hideTitle title="Compras y facturas" subtitle="Gastos y comprobantes del club" />
+        <PageHeader hideTitle title="Compras y facturas" subtitle="Gastos y facturas del club" />
         <ModuleTabs activeKey="compras_facturas" />
         <EmptyState icon={Receipt} title="Sin acceso" message="Tu rol actual no tiene permisos para este módulo." />
       </div>
@@ -135,7 +135,7 @@ function ComprasPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader hideTitle title="Compras y facturas" subtitle="Gastos y comprobantes del club" />
+      <PageHeader hideTitle title="Compras y facturas" subtitle="Gastos y facturas del club" />
       <ModuleTabs activeKey="compras_facturas" />
 
       <Tabs value={view} onValueChange={(v) => setView(v as SubView)} className="space-y-4">
@@ -164,48 +164,7 @@ function ComprasPage() {
         ) : null}
 
         <TabsContent value="gastos" className="space-y-4">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar por concepto o proveedor…"
-              className="pl-9"
-            />
-          </div>
-
-          <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {[
-              { key: "all" as const, label: "Todas" },
-              ...EXPENSE_CATEGORIES.map((c) => ({ key: c.key, label: c.label })),
-            ].map((o) => (
-              <Chip key={o.key} active={cat === o.key} onClick={() => setCat(o.key)}>
-                {o.label}
-              </Chip>
-            ))}
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            {(["all", "pendiente", "pagado"] as const).map((p) => (
-              <Chip key={p} active={pay === p} onClick={() => setPay(p)}>
-                {p === "all" ? "Todo pago" : PAYMENT_LABEL[p]}
-              </Chip>
-            ))}
-            <Input
-              type="date"
-              value={from}
-              onChange={(e) => setFrom(e.target.value)}
-              className="h-9 w-[9.5rem]"
-              aria-label="Desde"
-            />
-            <Input
-              type="date"
-              value={to}
-              onChange={(e) => setTo(e.target.value)}
-              className="h-9 w-[9.5rem]"
-              aria-label="Hasta"
-            />
-          </div>
+          <ExpenseFilters value={filters} onChange={setFilters} count={filtered.length} />
 
           {expensesQ.isLoading ? (
             <CardGridSkeleton />
@@ -352,28 +311,6 @@ function Chip({
   );
 }
 
-function ExpenseCard({ expense, onOpen }: { expense: ExpenseRow; onOpen: (e: ExpenseRow) => void }) {
-  const cat = EXPENSE_CATEGORY_MAP[expense.category];
-  const supplier = expense.supplier?.name ?? expense.supplier_name ?? null;
-  return (
-    <StandardCard
-      interactive
-      icon={cat.icon}
-      title={expense.concept}
-      subtitle={[supplier, cat.label].filter(Boolean).join(" · ")}
-      status={{ label: PAYMENT_LABEL[expense.payment_status], variant: PAYMENT_VARIANT[expense.payment_status] }}
-      onClick={() => onOpen(expense)}
-    >
-      <div className="flex items-center justify-between gap-3">
-        <span className="font-display text-base font-semibold text-foreground">
-          {formatMoney(expense.amount, expense.currency)}
-        </span>
-        <span>{formatDay(expense.expense_date)}</span>
-      </div>
-    </StandardCard>
-  );
-}
-
 /** Reportes: todos los totales vienen ya sumados del servidor (RPC expense_report). */
 function ReportsView({ clubId }: { clubId: string }) {
   const [preset, setPreset] = React.useState<"este" | "pasado" | "custom">("este");
@@ -392,7 +329,10 @@ function ReportsView({ clubId }: { clubId: string }) {
   const total = rows.reduce((a, r) => a + r.total, 0);
   const pending = rows.reduce((a, r) => a + r.pending_total, 0);
   const paid = rows.reduce((a, r) => a + r.paid_total, 0);
+  const invoiced = rows.reduce((a, r) => a + r.invoiced_total, 0);
+  const uninvoiced = rows.reduce((a, r) => a + r.uninvoiced_total, 0);
   const max = rows.reduce((a, r) => Math.max(a, r.total), 0);
+  const invoicedPct = total > 0 ? Math.round((invoiced / total) * 100) : 0;
 
   return (
     <div className="space-y-4">
@@ -435,6 +375,26 @@ function ReportsView({ clubId }: { clubId: string }) {
 
       <div className="glass space-y-3 p-4">
         <p className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">
+          <FileCheck2 className="h-3.5 w-3.5" /> Facturado vs sin factura
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <p className="text-xs text-muted-foreground">Con factura (deducible)</p>
+            <p className="font-display text-lg font-semibold text-foreground">{formatMoney(invoiced)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Sin factura</p>
+            <p className="font-display text-lg font-semibold text-foreground">{formatMoney(uninvoiced)}</p>
+          </div>
+        </div>
+        <div className="h-2 w-full overflow-hidden rounded-full bg-white/5">
+          <div className="h-full rounded-full bg-primary" style={{ width: `${invoicedPct}%` }} />
+        </div>
+        <p className="text-xs text-muted-foreground">{invoicedPct}% del gasto del periodo está facturado.</p>
+      </div>
+
+      <div className="glass space-y-3 p-4">
+        <p className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">
           <TrendingUp className="h-3.5 w-3.5" /> Desglose por categoría
         </p>
         {reportQ.isLoading ? (
@@ -457,6 +417,9 @@ function ReportsView({ clubId }: { clubId: string }) {
                     style={{ width: `${max > 0 ? Math.max((r.total / max) * 100, 3) : 0}%` }}
                   />
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  Facturado {formatMoney(r.invoiced_total)} · Sin factura {formatMoney(r.uninvoiced_total)}
+                </p>
               </div>
             ))}
           </div>
@@ -523,7 +486,6 @@ function ExpenseSupplierSheetShell({
   children: React.ReactNode;
 }) {
   return (
-
     <EntitySheet open={!!supplier} onOpenChange={onOpenChange}>
       <EntitySheetHeader>
         <EntitySheetTitle>{supplier?.name ?? "Proveedor"}</EntitySheetTitle>

@@ -31,12 +31,22 @@ export interface ExpenseRow {
   request_id: string | null;
   created_by: string | null;
   created_at: string;
+  /** Factura recibida del proveedor (opcional). */
+  has_invoice: boolean;
+  invoice_pdf_path: string | null;
+  invoice_xml_path: string | null;
+  invoice_folio: string | null;
+  invoice_uuid: string | null;
+  issuer_rfc: string | null;
+  invoice_total: number | null;
+  invoice_tax: number | null;
+  invoice_date: string | null;
   supplier: { id: string; name: string } | null;
   creator: { id: string; full_name: string | null; email: string | null } | null;
 }
 
 const EXPENSE_SELECT =
-  "id, club_id, concept, amount, currency, category, supplier_id, supplier_name, expense_date, payment_status, paid_at, receipt_path, notes, request_id, created_by, created_at, supplier:suppliers(id, name), creator:profiles!expenses_created_by_fkey(id, full_name, email)";
+  "id, club_id, concept, amount, currency, category, supplier_id, supplier_name, expense_date, payment_status, paid_at, receipt_path, notes, request_id, created_by, created_at, has_invoice, invoice_pdf_path, invoice_xml_path, invoice_folio, invoice_uuid, issuer_rfc, invoice_total, invoice_tax, invoice_date, supplier:suppliers(id, name), creator:profiles!expenses_created_by_fkey(id, full_name, email)";
 
 export const expensesQueryOptions = (clubId: string | null | undefined) =>
   queryOptions({
@@ -124,6 +134,8 @@ export interface ExpenseReportRow {
   total: number;
   pending_total: number;
   paid_total: number;
+  invoiced_total: number;
+  uninvoiced_total: number;
   expense_count: number;
 }
 
@@ -149,6 +161,8 @@ export function useExpenseReport(
         total: Number(r.total),
         pending_total: Number(r.pending_total),
         paid_total: Number(r.paid_total),
+        invoiced_total: Number(r.invoiced_total ?? 0),
+        uninvoiced_total: Number(r.uninvoiced_total ?? 0),
         expense_count: Number(r.expense_count),
       }));
     },
@@ -159,6 +173,7 @@ export interface ExpenseSummary {
   pending_total: number;
   month_total: number;
   pending_count: number;
+  uninvoiced_total: number;
 }
 
 /** Resumen ligero para Home: pendiente por pagar y gasto del mes. */
@@ -175,9 +190,15 @@ export function useExpenseSummary(clubId: string | null | undefined, enabled = t
         pending_total: Number(row?.pending_total ?? 0),
         month_total: Number(row?.month_total ?? 0),
         pending_count: Number(row?.pending_count ?? 0),
+        uninvoiced_total: Number(row?.uninvoiced_total ?? 0),
       };
     },
   });
+}
+
+/** URL firmada de cualquier archivo del bucket `expense-receipts`. */
+export function useExpenseFileUrl(path: string | null | undefined) {
+  return useReceiptUrl(path);
 }
 
 /** URL firmada del comprobante en el bucket privado `expense-receipts`. */

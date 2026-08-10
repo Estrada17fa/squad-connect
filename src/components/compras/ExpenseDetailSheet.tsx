@@ -2,8 +2,22 @@ import * as React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
-import { BadgeCheck, Download, ExternalLink, FileText, Pencil, Trash2 } from "lucide-react";
-import { DetailSheet } from "@/components/squad/DetailSheet";
+import {
+  BadgeCheck,
+  Download,
+  ExternalLink,
+  FileSpreadsheet,
+  FileText,
+  Pencil,
+  Trash2,
+} from "lucide-react";
+import {
+  DetailSheet,
+  DetailSection,
+  DetailGrid,
+  DetailField,
+  DetailValue,
+} from "@/components/squad/DetailSheet";
 import { StatusBadge } from "@/components/squad/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -11,8 +25,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useReceiptUrl, type ExpenseRow } from "@/hooks/useExpenses";
 import {
   EXPENSE_CATEGORY_MAP,
+  FISCAL_LABEL,
+  FISCAL_VARIANT,
   PAYMENT_LABEL,
   PAYMENT_VARIANT,
+  fiscalStatus,
   formatDay,
   formatMoney,
 } from "@/lib/expenses";
@@ -44,12 +61,41 @@ function useLinkedRequest(requestId: string | null | undefined) {
   });
 }
 
+function FileLink({
+  url,
+  label,
+  icon: Icon,
+}: {
+  url: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+}) {
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-2 rounded-lg border border-border/60 px-3 py-2 text-sm text-foreground hover:bg-white/[0.04]"
+    >
+      <Icon className="h-4 w-4 text-primary" /> {label}
+    </a>
+  );
+}
+
 export function ExpenseDetailSheet({ open, onOpenChange, expense, canEdit, onEdit }: Props) {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const receiptQ = useReceiptUrl(open ? expense?.receipt_path ?? null : null);
+  const pdfQ = useReceiptUrl(open ? expense?.invoice_pdf_path ?? null : null);
+  const xmlQ = useReceiptUrl(open ? expense?.invoice_xml_path ?? null : null);
   const requestQ = useLinkedRequest(open ? expense?.request_id ?? null : null);
   const [zoom, setZoom] = React.useState(false);
+
+  const invalidate = (clubId: string) => {
+    qc.invalidateQueries({ queryKey: ["expenses", clubId] });
+    qc.invalidateQueries({ queryKey: ["expense-report", clubId] });
+    qc.invalidateQueries({ queryKey: ["expense-summary", clubId] });
+  };
 
   const markPaid = useMutation({
     mutationFn: async () => {
@@ -61,9 +107,7 @@ export function ExpenseDetailSheet({ open, onOpenChange, expense, canEdit, onEdi
     },
     onSuccess: () => {
       toast.success("Gasto marcado como pagado");
-      qc.invalidateQueries({ queryKey: ["expenses", expense!.club_id] });
-      qc.invalidateQueries({ queryKey: ["expense-report", expense!.club_id] });
-      qc.invalidateQueries({ queryKey: ["expense-summary", expense!.club_id] });
+      invalidate(expense!.club_id);
     },
     onError: (e: any) => toast.error(e.message ?? "No se pudo actualizar"),
   });
@@ -75,9 +119,7 @@ export function ExpenseDetailSheet({ open, onOpenChange, expense, canEdit, onEdi
     },
     onSuccess: () => {
       toast.success("Gasto eliminado");
-      qc.invalidateQueries({ queryKey: ["expenses", expense!.club_id] });
-      qc.invalidateQueries({ queryKey: ["expense-report", expense!.club_id] });
-      qc.invalidateQueries({ queryKey: ["expense-summary", expense!.club_id] });
+      invalidate(expense!.club_id);
       onOpenChange(false);
     },
     onError: (e: any) => toast.error(e.message ?? "No se pudo eliminar"),
@@ -89,6 +131,7 @@ export function ExpenseDetailSheet({ open, onOpenChange, expense, canEdit, onEdi
   const Icon = cat.icon;
   const supplier = expense.supplier?.name ?? expense.supplier_name ?? null;
   const isImage = !!expense.receipt_path && !/\.pdf$/i.test(expense.receipt_path);
+  const fiscal = fiscalStatus(expense);
 
   return (
     <>
@@ -138,37 +181,34 @@ export function ExpenseDetailSheet({ open, onOpenChange, expense, canEdit, onEdi
             </p>
             <p className="text-xs text-muted-foreground">Registrado el {formatDateTime(expense.created_at)}</p>
           </div>
-          <StatusBadge variant={PAYMENT_VARIANT[expense.payment_status]}>
-            {PAYMENT_LABEL[expense.payment_status]}
-          </StatusBadge>
+          <div className="flex shrink-0 flex-col items-end gap-1">
+            <StatusBadge variant={PAYMENT_VARIANT[expense.payment_status]}>
+              {PAYMENT_LABEL[expense.payment_status]}
+            </StatusBadge>
+            <StatusBadge variant={FISCAL_VARIANT[fiscal]}>{FISCAL_LABEL[fiscal]}</StatusBadge>
+          </div>
         </div>
 
-        <div className="space-y-2">
-          <Row label="Categoría" value={cat.label} />
-          <Row label="Proveedor" value={supplier ?? "—"} />
-          <Row label="Fecha del gasto" value={formatDay(expense.expense_date)} />
-          <Row
-            label="Pago"
-            value={
-              expense.paid_at
-                ? `Pagado · ${formatDateTime(expense.paid_at)}`
-                : "Pendiente de pago"
-            }
-          />
-          <Row
-            label="Registró"
-            value={expense.creator?.full_name ?? expense.creator?.email ?? "—"}
-          />
-          {expense.notes ? (
-            <div className="pt-1">
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">Notas</p>
-              <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">{expense.notes}</p>
-            </div>
-          ) : null}
-        </div>
+        <DetailSection title="Datos del gasto">
+          <DetailGrid>
+            <DetailField label="Categoría"><DetailValue value={cat.label} /></DetailField>
+            <DetailField label="Proveedor"><DetailValue value={supplier} /></DetailField>
+            <DetailField label="Fecha del gasto"><DetailValue value={formatDay(expense.expense_date)} /></DetailField>
+            <DetailField label="Pago">
+              <DetailValue
+                value={expense.paid_at ? `Pagado · ${formatDateTime(expense.paid_at)}` : "Pendiente de pago"}
+              />
+            </DetailField>
+            <DetailField label="Registró">
+              <DetailValue value={expense.creator?.full_name ?? expense.creator?.email ?? null} />
+            </DetailField>
+            {expense.notes ? (
+              <DetailField label="Notas" full><DetailValue value={expense.notes} /></DetailField>
+            ) : null}
+          </DetailGrid>
+        </DetailSection>
 
-        <div className="space-y-2">
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">Comprobante</p>
+        <DetailSection title="Comprobante">
           {!expense.receipt_path ? (
             <p className="text-sm text-muted-foreground">Sin comprobante adjunto.</p>
           ) : !receiptQ.data ? (
@@ -188,16 +228,57 @@ export function ExpenseDetailSheet({ open, onOpenChange, expense, canEdit, onEdi
               </a>
             </div>
           ) : (
-            <a
-              href={receiptQ.data}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-lg border border-border/60 px-3 py-2 text-sm text-foreground hover:bg-white/[0.04]"
-            >
-              <FileText className="h-4 w-4 text-primary" /> Ver comprobante (PDF)
-            </a>
+            <FileLink url={receiptQ.data} label="Ver comprobante (PDF)" icon={FileText} />
           )}
-        </div>
+        </DetailSection>
+
+        <DetailSection title="Factura">
+          {!expense.has_invoice ? (
+            <p className="text-sm text-muted-foreground">
+              Este gasto no tiene factura registrada.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              <DetailGrid>
+                <DetailField label="Folio"><DetailValue value={expense.invoice_folio} /></DetailField>
+                <DetailField label="Fecha de la factura">
+                  <DetailValue value={expense.invoice_date ? formatDay(expense.invoice_date) : null} />
+                </DetailField>
+                <DetailField label="UUID fiscal" full><DetailValue value={expense.invoice_uuid} /></DetailField>
+                <DetailField label="RFC del emisor"><DetailValue value={expense.issuer_rfc} /></DetailField>
+                <DetailField label="Monto facturado">
+                  <DetailValue
+                    value={
+                      expense.invoice_total != null
+                        ? formatMoney(expense.invoice_total, expense.currency)
+                        : null
+                    }
+                  />
+                </DetailField>
+                <DetailField label="IVA">
+                  <DetailValue
+                    value={expense.invoice_tax != null ? formatMoney(expense.invoice_tax, expense.currency) : null}
+                  />
+                </DetailField>
+              </DetailGrid>
+
+              <div className="flex flex-wrap gap-2">
+                {expense.invoice_pdf_path && pdfQ.data ? (
+                  <FileLink url={pdfQ.data} label="Ver factura (PDF)" icon={FileText} />
+                ) : null}
+                {expense.invoice_xml_path && xmlQ.data ? (
+                  <FileLink url={xmlQ.data} label="Descargar XML" icon={FileSpreadsheet} />
+                ) : null}
+              </div>
+
+              {fiscal === "factura_pendiente" ? (
+                <p className="text-sm text-muted-foreground">
+                  Falta adjuntar el archivo o capturar el folio/UUID de la factura.
+                </p>
+              ) : null}
+            </div>
+          )}
+        </DetailSection>
 
         {expense.request_id ? (
           <div className="glass space-y-1 p-3 text-sm">
@@ -232,14 +313,5 @@ export function ExpenseDetailSheet({ open, onOpenChange, expense, canEdit, onEdi
         </DialogContent>
       </Dialog>
     </>
-  );
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-start justify-between gap-4 border-b border-border/40 pb-2">
-      <span className="text-xs uppercase tracking-wide text-muted-foreground">{label}</span>
-      <span className="text-right text-sm text-foreground">{value}</span>
-    </div>
   );
 }
