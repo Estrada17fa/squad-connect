@@ -78,6 +78,20 @@ export function canRead(level: PermissionLevel | undefined | null): boolean {
   return normalizeLevel(level) !== "sin_acceso";
 }
 
+/**
+ * Módulos de GESTIÓN pura: los niveles de jugador y de lector por categoría no
+ * alcanzan para verlos. En Viajes la información personal del jugador (su
+ * citación, su vuelo, su pase) se mostrará desde Agenda/Inicio, no aquí.
+ */
+export const MANAGEMENT_ONLY_MODULES: ModuleKey[] = ["viajes"];
+
+/** ¿El módulo aparece en la navegación y en sus rutas? */
+export function canSeeModule(key: ModuleKey, level: PermissionLevel | undefined | null): boolean {
+  const l = normalizeLevel(level);
+  if (MANAGEMENT_ONLY_MODULES.includes(key)) return LEVEL_RANK[l] >= LEVEL_RANK.lector_global;
+  return canRead(l);
+}
+
 /** ¿Puede crear o editar? */
 export function canEdit(level: PermissionLevel | undefined | null): boolean {
   const l = normalizeLevel(level);
