@@ -94,26 +94,30 @@ export function FlightLuggageSection({ tripId, flight, canEdit }: Props) {
               <span className="min-w-0 flex-1 truncate text-sm text-foreground">{personLabel(p.profile)}</span>
 
               <div className="flex shrink-0 flex-wrap justify-end gap-1.5">
-                <LuggageChip
-                  active={f.checked_bag}
-                  canEdit={canEdit}
-                  icon={Luggage}
-                  label="Documentada"
-                  onClick={() => toggle(p.user_id, "checked_bag")}
-                />
-                <LuggageChip
-                  active={f.carry_on}
-                  canEdit={canEdit}
-                  icon={Briefcase}
-                  label="Mano"
-                  onClick={() => toggle(p.user_id, "carry_on")}
-                />
+                {!none || !canEdit ? (
+                  <>
+                    <LuggageChip
+                      active={f.checked_bag}
+                      canEdit={canEdit}
+                      icon={Luggage}
+                      label="Documentada"
+                      onClick={() => toggle(p.user_id, "checked_bag")}
+                    />
+                    <LuggageChip
+                      active={f.carry_on}
+                      canEdit={canEdit}
+                      icon={Briefcase}
+                      label="Mano"
+                      onClick={() => toggle(p.user_id, "carry_on")}
+                    />
+                  </>
+                ) : null}
                 <LuggageChip
                   active={none}
                   canEdit={canEdit}
                   icon={Ban}
                   label="Sin equipaje"
-                  onClick={() => setNone(p.user_id)}
+                  onClick={() => setNone(p.user_id, none)}
                 />
               </div>
             </li>
