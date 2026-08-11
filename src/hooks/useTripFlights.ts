@@ -21,6 +21,8 @@ export interface FlightBaggageHandler {
   flight_id: string;
   user_id: string;
   pieces: number | null;
+  checked_bag: boolean;
+  carry_on: boolean;
   profile: MiniProfile | null;
 }
 
@@ -59,7 +61,7 @@ const SELECT =
   `id, trip_id, leg, flight_code, airline, departs_at, arrives_at, origin, destination, gate, notes, baggage_instructions, ` +
   `passengers:trip_flight_passengers(id, user_id, profile:profiles(${MINI_PROFILE_SELECT})), ` +
   `boarding_passes:trip_boarding_passes(id, flight_id, user_id, file_path, seat, boarding_group, terminal, notes, profile:profiles!trip_boarding_passes_user_id_fkey(${MINI_PROFILE_SELECT})), ` +
-  `baggage_handlers:trip_flight_baggage_handlers(id, flight_id, user_id, pieces, profile:profiles(${MINI_PROFILE_SELECT}))`;
+  `baggage_handlers:trip_flight_baggage_handlers(id, flight_id, user_id, pieces, checked_bag, carry_on, profile:profiles(${MINI_PROFILE_SELECT}))`;
 
 export const tripFlightsKey = (tripId: string | null | undefined) => ["trip-flights", tripId ?? "none"] as const;
 
@@ -167,5 +169,26 @@ export function useFlightMutations(tripId: string | null | undefined) {
     onSuccess: invalidate,
   });
 
-  return { save, remove, setPassengers, setBaggageHandlers, invalidate };
+  /** Marca el equipaje (documentada / mano / sin equipaje) de una persona en un vuelo. */
+  const setLuggageFlags = useMutation({
+    mutationFn: async ({
+      flightId,
+      userId,
+      checked_bag,
+      carry_on,
+    }: {
+      flightId: string;
+      userId: string;
+      checked_bag: boolean;
+      carry_on: boolean;
+    }) => {
+      const { error } = await supabase
+        .from("trip_flight_baggage_handlers")
+        .upsert({ flight_id: flightId, user_id: userId, checked_bag, carry_on }, { onConflict: "flight_id,user_id" });
+      if (error) throw error;
+    },
+    onSuccess: invalidate,
+  });
+
+  return { save, remove, setPassengers, setBaggageHandlers, setLuggageFlags, invalidate };
 }
