@@ -190,5 +190,18 @@ export function useFlightMutations(tripId: string | null | undefined) {
     onSuccess: invalidate,
   });
 
-  return { save, remove, setPassengers, setBaggageHandlers, setLuggageFlags, invalidate };
+  /** Elimina el registro de equipaje de una persona en un vuelo (vuelve a "sin capturar"). */
+  const clearLuggageFlags = useMutation({
+    mutationFn: async ({ flightId, userId }: { flightId: string; userId: string }) => {
+      const { error } = await supabase
+        .from("trip_flight_baggage_handlers")
+        .delete()
+        .eq("flight_id", flightId)
+        .eq("user_id", userId);
+      if (error) throw error;
+    },
+    onSuccess: invalidate,
+  });
+
+  return { save, remove, setPassengers, setBaggageHandlers, setLuggageFlags, clearLuggageFlags, invalidate };
 }

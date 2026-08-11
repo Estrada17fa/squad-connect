@@ -20,7 +20,7 @@ type Flags = { checked_bag: boolean; carry_on: boolean; captured: boolean };
  * así que ida y regreso pueden ser distintos.
  */
 export function FlightLuggageSection({ tripId, flight, canEdit }: Props) {
-  const { setLuggageFlags } = useFlightMutations(tripId);
+  const { setLuggageFlags, clearLuggageFlags } = useFlightMutations(tripId);
 
   const byUser = React.useMemo(() => {
     const map = new Map<string, Flags>();
@@ -57,7 +57,16 @@ export function FlightLuggageSection({ tripId, flight, canEdit }: Props) {
     apply(uid, field === "checked_bag" ? !f.checked_bag : f.checked_bag, field === "carry_on" ? !f.carry_on : f.carry_on);
   };
 
-  const setNone = (uid: string) => apply(uid, false, false);
+  const setNone = (uid: string, alreadyNone: boolean) => {
+    if (alreadyNone) {
+      clearLuggageFlags.mutate(
+        { flightId: flight.id, userId: uid },
+        { onError: (e: any) => toast.error(e.message ?? "No se pudo quitar el equipaje") },
+      );
+    } else {
+      apply(uid, false, false);
+    }
+  };
 
   if (people.length === 0) {
     return (
@@ -85,26 +94,30 @@ export function FlightLuggageSection({ tripId, flight, canEdit }: Props) {
               <span className="min-w-0 flex-1 truncate text-sm text-foreground">{personLabel(p.profile)}</span>
 
               <div className="flex shrink-0 flex-wrap justify-end gap-1.5">
-                <LuggageChip
-                  active={f.checked_bag}
-                  canEdit={canEdit}
-                  icon={Luggage}
-                  label="Documentada"
-                  onClick={() => toggle(p.user_id, "checked_bag")}
-                />
-                <LuggageChip
-                  active={f.carry_on}
-                  canEdit={canEdit}
-                  icon={Briefcase}
-                  label="Mano"
-                  onClick={() => toggle(p.user_id, "carry_on")}
-                />
+                {!none || !canEdit ? (
+                  <>
+                    <LuggageChip
+                      active={f.checked_bag}
+                      canEdit={canEdit}
+                      icon={Luggage}
+                      label="Documentada"
+                      onClick={() => toggle(p.user_id, "checked_bag")}
+                    />
+                    <LuggageChip
+                      active={f.carry_on}
+                      canEdit={canEdit}
+                      icon={Briefcase}
+                      label="Mano"
+                      onClick={() => toggle(p.user_id, "carry_on")}
+                    />
+                  </>
+                ) : null}
                 <LuggageChip
                   active={none}
                   canEdit={canEdit}
                   icon={Ban}
                   label="Sin equipaje"
-                  onClick={() => setNone(p.user_id)}
+                  onClick={() => setNone(p.user_id, none)}
                 />
               </div>
             </li>
