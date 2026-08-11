@@ -57,7 +57,16 @@ export function FlightLuggageSection({ tripId, flight, canEdit }: Props) {
     apply(uid, field === "checked_bag" ? !f.checked_bag : f.checked_bag, field === "carry_on" ? !f.carry_on : f.carry_on);
   };
 
-  const setNone = (uid: string) => apply(uid, false, false);
+  const setNone = (uid: string, alreadyNone: boolean) => {
+    if (alreadyNone) {
+      clearLuggageFlags.mutate(
+        { flightId: flight.id, userId: uid },
+        { onError: (e: any) => toast.error(e.message ?? "No se pudo quitar el equipaje") },
+      );
+    } else {
+      apply(uid, false, false);
+    }
+  };
 
   if (people.length === 0) {
     return (
