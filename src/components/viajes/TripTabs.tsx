@@ -14,7 +14,6 @@ import { TransportsSection } from "./logistica/TransportsSection";
 import { HotelsSection } from "./logistica/HotelsSection";
 import { MealsSection } from "./logistica/MealsSection";
 import { LuggageSection } from "./logistica/LuggageSection";
-import { TravelerLuggageSection } from "./logistica/TravelerLuggageSection";
 import { TripDocumentsSection } from "./logistica/TripDocumentsSection";
 import { TimelineSection } from "./logistica/TimelineSection";
 import type { AssignCandidate } from "./logistica/PassengerAssignDialog";
@@ -116,12 +115,6 @@ export function TripTabs({ trip, canEdit, generalHeader }: Props) {
 
           <MealsSection tripId={trip.id} userId={uid} meals={meals} canEdit={editable} />
 
-          <TravelerLuggageSection
-            tripId={trip.id}
-            userId={uid}
-            travelers={travelers.map((t) => ({ user_id: t.user_id, profile: t.profile }))}
-            canEdit={editable}
-          />
 
           <LuggageSection
             tripId={trip.id}
