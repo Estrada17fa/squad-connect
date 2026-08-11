@@ -20,7 +20,7 @@ type Flags = { checked_bag: boolean; carry_on: boolean; captured: boolean };
  * así que ida y regreso pueden ser distintos.
  */
 export function FlightLuggageSection({ tripId, flight, canEdit }: Props) {
-  const { setLuggageFlags } = useFlightMutations(tripId);
+  const { setLuggageFlags, clearLuggageFlags } = useFlightMutations(tripId);
 
   const byUser = React.useMemo(() => {
     const map = new Map<string, Flags>();
