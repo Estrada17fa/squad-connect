@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import squadLogo from "@/assets/squad-logo.png.asset.json";
+import { Toaster } from "@/components/ui/sonner";
 
 
 function NotFoundComponent() {
@@ -123,6 +124,8 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
+      {/* Avisos (sonner). Debe montarse una sola vez, por encima de sheets y diálogos. */}
+      <Toaster position="top-center" richColors closeButton />
     </QueryClientProvider>
   );
 }

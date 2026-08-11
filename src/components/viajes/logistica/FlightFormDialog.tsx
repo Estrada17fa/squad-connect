@@ -13,9 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toLocalInputValue, fromLocalInputValue } from "@/lib/calendar-utils";
-import { LEG_LABEL, LEG_ORDER, type TripLeg } from "@/lib/tripLogistics";
+import { LEG_LABEL, type TripLeg } from "@/lib/tripLogistics";
 import { useFlightMutations, type FlightInput, type TripFlight } from "@/hooks/useTripFlights";
 
 interface Props {
@@ -41,9 +40,11 @@ export function FlightFormDialog({ open, onOpenChange, tripId, userId, flight, d
   const [gate, setGate] = React.useState("");
   const [notes, setNotes] = React.useState("");
   const [baggage, setBaggage] = React.useState("");
+  const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     if (!open) return;
+    setError(null);
     setLeg(flight?.leg ?? defaultLeg);
     setCode(flight?.flight_code ?? "");
     setAirline(flight?.airline ?? "");
@@ -56,12 +57,18 @@ export function FlightFormDialog({ open, onOpenChange, tripId, userId, flight, d
     setBaggage(flight?.baggage_instructions ?? "");
   }, [open, flight, defaultLeg]);
 
+  const fail = (msg: string) => {
+    setError(msg);
+    toast.error(msg);
+  };
+
   const submit = () => {
-    if (!code.trim()) return toast.error("El número de vuelo es obligatorio");
-    if (!departsAt) return toast.error("La fecha y hora de salida son obligatorias");
-    if (!origin.trim() || !destination.trim()) return toast.error("Origen y destino son obligatorios");
+    setError(null);
+    if (!code.trim()) return fail("El número de vuelo es obligatorio");
+    if (!departsAt) return fail("La fecha y hora de salida son obligatorias");
+    if (!origin.trim() || !destination.trim()) return fail("Origen y destino son obligatorios");
     if (arrivesAt && new Date(arrivesAt) < new Date(departsAt)) {
-      return toast.error("La llegada no puede ser antes de la salida");
+      return fail("La llegada no puede ser antes de la salida");
     }
     const input: FlightInput = {
       leg,
@@ -82,7 +89,7 @@ export function FlightFormDialog({ open, onOpenChange, tripId, userId, flight, d
           toast.success(isEdit ? "Vuelo actualizado" : "Vuelo agregado");
           onOpenChange(false);
         },
-        onError: (e: any) => toast.error(e.message ?? "No se pudo guardar el vuelo"),
+        onError: (e: any) => fail(e.message ?? "No se pudo guardar el vuelo"),
       },
     );
   };
@@ -95,21 +102,22 @@ export function FlightFormDialog({ open, onOpenChange, tripId, userId, flight, d
       </EntitySheetHeader>
 
       <EntitySheetBody>
+        {error ? (
+          <p className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {error}
+          </p>
+        ) : null}
+
         <div className="space-y-1.5">
           <Label>Tramo</Label>
-          <Select value={leg} onValueChange={(v) => setLeg(v as TripLeg)}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {LEG_ORDER.map((l) => (
-                <SelectItem key={l} value={l}>
-                  {LEG_LABEL[l]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex h-10 items-center rounded-md border border-input bg-muted/30 px-3 text-sm text-foreground">
+            {LEG_LABEL[leg]}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            El vuelo pertenece a la pestaña desde la que lo estás gestionando.
+          </p>
         </div>
+
 
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
@@ -195,7 +203,7 @@ export function FlightFormDialog({ open, onOpenChange, tripId, userId, flight, d
           Cancelar
         </Button>
         <Button type="button" className="glow-primary" disabled={save.isPending} onClick={submit}>
-          {isEdit ? "Guardar cambios" : "Agregar vuelo"}
+          {save.isPending ? "Guardando…" : isEdit ? "Guardar cambios" : "Agregar vuelo"}
         </Button>
       </EntitySheetFooter>
     </EntitySheet>

@@ -17,7 +17,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toLocalInputValue, fromLocalInputValue } from "@/lib/calendar-utils";
 import {
   LEG_LABEL,
-  LEG_ORDER,
   TRANSPORT_TYPE_LABEL,
   TRANSPORT_TYPE_ORDER,
   type TripLeg,
@@ -97,19 +96,11 @@ export function TransportFormDialog({ open, onOpenChange, tripId, clubId, userId
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <Label>Tramo</Label>
-            <Select value={leg} onValueChange={(v) => setLeg(v as TripLeg)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {LEG_ORDER.map((l) => (
-                  <SelectItem key={l} value={l}>
-                    {LEG_LABEL[l]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex h-10 items-center rounded-md border border-input bg-muted/30 px-3 text-sm text-foreground">
+              {LEG_LABEL[leg]}
+            </div>
           </div>
+
           <div className="space-y-1.5">
             <Label>Tipo</Label>
             <Select value={type} onValueChange={(v) => setType(v as TripTransportType)}>
