@@ -2777,6 +2777,8 @@ export type Database = {
       }
       trip_flight_baggage_handlers: {
         Row: {
+          carry_on: boolean
+          checked_bag: boolean
           created_at: string
           flight_id: string
           id: string
@@ -2784,6 +2786,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          carry_on?: boolean
+          checked_bag?: boolean
           created_at?: string
           flight_id: string
           id?: string
@@ -2791,6 +2795,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          carry_on?: boolean
+          checked_bag?: boolean
           created_at?: string
           flight_id?: string
           id?: string
@@ -3268,54 +3274,6 @@ export type Database = {
             columns: ["trip_id"]
             isOneToOne: false
             referencedRelation: "trips"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      trip_traveler_luggage: {
-        Row: {
-          carry_on: boolean
-          checked_bag: boolean
-          created_at: string
-          created_by: string | null
-          id: string
-          trip_id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          carry_on?: boolean
-          checked_bag?: boolean
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          trip_id: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          carry_on?: boolean
-          checked_bag?: boolean
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          trip_id?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "trip_traveler_luggage_trip_id_fkey"
-            columns: ["trip_id"]
-            isOneToOne: false
-            referencedRelation: "trips"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "trip_traveler_luggage_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]

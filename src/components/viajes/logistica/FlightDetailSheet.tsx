@@ -17,7 +17,7 @@ import { useFlightMutations, type TripFlight } from "@/hooks/useTripFlights";
 import { PersonChips } from "./PersonChips";
 import { FlightFormDialog } from "./FlightFormDialog";
 import { BoardingPassesSheet } from "./BoardingPassesSheet";
-import { BaggageHandlersDialog } from "./BaggageHandlersDialog";
+import { FlightLuggageSection } from "./FlightLuggageSection";
 import { PassengerAssignDialog, type AssignCandidate } from "./PassengerAssignDialog";
 
 interface Props {
@@ -37,7 +37,6 @@ export function FlightDetailSheet({ open, onOpenChange, flight, allFlights, trip
   const [editOpen, setEditOpen] = React.useState(false);
   const [passengersOpen, setPassengersOpen] = React.useState(false);
   const [passesOpen, setPassesOpen] = React.useState(false);
-  const [baggageOpen, setBaggageOpen] = React.useState(false);
 
   const current = flight ? allFlights.find((f) => f.id === flight.id) ?? flight : null;
 
@@ -108,29 +107,8 @@ export function FlightDetailSheet({ open, onOpenChange, flight, allFlights, trip
             ) : null}
           </DetailSection>
 
-          <DetailSection title="Documentan maletas">
-            {current.baggage_handlers.length > 0 ? (
-              current.baggage_handlers.some((h) => h.user_id === userId) ? (
-                <p className="rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-medium text-primary">
-                  Tú documentas las maletas del equipo en este vuelo
-                  {(() => {
-                    const mine = current.baggage_handlers.find((h) => h.user_id === userId);
-                    return mine?.pieces ? ` · ${mine.pieces} pieza${mine.pieces === 1 ? "" : "s"}` : "";
-                  })()}
-                </p>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  Documentan: {current.baggage_handlers.map((h) => personLabel(h.profile)).join(", ")}
-                </p>
-              )
-            ) : (
-              <p className="text-sm text-muted-foreground">Sin responsables asignados.</p>
-            )}
-            {canEdit ? (
-              <Button type="button" size="sm" variant="outline" onClick={() => setBaggageOpen(true)}>
-                <Luggage className="mr-1.5 h-4 w-4" /> Documentan maletas ({current.baggage_handlers.length})
-              </Button>
-            ) : null}
+          <DetailSection title="Equipaje">
+            <FlightLuggageSection tripId={tripId} flight={current} canEdit={canEdit} />
           </DetailSection>
 
           <DetailSection title="Pases de abordar">
@@ -190,9 +168,6 @@ export function FlightDetailSheet({ open, onOpenChange, flight, allFlights, trip
         />
       ) : null}
 
-      {canEdit && baggageOpen ? (
-        <BaggageHandlersDialog open onOpenChange={(v) => !v && setBaggageOpen(false)} tripId={tripId} flight={current} />
-      ) : null}
     </>
   );
 }
