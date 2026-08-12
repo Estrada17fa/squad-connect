@@ -1,6 +1,6 @@
 import * as React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, HeartPulse, TrendingUp, Apple, Pencil } from "lucide-react";
+import { ArrowLeft, HeartPulse, TrendingUp, Apple } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { EmptyState } from "@/components/squad/EmptyState";
 import { LoadingState } from "@/components/squad/LoadingState";
@@ -36,7 +36,6 @@ function PlayerDetail() {
   const { data: player, isLoading } = usePlayer(playerId);
   // Permiso por equipo: editor en Sub-20 no puede editar fichas de Primera.
   const canEdit = canEditTeam(player?.team_id);
-  const [editOpen, setEditOpen] = React.useState(false);
   const [healthOpen, setHealthOpen] = React.useState(false);
   const [devOpen, setDevOpen] = React.useState(false);
   const [clubId, setClubId] = React.useState<string | null>(null);
