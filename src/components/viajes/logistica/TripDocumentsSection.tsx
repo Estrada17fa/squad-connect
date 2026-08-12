@@ -1,6 +1,7 @@
 import * as React from "react";
 import { toast } from "sonner";
-import { FileText, Plus, Trash2 } from "lucide-react";
+import { FileText, Plus } from "lucide-react";
+import { DeleteAction } from "./DeleteAction";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -59,23 +60,14 @@ export function TripDocumentsSection({ tripId, clubId, teamId, userId, canEdit }
               {d.description ? <p className="text-xs text-muted-foreground">{d.description}</p> : null}
             </button>
             {canEdit ? (
-              <Button
-                type="button"
-                size="icon"
-                variant="ghost"
-                className="text-destructive hover:text-destructive"
-                onClick={() =>
-                  remove.mutate(
-                    { id: d.id, filePath: d.file_path },
-                    {
-                      onSuccess: () => toast.success("Documento eliminado"),
-                      onError: (e: any) => toast.error(e.message ?? "No se pudo eliminar"),
-                    },
-                  )
-                }
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              <DeleteAction
+                iconOnly
+                label="Eliminar documento"
+                title={`¿Eliminar "${d.title}"?`}
+                successMessage="Documento eliminado"
+                loading={remove.isPending}
+                onDelete={() => remove.mutateAsync({ id: d.id, filePath: d.file_path })}
+              />
             ) : null}
           </article>
         ))}
