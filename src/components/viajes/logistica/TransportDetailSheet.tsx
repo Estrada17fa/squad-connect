@@ -18,6 +18,8 @@ import { useTransportMutations, type TripTransport } from "@/hooks/useTripTransp
 import { PersonChips } from "./PersonChips";
 import { TransportFormDialog } from "./TransportFormDialog";
 import { PassengerAssignDialog, type AssignCandidate } from "./PassengerAssignDialog";
+import { DeleteAction } from "./DeleteAction";
+import { useTripRefresh } from "@/hooks/useTripChannel";
 
 interface Props {
   open: boolean;
@@ -33,7 +35,8 @@ interface Props {
 
 /** Ficha de lectura de un transporte del viaje. */
 export function TransportDetailSheet({ open, onOpenChange, transport, allTransports, tripId, clubId, userId, travelers, canEdit }: Props) {
-  const { setPassengers } = useTransportMutations(tripId);
+  const { setPassengers, remove } = useTransportMutations(tripId);
+  const refresh = useTripRefresh(tripId);
   const [editOpen, setEditOpen] = React.useState(false);
   const [passengersOpen, setPassengersOpen] = React.useState(false);
 
@@ -75,9 +78,23 @@ export function TransportDetailSheet({ open, onOpenChange, transport, allTranspo
           </EntitySheetDescription>
           <div className="mt-3 flex flex-wrap gap-2">
             {canEdit ? (
-              <Button size="sm" variant="secondary" onClick={() => setEditOpen(true)}>
-                <Pencil className="mr-2 h-3.5 w-3.5" /> Editar
-              </Button>
+              <>
+                <Button size="sm" variant="secondary" onClick={() => setEditOpen(true)}>
+                  <Pencil className="mr-2 h-3.5 w-3.5" /> Editar
+                </Button>
+                <DeleteAction
+                  label="Eliminar transporte"
+                  title="¿Eliminar este transporte?"
+                  description="Se borrarán también sus pasajeros asignados."
+                  successMessage="Transporte eliminado"
+                  loading={remove.isPending}
+                  onDelete={() => remove.mutateAsync(current.id)}
+                  onDeleted={() => {
+                    refresh();
+                    onOpenChange(false);
+                  }}
+                />
+              </>
             ) : null}
           </div>
         </EntitySheetHeader>

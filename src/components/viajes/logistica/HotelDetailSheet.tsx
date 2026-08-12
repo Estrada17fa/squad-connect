@@ -17,6 +17,9 @@ import { PersonChips } from "./PersonChips";
 import { HotelFormDialog } from "./HotelFormDialog";
 import { LocationDisplay } from "@/components/calendar/LocationDisplay";
 import { RoomFormDialog } from "./RoomFormDialog";
+import { DeleteAction } from "./DeleteAction";
+import { useHotelMutations } from "@/hooks/useTripHotels";
+import { useTripRefresh } from "@/hooks/useTripChannel";
 
 interface Props {
   open: boolean;
@@ -33,6 +36,8 @@ interface Props {
 /** Ficha de lectura de un hotel: datos generales y rooming list. */
 export function HotelDetailSheet({ open, onOpenChange, hotel, tripId, clubId, userId, canEdit, onOpenRoom, onAddRoom }: Props) {
   const [editOpen, setEditOpen] = React.useState(false);
+  const { removeHotel } = useHotelMutations(tripId);
+  const refresh = useTripRefresh(tripId);
 
   if (!hotel) {
     return <EntitySheet open={open} onOpenChange={onOpenChange}><EntitySheetHeader><EntitySheetTitle>Hotel</EntitySheetTitle></EntitySheetHeader><EntitySheetBody /></EntitySheet>;
@@ -48,9 +53,23 @@ export function HotelDetailSheet({ open, onOpenChange, hotel, tripId, clubId, us
           {hotel.address ? <EntitySheetDescription>{hotel.address}</EntitySheetDescription> : null}
           <div className="mt-3 flex flex-wrap gap-2">
             {canEdit ? (
-              <Button size="sm" variant="secondary" onClick={() => setEditOpen(true)}>
-                <Pencil className="mr-2 h-3.5 w-3.5" /> Editar
-              </Button>
+              <>
+                <Button size="sm" variant="secondary" onClick={() => setEditOpen(true)}>
+                  <Pencil className="mr-2 h-3.5 w-3.5" /> Editar
+                </Button>
+                <DeleteAction
+                  label="Eliminar hotel"
+                  title={`¿Eliminar ${hotel.name}?`}
+                  description="Se borrarán sus cuartos y la rooming list."
+                  successMessage="Hotel eliminado"
+                  loading={removeHotel.isPending}
+                  onDelete={() => removeHotel.mutateAsync(hotel.id)}
+                  onDeleted={() => {
+                    refresh();
+                    onOpenChange(false);
+                  }}
+                />
+              </>
             ) : null}
           </div>
         </EntitySheetHeader>

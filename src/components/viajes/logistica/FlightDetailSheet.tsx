@@ -18,6 +18,8 @@ import { PersonChips } from "./PersonChips";
 import { FlightFormDialog } from "./FlightFormDialog";
 import { BoardingPassesSheet } from "./BoardingPassesSheet";
 import { FlightLuggageSection } from "./FlightLuggageSection";
+import { DeleteAction } from "./DeleteAction";
+import { useTripRefresh } from "@/hooks/useTripChannel";
 import { PassengerAssignDialog, type AssignCandidate } from "./PassengerAssignDialog";
 
 interface Props {
@@ -33,7 +35,8 @@ interface Props {
 
 /** Ficha de lectura de un vuelo del viaje: horarios, ruta, pasajeros y equipaje. */
 export function FlightDetailSheet({ open, onOpenChange, flight, allFlights, tripId, userId, travelers, canEdit }: Props) {
-  const { setPassengers } = useFlightMutations(tripId);
+  const { setPassengers, remove } = useFlightMutations(tripId);
+  const refresh = useTripRefresh(tripId);
   const [editOpen, setEditOpen] = React.useState(false);
   const [passengersOpen, setPassengersOpen] = React.useState(false);
   const [passesOpen, setPassesOpen] = React.useState(false);
@@ -64,9 +67,23 @@ export function FlightDetailSheet({ open, onOpenChange, flight, allFlights, trip
           </EntitySheetDescription>
           <div className="mt-3 flex flex-wrap gap-2">
             {canEdit ? (
-              <Button size="sm" variant="secondary" onClick={() => setEditOpen(true)}>
-                <Pencil className="mr-2 h-3.5 w-3.5" /> Editar
-              </Button>
+              <>
+                <Button size="sm" variant="secondary" onClick={() => setEditOpen(true)}>
+                  <Pencil className="mr-2 h-3.5 w-3.5" /> Editar
+                </Button>
+                <DeleteAction
+                  label="Eliminar vuelo"
+                  title={`¿Eliminar el vuelo ${current.flight_code}?`}
+                  description="Se borrarán sus pasajeros, equipaje y pases de abordar. Esta acción no se puede deshacer."
+                  successMessage="Vuelo eliminado"
+                  loading={remove.isPending}
+                  onDelete={() => remove.mutateAsync(current.id)}
+                  onDeleted={() => {
+                    refresh();
+                    onOpenChange(false);
+                  }}
+                />
+              </>
             ) : null}
           </div>
         </EntitySheetHeader>

@@ -58,3 +58,28 @@ export async function syncAssignments(
     if (error) throw error;
   }
 }
+
+/**
+ * Refresca todas las vistas de un viaje (itinerario, "Mi viaje" y la lista).
+ * Se usa tras eliminar o reasignar algo, para que el resumen quede al día
+ * al instante sin esperar al evento de tiempo real.
+ */
+export function useTripRefresh(tripId: string | null | undefined) {
+  const qc = useQueryClient();
+  return React.useCallback(() => {
+    const id = tripId ?? "none";
+    for (const key of [
+      "trip-flights",
+      "trip-transports",
+      "trip-hotels",
+      "trip-meals",
+      "trip-material",
+      "trip-documents",
+      "trip-boarding-passes",
+    ]) {
+      qc.invalidateQueries({ queryKey: [key, id] });
+    }
+    qc.invalidateQueries({ queryKey: ["trips"] });
+    qc.invalidateQueries({ queryKey: ["home-next-trip"] });
+  }, [qc, tripId]);
+}

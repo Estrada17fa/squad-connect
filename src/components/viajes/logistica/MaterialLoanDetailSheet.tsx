@@ -14,6 +14,9 @@ import { formatDateTime } from "@/lib/calendar-utils";
 import { personLabel, type MiniProfile } from "@/lib/tripLogistics";
 import { materialOutstanding, type TripMaterialLoan } from "@/hooks/useTripMaterial";
 import { TripMaterialDialog } from "./TripMaterialDialog";
+import { DeleteAction } from "./DeleteAction";
+import { useTripMaterialMutations } from "@/hooks/useTripMaterial";
+import { useTripRefresh } from "@/hooks/useTripChannel";
 
 interface Props {
   open: boolean;
@@ -42,6 +45,8 @@ export function MaterialLoanDetailSheet({
   canEdit,
 }: Props) {
   const [editOpen, setEditOpen] = React.useState(false);
+  const { remove } = useTripMaterialMutations(tripId, clubId);
+  const refresh = useTripRefresh(tripId);
 
   if (!loan) {
     return <EntitySheet open={open} onOpenChange={onOpenChange}><EntitySheetHeader><EntitySheetTitle>Material</EntitySheetTitle></EntitySheetHeader><EntitySheetBody /></EntitySheet>;
@@ -60,9 +65,23 @@ export function MaterialLoanDetailSheet({
           </EntitySheetTitle>
           <div className="mt-3 flex flex-wrap gap-2">
             {canEdit ? (
-              <Button size="sm" variant="secondary" onClick={() => setEditOpen(true)}>
-                <Pencil className="mr-2 h-3.5 w-3.5" /> Editar
-              </Button>
+              <>
+                <Button size="sm" variant="secondary" onClick={() => setEditOpen(true)}>
+                  <Pencil className="mr-2 h-3.5 w-3.5" /> Editar
+                </Button>
+                <DeleteAction
+                  label="Quitar del viaje"
+                  title="¿Quitar este material del viaje?"
+                  description="Se elimina el préstamo y el material vuelve a estar disponible."
+                  successMessage="Material eliminado del viaje"
+                  loading={remove.isPending}
+                  onDelete={() => remove.mutateAsync(loan.id)}
+                  onDeleted={() => {
+                    refresh();
+                    onOpenChange(false);
+                  }}
+                />
+              </>
             ) : null}
           </div>
         </EntitySheetHeader>

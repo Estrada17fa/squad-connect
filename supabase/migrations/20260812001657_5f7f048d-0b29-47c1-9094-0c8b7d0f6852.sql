@@ -1,0 +1,2 @@
+ALTER TABLE public.trip_flight_baggage_handlers REPLICA IDENTITY FULL;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.trip_flight_baggage_handlers;

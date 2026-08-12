@@ -103,9 +103,11 @@ export function MyTripView({ trip, userId }: Props) {
           pass?.seat ? `Tu asiento: ${pass.seat}` : null,
           f.baggage_instructions,
         ],
-        highlight: handler
-          ? `Tú documentas las maletas del equipo${handler.pieces ? ` · ${handler.pieces} pieza${handler.pieces === 1 ? "" : "s"}` : ""}`
-          : null,
+        highlight: handler?.checked_bag
+          ? `Documentas maleta${handler.pieces ? ` · ${handler.pieces} pieza${handler.pieces === 1 ? "" : "s"}` : ""}`
+          : handler?.carry_on
+            ? "Solo maleta de mano"
+            : null,
         action: pass ? { label: "Ver mi pase de abordar", onClick: () => openPass(pass.file_path) } : null,
       });
     }
