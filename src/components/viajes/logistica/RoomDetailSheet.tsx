@@ -15,6 +15,8 @@ import { useHotelMutations, type TripHotel, type TripRoom } from "@/hooks/useTri
 import { PersonChips } from "./PersonChips";
 import { RoomFormDialog } from "./RoomFormDialog";
 import { PassengerAssignDialog, type AssignCandidate } from "./PassengerAssignDialog";
+import { DeleteAction } from "./DeleteAction";
+import { useTripRefresh } from "@/hooks/useTripChannel";
 
 interface Props {
   open: boolean;
@@ -29,7 +31,8 @@ interface Props {
 
 /** Ficha de lectura de un cuarto: etiqueta, notas y ocupantes. */
 export function RoomDetailSheet({ open, onOpenChange, hotel, room, tripId, travelers, allRooms, canEdit }: Props) {
-  const { setOccupants } = useHotelMutations(tripId);
+  const { setOccupants, removeRoom } = useHotelMutations(tripId);
+  const refresh = useTripRefresh(tripId);
   const [editOpen, setEditOpen] = React.useState(false);
   const [occupantsOpen, setOccupantsOpen] = React.useState(false);
 
@@ -56,9 +59,23 @@ export function RoomDetailSheet({ open, onOpenChange, hotel, room, tripId, trave
           </EntitySheetTitle>
           <div className="mt-3 flex flex-wrap gap-2">
             {canEdit ? (
-              <Button size="sm" variant="secondary" onClick={() => setEditOpen(true)}>
-                <Pencil className="mr-2 h-3.5 w-3.5" /> Editar
-              </Button>
+              <>
+                <Button size="sm" variant="secondary" onClick={() => setEditOpen(true)}>
+                  <Pencil className="mr-2 h-3.5 w-3.5" /> Editar
+                </Button>
+                <DeleteAction
+                  label="Eliminar cuarto"
+                  title={`¿Eliminar el cuarto ${current.room_label}?`}
+                  description="Se quitarán sus ocupantes."
+                  successMessage="Cuarto eliminado"
+                  loading={removeRoom.isPending}
+                  onDelete={() => removeRoom.mutateAsync(current.id)}
+                  onDeleted={() => {
+                    refresh();
+                    onOpenChange(false);
+                  }}
+                />
+              </>
             ) : null}
           </div>
         </EntitySheetHeader>

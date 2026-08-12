@@ -14,6 +14,9 @@ import { formatDateTime } from "@/lib/calendar-utils";
 import { MEAL_TYPE_LABEL } from "@/lib/tripLogistics";
 import type { TripMeal } from "@/hooks/useTripMeals";
 import { MealFormDialog } from "./MealFormDialog";
+import { DeleteAction } from "./DeleteAction";
+import { useMealMutations } from "@/hooks/useTripMeals";
+import { useTripRefresh } from "@/hooks/useTripChannel";
 
 interface Props {
   open: boolean;
@@ -27,6 +30,8 @@ interface Props {
 /** Ficha de lectura de una comida programada del viaje. */
 export function MealDetailSheet({ open, onOpenChange, meal, tripId, userId, canEdit }: Props) {
   const [editOpen, setEditOpen] = React.useState(false);
+  const { remove } = useMealMutations(tripId);
+  const refresh = useTripRefresh(tripId);
 
   if (!meal) {
     return <EntitySheet open={open} onOpenChange={onOpenChange}><EntitySheetHeader><EntitySheetTitle>Comida</EntitySheetTitle></EntitySheetHeader><EntitySheetBody /></EntitySheet>;
@@ -42,9 +47,22 @@ export function MealDetailSheet({ open, onOpenChange, meal, tripId, userId, canE
           <EntitySheetDescription>{formatDateTime(meal.scheduled_at)}</EntitySheetDescription>
           <div className="mt-3 flex flex-wrap gap-2">
             {canEdit ? (
-              <Button size="sm" variant="secondary" onClick={() => setEditOpen(true)}>
-                <Pencil className="mr-2 h-3.5 w-3.5" /> Editar
-              </Button>
+              <>
+                <Button size="sm" variant="secondary" onClick={() => setEditOpen(true)}>
+                  <Pencil className="mr-2 h-3.5 w-3.5" /> Editar
+                </Button>
+                <DeleteAction
+                  label="Eliminar comida"
+                  title="¿Eliminar esta comida?"
+                  successMessage="Comida eliminada"
+                  loading={remove.isPending}
+                  onDelete={() => remove.mutateAsync(meal.id)}
+                  onDeleted={() => {
+                    refresh();
+                    onOpenChange(false);
+                  }}
+                />
+              </>
             ) : null}
           </div>
         </EntitySheetHeader>
