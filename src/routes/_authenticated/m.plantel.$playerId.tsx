@@ -11,7 +11,6 @@ import { useApp } from "@/components/squad/AppLayout";
 import { useTeamAccess } from "@/hooks/useTeamAccess";
 import { usePlayer } from "@/hooks/usePlayers";
 import { AVAILABILITY_META } from "@/lib/plantel";
-import { PlayerFormDialog } from "@/components/plantel/PlayerFormDialog";
 import { PlayerMedicalSheet } from "@/components/salud/PlayerMedicalSheet";
 import { PlayerDevelopmentSheet } from "@/components/desarrollo/PlayerDevelopmentSheet";
 import { supabase } from "@/integrations/supabase/client";
@@ -72,13 +71,6 @@ function PlayerDetail() {
         <PageHeader
           title={player.profile?.full_name ?? "Jugador"}
           subtitle={player.position ?? "Sin posición"}
-          action={
-            canEdit ? (
-              <Button onClick={() => setEditOpen(true)} variant="secondary">
-                <Pencil className="mr-2 h-4 w-4" /> Editar
-              </Button>
-            ) : null
-          }
         />
       </div>
 
@@ -175,16 +167,6 @@ function PlayerDetail() {
         isSelf={isSelf}
       />
 
-
-      {clubId ? (
-        <PlayerFormDialog
-          open={editOpen}
-          onOpenChange={setEditOpen}
-          clubId={clubId}
-          teamId={player.team_id}
-          player={player}
-        />
-      ) : null}
     </div>
   );
 }
