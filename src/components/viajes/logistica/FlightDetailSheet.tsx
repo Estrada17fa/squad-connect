@@ -18,6 +18,8 @@ import { PersonChips } from "./PersonChips";
 import { FlightFormDialog } from "./FlightFormDialog";
 import { BoardingPassesSheet } from "./BoardingPassesSheet";
 import { FlightLuggageSection } from "./FlightLuggageSection";
+import { DeleteAction } from "./DeleteAction";
+import { useTripRefresh } from "@/hooks/useTripChannel";
 import { PassengerAssignDialog, type AssignCandidate } from "./PassengerAssignDialog";
 
 interface Props {
@@ -33,7 +35,8 @@ interface Props {
 
 /** Ficha de lectura de un vuelo del viaje: horarios, ruta, pasajeros y equipaje. */
 export function FlightDetailSheet({ open, onOpenChange, flight, allFlights, tripId, userId, travelers, canEdit }: Props) {
-  const { setPassengers } = useFlightMutations(tripId);
+  const { setPassengers, remove } = useFlightMutations(tripId);
+  const refresh = useTripRefresh(tripId);
   const [editOpen, setEditOpen] = React.useState(false);
   const [passengersOpen, setPassengersOpen] = React.useState(false);
   const [passesOpen, setPassesOpen] = React.useState(false);
