@@ -62,18 +62,19 @@ export function FlightsSection({ tripId, userId, leg, flights, allFlights, trave
               </p>
             </div>
 
-            {f.baggage_handlers.length > 0 ? (
-              f.baggage_handlers.some((h) => h.user_id === userId) ? (
+            {f.baggage_handlers.filter((h) => h.checked_bag).length > 0 ? (
+              f.baggage_handlers.some((h) => h.checked_bag && h.user_id === userId) ? (
                 <p className="rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-xs font-medium text-primary">
                   Tú documentas las maletas del equipo en este vuelo
                 </p>
               ) : (
                 <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
                   <Luggage className="mt-0.5 h-3.5 w-3.5 shrink-0" /> Documentan:{" "}
-                  {f.baggage_handlers.map((h) => personLabel(h.profile)).join(", ")}
+                  {f.baggage_handlers.filter((h) => h.checked_bag).map((h) => personLabel(h.profile)).join(", ")}
                 </p>
               )
             ) : null}
+
 
             <PersonChips
               people={f.passengers.map((p) => ({ id: p.id, profile: p.profile as MiniProfile | null }))}
