@@ -1,6 +1,6 @@
 import * as React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, HeartPulse, TrendingUp, Apple, Pencil } from "lucide-react";
+import { ArrowLeft, HeartPulse, TrendingUp, Apple } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { EmptyState } from "@/components/squad/EmptyState";
 import { LoadingState } from "@/components/squad/LoadingState";
@@ -10,8 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useApp } from "@/components/squad/AppLayout";
 import { useTeamAccess } from "@/hooks/useTeamAccess";
 import { usePlayer } from "@/hooks/usePlayers";
-import { AVAILABILITY_META } from "./m.plantel";
-import { PlayerFormDialog } from "@/components/plantel/PlayerFormDialog";
+import { AVAILABILITY_META } from "@/lib/plantel";
 import { PlayerMedicalSheet } from "@/components/salud/PlayerMedicalSheet";
 import { PlayerDevelopmentSheet } from "@/components/desarrollo/PlayerDevelopmentSheet";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,7 +36,6 @@ function PlayerDetail() {
   const { data: player, isLoading } = usePlayer(playerId);
   // Permiso por equipo: editor en Sub-20 no puede editar fichas de Primera.
   const canEdit = canEditTeam(player?.team_id);
-  const [editOpen, setEditOpen] = React.useState(false);
   const [healthOpen, setHealthOpen] = React.useState(false);
   const [devOpen, setDevOpen] = React.useState(false);
   const [clubId, setClubId] = React.useState<string | null>(null);
@@ -72,13 +70,6 @@ function PlayerDetail() {
         <PageHeader
           title={player.profile?.full_name ?? "Jugador"}
           subtitle={player.position ?? "Sin posición"}
-          action={
-            canEdit ? (
-              <Button onClick={() => setEditOpen(true)} variant="secondary">
-                <Pencil className="mr-2 h-4 w-4" /> Editar
-              </Button>
-            ) : null
-          }
         />
       </div>
 
@@ -175,16 +166,6 @@ function PlayerDetail() {
         isSelf={isSelf}
       />
 
-
-      {clubId ? (
-        <PlayerFormDialog
-          open={editOpen}
-          onOpenChange={setEditOpen}
-          clubId={clubId}
-          teamId={player.team_id}
-          player={player}
-        />
-      ) : null}
     </div>
   );
 }
