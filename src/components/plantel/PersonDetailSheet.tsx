@@ -58,12 +58,26 @@ export function PersonDetailSheet({
       title={name}
       description={isPlayer ? member.position ?? "Sin posición" : member.jobTitle ?? member.roleName ?? undefined}
       headerActions={
-        canEditUsers ? (
-          <Button size="sm" variant="secondary" onClick={() => navigate({ to: "/m/usuarios" })}>
-            <ArrowUpRight className="mr-2 h-3.5 w-3.5" /> Editar en Usuarios
-          </Button>
-        ) : undefined
+        <>
+          {isPlayer && member.playerId ? (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() =>
+                navigate({ to: "/m/plantel/$playerId", params: { playerId: member.playerId! } })
+              }
+            >
+              <ClipboardList className="mr-2 h-3.5 w-3.5" /> Ver expediente
+            </Button>
+          ) : null}
+          {canEditUsers ? (
+            <Button size="sm" variant="secondary" onClick={() => navigate({ to: "/m/usuarios" })}>
+              <ArrowUpRight className="mr-2 h-3.5 w-3.5" /> Editar en Usuarios
+            </Button>
+          ) : null}
+        </>
       }
+
     >
       <div className="space-y-6">
         <div className="flex items-start gap-4">
