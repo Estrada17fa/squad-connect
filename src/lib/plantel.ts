@@ -44,5 +44,6 @@ export function positionGroup(position: string | null | undefined): PositionGrou
 export const PREFERRED_FOOT_LABEL: Record<string, string> = {
   derecho: "Pie derecho",
   izquierdo: "Pie izquierdo",
-  ambidiestro: "Ambidiestro",
+  ambos: "Ambidiestro",
 };
+
