@@ -3,6 +3,8 @@ import { useNavigate } from "@tanstack/react-router";
 import {
   ArrowUpRight,
   Briefcase,
+  ClipboardList,
+
   CalendarDays,
   Flag,
   Footprints,
