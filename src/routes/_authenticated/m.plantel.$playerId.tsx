@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useApp } from "@/components/squad/AppLayout";
 import { useTeamAccess } from "@/hooks/useTeamAccess";
 import { usePlayer } from "@/hooks/usePlayers";
-import { AVAILABILITY_META } from "./m.plantel";
+import { AVAILABILITY_META } from "@/lib/plantel";
 import { PlayerFormDialog } from "@/components/plantel/PlayerFormDialog";
 import { PlayerMedicalSheet } from "@/components/salud/PlayerMedicalSheet";
 import { PlayerDevelopmentSheet } from "@/components/desarrollo/PlayerDevelopmentSheet";

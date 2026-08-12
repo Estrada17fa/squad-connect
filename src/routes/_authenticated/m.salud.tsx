@@ -31,7 +31,7 @@ import { InjuryFormDialog } from "@/components/salud/InjuryFormDialog";
 import { InjuryDetailSheet, INJURY_STATUS_VARIANT } from "@/components/salud/InjuryDetailSheet";
 import { CheckupDetailSheet } from "@/components/salud/CheckupDetailSheet";
 import { PlayerMedicalSheet } from "@/components/salud/PlayerMedicalSheet";
-import { AVAILABILITY_META } from "./m.plantel";
+import { AVAILABILITY_META } from "@/lib/plantel";
 
 export const Route = createFileRoute("/_authenticated/m/salud")({
   head: () => ({
