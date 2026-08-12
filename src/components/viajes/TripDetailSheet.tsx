@@ -18,6 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDateTime } from "@/lib/calendar-utils";
 import {
   addTraveler,
+  deleteTrip,
   removeTraveler,
   tripMilestones,
   TRIP_STATUS_LABEL,
@@ -26,6 +27,8 @@ import {
 } from "@/hooks/useTrips";
 import { TravelerPicker, initialsOf, type TeamMemberOption } from "./TravelerPicker";
 import { TripTabs } from "./TripTabs";
+import { DeleteAction } from "./logistica/DeleteAction";
+import { useTripRefresh } from "@/hooks/useTripChannel";
 
 interface Props {
   open: boolean;
@@ -65,6 +68,7 @@ export function TripDetailSheet({
   const qc = useQueryClient();
   const [picker, setPicker] = React.useState(false);
   const [busyId, setBusyId] = React.useState<string | null>(null);
+  const refresh = useTripRefresh(trip?.id ?? null);
   const editable = canEdit && !readOnly;
 
   React.useEffect(() => {
@@ -76,7 +80,8 @@ export function TripDetailSheet({
   }, [open]);
 
   const invalidate = () => {
-    if (trip) qc.invalidateQueries({ queryKey: ["trips"] });
+    qc.invalidateQueries({ queryKey: ["trips"] });
+    refresh();
   };
 
   const toggle = useMutation({
@@ -234,6 +239,17 @@ export function TripDetailSheet({
             <Button type="button" size="sm" variant="secondary" onClick={() => onEdit(trip)}>
               <Pencil className="mr-2 h-3.5 w-3.5" /> Editar viaje
             </Button>
+            <DeleteAction
+              label="Eliminar viaje"
+              title={`¿Eliminar el viaje "${trip.title}"?`}
+              description="Se borrará toda su logística: convocatoria, transportes, vuelos, hoteles, comidas, material y documentos."
+              successMessage="Viaje eliminado"
+              onDelete={() => deleteTrip(trip.id)}
+              onDeleted={() => {
+                invalidate();
+                onOpenChange(false);
+              }}
+            />
           </div>
         ) : null}
       </EntitySheetHeader>
