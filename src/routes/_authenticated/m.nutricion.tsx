@@ -30,6 +30,9 @@ import {
   NutricionFilters,
   type NutricionFilterState,
 } from "@/components/nutricion/NutricionFilters";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { EquivalencesTab } from "@/components/nutricion/EquivalencesTab";
+import { RecipesTab } from "@/components/nutricion/RecipesTab";
 import { formatShortDay, isCurrentWeek } from "@/lib/nutricion";
 
 export const Route = createFileRoute("/_authenticated/m/nutricion")({
