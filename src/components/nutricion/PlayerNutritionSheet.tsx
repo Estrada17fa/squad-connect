@@ -26,7 +26,7 @@ import { MealCard } from "@/components/nutricion/NutricionPieces";
 import { EquivalenceSheet } from "@/components/nutricion/EquivalenceSheet";
 import { RecipeDetailSheet } from "@/components/nutricion/RecipesTab";
 import {
-  FOOD_GROUP_LABEL,
+  
   MEAL_SLOT_LABEL,
   MEAL_SLOT_ORDER,
   anthroResults,
