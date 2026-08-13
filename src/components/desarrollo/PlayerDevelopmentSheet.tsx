@@ -92,21 +92,24 @@ export function PlayerDevelopmentContent({
 
   return (
     <div className="space-y-6">
-        <DevPersonHeader
-          name={player.fullName ?? "Jugador"}
-          avatarUrl={player.avatarUrl}
-          subtitle={subtitle || undefined}
-          badges={
-            <>
-              <StatusBadge variant={level.variant}>{level.label}</StatusBadge>
-              {activeGoals.length > 0 ? (
-                <StatusBadge variant="info">
-                  {activeGoals.length} {activeGoals.length === 1 ? "objetivo activo" : "objetivos activos"}
-                </StatusBadge>
-              ) : null}
-            </>
-          }
-        />
+        {showHeader ? (
+          <DevPersonHeader
+            name={player.fullName ?? "Jugador"}
+            avatarUrl={player.avatarUrl}
+            subtitle={subtitle || undefined}
+            badges={
+              <>
+                <StatusBadge variant={level.variant}>{level.label}</StatusBadge>
+                {activeGoals.length > 0 ? (
+                  <StatusBadge variant="info">
+                    {activeGoals.length}{" "}
+                    {activeGoals.length === 1 ? "objetivo activo" : "objetivos activos"}
+                  </StatusBadge>
+                ) : null}
+              </>
+            }
+          />
+        ) : null}
 
         <DevSection icon={TrendingUp} title="Evaluaciones">
           {assessments.length === 0 ? (
