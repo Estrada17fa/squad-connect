@@ -88,8 +88,27 @@ export interface InjuryProgressRow {
   created_by: string | null;
 }
 
+export interface AppointmentRow {
+  id: string;
+  club_id: string;
+  team_id: string;
+  player_user_id: string;
+  scheduled_at: string;
+  appointment_type: CheckupType;
+  reason: string;
+  place: string | null;
+  notes: string | null;
+  status: AppointmentStatus;
+  event_id: string | null;
+  created_by: string | null;
+  player?: { id: string; full_name: string | null; email: string | null; avatar_url: string | null } | null;
+  team?: { id: string; name: string } | null;
+}
+
 const CHECKUP_SELECT =
-  "id, club_id, team_id, player_user_id, checkup_date, reason, findings, diagnosis, notes, request_id, created_by, created_at, player:profiles!medical_checkups_player_user_id_fkey(id, full_name, email, avatar_url), team:teams(id, name)";
+  "id, club_id, team_id, player_user_id, checkup_date, checkup_type, reason, findings, diagnosis, notes, request_id, created_by, created_at, player:profiles!medical_checkups_player_user_id_fkey(id, full_name, email, avatar_url), team:teams(id, name)";
+const APPOINTMENT_SELECT =
+  "id, club_id, team_id, player_user_id, scheduled_at, appointment_type, reason, place, notes, status, event_id, created_by, player:profiles!medical_appointments_player_user_id_fkey(id, full_name, email, avatar_url), team:teams(id, name)";
 const INJURY_SELECT =
   "id, club_id, team_id, player_user_id, injury_type, body_part, severity, occurred_at, estimated_return, status, description, created_at, player:profiles!injuries_player_user_id_fkey(id, full_name, email, avatar_url), team:teams(id, name)";
 const PRESCRIPTION_SELECT =
