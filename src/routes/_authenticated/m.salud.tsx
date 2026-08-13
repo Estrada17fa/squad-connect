@@ -24,6 +24,8 @@ import { CheckupFormDialog } from "@/components/salud/CheckupFormDialog";
 import { InjuryFormDialog } from "@/components/salud/InjuryFormDialog";
 import { InjuryDetailSheet } from "@/components/salud/InjuryDetailSheet";
 import { AppointmentFormDialog } from "@/components/salud/AppointmentFormDialog";
+import { AppointmentDetailSheet } from "@/components/salud/AppointmentDetailSheet";
+import { CheckupDetailSheet } from "@/components/salud/CheckupDetailSheet";
 import {
   PlayerHealthContent,
   PlayerHealthSheet,
