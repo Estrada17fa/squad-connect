@@ -418,12 +418,7 @@ export function SessionFormDialog({
                             <X className="h-4 w-4" />
                           </button>
                         </div>
-                        <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-[1fr_120px]">
-                          <Input
-                            placeholder="Ajuste para esta sesión (ej. 3 series)"
-                            value={item.custom_notes ?? ""}
-                            onChange={(e) => updateItem(item.index, { custom_notes: e.target.value || null })}
-                          />
+                        <div className="mt-2 grid grid-cols-3 gap-2">
                           <Input
                             type="number"
                             min={1}
@@ -435,7 +430,31 @@ export function SessionFormDialog({
                               })
                             }
                           />
+                          <Input
+                            type="number"
+                            min={1}
+                            placeholder="series"
+                            value={item.sets ?? ""}
+                            onChange={(e) =>
+                              updateItem(item.index, { sets: e.target.value ? Number(e.target.value) : null })
+                            }
+                          />
+                          <Input
+                            type="number"
+                            min={1}
+                            placeholder="reps"
+                            value={item.reps ?? ""}
+                            onChange={(e) =>
+                              updateItem(item.index, { reps: e.target.value ? Number(e.target.value) : null })
+                            }
+                          />
                         </div>
+                        <Input
+                          className="mt-2"
+                          placeholder="Ajuste para esta sesión"
+                          value={item.custom_notes ?? ""}
+                          onChange={(e) => updateItem(item.index, { custom_notes: e.target.value || null })}
+                        />
                       </div>
                     );
                   })
