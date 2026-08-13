@@ -66,13 +66,11 @@ export interface AssessmentRow {
 }
 
 const PLAN_SELECT = `id, club_id, team_id, player_user_id, week_start, week_end, week_type, notes, created_at,
-  player:profiles!nutrition_meal_plans_player_user_id_fkey(id, full_name, email, avatar_url),
   team:teams(id, name),
   meals:nutrition_plan_meals(id, plan_id, slot, sort_order, notes,
     portions:nutrition_plan_portions(id, meal_id, plan_id, food_group, portions, note))`;
 
 const ASSESSMENT_SELECT = `id, club_id, team_id, player_user_id, assessed_at, notes, created_at, ${ISAK_FIELD_KEYS.join(", ")},
-  player:profiles!nutrition_assessments_player_user_id_fkey(id, full_name, email, avatar_url),
   team:teams(id, name)`;
 
 function sortPlan(plan: MealPlanRow): MealPlanRow {
