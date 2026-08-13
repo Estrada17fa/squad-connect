@@ -13,7 +13,7 @@ import {
   TrendingUp,
   User,
 } from "lucide-react";
-import { PlayerMedicalSheet } from "@/components/salud/PlayerMedicalSheet";
+import { PlayerHealthSheet } from "@/components/salud/PlayerHealthSheet";
 import { PlayerDevelopmentSheet } from "@/components/desarrollo/PlayerDevelopmentSheet";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { StandardCard } from "@/components/squad/StandardCard";
@@ -490,13 +490,13 @@ function MiSaludSection({
       <StandardCard
         icon={HeartPulse}
         title="Mi expediente médico"
-        subtitle="Revisiones, recetas y lesiones"
+        subtitle="Estado, lesiones, tratamiento y citas"
         interactive
         onClick={() => setOpen(true)}
       >
         Solo tú y el cuerpo médico de tu equipo pueden ver esta información.
       </StandardCard>
-      <PlayerMedicalSheet
+      <PlayerHealthSheet
         open={open}
         onOpenChange={setOpen}
         clubId={data.team.club_id}
@@ -506,6 +506,7 @@ function MiSaludSection({
           fullName,
           avatarUrl,
           teamName: data.team?.name ?? null,
+          availability: data.availability_status ?? "apto",
         }}
         canEdit={false}
       />
