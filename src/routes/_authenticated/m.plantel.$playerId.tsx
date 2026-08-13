@@ -14,6 +14,7 @@ import { AVAILABILITY_META } from "@/lib/plantel";
 import { PlayerHealthSheet } from "@/components/salud/PlayerHealthSheet";
 import { PlayerDevelopmentSheet } from "@/components/desarrollo/PlayerDevelopmentSheet";
 import { supabase } from "@/integrations/supabase/client";
+import { usePlayerLatestAnthro } from "@/hooks/useNutrition";
 
 export const Route = createFileRoute("/_authenticated/m/plantel/$playerId")({
   head: () => ({
@@ -34,6 +35,8 @@ function PlayerDetail() {
   const { canEditTeam: canEditDesarrollo } = useTeamAccess("desarrollo");
 
   const { data: player, isLoading } = usePlayer(playerId);
+  // Peso y talla: fuente única = último estudio antropométrico (Nutrición).
+  const { data: anthro } = usePlayerLatestAnthro(player?.user_id ?? null);
   // Permiso por equipo: editor en Sub-20 no puede editar fichas de Primera.
   const canEdit = canEditTeam(player?.team_id);
   const [healthOpen, setHealthOpen] = React.useState(false);
@@ -91,8 +94,8 @@ function PlayerDetail() {
             <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm sm:grid-cols-4">
               <Info label="Posición" value={player.position} />
               <Info label="Nacimiento" value={player.birthdate} />
-              <Info label="Altura" value={player.height_cm ? `${player.height_cm} cm` : null} />
-              <Info label="Peso" value={player.weight_kg ? `${player.weight_kg} kg` : null} />
+              <Info label="Altura" value={anthro?.heightCm ? `${anthro.heightCm} cm` : null} />
+              <Info label="Peso" value={anthro?.weightKg ? `${anthro.weightKg} kg` : null} />
             </dl>
           ) : null}
         </div>

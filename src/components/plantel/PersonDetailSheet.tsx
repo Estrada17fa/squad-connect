@@ -31,6 +31,8 @@ import { formatShortDate } from "@/lib/calendar-utils";
 import { initials } from "@/components/usuarios/memberUtils";
 import type { RosterMember } from "@/hooks/useRoster";
 import { AVAILABILITY_META, PREFERRED_FOOT_LABEL } from "@/lib/plantel";
+import { usePlayerLatestAnthro } from "@/hooks/useNutrition";
+import { formatShortDay } from "@/lib/nutricion";
 
 /**
  * Ficha de Plantel: SIEMPRE lectura. Editar se hace en Usuarios; aquí solo
@@ -52,6 +54,9 @@ export function PersonDetailSheet({
   const isPlayer = member.baseRole === "jugador";
   const meta = member.availability ? AVAILABILITY_META[member.availability] : null;
   const foot = member.preferredFoot ? PREFERRED_FOOT_LABEL[member.preferredFoot] ?? member.preferredFoot : null;
+  // Peso y talla: fuente única = último estudio antropométrico (Nutrición).
+  const { data: anthro } = usePlayerLatestAnthro(isPlayer ? member.userId : null);
+  const measuredOn = anthro ? `Medido el ${formatShortDay(anthro.assessedAt)}` : null;
 
   return (
     <DetailSheet
@@ -122,10 +127,16 @@ export function PersonDetailSheet({
                 <DetailValue value={foot} />
               </DetailField>
               <DetailField label="Estatura" icon={Ruler}>
-                <DetailValue value={member.heightCm ? `${member.heightCm} cm` : null} />
+                <DetailValue value={anthro?.heightCm ? `${anthro.heightCm} cm` : null} />
+                {anthro?.heightCm ? (
+                  <p className="text-xs text-muted-foreground">{measuredOn}</p>
+                ) : null}
               </DetailField>
               <DetailField label="Peso" icon={Weight}>
-                <DetailValue value={member.weightKg ? `${member.weightKg} kg` : null} />
+                <DetailValue value={anthro?.weightKg ? `${anthro.weightKg} kg` : null} />
+                {anthro?.weightKg ? (
+                  <p className="text-xs text-muted-foreground">{measuredOn}</p>
+                ) : null}
               </DetailField>
             </DetailGrid>
           </DetailSection>
