@@ -1826,6 +1826,41 @@ export type Database = {
           },
         ]
       }
+      nutrition_equivalence_items: {
+        Row: {
+          amount: string | null
+          created_at: string
+          equivalence_id: string
+          food_name: string
+          id: string
+          sort_order: number
+        }
+        Insert: {
+          amount?: string | null
+          created_at?: string
+          equivalence_id: string
+          food_name: string
+          id?: string
+          sort_order?: number
+        }
+        Update: {
+          amount?: string | null
+          created_at?: string
+          equivalence_id?: string
+          food_name?: string
+          id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nutrition_equivalence_items_equivalence_id_fkey"
+            columns: ["equivalence_id"]
+            isOneToOne: false
+            referencedRelation: "nutrition_portion_equivalences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       nutrition_meal_plans: {
         Row: {
           club_id: string
@@ -1879,6 +1914,58 @@ export type Database = {
             columns: ["team_id"]
             isOneToOne: false
             referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nutrition_plan_meal_recipes: {
+        Row: {
+          created_at: string
+          id: string
+          meal_id: string
+          name: string
+          plan_id: string
+          recipe_id: string | null
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          meal_id: string
+          name: string
+          plan_id: string
+          recipe_id?: string | null
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          meal_id?: string
+          name?: string
+          plan_id?: string
+          recipe_id?: string | null
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nutrition_plan_meal_recipes_meal_id_fkey"
+            columns: ["meal_id"]
+            isOneToOne: false
+            referencedRelation: "nutrition_plan_meals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nutrition_plan_meal_recipes_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "nutrition_meal_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nutrition_plan_meal_recipes_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "nutrition_recipes"
             referencedColumns: ["id"]
           },
         ]
@@ -1965,6 +2052,91 @@ export type Database = {
             columns: ["plan_id"]
             isOneToOne: false
             referencedRelation: "nutrition_meal_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nutrition_portion_equivalences: {
+        Row: {
+          club_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          food_group: Database["public"]["Enums"]["nutrition_food_group"]
+          id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          club_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          food_group: Database["public"]["Enums"]["nutrition_food_group"]
+          id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          club_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          food_group?: Database["public"]["Enums"]["nutrition_food_group"]
+          id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nutrition_portion_equivalences_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nutrition_recipes: {
+        Row: {
+          club_id: string
+          created_at: string
+          created_by: string | null
+          food_groups: Database["public"]["Enums"]["nutrition_food_group"][]
+          id: string
+          ingredients: string | null
+          name: string
+          preparation: string | null
+          updated_at: string
+        }
+        Insert: {
+          club_id: string
+          created_at?: string
+          created_by?: string | null
+          food_groups?: Database["public"]["Enums"]["nutrition_food_group"][]
+          id?: string
+          ingredients?: string | null
+          name: string
+          preparation?: string | null
+          updated_at?: string
+        }
+        Update: {
+          club_id?: string
+          created_at?: string
+          created_by?: string | null
+          food_groups?: Database["public"]["Enums"]["nutrition_food_group"][]
+          id?: string
+          ingredients?: string | null
+          name?: string
+          preparation?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nutrition_recipes_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
             referencedColumns: ["id"]
           },
         ]

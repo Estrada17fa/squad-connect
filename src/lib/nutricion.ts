@@ -341,3 +341,48 @@ export function isCurrentWeek(start: string, end: string, ref = new Date()): boo
   const today = toISODate(ref);
   return start <= today && today <= end;
 }
+
+/* ------------------------------------------------------------------ */
+/* Etiquetas de porciones y iconos                                     */
+/* ------------------------------------------------------------------ */
+
+/** Etiqueta corta del grupo para los chips del plan. */
+export const FOOD_GROUP_SHORT: Record<FoodGroup, string> = {
+  proteinas: "proteína",
+  cereales: "cereal",
+  verduras: "verdura",
+  frutas: "fruta",
+  grasas: "grasa",
+  lacteos: "lácteo",
+  leguminosas: "leguminosa",
+  azucares: "azúcar",
+  libres: "libre",
+};
+
+/** Formatea un número de porciones sin decimales inútiles (2, 1.5). */
+export function portionsNumber(n: number): string {
+  const v = Number(n);
+  if (!Number.isFinite(v)) return "0";
+  return Number.isInteger(v) ? String(v) : v.toFixed(1);
+}
+
+/** "2 porciones de proteína" / "1 porción de fruta". */
+export function portionsLabel(n: number, group: FoodGroup): string {
+  const v = Number(n);
+  const word = v === 1 ? "porción" : "porciones";
+  return `${portionsNumber(v)} ${word} de ${FOOD_GROUP_SHORT[group]}`;
+}
+
+/** Chip compacto: "2 porc. proteína". */
+export function portionsChipLabel(n: number, group: FoodGroup): string {
+  return `${portionsNumber(n)} porc. ${FOOD_GROUP_SHORT[group]}`;
+}
+
+export const PORTION_MIN = 0.5;
+export const PORTION_MAX = 10;
+export const PORTION_STEP = 0.5;
+
+export function clampPortions(n: number): number {
+  if (!Number.isFinite(n)) return PORTION_MIN;
+  return Math.min(PORTION_MAX, Math.max(PORTION_MIN, Math.round(n * 2) / 2));
+}
