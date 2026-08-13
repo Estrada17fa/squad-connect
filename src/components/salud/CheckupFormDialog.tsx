@@ -21,6 +21,7 @@ import {
   type PrescriptionDraft,
 } from "@/hooks/useHealth";
 import { cn } from "@/lib/utils";
+import { CHECKUP_TYPE_LABEL, CHECKUP_TYPE_ORDER, type CheckupType } from "@/lib/salud";
 
 export interface CheckupDraft {
   playerUserId?: string | null;
@@ -63,6 +64,7 @@ export function CheckupFormDialog({
 
   const [playerUserId, setPlayerUserId] = React.useState("");
   const [date, setDate] = React.useState("");
+  const [checkupType, setCheckupType] = React.useState<CheckupType>("valoracion");
   const [reason, setReason] = React.useState("");
   const [findings, setFindings] = React.useState("");
   const [diagnosis, setDiagnosis] = React.useState("");
@@ -73,6 +75,7 @@ export function CheckupFormDialog({
     if (!open) return;
     setPlayerUserId(checkup?.player_user_id ?? draft?.playerUserId ?? players[0]?.userId ?? "");
     setDate(toLocalInputValue(checkup?.checkup_date ?? new Date().toISOString()));
+    setCheckupType((checkup?.checkup_type ?? "valoracion") as CheckupType);
     setReason(checkup?.reason ?? draft?.reason ?? "");
     setFindings(checkup?.findings ?? "");
     setDiagnosis(checkup?.diagnosis ?? "");
@@ -94,6 +97,7 @@ export function CheckupFormDialog({
         team_id: player.teamId,
         player_user_id: player.userId,
         checkup_date: date ? fromLocalInputValue(date) : new Date().toISOString(),
+        checkup_type: checkupType,
         reason: reason.trim(),
         findings: findings.trim() || null,
         diagnosis: diagnosis.trim() || null,
@@ -148,6 +152,22 @@ export function CheckupFormDialog({
         <div className="space-y-1.5">
           <Label htmlFor="ck-date">Fecha y hora</Label>
           <Input id="ck-date" type="datetime-local" value={date} onChange={(e) => setDate(e.target.value)} />
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="ck-type">Tipo de revisión</Label>
+          <select
+            id="ck-type"
+            value={checkupType}
+            onChange={(e) => setCheckupType(e.target.value as CheckupType)}
+            className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+          >
+            {CHECKUP_TYPE_ORDER.map((t) => (
+              <option key={t} value={t}>
+                {CHECKUP_TYPE_LABEL[t]}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="space-y-1.5">
