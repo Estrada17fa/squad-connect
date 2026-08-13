@@ -1,22 +1,20 @@
 import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { CalendarDays, Dumbbell, Library, Plus, Search } from "lucide-react";
+import { CalendarDays, Dumbbell, Library, Plus } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { ModuleTabs } from "@/components/squad/ModuleTabs";
 import { EmptyState } from "@/components/squad/EmptyState";
 import { CardGridSkeleton } from "@/components/squad/LoadingState";
-import { TeamFilter } from "@/components/squad/TeamFilter";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useApp } from "@/components/squad/AppLayout";
 import { useTeamAccess } from "@/hooks/useTeamAccess";
 import { useEditableTeams } from "@/hooks/useEditableTeams";
 import {
-  CATEGORY_LABEL,
-  EXERCISE_CATEGORIES,
+  PHASE_LABEL,
   formatSessionDate,
   useExercises,
+  useSessionSummaries,
   useTrainingSessions,
   type ExerciseRow,
   type TrainingSessionRow,
@@ -25,6 +23,12 @@ import { ExerciseFormDialog } from "@/components/entrenamientos/ExerciseFormDial
 import { SessionFormDialog } from "@/components/entrenamientos/SessionFormDialog";
 import { SessionDetailSheet } from "@/components/entrenamientos/SessionDetailSheet";
 import { ExerciseDetailSheet } from "@/components/entrenamientos/ExerciseDetailSheet";
+import { ExerciseCard, PlanSummaryChips, TrainingChip } from "@/components/entrenamientos/TrainingPieces";
+import {
+  EMPTY_TRAINING_FILTERS,
+  EntrenamientosFilters,
+  type TrainingFilterState,
+} from "@/components/entrenamientos/EntrenamientosFilters";
 
 export const Route = createFileRoute("/_authenticated/m/entrenamientos")({
   head: () => ({
@@ -39,6 +43,8 @@ export const Route = createFileRoute("/_authenticated/m/entrenamientos")({
         property: "og:description",
         content: "Planea sesiones por fases y consulta qué se va a entrenar.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: EntrenamientosPage,
@@ -55,9 +61,7 @@ function EntrenamientosPage() {
   const editableTeams = useEditableTeams("entrenamientos");
 
   const [view, setView] = React.useState<SubView>("sesiones");
-  const [teamFilter, setTeamFilter] = React.useState<string | null>(null);
-  const [search, setSearch] = React.useState("");
-  const [category, setCategory] = React.useState<string>("todas");
+  const [filters, setFilters] = React.useState<TrainingFilterState>(EMPTY_TRAINING_FILTERS);
 
   const [sessionFormOpen, setSessionFormOpen] = React.useState(false);
   const [editingSession, setEditingSession] = React.useState<TrainingSessionRow | null>(null);
@@ -69,22 +73,41 @@ function EntrenamientosPage() {
   const sessionsQ = useTrainingSessions(canAccess ? clubId : null);
   const exercisesQ = useExercises(canAccess ? clubId : null);
 
-  const q = search.trim().toLowerCase();
-  const matchTeam = (teamId: string | null) => !teamFilter || teamFilter === teamId;
+  const q = filters.search.trim().toLowerCase();
+  const teamName = (id: string | null) => teamOptions.find((t) => t.id === id)?.name ?? null;
 
-  const sessions = (sessionsQ.data ?? []).filter(
-    (s) => canReadTeam(s.team_id) && matchTeam(s.team_id) && (!q || s.title.toLowerCase().includes(q)),
+  const visibleSessions = React.useMemo(
+    () => (sessionsQ.data ?? []).filter((s) => canReadTeam(s.team_id)),
+    [sessionsQ.data, canReadTeam],
   );
-  const exercises = (exercisesQ.data ?? []).filter(
-    (e) =>
-      (e.team_id ? canReadTeam(e.team_id) : true) &&
-      (!teamFilter || !e.team_id || e.team_id === teamFilter) &&
-      (category === "todas" || e.category === category) &&
-      (!q || e.name.toLowerCase().includes(q)),
-  );
+  const summariesQ = useSessionSummaries(visibleSessions.map((s) => s.id));
+  const summaries = summariesQ.data ?? {};
+
+  const sessions = visibleSessions.filter((s) => {
+    if (filters.teamId && s.team_id !== filters.teamId) return false;
+    if (q && !s.title.toLowerCase().includes(q) && !(s.objective ?? "").toLowerCase().includes(q))
+      return false;
+    if (filters.linked && !s.event_id) return false;
+    const count = summaries[s.id]?.count ?? 0;
+    if (filters.planned === "con" && count === 0) return false;
+    if (filters.planned === "sin" && count > 0) return false;
+    return true;
+  });
+
+  const exercises = (exercisesQ.data ?? []).filter((e) => {
+    if (e.team_id && !canReadTeam(e.team_id)) return false;
+    if (filters.teamId && e.team_id && e.team_id !== filters.teamId) return false;
+    if (filters.category && e.category !== filters.category) return false;
+    if (filters.scope === "club" && e.team_id) return false;
+    if (filters.scope === "team" && !e.team_id) return false;
+    if (filters.extra === "material" && !e.materials) return false;
+    if (filters.extra === "media" && !e.media_path) return false;
+    if (q && !e.name.toLowerCase().includes(q) && !(e.objective ?? "").toLowerCase().includes(q))
+      return false;
+    return true;
+  });
 
   const canEditAny = editableTeams.length > 0;
-  const teamName = (id: string | null) => teamOptions.find((t) => t.id === id)?.name ?? null;
 
   if (!canAccess) {
     return (
@@ -105,6 +128,7 @@ function EntrenamientosPage() {
   const past = sessions.filter((s) => new Date(s.session_date).getTime() < now);
 
   function renderSessionCard(s: TrainingSessionRow) {
+    const sum = summaries[s.id];
     return (
       <button
         key={s.id}
@@ -113,14 +137,37 @@ function EntrenamientosPage() {
         className="glass w-full p-4 text-left transition-all hover:border-white/15 hover:bg-white/[0.06] active:scale-[0.99]"
       >
         <div className="flex items-start justify-between gap-2">
-          <p className="min-w-0 truncate font-display font-semibold text-foreground">{s.title}</p>
+          <div className="min-w-0">
+            <p className="text-xs font-medium uppercase tracking-wide text-primary">
+              {formatSessionDate(s.session_date)}
+            </p>
+            <p className="mt-1 break-words font-display font-semibold text-foreground [overflow-wrap:anywhere]">
+              {s.title}
+            </p>
+          </div>
           {s.event_id ? <CalendarDays className="h-4 w-4 shrink-0 text-primary" /> : null}
         </div>
-        <p className="mt-1 text-xs text-muted-foreground">
-          {formatSessionDate(s.session_date)}
-          {teamName(s.team_id) ? ` · ${teamName(s.team_id)}` : ""}
-        </p>
-        {s.objective ? <p className="mt-2 line-clamp-2 text-sm text-foreground/80">{s.objective}</p> : null}
+
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {teamName(s.team_id) ? <TrainingChip>{teamName(s.team_id)}</TrainingChip> : null}
+        </div>
+
+        {s.objective ? (
+          <p className="mt-2 line-clamp-2 text-sm text-foreground/80">{s.objective}</p>
+        ) : null}
+
+        <div className="mt-2">
+          {sum && sum.count > 0 ? (
+            <PlanSummaryChips
+              count={sum.count}
+              minutes={sum.minutes}
+              phases={sum.phases}
+              phaseLabels={PHASE_LABEL}
+            />
+          ) : (
+            <p className="text-xs text-muted-foreground">Sin plan de ejercicios</p>
+          )}
+        </div>
       </button>
     );
   }
@@ -129,9 +176,15 @@ function EntrenamientosPage() {
     <div className="space-y-6">
       <ModuleTabs activeKey="entrenamientos" />
       <PageHeader hideTitle title="Entrenamientos" subtitle="Sesiones del equipo y biblioteca" />
-      <TeamFilter teams={teamOptions} value={teamFilter} onChange={setTeamFilter} />
 
-      <Tabs value={view} onValueChange={(v) => setView(v as SubView)} className="space-y-4">
+      <Tabs
+        value={view}
+        onValueChange={(v) => {
+          setView(v as SubView);
+          setFilters(EMPTY_TRAINING_FILTERS);
+        }}
+        className="space-y-4"
+      >
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="sesiones">Sesiones</TabsTrigger>
           <TabsTrigger value="biblioteca">Biblioteca</TabsTrigger>
@@ -155,15 +208,13 @@ function EntrenamientosPage() {
           </Button>
         ) : null}
 
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar…"
-            className="pl-9"
-          />
-        </div>
+        <EntrenamientosFilters
+          mode={view}
+          value={filters}
+          onChange={setFilters}
+          teams={teamOptions}
+          count={view === "sesiones" ? sessions.length : exercises.length}
+        />
 
         <TabsContent value="sesiones" className="space-y-4">
           {sessionsQ.isLoading ? (
@@ -172,7 +223,7 @@ function EntrenamientosPage() {
             <EmptyState
               icon={Dumbbell}
               title="Sin sesiones"
-              message="Aún no hay sesiones de entrenamiento planeadas para tus equipos."
+              message="Aún no hay sesiones de entrenamiento que coincidan con los filtros."
             />
           ) : (
             <>
@@ -195,24 +246,6 @@ function EntrenamientosPage() {
         </TabsContent>
 
         <TabsContent value="biblioteca" className="space-y-3">
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {[{ key: "todas", label: "Todas" }, ...EXERCISE_CATEGORIES].map((c) => (
-              <button
-                key={c.key}
-                type="button"
-                onClick={() => setCategory(c.key)}
-                className={
-                  "shrink-0 rounded-full px-3 py-1 text-xs transition-colors " +
-                  (category === c.key
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-white/[0.06] text-muted-foreground hover:text-foreground")
-                }
-              >
-                {c.label}
-              </button>
-            ))}
-          </div>
-
           {exercisesQ.isLoading ? (
             <CardGridSkeleton count={4} />
           ) : exercises.length === 0 ? (
@@ -223,26 +256,14 @@ function EntrenamientosPage() {
             />
           ) : (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {exercises.map((ex) => {
-                return (
-                  <button
-                    key={ex.id}
-                    type="button"
-                    onClick={() => setDetailExercise(ex)}
-                    className="glass p-4 text-left transition-all hover:border-white/15 hover:bg-white/[0.06]"
-                  >
-                    <p className="truncate font-display font-semibold text-foreground">{ex.name}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {CATEGORY_LABEL[ex.category]}
-                      {ex.duration_minutes ? ` · ${ex.duration_minutes} min` : ""}
-                      {ex.team_id ? ` · ${teamName(ex.team_id) ?? "Equipo"}` : " · Club"}
-                    </p>
-                    {ex.objective ? (
-                      <p className="mt-2 line-clamp-2 text-sm text-foreground/80">{ex.objective}</p>
-                    ) : null}
-                  </button>
-                );
-              })}
+              {exercises.map((ex) => (
+                <ExerciseCard
+                  key={ex.id}
+                  exercise={ex}
+                  scopeLabel={ex.team_id ? teamName(ex.team_id) ?? "Categoría" : "Club"}
+                  onClick={() => setDetailExercise(ex)}
+                />
+              ))}
             </div>
           )}
         </TabsContent>
@@ -256,7 +277,7 @@ function EntrenamientosPage() {
             clubId={clubId}
             userId={userId}
             teams={editableTeams}
-            defaultTeamId={teamFilter}
+            defaultTeamId={filters.teamId}
             session={editingSession}
           />
           <ExerciseFormDialog
@@ -274,6 +295,7 @@ function EntrenamientosPage() {
         open={!!detailSession}
         onOpenChange={(v) => !v && setDetailSession(null)}
         session={detailSession}
+        teamName={detailSession ? teamName(detailSession.team_id) : null}
         readOnly={!detailSession || !canEditTeam(detailSession.team_id)}
         onEdit={() => {
           setEditingSession(detailSession);
@@ -286,7 +308,10 @@ function EntrenamientosPage() {
         open={!!detailExercise}
         onOpenChange={(v) => !v && setDetailExercise(null)}
         exercise={detailExercise}
-        canEdit={!!detailExercise && (canEditTeam(detailExercise.team_id) || (!detailExercise.team_id && canEditAny))}
+        canEdit={
+          !!detailExercise &&
+          (detailExercise.team_id ? canEditTeam(detailExercise.team_id) : canEditTeam(null))
+        }
         clubId={clubId}
         userId={userId}
         teams={editableTeams}
