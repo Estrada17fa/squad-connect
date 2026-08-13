@@ -272,6 +272,28 @@ export function PlayerDevelopmentSheet({ open, onOpenChange, clubId, player, isS
             </div>
           )}
         </DevSection>
+    </div>
+  );
+}
+
+/** Envoltura en sheet lateral para el cuerpo técnico. */
+export function PlayerDevelopmentSheet({ open, onOpenChange, clubId, player, isSelf }: Props) {
+  if (!player) return null;
+  return (
+    <EntitySheet open={open} onOpenChange={onOpenChange} size="lg">
+      <EntitySheetHeader>
+        <EntitySheetTitle>{isSelf ? "Mi desarrollo" : (player.fullName ?? "Jugador")}</EntitySheetTitle>
+        <EntitySheetDescription>Seguimiento deportivo del cuerpo técnico</EntitySheetDescription>
+      </EntitySheetHeader>
+
+      <EntitySheetBody>
+        <PlayerDevelopmentContent
+          clubId={clubId}
+          player={player}
+          isSelf={isSelf}
+          enabled={open}
+          showHeader
+        />
       </EntitySheetBody>
 
       <EntitySheetFooter>
