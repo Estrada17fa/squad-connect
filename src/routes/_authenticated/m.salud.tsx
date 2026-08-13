@@ -215,6 +215,29 @@ function SaludPage() {
           setInjuryOpen(true);
         }}
       />
+      <AppointmentDetailSheet
+        open={!!detailAppointment}
+        onOpenChange={(v) => !v && setDetailAppointment(null)}
+        clubId={clubId}
+        appointment={detailAppointment}
+        canEdit={!!detailAppointment && canEditTeam(detailAppointment.team_id)}
+        onEdit={(a) => {
+          setDetailAppointment(null);
+          setEditingAppointment(a);
+          setAppointmentOpen(true);
+        }}
+      />
+      <CheckupDetailSheet
+        open={!!detailCheckup}
+        onOpenChange={(v) => !v && setDetailCheckup(null)}
+        checkup={detailCheckup}
+        canEdit={!!detailCheckup && canEditTeam(detailCheckup.team_id)}
+        onEdit={(c) => {
+          setDetailCheckup(null);
+          setEditingCheckup(c);
+          setCheckupOpen(true);
+        }}
+      />
     </>
   ) : null;
 
@@ -230,6 +253,8 @@ function SaludPage() {
           canEdit={canEditTeam(myRow.teamId)}
           self
           onOpenInjury={(i) => setDetailInjury(i)}
+          onOpenAppointment={(a) => setDetailAppointment(a)}
+          onOpenCheckup={(c) => setDetailCheckup(c)}
         />
         {dialogs}
       </div>
