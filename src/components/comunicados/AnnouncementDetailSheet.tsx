@@ -76,6 +76,7 @@ export function AnnouncementDetailSheet({
                 teams={teams}
                 canPublishClubWide={canPublishClubWide}
                 announcement={announcement}
+                onDeleted={() => onOpenChange(false)}
               />
             )
           : undefined
