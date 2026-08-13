@@ -95,3 +95,17 @@ export function formatDay(date: string | null | undefined): string {
   if (Number.isNaN(d.getTime())) return "—";
   return d.toLocaleDateString("es-MX", { day: "2-digit", month: "long", year: "numeric" });
 }
+
+/** Color de badge por gravedad de lesión. */
+export const SEVERITY_VARIANT: Record<string, StatusVariant> = {
+  leve: "info",
+  moderada: "pending",
+  grave: "rejected",
+};
+
+/** Color de badge por estado de lesión. */
+export const INJURY_STATUS_BADGE: Record<string, StatusVariant> = {
+  activa: "rejected",
+  en_recuperacion: "pending",
+  recuperada: "approved",
+};
