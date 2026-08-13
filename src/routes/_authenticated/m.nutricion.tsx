@@ -88,6 +88,10 @@ function NutricionPage() {
     [roster, canEditTeam],
   );
 
+  /** La guía y las recetas son del club: las edita cualquier editor de nutrición. */
+  const canEditClub = isSuperAdmin || editablePlayers.length > 0 || canEditTeam(null);
+
+
   const myRow = roster.find((p) => p.userId === user.id) ?? null;
   const isPlayerOnlyView = roster.length > 0 && roster.every((p) => p.userId === user.id);
 
