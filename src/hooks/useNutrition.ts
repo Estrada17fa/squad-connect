@@ -28,6 +28,16 @@ export interface PortionRow {
   note: string | null;
 }
 
+export interface MealRecipeRow {
+  id: string;
+  meal_id: string;
+  plan_id: string;
+  recipe_id: string | null;
+  name: string;
+  sort_order: number;
+  recipe?: RecipeRow | null;
+}
+
 export interface PlanMealRow {
   id: string;
   plan_id: string;
@@ -35,7 +45,9 @@ export interface PlanMealRow {
   sort_order: number;
   notes: string | null;
   portions?: PortionRow[];
+  recipes?: MealRecipeRow[];
 }
+
 
 export interface MealPlanRow {
   id: string;
@@ -65,10 +77,44 @@ export interface AssessmentRow {
   [key: string]: any;
 }
 
+/* ------------------------------------------------------------------ */
+/* Equivalencias y recetas (del club)                                  */
+/* ------------------------------------------------------------------ */
+
+export interface EquivalenceItemRow {
+  id: string;
+  equivalence_id: string;
+  food_name: string;
+  amount: string | null;
+  sort_order: number;
+}
+
+export interface EquivalenceRow {
+  id: string;
+  club_id: string;
+  food_group: FoodGroup;
+  description: string | null;
+  sort_order: number;
+  items?: EquivalenceItemRow[];
+}
+
+export interface RecipeRow {
+  id: string;
+  club_id: string;
+  name: string;
+  food_groups: FoodGroup[];
+  ingredients: string | null;
+  preparation: string | null;
+  created_at: string;
+}
+
 const PLAN_SELECT = `id, club_id, team_id, player_user_id, week_start, week_end, week_type, notes, created_at,
   team:teams(id, name),
   meals:nutrition_plan_meals(id, plan_id, slot, sort_order, notes,
-    portions:nutrition_plan_portions(id, meal_id, plan_id, food_group, portions, note))`;
+    portions:nutrition_plan_portions(id, meal_id, plan_id, food_group, portions, note),
+    recipes:nutrition_plan_meal_recipes(id, meal_id, plan_id, recipe_id, name, sort_order,
+      recipe:nutrition_recipes(id, club_id, name, food_groups, ingredients, preparation, created_at)))`;
+
 
 const ASSESSMENT_SELECT = `id, club_id, team_id, player_user_id, assessed_at, notes, created_at, ${ISAK_FIELD_KEYS.join(", ")},
   team:teams(id, name)`;
@@ -260,10 +306,16 @@ export interface PlanDraftPortion {
   note: string | null;
 }
 
+export interface PlanDraftRecipe {
+  recipe_id: string | null;
+  name: string;
+}
+
 export interface PlanDraftMeal {
   slot: MealSlot;
   notes: string | null;
   portions: PlanDraftPortion[];
+  recipes: PlanDraftRecipe[];
 }
 
 export interface SavePlanInput {
@@ -298,7 +350,9 @@ export function useSaveMealPlan(clubId: string, userId: string) {
         planId = data.id as string;
       }
 
-      const usable = meals.filter((m) => m.portions.length > 0 || (m.notes ?? "").trim());
+      const usable = meals.filter(
+        (m) => m.portions.length > 0 || (m.recipes ?? []).length > 0 || (m.notes ?? "").trim(),
+      );
       for (const [i, meal] of usable.entries()) {
         const { data: mealRow, error: mealErr } = await db
           .from("nutrition_plan_meals")
@@ -317,6 +371,18 @@ export function useSaveMealPlan(clubId: string, userId: string) {
             })),
           );
           if (pErr) throw pErr;
+        }
+        if ((meal.recipes ?? []).length > 0) {
+          const { error: rErr } = await db.from("nutrition_plan_meal_recipes").insert(
+            meal.recipes.map((r, j) => ({
+              meal_id: mealRow.id,
+              plan_id: planId,
+              recipe_id: r.recipe_id,
+              name: r.name,
+              sort_order: j,
+            })),
+          );
+          if (rErr) throw rErr;
         }
       }
       return planId as string;
@@ -404,5 +470,156 @@ export function usePlayerLatestAnthro(playerUserId: string | null | undefined) {
         heightCm: data.height_cm == null ? null : Number(data.height_cm),
       };
     },
+  });
+}
+
+/* ------------------------------------------------------------------ */
+/* Guía de equivalencias (club)                                        */
+/* ------------------------------------------------------------------ */
+
+const EQUIV_SELECT = `id, club_id, food_group, description, sort_order,
+  items:nutrition_equivalence_items(id, equivalence_id, food_name, amount, sort_order)`;
+
+export function useEquivalences(clubId: string | null | undefined) {
+  useRealtime(clubId, "nutrition_portion_equivalences", "nutri-equivalences");
+  return useQuery({
+    queryKey: ["nutri-equivalences", clubId ?? "none"] as const,
+    enabled: !!clubId,
+    staleTime: 60_000,
+    queryFn: async (): Promise<EquivalenceRow[]> => {
+      const { data, error } = await db
+        .from("nutrition_portion_equivalences")
+        .select(EQUIV_SELECT)
+        .eq("club_id", clubId);
+      if (error) throw error;
+      return ((data ?? []) as EquivalenceRow[]).map((e) => ({
+        ...e,
+        items: (e.items ?? []).slice().sort((a, b) => a.sort_order - b.sort_order),
+      }));
+    },
+  });
+}
+
+export interface SaveEquivalenceInput {
+  id?: string | null;
+  food_group: FoodGroup;
+  description: string | null;
+  items: { food_name: string; amount: string | null }[];
+}
+
+export function useSaveEquivalence(clubId: string, userId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: SaveEquivalenceInput) => {
+      let equivId = input.id ?? null;
+      if (equivId) {
+        const { error } = await db
+          .from("nutrition_portion_equivalences")
+          .update({ description: input.description })
+          .eq("id", equivId);
+        if (error) throw error;
+        const { error: delErr } = await db
+          .from("nutrition_equivalence_items")
+          .delete()
+          .eq("equivalence_id", equivId);
+        if (delErr) throw delErr;
+      } else {
+        const { data, error } = await db
+          .from("nutrition_portion_equivalences")
+          .insert({
+            club_id: clubId,
+            food_group: input.food_group,
+            description: input.description,
+            created_by: userId,
+          })
+          .select("id")
+          .single();
+        if (error) throw error;
+        equivId = data.id as string;
+      }
+      const items = input.items.filter((i) => i.food_name.trim());
+      if (items.length > 0) {
+        const { error } = await db.from("nutrition_equivalence_items").insert(
+          items.map((i, idx) => ({
+            equivalence_id: equivId,
+            food_name: i.food_name.trim(),
+            amount: i.amount?.trim() || null,
+            sort_order: idx,
+          })),
+        );
+        if (error) throw error;
+      }
+      return equivId as string;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["nutri-equivalences", clubId] }),
+  });
+}
+
+/* ------------------------------------------------------------------ */
+/* Biblioteca de recetas (club)                                        */
+/* ------------------------------------------------------------------ */
+
+export function useRecipes(clubId: string | null | undefined) {
+  useRealtime(clubId, "nutrition_recipes", "nutri-recipes");
+  return useQuery({
+    queryKey: ["nutri-recipes", clubId ?? "none"] as const,
+    enabled: !!clubId,
+    staleTime: 60_000,
+    queryFn: async (): Promise<RecipeRow[]> => {
+      const { data, error } = await db
+        .from("nutrition_recipes")
+        .select("id, club_id, name, food_groups, ingredients, preparation, created_at")
+        .eq("club_id", clubId)
+        .order("name");
+      if (error) throw error;
+      return (data ?? []) as RecipeRow[];
+    },
+  });
+}
+
+export interface SaveRecipeInput {
+  id?: string | null;
+  name: string;
+  food_groups: FoodGroup[];
+  ingredients: string | null;
+  preparation: string | null;
+}
+
+export function useSaveRecipe(clubId: string, userId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: SaveRecipeInput): Promise<RecipeRow> => {
+      const { id, ...row } = input;
+      if (id) {
+        const { data, error } = await db
+          .from("nutrition_recipes")
+          .update(row)
+          .eq("id", id)
+          .select("id, club_id, name, food_groups, ingredients, preparation, created_at")
+          .single();
+        if (error) throw error;
+        return data as RecipeRow;
+      }
+      const { data, error } = await db
+        .from("nutrition_recipes")
+        .insert({ ...row, club_id: clubId, created_by: userId })
+        .select("id, club_id, name, food_groups, ingredients, preparation, created_at")
+        .single();
+      if (error) throw error;
+      return data as RecipeRow;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["nutri-recipes", clubId] }),
+  });
+}
+
+export function useDeleteRecipe(clubId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (recipe: RecipeRow) => {
+      const { error } = await db.from("nutrition_recipes").delete().eq("id", recipe.id);
+      if (error) throw error;
+      return recipe;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["nutri-recipes", clubId] }),
   });
 }

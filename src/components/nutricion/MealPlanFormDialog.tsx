@@ -1,6 +1,6 @@
 import * as React from "react";
 import { toast } from "sonner";
-import { Plus, Trash2, UtensilsCrossed } from "lucide-react";
+import { CookingPot, Plus, Scale, Trash2 } from "lucide-react";
 import {
   EntitySheet,
   EntitySheetBody,
@@ -22,11 +22,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  useEquivalences,
+  useRecipes,
   useSaveMealPlan,
   type MealPlanRow,
   type NutritionRosterMember,
   type PlanDraftMeal,
+  type RecipeRow,
 } from "@/hooks/useNutrition";
+import { MEAL_SLOT_ICON, PortionField } from "@/components/nutricion/NutricionPieces";
+import { EquivalenceSheet } from "@/components/nutricion/EquivalenceSheet";
+import { RecipeFormDialog } from "@/components/nutricion/RecipeFormDialog";
 import {
   FOOD_GROUP_LABEL,
   FOOD_GROUP_ORDER,
@@ -54,7 +60,7 @@ interface Props {
 }
 
 const emptyMeals = (): PlanDraftMeal[] =>
-  MEAL_SLOT_ORDER.map((slot) => ({ slot, notes: null, portions: [] }));
+  MEAL_SLOT_ORDER.map((slot) => ({ slot, notes: null, portions: [], recipes: [] }));
 
 function mealsFrom(plan: MealPlanRow | null | undefined): PlanDraftMeal[] {
   if (!plan) return emptyMeals();
@@ -68,6 +74,10 @@ function mealsFrom(plan: MealPlanRow | null | undefined): PlanDraftMeal[] {
         portions: Number(p.portions),
         note: p.note,
       })),
+      recipes: (m?.recipes ?? [])
+        .slice()
+        .sort((a, b) => a.sort_order - b.sort_order)
+        .map((r) => ({ recipe_id: r.recipe_id, name: r.name })),
     };
   });
 }
@@ -84,6 +94,8 @@ export function MealPlanFormDialog({
   onSaved,
 }: Props) {
   const save = useSaveMealPlan(clubId, userId);
+  const recipesQ = useRecipes(clubId);
+  const equivQ = useEquivalences(clubId);
   const isEdit = !!plan;
   const base = plan ?? duplicateFrom ?? null;
 
@@ -92,6 +104,8 @@ export function MealPlanFormDialog({
   const [weekType, setWeekType] = React.useState(WEEK_TYPE_PRESETS[0]!);
   const [notes, setNotes] = React.useState("");
   const [meals, setMeals] = React.useState<PlanDraftMeal[]>(emptyMeals);
+  const [guideOpen, setGuideOpen] = React.useState(false);
+  const [recipeFormSlot, setRecipeFormSlot] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     if (!open) return;
@@ -105,8 +119,8 @@ export function MealPlanFormDialog({
 
   const player = players.find((p) => p.userId === playerUserId);
   const weekEnd = addDaysISO(weekStart, 6);
-  const totalPortions = meals.reduce((a, m) => a + m.portions.length, 0);
-  const disabled = !player || !weekStart || !weekType.trim() || totalPortions === 0 || save.isPending;
+  const totalItems = meals.reduce((a, m) => a + m.portions.length + m.recipes.length, 0);
+  const disabled = !player || !weekStart || !weekType.trim() || totalItems === 0 || save.isPending;
 
   const patchMeal = (slot: string, patch: Partial<PlanDraftMeal>) =>
     setMeals((prev) => prev.map((m) => (m.slot === slot ? { ...m, ...patch } : m)));
@@ -116,6 +130,15 @@ export function MealPlanFormDialog({
       prev.map((m) =>
         m.slot === slot
           ? { ...m, portions: [...m.portions, { food_group: group, portions: 1, note: null }] }
+          : m,
+      ),
+    );
+
+  const addRecipe = (slot: string, recipe: RecipeRow) =>
+    setMeals((prev) =>
+      prev.map((m) =>
+        m.slot === slot && !m.recipes.some((r) => r.recipe_id === recipe.id)
+          ? { ...m, recipes: [...m.recipes, { recipe_id: recipe.id, name: recipe.name }] }
           : m,
       ),
     );
@@ -141,6 +164,8 @@ export function MealPlanFormDialog({
     }
   };
 
+  const recipes = recipesQ.data ?? [];
+
   return (
     <EntitySheet open={open} onOpenChange={onOpenChange} size="lg">
       <EntitySheetHeader>
@@ -148,8 +173,13 @@ export function MealPlanFormDialog({
           {isEdit ? "Editar plan semanal" : duplicateFrom ? "Duplicar plan semanal" : "Nuevo plan semanal"}
         </EntitySheetTitle>
         <EntitySheetDescription>
-          Porciones por grupo de alimentos en cada tiempo de comida.
+          Porciones por grupo de alimentos y recetas sugeridas en cada tiempo de comida.
         </EntitySheetDescription>
+        <div className="mt-3">
+          <Button size="sm" variant="secondary" onClick={() => setGuideOpen(true)}>
+            <Scale className="mr-1.5 h-3.5 w-3.5" /> Guía de equivalencias
+          </Button>
+        </div>
       </EntitySheetHeader>
 
       <EntitySheetBody className="space-y-5">
@@ -202,66 +232,46 @@ export function MealPlanFormDialog({
         </div>
 
         <div className="space-y-3">
-          {meals.map((meal) => (
-            <div key={meal.slot} className="glass space-y-3 rounded-lg p-3">
-              <div className="flex items-center gap-2">
-                <UtensilsCrossed className="h-4 w-4 text-primary" />
-                <p className="font-display text-sm font-semibold">{MEAL_SLOT_LABEL[meal.slot]}</p>
-              </div>
+          {meals.map((meal) => {
+            const Icon = MEAL_SLOT_ICON[meal.slot];
+            const available = recipes.filter((r) => !meal.recipes.some((x) => x.recipe_id === r.id));
+            return (
+              <div key={meal.slot} className="glass space-y-3 rounded-lg p-3">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <p className="font-display text-sm font-semibold">{MEAL_SLOT_LABEL[meal.slot]}</p>
+                </div>
 
-              {meal.portions.map((p, i) => (
-                <div key={`${meal.slot}-${i}`} className="grid grid-cols-[1fr_5rem_auto] gap-2">
-                  <Select
-                    value={p.food_group}
-                    onValueChange={(v) =>
+                {meal.portions.map((p, i) => (
+                  <PortionField
+                    key={`${meal.slot}-${i}`}
+                    group={p.food_group}
+                    portions={p.portions}
+                    onGroupChange={(g) =>
                       patchMeal(meal.slot, {
                         portions: meal.portions.map((x, j) =>
-                          j === i ? { ...x, food_group: v as FoodGroup } : x,
+                          j === i ? { ...x, food_group: g } : x,
                         ),
                       })
                     }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {FOOD_GROUP_ORDER.map((g) => (
-                        <SelectItem key={g} value={g}>
-                          {FOOD_GROUP_LABEL[g]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Input
-                    type="number"
-                    min={0}
-                    step="0.5"
-                    value={p.portions}
-                    onChange={(e) =>
+                    onPortionsChange={(n) =>
                       patchMeal(meal.slot, {
-                        portions: meal.portions.map((x, j) =>
-                          j === i ? { ...x, portions: Number(e.target.value) } : x,
-                        ),
+                        portions: meal.portions.map((x, j) => (j === i ? { ...x, portions: n } : x)),
+                      })
+                    }
+                    onRemove={() =>
+                      patchMeal(meal.slot, {
+                        portions: meal.portions.filter((_, j) => j !== i),
                       })
                     }
                   />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() =>
-                      patchMeal(meal.slot, { portions: meal.portions.filter((_, j) => j !== i) })
-                    }
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
+                ))}
 
-              <div className="flex flex-wrap items-center gap-2">
                 <Select value="" onValueChange={(v) => addPortion(meal.slot, v as FoodGroup)}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Agregar grupo…" />
+                  <SelectTrigger className="w-full sm:w-56">
+                    <SelectValue placeholder="Agregar grupo de alimentos…" />
                   </SelectTrigger>
                   <SelectContent>
                     {FOOD_GROUP_ORDER.map((g) => (
@@ -271,17 +281,75 @@ export function MealPlanFormDialog({
                     ))}
                   </SelectContent>
                 </Select>
-                <Plus className="h-4 w-4 text-muted-foreground" />
-              </div>
 
-              <Textarea
-                rows={2}
-                value={meal.notes ?? ""}
-                onChange={(e) => patchMeal(meal.slot, { notes: e.target.value || null })}
-                placeholder="Indicaciones de este tiempo de comida (opcional)"
-              />
-            </div>
-          ))}
+                <div className="space-y-2 border-t border-white/5 pt-2">
+                  <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    <CookingPot className="h-3.5 w-3.5" /> Recetas sugeridas
+                  </p>
+                  {meal.recipes.map((r, i) => (
+                    <div
+                      key={`${meal.slot}-rec-${i}`}
+                      className="flex items-center justify-between gap-2 rounded-md bg-white/[0.03] px-2.5 py-1.5 text-sm"
+                    >
+                      <span className="min-w-0 truncate">{r.name}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Quitar receta"
+                        onClick={() =>
+                          patchMeal(meal.slot, {
+                            recipes: meal.recipes.filter((_, j) => j !== i),
+                          })
+                        }
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Select
+                      value=""
+                      onValueChange={(v) => {
+                        const r = recipes.find((x) => x.id === v);
+                        if (r) addRecipe(meal.slot, r);
+                      }}
+                    >
+                      <SelectTrigger className="w-full sm:w-56">
+                        <SelectValue
+                          placeholder={
+                            available.length === 0 ? "Sin recetas en la biblioteca" : "Agregar receta…"
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {available.map((r) => (
+                          <SelectItem key={r.id} value={r.id}>
+                            {r.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setRecipeFormSlot(meal.slot)}
+                    >
+                      <Plus className="mr-1 h-3.5 w-3.5" /> Nueva receta
+                    </Button>
+                  </div>
+                </div>
+
+                <Textarea
+                  rows={2}
+                  value={meal.notes ?? ""}
+                  onChange={(e) => patchMeal(meal.slot, { notes: e.target.value || null })}
+                  placeholder="Indicaciones de este tiempo de comida (opcional)"
+                />
+              </div>
+            );
+          })}
         </div>
 
         <div className="space-y-1.5">
@@ -304,6 +372,23 @@ export function MealPlanFormDialog({
           {save.isPending ? "Guardando…" : "Guardar plan"}
         </Button>
       </EntitySheetFooter>
+
+      <EquivalenceSheet
+        open={guideOpen}
+        onOpenChange={setGuideOpen}
+        equivalences={equivQ.data ?? []}
+      />
+
+      <RecipeFormDialog
+        open={!!recipeFormSlot}
+        onOpenChange={(v) => !v && setRecipeFormSlot(null)}
+        clubId={clubId}
+        userId={userId}
+        onSaved={(r) => {
+          if (recipeFormSlot) addRecipe(recipeFormSlot, r);
+          setRecipeFormSlot(null);
+        }}
+      />
     </EntitySheet>
   );
 }

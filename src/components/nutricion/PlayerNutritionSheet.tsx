@@ -16,10 +16,15 @@ import { StatusBadge } from "@/components/squad/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  useEquivalences,
   usePlayerNutrition,
   type AssessmentRow,
   type MealPlanRow,
+  type RecipeRow,
 } from "@/hooks/useNutrition";
+import { MealCard } from "@/components/nutricion/NutricionPieces";
+import { EquivalenceSheet } from "@/components/nutricion/EquivalenceSheet";
+import { RecipeDetailSheet } from "@/components/nutricion/RecipesTab";
 import {
   FOOD_GROUP_LABEL,
   MEAL_SLOT_LABEL,
@@ -31,8 +36,10 @@ import {
   isCurrentWeek,
   somatotypeLabel,
   weekRangeLabel,
+  type FoodGroup,
 } from "@/lib/nutricion";
 import { cn } from "@/lib/utils";
+
 
 export interface NutritionPlayer {
   userId: string;
@@ -81,8 +88,13 @@ function Section({
   );
 }
 
-/** Tarjetas por tiempo de comida con sus porciones por grupo de alimentos. */
-export function MealPlanView({ plan }: { plan: MealPlanRow }) {
+/** Tarjetas por tiempo de comida: porciones claras, recetas y guía consultable. */
+export function MealPlanView({ plan, clubId }: { plan: MealPlanRow; clubId?: string | null }) {
+  const equivQ = useEquivalences(clubId);
+  const [guideGroup, setGuideGroup] = React.useState<FoodGroup | null>(null);
+  const [guideOpen, setGuideOpen] = React.useState(false);
+  const [recipe, setRecipe] = React.useState<RecipeRow | null>(null);
+
   const meals = MEAL_SLOT_ORDER.map((slot) => (plan.meals ?? []).find((m) => m.slot === slot)).filter(
     Boolean,
   ) as NonNullable<MealPlanRow["meals"]>;
@@ -91,37 +103,51 @@ export function MealPlanView({ plan }: { plan: MealPlanRow }) {
     return <p className="text-sm text-muted-foreground">Este plan aún no tiene comidas cargadas.</p>;
   }
 
+  const allRecipes = meals.flatMap((m) => m.recipes ?? []);
+
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-      {meals.map((meal) => (
-        <div key={meal.id} className="glass space-y-2 rounded-lg p-3">
-          <div className="flex items-center gap-2">
-            <UtensilsCrossed className="h-4 w-4 text-primary" />
-            <p className="font-display text-sm font-semibold">{MEAL_SLOT_LABEL[meal.slot]}</p>
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            {(meal.portions ?? []).length === 0 ? (
-              <span className="text-xs text-muted-foreground">Sin porciones asignadas</span>
-            ) : (
-              (meal.portions ?? []).map((p) => (
-                <span
-                  key={p.id}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.05] px-2.5 py-1 text-xs ring-1 ring-inset ring-white/10"
-                >
-                  <span className="font-semibold text-foreground">{Number(p.portions)}</span>
-                  <span className="text-muted-foreground">{FOOD_GROUP_LABEL[p.food_group]}</span>
-                </span>
-              ))
-            )}
-          </div>
-          {meal.notes ? (
-            <p className="whitespace-pre-wrap text-xs text-muted-foreground">{meal.notes}</p>
-          ) : null}
-        </div>
-      ))}
-    </div>
+    <>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {meals.map((meal) => (
+          <MealCard
+            key={meal.id}
+            slot={meal.slot}
+            portions={(meal.portions ?? []).map((p) => ({
+              id: p.id,
+              food_group: p.food_group,
+              portions: Number(p.portions),
+            }))}
+            recipes={(meal.recipes ?? [])
+              .slice()
+              .sort((a, b) => a.sort_order - b.sort_order)
+              .map((r) => ({ id: r.id, name: r.name }))}
+            notes={meal.notes}
+            onGroupClick={(g) => {
+              setGuideGroup(g);
+              setGuideOpen(true);
+            }}
+            onRecipeClick={(id) => {
+              const link = allRecipes.find((r) => r.id === id);
+              if (link?.recipe) setRecipe(link.recipe as RecipeRow);
+            }}
+          />
+        ))}
+      </div>
+
+      <EquivalenceSheet
+        open={guideOpen}
+        onOpenChange={(v) => {
+          setGuideOpen(v);
+          if (!v) setGuideGroup(null);
+        }}
+        equivalences={equivQ.data ?? []}
+        group={guideGroup}
+      />
+      <RecipeDetailSheet open={!!recipe} onOpenChange={(v) => !v && setRecipe(null)} recipe={recipe} />
+    </>
   );
 }
+
 
 /** Evolución del peso y del % de grasa a lo largo de los estudios. */
 function EvolutionChart({ assessments }: { assessments: AssessmentRow[] }) {
