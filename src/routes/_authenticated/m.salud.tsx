@@ -73,6 +73,8 @@ function SaludPage() {
   const [checkupOpen, setCheckupOpen] = React.useState(false);
   const [editingAppointment, setEditingAppointment] = React.useState<AppointmentRow | null>(null);
   const [appointmentOpen, setAppointmentOpen] = React.useState(false);
+  const [detailAppointment, setDetailAppointment] = React.useState<AppointmentRow | null>(null);
+  const [detailCheckup, setDetailCheckup] = React.useState<CheckupRow | null>(null);
   const [formPlayer, setFormPlayer] = React.useState<string | null>(null);
 
   /** Jugadores visibles: 'vista_jugador' solo se ve a sí mismo. */
