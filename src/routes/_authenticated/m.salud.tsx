@@ -24,6 +24,8 @@ import { CheckupFormDialog } from "@/components/salud/CheckupFormDialog";
 import { InjuryFormDialog } from "@/components/salud/InjuryFormDialog";
 import { InjuryDetailSheet } from "@/components/salud/InjuryDetailSheet";
 import { AppointmentFormDialog } from "@/components/salud/AppointmentFormDialog";
+import { AppointmentDetailSheet } from "@/components/salud/AppointmentDetailSheet";
+import { CheckupDetailSheet } from "@/components/salud/CheckupDetailSheet";
 import {
   PlayerHealthContent,
   PlayerHealthSheet,
@@ -71,6 +73,8 @@ function SaludPage() {
   const [checkupOpen, setCheckupOpen] = React.useState(false);
   const [editingAppointment, setEditingAppointment] = React.useState<AppointmentRow | null>(null);
   const [appointmentOpen, setAppointmentOpen] = React.useState(false);
+  const [detailAppointment, setDetailAppointment] = React.useState<AppointmentRow | null>(null);
+  const [detailCheckup, setDetailCheckup] = React.useState<CheckupRow | null>(null);
   const [formPlayer, setFormPlayer] = React.useState<string | null>(null);
 
   /** Jugadores visibles: 'vista_jugador' solo se ve a sí mismo. */
@@ -211,6 +215,29 @@ function SaludPage() {
           setInjuryOpen(true);
         }}
       />
+      <AppointmentDetailSheet
+        open={!!detailAppointment}
+        onOpenChange={(v) => !v && setDetailAppointment(null)}
+        clubId={clubId}
+        appointment={detailAppointment}
+        canEdit={!!detailAppointment && canEditTeam(detailAppointment.team_id)}
+        onEdit={(a) => {
+          setDetailAppointment(null);
+          setEditingAppointment(a);
+          setAppointmentOpen(true);
+        }}
+      />
+      <CheckupDetailSheet
+        open={!!detailCheckup}
+        onOpenChange={(v) => !v && setDetailCheckup(null)}
+        checkup={detailCheckup}
+        canEdit={!!detailCheckup && canEditTeam(detailCheckup.team_id)}
+        onEdit={(c) => {
+          setDetailCheckup(null);
+          setEditingCheckup(c);
+          setCheckupOpen(true);
+        }}
+      />
     </>
   ) : null;
 
@@ -226,6 +253,8 @@ function SaludPage() {
           canEdit={canEditTeam(myRow.teamId)}
           self
           onOpenInjury={(i) => setDetailInjury(i)}
+          onOpenAppointment={(a) => setDetailAppointment(a)}
+          onOpenCheckup={(c) => setDetailCheckup(c)}
         />
         {dialogs}
       </div>
@@ -405,8 +434,12 @@ function SaludPage() {
             setAppointmentOpen(true);
           }}
           onOpenAppointment={(a) => {
-            setEditingAppointment(a);
-            setAppointmentOpen(true);
+            setDetailPlayer(null);
+            setDetailAppointment(a);
+          }}
+          onOpenCheckup={(c) => {
+            setDetailPlayer(null);
+            setDetailCheckup(c);
           }}
         />
       ) : null}
