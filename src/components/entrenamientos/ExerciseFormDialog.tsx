@@ -46,6 +46,12 @@ export function ExerciseFormDialog({ open, onOpenChange, clubId, userId, teams, 
   const [duration, setDuration] = React.useState(
     exercise?.duration_minutes != null ? String(exercise.duration_minutes) : "",
   );
+  const [sets, setSets] = React.useState(
+    exercise?.default_sets != null ? String(exercise.default_sets) : "",
+  );
+  const [reps, setReps] = React.useState(
+    exercise?.default_reps != null ? String(exercise.default_reps) : "",
+  );
   const [objective, setObjective] = React.useState(exercise?.objective ?? "");
   const [description, setDescription] = React.useState(exercise?.description ?? "");
   const [materials, setMaterials] = React.useState(exercise?.materials ?? "");
