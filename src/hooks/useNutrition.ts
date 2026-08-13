@@ -133,7 +133,7 @@ function useRealtime(clubId: string | null | undefined, table: string, key: stri
   React.useEffect(() => {
     if (!clubId) return;
     const ch = supabase
-      .channel(`nutri-${table}-${clubId}`)
+      .channel(`nutri-${table}-${clubId}-${Math.random().toString(36).slice(2)}`)
       .on("postgres_changes", { event: "*", schema: "public", table }, () =>
         qc.invalidateQueries({ queryKey: [key, clubId] }),
       )
