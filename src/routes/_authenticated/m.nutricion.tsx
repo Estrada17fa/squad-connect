@@ -193,11 +193,27 @@ function NutricionPage() {
       <div className="space-y-6">
         <ModuleTabs activeKey="nutricion" />
         <PageHeader hideTitle title="Mi Nutrición" subtitle="Tu menú de la semana y tus medidas" />
-        <PlayerNutritionContent player={toPlayer(myRow)} canEdit={false} self />
+        <Tabs defaultValue="plan">
+          <TabsList>
+            <TabsTrigger value="plan">Mi plan</TabsTrigger>
+            <TabsTrigger value="guia">Guía de porciones</TabsTrigger>
+            <TabsTrigger value="recetas">Recetas</TabsTrigger>
+          </TabsList>
+          <TabsContent value="plan" className="mt-4">
+            <PlayerNutritionContent player={toPlayer(myRow)} clubId={clubId} canEdit={false} self />
+          </TabsContent>
+          <TabsContent value="guia" className="mt-4">
+            {clubId ? <EquivalencesTab clubId={clubId} userId={user.id} canEdit={false} /> : null}
+          </TabsContent>
+          <TabsContent value="recetas" className="mt-4">
+            {clubId ? <RecipesTab clubId={clubId} userId={user.id} canEdit={false} /> : null}
+          </TabsContent>
+        </Tabs>
         {dialogs}
       </div>
     );
   }
+
 
   /* -------------------------------- Panel --------------------------------- */
   return (
