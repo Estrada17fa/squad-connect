@@ -84,7 +84,21 @@ export interface SessionExerciseRow {
   order_index: number;
   custom_notes: string | null;
   duration_override: number | null;
+  sets: number | null;
+  reps: number | null;
   exercise?: ExerciseRow | null;
+}
+
+/** Minutos efectivos de un ejercicio dentro del plan. */
+export function itemMinutes(item: {
+  duration_override?: number | null;
+  exercise?: { duration_minutes: number | null } | null;
+}) {
+  return item.duration_override ?? item.exercise?.duration_minutes ?? 0;
+}
+
+export function planMinutes(items: SessionExerciseRow[]) {
+  return items.reduce((sum, i) => sum + itemMinutes(i), 0);
 }
 
 /* ============ biblioteca ============ */
