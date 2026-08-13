@@ -8,6 +8,7 @@ import {
   EntitySheetHeader,
   EntitySheetTitle,
 } from "@/components/squad/EntitySheet";
+import { PlayerPicker } from "@/components/squad/PlayerPicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -63,7 +64,7 @@ export function AppointmentFormDialog({
   React.useEffect(() => {
     if (!open) return;
     setPlayerUserId(
-      appointment?.player_user_id ?? fixedPlayerUserId ?? players[0]?.userId ?? "",
+      appointment?.player_user_id ?? fixedPlayerUserId ?? "",
     );
     setWhen(toLocalInputValue(appointment?.scheduled_at ?? new Date().toISOString()));
     setType((appointment?.appointment_type ?? "valoracion") as CheckupType);

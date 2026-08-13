@@ -9,6 +9,7 @@ import {
   EntitySheetHeader,
   EntitySheetTitle,
 } from "@/components/squad/EntitySheet";
+import { PlayerPicker } from "@/components/squad/PlayerPicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -73,7 +74,7 @@ export function CheckupFormDialog({
 
   React.useEffect(() => {
     if (!open) return;
-    setPlayerUserId(checkup?.player_user_id ?? draft?.playerUserId ?? players[0]?.userId ?? "");
+    setPlayerUserId(checkup?.player_user_id ?? draft?.playerUserId ?? "");
     setDate(toLocalInputValue(checkup?.checkup_date ?? new Date().toISOString()));
     setCheckupType((checkup?.checkup_type ?? "valoracion") as CheckupType);
     setReason(checkup?.reason ?? draft?.reason ?? "");

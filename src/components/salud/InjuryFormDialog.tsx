@@ -8,6 +8,7 @@ import {
   EntitySheetHeader,
   EntitySheetTitle,
 } from "@/components/squad/EntitySheet";
+import { PlayerPicker } from "@/components/squad/PlayerPicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -69,7 +70,7 @@ export function InjuryFormDialog({
 
   React.useEffect(() => {
     if (!open) return;
-    setPlayerUserId(injury?.player_user_id ?? presetPlayerUserId ?? players[0]?.userId ?? "");
+    setPlayerUserId(injury?.player_user_id ?? presetPlayerUserId ?? "");
     setType(injury?.injury_type ?? "");
     setBodyPart(injury?.body_part ?? "");
     setSeverity(injury?.severity ?? "leve");
