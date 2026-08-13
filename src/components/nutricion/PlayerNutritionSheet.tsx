@@ -52,6 +52,8 @@ export interface NutritionPlayer {
 
 interface ContentProps {
   player: NutritionPlayer;
+  /** Club activo, para leer la guía de equivalencias. */
+  clubId?: string | null;
   /** Editor de 'nutricion' en la categoría del jugador. */
   canEdit: boolean;
   /** Vista del propio jugador: sin cabecera de persona. */
