@@ -370,7 +370,11 @@ export function PlayerHealthSheet({
   open,
   onOpenChange,
   ...rest
-}: ContentProps & { open: boolean; onOpenChange: (v: boolean) => void; player: HealthPlayer | null }) {
+}: Omit<ContentProps, "player"> & {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  player: HealthPlayer | null;
+}) {
   const { player } = rest;
   if (!player) return null;
   return (

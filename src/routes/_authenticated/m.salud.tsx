@@ -298,7 +298,7 @@ function SaludPage() {
         </div>
       ) : null}
 
-      <SaludFilters value={filters} onChange={setFilters} teams={teamOptions} count={filtered.length} />
+      <SaludFilters value={filters} onChange={setFilters} teams={teamOptions.filter((t): t is { id: string; name: string } => !!t.id)} count={filtered.length} />
 
       {rosterQ.isLoading ? (
         <CardGridSkeleton count={4} />
