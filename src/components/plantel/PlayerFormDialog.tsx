@@ -68,8 +68,6 @@ export function PlayerFormDialog({ open, onOpenChange, clubId, teamId: teamIdPro
     setPosition(player?.position ?? "");
     setJerseyNumber(player?.jersey_number != null ? String(player.jersey_number) : "");
     setBirthdate(player?.birthdate ?? "");
-    setHeightCm(player?.height_cm != null ? String(player.height_cm) : "");
-    setWeightKg(player?.weight_kg != null ? String(player.weight_kg) : "");
     setAvailability(player?.availability_status ?? "apto");
     setNotes(player?.notes ?? "");
   }, [open, player]);
