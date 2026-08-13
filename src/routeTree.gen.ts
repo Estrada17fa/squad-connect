@@ -32,6 +32,7 @@ import { Route as AuthenticatedMEntrenamientosRouteImport } from './routes/_auth
 import { Route as AuthenticatedMDocumentosRouteImport } from './routes/_authenticated/m.documentos'
 import { Route as AuthenticatedMDesarrolloRouteImport } from './routes/_authenticated/m.desarrollo'
 import { Route as AuthenticatedMCoordinacion_internaRouteImport } from './routes/_authenticated/m.coordinacion_interna'
+import { Route as AuthenticatedMComunicadosRouteImport } from './routes/_authenticated/m.comunicados'
 import { Route as AuthenticatedMCompras_facturasRouteImport } from './routes/_authenticated/m.compras_facturas'
 import { Route as AuthenticatedMAgendaRouteImport } from './routes/_authenticated/m.agenda'
 import { Route as AuthenticatedMModuleRouteImport } from './routes/_authenticated/m.$module'
@@ -161,6 +162,12 @@ const AuthenticatedMCoordinacion_internaRoute =
     path: '/m/coordinacion_interna',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMComunicadosRoute =
+  AuthenticatedMComunicadosRouteImport.update({
+    id: '/m/comunicados',
+    path: '/m/comunicados',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMCompras_facturasRoute =
   AuthenticatedMCompras_facturasRouteImport.update({
     id: '/m/compras_facturas',
@@ -210,6 +217,7 @@ export interface FileRoutesByFullPath {
   '/m/$module': typeof AuthenticatedMModuleRoute
   '/m/agenda': typeof AuthenticatedMAgendaRoute
   '/m/compras_facturas': typeof AuthenticatedMCompras_facturasRoute
+  '/m/comunicados': typeof AuthenticatedMComunicadosRoute
   '/m/coordinacion_interna': typeof AuthenticatedMCoordinacion_internaRoute
   '/m/desarrollo': typeof AuthenticatedMDesarrolloRoute
   '/m/documentos': typeof AuthenticatedMDocumentosRoute
@@ -239,6 +247,7 @@ export interface FileRoutesByTo {
   '/m/$module': typeof AuthenticatedMModuleRoute
   '/m/agenda': typeof AuthenticatedMAgendaRoute
   '/m/compras_facturas': typeof AuthenticatedMCompras_facturasRoute
+  '/m/comunicados': typeof AuthenticatedMComunicadosRoute
   '/m/coordinacion_interna': typeof AuthenticatedMCoordinacion_internaRoute
   '/m/desarrollo': typeof AuthenticatedMDesarrolloRoute
   '/m/documentos': typeof AuthenticatedMDocumentosRoute
@@ -271,6 +280,7 @@ export interface FileRoutesById {
   '/_authenticated/m/$module': typeof AuthenticatedMModuleRoute
   '/_authenticated/m/agenda': typeof AuthenticatedMAgendaRoute
   '/_authenticated/m/compras_facturas': typeof AuthenticatedMCompras_facturasRoute
+  '/_authenticated/m/comunicados': typeof AuthenticatedMComunicadosRoute
   '/_authenticated/m/coordinacion_interna': typeof AuthenticatedMCoordinacion_internaRoute
   '/_authenticated/m/desarrollo': typeof AuthenticatedMDesarrolloRoute
   '/_authenticated/m/documentos': typeof AuthenticatedMDocumentosRoute
@@ -303,6 +313,7 @@ export interface FileRouteTypes {
     | '/m/$module'
     | '/m/agenda'
     | '/m/compras_facturas'
+    | '/m/comunicados'
     | '/m/coordinacion_interna'
     | '/m/desarrollo'
     | '/m/documentos'
@@ -332,6 +343,7 @@ export interface FileRouteTypes {
     | '/m/$module'
     | '/m/agenda'
     | '/m/compras_facturas'
+    | '/m/comunicados'
     | '/m/coordinacion_interna'
     | '/m/desarrollo'
     | '/m/documentos'
@@ -363,6 +375,7 @@ export interface FileRouteTypes {
     | '/_authenticated/m/$module'
     | '/_authenticated/m/agenda'
     | '/_authenticated/m/compras_facturas'
+    | '/_authenticated/m/comunicados'
     | '/_authenticated/m/coordinacion_interna'
     | '/_authenticated/m/desarrollo'
     | '/_authenticated/m/documentos'
@@ -548,6 +561,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMCoordinacion_internaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/m/comunicados': {
+      id: '/_authenticated/m/comunicados'
+      path: '/m/comunicados'
+      fullPath: '/m/comunicados'
+      preLoaderRoute: typeof AuthenticatedMComunicadosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/m/compras_facturas': {
       id: '/_authenticated/m/compras_facturas'
       path: '/m/compras_facturas'
@@ -632,6 +652,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMModuleRoute: typeof AuthenticatedMModuleRoute
   AuthenticatedMAgendaRoute: typeof AuthenticatedMAgendaRoute
   AuthenticatedMCompras_facturasRoute: typeof AuthenticatedMCompras_facturasRoute
+  AuthenticatedMComunicadosRoute: typeof AuthenticatedMComunicadosRoute
   AuthenticatedMCoordinacion_internaRoute: typeof AuthenticatedMCoordinacion_internaRoute
   AuthenticatedMDesarrolloRoute: typeof AuthenticatedMDesarrolloRoute
   AuthenticatedMDocumentosRoute: typeof AuthenticatedMDocumentosRoute
@@ -657,6 +678,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMModuleRoute: AuthenticatedMModuleRoute,
   AuthenticatedMAgendaRoute: AuthenticatedMAgendaRoute,
   AuthenticatedMCompras_facturasRoute: AuthenticatedMCompras_facturasRoute,
+  AuthenticatedMComunicadosRoute: AuthenticatedMComunicadosRoute,
   AuthenticatedMCoordinacion_internaRoute:
     AuthenticatedMCoordinacion_internaRoute,
   AuthenticatedMDesarrolloRoute: AuthenticatedMDesarrolloRoute,
