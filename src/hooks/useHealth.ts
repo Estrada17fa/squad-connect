@@ -552,3 +552,87 @@ export function daysToReturn(injury: Pick<InjuryRow, "estimated_return">): numbe
 export function isInjuryOpen(i: InjuryRow): boolean {
   return i.status !== "recuperada";
 }
+
+/* ------------------------------------------------------------------ */
+/* Citas médicas                                                       */
+/* ------------------------------------------------------------------ */
+
+/** Citas visibles del club (RLS acota a equipos con acceso + las propias). */
+export function useAppointments(clubId: string | null | undefined) {
+  const qc = useQueryClient();
+  React.useEffect(() => {
+    if (!clubId) return;
+    const ch = supabase
+      .channel(`health-appointments-${clubId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "medical_appointments" }, () =>
+        qc.invalidateQueries({ queryKey: ["appointments", clubId] }),
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(ch);
+    };
+  }, [clubId, qc]);
+
+  return useQuery({
+    queryKey: ["appointments", clubId ?? "none"] as const,
+    enabled: !!clubId,
+    staleTime: 30_000,
+    queryFn: async (): Promise<AppointmentRow[]> => {
+      const { data, error } = await db
+        .from("medical_appointments")
+        .select(APPOINTMENT_SELECT)
+        .eq("club_id", clubId)
+        .order("scheduled_at", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as AppointmentRow[];
+    },
+  });
+}
+
+export function useSaveAppointment(clubId: string, userId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      id?: string | null;
+      team_id: string;
+      player_user_id: string;
+      scheduled_at: string;
+      appointment_type: CheckupType;
+      reason: string;
+      place: string | null;
+      notes: string | null;
+      status: AppointmentStatus;
+    }) => {
+      const { id, ...row } = input;
+      if (id) {
+        const { error } = await db.from("medical_appointments").update(row).eq("id", id);
+        if (error) throw error;
+      } else {
+        const { error } = await db
+          .from("medical_appointments")
+          .insert({ ...row, club_id: clubId, created_by: userId });
+        if (error) throw error;
+      }
+    },
+    onSuccess: (_d, vars) => {
+      invalidateHealth(qc, clubId, vars.player_user_id);
+      qc.invalidateQueries({ queryKey: ["appointments", clubId] });
+      qc.invalidateQueries({ queryKey: ["calendar-events"] });
+    },
+  });
+}
+
+export function useDeleteAppointment(clubId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await db.from("medical_appointments").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      invalidateHealth(qc, clubId);
+      qc.invalidateQueries({ queryKey: ["appointments", clubId] });
+      qc.invalidateQueries({ queryKey: ["calendar-events"] });
+    },
+  });
+}
