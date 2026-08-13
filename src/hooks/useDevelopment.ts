@@ -31,6 +31,8 @@ export interface FeedbackRow {
   feedback_date: string;
   context: string | null;
   content: string;
+  /** Nota interna: si es false el jugador NUNCA la recibe (filtrado en RLS). */
+  visible_to_player: boolean;
   created_by: string | null;
   created_at: string;
   player?: PlayerRef | null;
@@ -108,7 +110,7 @@ export interface RoutineRow {
 }
 
 const PLAYER_FK = "player:profiles!%FK%(id, full_name, email, avatar_url)";
-const FEEDBACK_SELECT = `id, club_id, team_id, player_user_id, feedback_date, context, content, created_by, created_at, ${PLAYER_FK.replace("%FK%", "development_feedback_player_user_id_fkey")}, team:teams(id, name)`;
+const FEEDBACK_SELECT = `id, club_id, team_id, player_user_id, feedback_date, context, content, visible_to_player, created_by, created_at, ${PLAYER_FK.replace("%FK%", "development_feedback_player_user_id_fkey")}, team:teams(id, name)`;
 const GOAL_SELECT = `id, club_id, team_id, player_user_id, title, description, target_date, status, completed_at, created_at, ${PLAYER_FK.replace("%FK%", "development_goals_player_user_id_fkey")}, team:teams(id, name)`;
 const ASSESSMENT_SELECT = `id, club_id, team_id, player_user_id, assessment_date, notes, created_at, ${PLAYER_FK.replace("%FK%", "development_assessments_player_user_id_fkey")}, team:teams(id, name), scores:assessment_scores(id, assessment_id, attribute, score)`;
 const ROUTINE_SELECT = `id, club_id, team_id, name, description, category, created_at, team:teams(id, name), exercises:routine_exercises(id, routine_id, name, sets, reps, instructions, order_index), assignments:routine_assignments(id, routine_id, player_user_id, assigned_at, due_date, status, notes, ${PLAYER_FK.replace("%FK%", "routine_assignments_player_user_id_fkey")})`;
@@ -250,7 +252,7 @@ export function usePlayerDevelopment(playerUserId: string | null | undefined) {
     enabled: !!playerUserId,
     staleTime: 15_000,
     queryFn: async () => {
-      const [fbRes, goalRes, assessRes, assignRes] = await Promise.all([
+      const [fbRes, goalRes, assessRes, assignRes, measureRes, statsRes] = await Promise.all([
         db
           .from("development_feedback")
           .select(FEEDBACK_SELECT)
@@ -273,12 +275,24 @@ export function usePlayerDevelopment(playerUserId: string | null | undefined) {
           )
           .eq("player_user_id", playerUserId)
           .order("assigned_at", { ascending: false }),
+        db
+          .from("development_measurements")
+          .select(MEASUREMENT_SELECT)
+          .eq("player_user_id", playerUserId)
+          .order("measured_on", { ascending: false }),
+        db
+          .from("player_competition_stats")
+          .select(STATS_SELECT)
+          .eq("player_user_id", playerUserId)
+          .order("season_name", { ascending: false }),
       ]);
       if (fbRes.error) throw fbRes.error;
       return {
         feedback: (fbRes.data ?? []) as FeedbackRow[],
         goals: (goalRes.data ?? []) as GoalRow[],
         assessments: (assessRes.data ?? []) as AssessmentRow[],
+        measurements: (measureRes.data ?? []) as MeasurementRow[],
+        stats: (statsRes.data ?? []) as CompetitionStatsRow[],
         assignments: ((assignRes.data ?? []) as AssignmentRow[]).map((a) => ({
           ...a,
           routine: a.routine
@@ -345,6 +359,8 @@ function invalidateDev(qc: ReturnType<typeof useQueryClient>, clubId: string, pl
   qc.invalidateQueries({ queryKey: ["dev-goals", clubId] });
   qc.invalidateQueries({ queryKey: ["dev-assessments", clubId] });
   qc.invalidateQueries({ queryKey: ["dev-routines", clubId] });
+  qc.invalidateQueries({ queryKey: ["dev-measurements", clubId] });
+  qc.invalidateQueries({ queryKey: ["dev-stats", clubId] });
   if (playerUserId) qc.invalidateQueries({ queryKey: ["player-development", playerUserId] });
 }
 
@@ -358,6 +374,7 @@ export function useSaveFeedback(clubId: string, userId: string) {
       feedback_date: string;
       context: string | null;
       content: string;
+      visible_to_player: boolean;
     }) => {
       const { id, ...row } = input;
       if (id) {
@@ -650,4 +667,188 @@ export function averageScore(a: AssessmentRow | undefined | null): number | null
   const scores = a?.scores ?? [];
   if (scores.length === 0) return null;
   return Math.round((scores.reduce((s, x) => s + Number(x.score), 0) / scores.length) * 10) / 10;
+}
+
+/* ------------------------------------------------------------------ */
+/* Mediciones físicas                                                  */
+/* ------------------------------------------------------------------ */
+
+export interface MeasurementRow {
+  id: string;
+  club_id: string;
+  team_id: string;
+  player_user_id: string;
+  measured_on: string;
+  metric: string;
+  value: number;
+  unit: string | null;
+  notes: string | null;
+  created_at: string;
+  player?: PlayerRef | null;
+  team?: { id: string; name: string } | null;
+}
+
+const MEASUREMENT_SELECT = `id, club_id, team_id, player_user_id, measured_on, metric, value, unit, notes, created_at, team:teams(id, name)`;
+
+export function useMeasurements(clubId: string | null | undefined) {
+  useRealtime(clubId, "development_measurements", "dev-measurements");
+  return useQuery({
+    queryKey: ["dev-measurements", clubId ?? "none"] as const,
+    enabled: !!clubId,
+    staleTime: 30_000,
+    queryFn: async (): Promise<MeasurementRow[]> => {
+      const { data, error } = await db
+        .from("development_measurements")
+        .select(MEASUREMENT_SELECT)
+        .eq("club_id", clubId)
+        .order("measured_on", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as MeasurementRow[];
+    },
+  });
+}
+
+export function useSaveMeasurement(clubId: string, userId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      id?: string | null;
+      team_id: string;
+      player_user_id: string;
+      measured_on: string;
+      metric: string;
+      value: number;
+      unit: string | null;
+      notes: string | null;
+    }) => {
+      const { id, ...row } = input;
+      if (id) {
+        const { error } = await db.from("development_measurements").update(row).eq("id", id);
+        if (error) throw error;
+      } else {
+        const { error } = await db
+          .from("development_measurements")
+          .insert({ ...row, club_id: clubId, created_by: userId });
+        if (error) throw error;
+      }
+    },
+    onSuccess: (_d, vars) => invalidateDev(qc, clubId, vars.player_user_id),
+  });
+}
+
+export function useDeleteMeasurement(clubId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await db.from("development_measurements").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => invalidateDev(qc, clubId),
+  });
+}
+
+/* ------------------------------------------------------------------ */
+/* Estadísticas de competencia (manual hoy, módulo Torneo mañana)      */
+/* ------------------------------------------------------------------ */
+
+export interface CompetitionStatsRow {
+  id: string;
+  club_id: string;
+  team_id: string;
+  player_user_id: string;
+  season_name: string;
+  period_start: string | null;
+  period_end: string | null;
+  matches_played: number;
+  matches_started: number;
+  minutes_played: number;
+  goals: number;
+  assists: number;
+  yellow_cards: number;
+  red_cards: number;
+  notes: string | null;
+  source: "manual" | "torneo";
+  created_at: string;
+  player?: PlayerRef | null;
+  team?: { id: string; name: string } | null;
+}
+
+const STATS_SELECT = `id, club_id, team_id, player_user_id, season_name, period_start, period_end, matches_played, matches_started, minutes_played, goals, assists, yellow_cards, red_cards, notes, source, created_at, team:teams(id, name)`;
+
+export function useCompetitionStats(clubId: string | null | undefined) {
+  useRealtime(clubId, "player_competition_stats", "dev-stats");
+  return useQuery({
+    queryKey: ["dev-stats", clubId ?? "none"] as const,
+    enabled: !!clubId,
+    staleTime: 30_000,
+    queryFn: async (): Promise<CompetitionStatsRow[]> => {
+      const { data, error } = await db
+        .from("player_competition_stats")
+        .select(STATS_SELECT)
+        .eq("club_id", clubId)
+        .order("season_name", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as CompetitionStatsRow[];
+    },
+  });
+}
+
+export function useSaveCompetitionStats(clubId: string, userId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      id?: string | null;
+      team_id: string;
+      player_user_id: string;
+      season_name: string;
+      period_start: string | null;
+      period_end: string | null;
+      matches_played: number;
+      matches_started: number;
+      minutes_played: number;
+      goals: number;
+      assists: number;
+      yellow_cards: number;
+      red_cards: number;
+      notes: string | null;
+    }) => {
+      const { id, ...row } = input;
+      if (id) {
+        const { error } = await db.from("player_competition_stats").update(row).eq("id", id);
+        if (error) throw error;
+      } else {
+        const { error } = await db
+          .from("player_competition_stats")
+          .insert({ ...row, club_id: clubId, created_by: userId, source: "manual" });
+        if (error) throw error;
+      }
+    },
+    onSuccess: (_d, vars) => invalidateDev(qc, clubId, vars.player_user_id),
+  });
+}
+
+export function useDeleteCompetitionStats(clubId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await db.from("player_competition_stats").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => invalidateDev(qc, clubId),
+  });
+}
+
+/** Serie de una medición concreta en el tiempo, lista para recharts. */
+export function measurementSeries(rows: MeasurementRow[], metric: string) {
+  return rows
+    .filter((r) => r.metric === metric)
+    .slice()
+    .sort((a, b) => a.measured_on.localeCompare(b.measured_on))
+    .map((r) => ({
+      date: new Date(`${r.measured_on}T12:00:00`).toLocaleDateString("es-MX", {
+        day: "2-digit",
+        month: "short",
+      }),
+      value: Number(r.value),
+    }));
 }

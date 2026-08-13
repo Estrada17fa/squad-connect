@@ -332,6 +332,7 @@ export type Database = {
           player_user_id: string
           team_id: string
           updated_at: string
+          visible_to_player: boolean
         }
         Insert: {
           club_id: string
@@ -344,6 +345,7 @@ export type Database = {
           player_user_id: string
           team_id: string
           updated_at?: string
+          visible_to_player?: boolean
         }
         Update: {
           club_id?: string
@@ -356,6 +358,7 @@ export type Database = {
           player_user_id?: string
           team_id?: string
           updated_at?: string
+          visible_to_player?: boolean
         }
         Relationships: [
           {
@@ -455,6 +458,66 @@ export type Database = {
           },
           {
             foreignKeyName: "development_goals_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      development_measurements: {
+        Row: {
+          club_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          measured_on: string
+          metric: string
+          notes: string | null
+          player_user_id: string
+          team_id: string
+          unit: string | null
+          updated_at: string
+          value: number
+        }
+        Insert: {
+          club_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          measured_on?: string
+          metric: string
+          notes?: string | null
+          player_user_id: string
+          team_id: string
+          unit?: string | null
+          updated_at?: string
+          value: number
+        }
+        Update: {
+          club_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          measured_on?: string
+          metric?: string
+          notes?: string | null
+          player_user_id?: string
+          team_id?: string
+          unit?: string | null
+          updated_at?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "development_measurements_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "development_measurements_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
             referencedRelation: "teams"
@@ -1573,6 +1636,90 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      player_competition_stats: {
+        Row: {
+          assists: number
+          club_id: string
+          created_at: string
+          created_by: string | null
+          goals: number
+          id: string
+          matches_played: number
+          matches_started: number
+          minutes_played: number
+          notes: string | null
+          period_end: string | null
+          period_start: string | null
+          player_user_id: string
+          red_cards: number
+          season_name: string
+          source: string
+          team_id: string
+          tournament_id: string | null
+          updated_at: string
+          yellow_cards: number
+        }
+        Insert: {
+          assists?: number
+          club_id: string
+          created_at?: string
+          created_by?: string | null
+          goals?: number
+          id?: string
+          matches_played?: number
+          matches_started?: number
+          minutes_played?: number
+          notes?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          player_user_id: string
+          red_cards?: number
+          season_name: string
+          source?: string
+          team_id: string
+          tournament_id?: string | null
+          updated_at?: string
+          yellow_cards?: number
+        }
+        Update: {
+          assists?: number
+          club_id?: string
+          created_at?: string
+          created_by?: string | null
+          goals?: number
+          id?: string
+          matches_played?: number
+          matches_started?: number
+          minutes_played?: number
+          notes?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          player_user_id?: string
+          red_cards?: number
+          season_name?: string
+          source?: string
+          team_id?: string
+          tournament_id?: string | null
+          updated_at?: string
+          yellow_cards?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_competition_stats_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "player_competition_stats_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
             referencedColumns: ["id"]
           },
         ]
@@ -3665,6 +3812,10 @@ export type Database = {
       development_level: {
         Args: { _team_id: string; _user_id: string }
         Returns: Database["public"]["Enums"]["access_level"]
+      }
+      development_sees_all: {
+        Args: { _team_id: string; _user_id: string }
+        Returns: boolean
       }
       effective_permission: {
         Args: { _module_key: string; _team_id: string; _user_id: string }

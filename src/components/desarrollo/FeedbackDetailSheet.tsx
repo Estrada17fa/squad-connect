@@ -1,5 +1,5 @@
 import * as React from "react";
-import { CalendarDays, MessageSquareQuote, User } from "lucide-react";
+import { CalendarDays, Eye, EyeOff, MessageSquareQuote, User } from "lucide-react";
 import { DetailField, DetailSection, DetailSheet, DetailValue } from "@/components/squad/DetailSheet";
 import { TeamBadge } from "@/components/squad/TeamFilter";
 import {
@@ -60,6 +60,11 @@ export function FeedbackDetailSheet({ open, onOpenChange, feedback, canEdit, clu
         ) : null}
         <DetailField label="Equipo">
           <TeamBadge name={feedback.team?.name} />
+        </DetailField>
+        <DetailField label="Visibilidad" icon={feedback.visible_to_player ? Eye : EyeOff}>
+          {feedback.visible_to_player
+            ? "Visible para el jugador"
+            : "Nota interna · solo cuerpo técnico"}
         </DetailField>
         <DetailField label="Retroalimentación" icon={MessageSquareQuote}>
           <DetailValue value={feedback.content} />
