@@ -65,6 +65,8 @@ export function ExerciseFormDialog({ open, onOpenChange, clubId, userId, teams, 
     setName(exercise?.name ?? "");
     setCategory(exercise?.category ?? "tecnica");
     setDuration(exercise?.duration_minutes != null ? String(exercise.duration_minutes) : "");
+    setSets(exercise?.default_sets != null ? String(exercise.default_sets) : "");
+    setReps(exercise?.default_reps != null ? String(exercise.default_reps) : "");
     setObjective(exercise?.objective ?? "");
     setDescription(exercise?.description ?? "");
     setMaterials(exercise?.materials ?? "");
