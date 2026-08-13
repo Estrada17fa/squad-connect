@@ -31,6 +31,8 @@ export interface FeedbackRow {
   feedback_date: string;
   context: string | null;
   content: string;
+  /** Nota interna: si es false el jugador NUNCA la recibe (filtrado en RLS). */
+  visible_to_player: boolean;
   created_by: string | null;
   created_at: string;
   player?: PlayerRef | null;
@@ -108,7 +110,7 @@ export interface RoutineRow {
 }
 
 const PLAYER_FK = "player:profiles!%FK%(id, full_name, email, avatar_url)";
-const FEEDBACK_SELECT = `id, club_id, team_id, player_user_id, feedback_date, context, content, created_by, created_at, ${PLAYER_FK.replace("%FK%", "development_feedback_player_user_id_fkey")}, team:teams(id, name)`;
+const FEEDBACK_SELECT = `id, club_id, team_id, player_user_id, feedback_date, context, content, visible_to_player, created_by, created_at, ${PLAYER_FK.replace("%FK%", "development_feedback_player_user_id_fkey")}, team:teams(id, name)`;
 const GOAL_SELECT = `id, club_id, team_id, player_user_id, title, description, target_date, status, completed_at, created_at, ${PLAYER_FK.replace("%FK%", "development_goals_player_user_id_fkey")}, team:teams(id, name)`;
 const ASSESSMENT_SELECT = `id, club_id, team_id, player_user_id, assessment_date, notes, created_at, ${PLAYER_FK.replace("%FK%", "development_assessments_player_user_id_fkey")}, team:teams(id, name), scores:assessment_scores(id, assessment_id, attribute, score)`;
 const ROUTINE_SELECT = `id, club_id, team_id, name, description, category, created_at, team:teams(id, name), exercises:routine_exercises(id, routine_id, name, sets, reps, instructions, order_index), assignments:routine_assignments(id, routine_id, player_user_id, assigned_at, due_date, status, notes, ${PLAYER_FK.replace("%FK%", "routine_assignments_player_user_id_fkey")})`;
@@ -250,7 +252,7 @@ export function usePlayerDevelopment(playerUserId: string | null | undefined) {
     enabled: !!playerUserId,
     staleTime: 15_000,
     queryFn: async () => {
-      const [fbRes, goalRes, assessRes, assignRes] = await Promise.all([
+      const [fbRes, goalRes, assessRes, assignRes, measureRes, statsRes] = await Promise.all([
         db
           .from("development_feedback")
           .select(FEEDBACK_SELECT)
@@ -273,12 +275,24 @@ export function usePlayerDevelopment(playerUserId: string | null | undefined) {
           )
           .eq("player_user_id", playerUserId)
           .order("assigned_at", { ascending: false }),
+        db
+          .from("development_measurements")
+          .select(MEASUREMENT_SELECT)
+          .eq("player_user_id", playerUserId)
+          .order("measured_on", { ascending: false }),
+        db
+          .from("player_competition_stats")
+          .select(STATS_SELECT)
+          .eq("player_user_id", playerUserId)
+          .order("season_name", { ascending: false }),
       ]);
       if (fbRes.error) throw fbRes.error;
       return {
         feedback: (fbRes.data ?? []) as FeedbackRow[],
         goals: (goalRes.data ?? []) as GoalRow[],
         assessments: (assessRes.data ?? []) as AssessmentRow[],
+        measurements: (measureRes.data ?? []) as MeasurementRow[],
+        stats: (statsRes.data ?? []) as CompetitionStatsRow[],
         assignments: ((assignRes.data ?? []) as AssignmentRow[]).map((a) => ({
           ...a,
           routine: a.routine
@@ -358,6 +372,7 @@ export function useSaveFeedback(clubId: string, userId: string) {
       feedback_date: string;
       context: string | null;
       content: string;
+      visible_to_player: boolean;
     }) => {
       const { id, ...row } = input;
       if (id) {
