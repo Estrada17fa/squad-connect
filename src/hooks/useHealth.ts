@@ -36,6 +36,7 @@ export interface CheckupRow {
   team_id: string;
   player_user_id: string;
   checkup_date: string;
+  checkup_type: CheckupType;
   reason: string;
   findings: string | null;
   diagnosis: string | null;
