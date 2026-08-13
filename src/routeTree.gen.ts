@@ -25,6 +25,7 @@ import { Route as AuthenticatedMUsuariosRouteImport } from './routes/_authentica
 import { Route as AuthenticatedMSolicitudesRouteImport } from './routes/_authenticated/m.solicitudes'
 import { Route as AuthenticatedMSaludRouteImport } from './routes/_authenticated/m.salud'
 import { Route as AuthenticatedMPlantelRouteImport } from './routes/_authenticated/m.plantel'
+import { Route as AuthenticatedMNutricionRouteImport } from './routes/_authenticated/m.nutricion'
 import { Route as AuthenticatedMMesRouteImport } from './routes/_authenticated/m.mes'
 import { Route as AuthenticatedMInventarioRouteImport } from './routes/_authenticated/m.inventario'
 import { Route as AuthenticatedMEntrenamientosRouteImport } from './routes/_authenticated/m.entrenamientos'
@@ -120,6 +121,11 @@ const AuthenticatedMPlantelRoute = AuthenticatedMPlantelRouteImport.update({
   path: '/m/plantel',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMNutricionRoute = AuthenticatedMNutricionRouteImport.update({
+  id: '/m/nutricion',
+  path: '/m/nutricion',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedMMesRoute = AuthenticatedMMesRouteImport.update({
   id: '/m/mes',
   path: '/m/mes',
@@ -210,6 +216,7 @@ export interface FileRoutesByFullPath {
   '/m/entrenamientos': typeof AuthenticatedMEntrenamientosRoute
   '/m/inventario': typeof AuthenticatedMInventarioRoute
   '/m/mes': typeof AuthenticatedMMesRoute
+  '/m/nutricion': typeof AuthenticatedMNutricionRoute
   '/m/plantel': typeof AuthenticatedMPlantelRouteWithChildren
   '/m/salud': typeof AuthenticatedMSaludRoute
   '/m/solicitudes': typeof AuthenticatedMSolicitudesRoute
@@ -238,6 +245,7 @@ export interface FileRoutesByTo {
   '/m/entrenamientos': typeof AuthenticatedMEntrenamientosRoute
   '/m/inventario': typeof AuthenticatedMInventarioRoute
   '/m/mes': typeof AuthenticatedMMesRoute
+  '/m/nutricion': typeof AuthenticatedMNutricionRoute
   '/m/plantel': typeof AuthenticatedMPlantelRouteWithChildren
   '/m/salud': typeof AuthenticatedMSaludRoute
   '/m/solicitudes': typeof AuthenticatedMSolicitudesRoute
@@ -269,6 +277,7 @@ export interface FileRoutesById {
   '/_authenticated/m/entrenamientos': typeof AuthenticatedMEntrenamientosRoute
   '/_authenticated/m/inventario': typeof AuthenticatedMInventarioRoute
   '/_authenticated/m/mes': typeof AuthenticatedMMesRoute
+  '/_authenticated/m/nutricion': typeof AuthenticatedMNutricionRoute
   '/_authenticated/m/plantel': typeof AuthenticatedMPlantelRouteWithChildren
   '/_authenticated/m/salud': typeof AuthenticatedMSaludRoute
   '/_authenticated/m/solicitudes': typeof AuthenticatedMSolicitudesRoute
@@ -300,6 +309,7 @@ export interface FileRouteTypes {
     | '/m/entrenamientos'
     | '/m/inventario'
     | '/m/mes'
+    | '/m/nutricion'
     | '/m/plantel'
     | '/m/salud'
     | '/m/solicitudes'
@@ -328,6 +338,7 @@ export interface FileRouteTypes {
     | '/m/entrenamientos'
     | '/m/inventario'
     | '/m/mes'
+    | '/m/nutricion'
     | '/m/plantel'
     | '/m/salud'
     | '/m/solicitudes'
@@ -358,6 +369,7 @@ export interface FileRouteTypes {
     | '/_authenticated/m/entrenamientos'
     | '/_authenticated/m/inventario'
     | '/_authenticated/m/mes'
+    | '/_authenticated/m/nutricion'
     | '/_authenticated/m/plantel'
     | '/_authenticated/m/salud'
     | '/_authenticated/m/solicitudes'
@@ -485,6 +497,13 @@ declare module '@tanstack/react-router' {
       path: '/m/plantel'
       fullPath: '/m/plantel'
       preLoaderRoute: typeof AuthenticatedMPlantelRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/m/nutricion': {
+      id: '/_authenticated/m/nutricion'
+      path: '/m/nutricion'
+      fullPath: '/m/nutricion'
+      preLoaderRoute: typeof AuthenticatedMNutricionRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/m/mes': {
@@ -619,6 +638,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMEntrenamientosRoute: typeof AuthenticatedMEntrenamientosRoute
   AuthenticatedMInventarioRoute: typeof AuthenticatedMInventarioRoute
   AuthenticatedMMesRoute: typeof AuthenticatedMMesRoute
+  AuthenticatedMNutricionRoute: typeof AuthenticatedMNutricionRoute
   AuthenticatedMPlantelRoute: typeof AuthenticatedMPlantelRouteWithChildren
   AuthenticatedMSaludRoute: typeof AuthenticatedMSaludRoute
   AuthenticatedMSolicitudesRoute: typeof AuthenticatedMSolicitudesRoute
@@ -644,6 +664,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMEntrenamientosRoute: AuthenticatedMEntrenamientosRoute,
   AuthenticatedMInventarioRoute: AuthenticatedMInventarioRoute,
   AuthenticatedMMesRoute: AuthenticatedMMesRoute,
+  AuthenticatedMNutricionRoute: AuthenticatedMNutricionRoute,
   AuthenticatedMPlantelRoute: AuthenticatedMPlantelRouteWithChildren,
   AuthenticatedMSaludRoute: AuthenticatedMSaludRoute,
   AuthenticatedMSolicitudesRoute: AuthenticatedMSolicitudesRoute,

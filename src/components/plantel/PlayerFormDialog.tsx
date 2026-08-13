@@ -59,8 +59,6 @@ export function PlayerFormDialog({ open, onOpenChange, clubId, teamId: teamIdPro
     player?.jersey_number != null ? String(player.jersey_number) : "",
   );
   const [birthdate, setBirthdate] = React.useState(player?.birthdate ?? "");
-  const [heightCm, setHeightCm] = React.useState<string>(player?.height_cm != null ? String(player.height_cm) : "");
-  const [weightKg, setWeightKg] = React.useState<string>(player?.weight_kg != null ? String(player.weight_kg) : "");
   const [availability, setAvailability] = React.useState<AvailabilityStatus>(player?.availability_status ?? "apto");
   const [notes, setNotes] = React.useState(player?.notes ?? "");
 
@@ -70,8 +68,6 @@ export function PlayerFormDialog({ open, onOpenChange, clubId, teamId: teamIdPro
     setPosition(player?.position ?? "");
     setJerseyNumber(player?.jersey_number != null ? String(player.jersey_number) : "");
     setBirthdate(player?.birthdate ?? "");
-    setHeightCm(player?.height_cm != null ? String(player.height_cm) : "");
-    setWeightKg(player?.weight_kg != null ? String(player.weight_kg) : "");
     setAvailability(player?.availability_status ?? "apto");
     setNotes(player?.notes ?? "");
   }, [open, player]);
@@ -98,8 +94,6 @@ export function PlayerFormDialog({ open, onOpenChange, clubId, teamId: teamIdPro
         position: position.trim() || null,
         jersey_number: jerseyNumber ? Number(jerseyNumber) : null,
         birthdate: birthdate || null,
-        height_cm: heightCm ? Number(heightCm) : null,
-        weight_kg: weightKg ? Number(weightKg) : null,
         availability_status: availability,
         notes: notes.trim() || null,
       };
@@ -182,19 +176,12 @@ export function PlayerFormDialog({ open, onOpenChange, clubId, teamId: teamIdPro
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="bd">Nacimiento</Label>
-            <Input id="bd" type="date" value={birthdate} onChange={(e) => setBirthdate(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="h">Altura (cm)</Label>
-            <Input id="h" type="number" inputMode="numeric" value={heightCm} onChange={(e) => setHeightCm(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="w">Peso (kg)</Label>
-            <Input id="w" type="number" inputMode="numeric" value={weightKg} onChange={(e) => setWeightKg(e.target.value)} />
-          </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="bd">Nacimiento</Label>
+          <Input id="bd" type="date" value={birthdate} onChange={(e) => setBirthdate(e.target.value)} />
+          <p className="text-xs text-muted-foreground">
+            El peso y la talla se registran en el estudio antropométrico de Nutrición.
+          </p>
         </div>
 
         <div className="space-y-1.5">

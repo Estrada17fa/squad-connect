@@ -36,6 +36,8 @@ import {
   type MemberProfile,
   type MembershipLite,
 } from "./memberUtils";
+import { usePlayerLatestAnthro } from "@/hooks/useNutrition";
+import { formatShortDay } from "@/lib/nutricion";
 
 /**
  * Ficha del miembro: SIEMPRE abre en lectura. Las acciones de gestión solo
@@ -88,6 +90,8 @@ export function MemberDetailSheet({
   });
 
   const player = playerQ.data as any | null;
+  // Peso y talla: fuente única = último estudio antropométrico (Nutrición).
+  const { data: anthro } = usePlayerLatestAnthro(player?.user_id ?? null);
 
   return (
     <DetailSheet
@@ -215,10 +219,15 @@ export function MemberDetailSheet({
                 )}
               </DetailField>
               <DetailField label="Estatura">
-                <DetailValue value={player.height_cm ? `${player.height_cm} cm` : null} />
+                <DetailValue value={anthro?.heightCm ? `${anthro.heightCm} cm` : null} />
               </DetailField>
               <DetailField label="Peso">
-                <DetailValue value={player.weight_kg ? `${player.weight_kg} kg` : null} />
+                <DetailValue value={anthro?.weightKg ? `${anthro.weightKg} kg` : null} />
+                {anthro ? (
+                  <p className="text-xs text-muted-foreground">
+                    Medido el {formatShortDay(anthro.assessedAt)}
+                  </p>
+                ) : null}
               </DetailField>
             </DetailGrid>
           </DetailSection>

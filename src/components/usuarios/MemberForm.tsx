@@ -284,8 +284,6 @@ export function MemberForm({
             position: player.position || null,
             secondary_position: player.secondary_position.trim() || null,
             preferred_foot: (player.preferred_foot || null) as PreferredFoot | null,
-            height_cm: num(player.height_cm),
-            weight_kg: num(player.weight_kg),
             nationality: player.nationality.trim() || null,
             birthplace: player.birthplace.trim() || null,
             affiliation_number: player.affiliation_number.trim() || null,
@@ -545,25 +543,10 @@ export function MemberForm({
                 </div>
               </Section>
 
-              <Section title="Datos físicos" hint="Medidas de plantel, no expediente médico.">
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <Field label="Altura (cm)" htmlFor="mf-h">
-                    <Input
-                      id="mf-h"
-                      type="number"
-                      value={player.height_cm}
-                      onChange={(e) => setPlayer((p) => ({ ...p, height_cm: e.target.value }))}
-                    />
-                  </Field>
-                  <Field label="Peso (kg)" htmlFor="mf-w">
-                    <Input
-                      id="mf-w"
-                      type="number"
-                      value={player.weight_kg}
-                      onChange={(e) => setPlayer((p) => ({ ...p, weight_kg: e.target.value }))}
-                    />
-                  </Field>
-                </div>
+              <Section
+                title="Datos físicos"
+                hint="El peso y la talla se miden en el estudio antropométrico de Nutrición."
+              >
                 <div className="grid gap-3 sm:grid-cols-3">
                   <Field label="Talla playera" htmlFor="mf-shirt">
                     <Input
