@@ -55,6 +55,8 @@ export interface ExerciseRow {
   objective: string | null;
   category: ExerciseCategory;
   duration_minutes: number | null;
+  default_sets: number | null;
+  default_reps: number | null;
   materials: string | null;
   media_path: string | null;
   created_by: string | null;
