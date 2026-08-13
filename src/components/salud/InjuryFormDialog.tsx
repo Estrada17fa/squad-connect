@@ -8,6 +8,7 @@ import {
   EntitySheetHeader,
   EntitySheetTitle,
 } from "@/components/squad/EntitySheet";
+import { PlayerPicker } from "@/components/squad/PlayerPicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -69,7 +70,7 @@ export function InjuryFormDialog({
 
   React.useEffect(() => {
     if (!open) return;
-    setPlayerUserId(injury?.player_user_id ?? presetPlayerUserId ?? players[0]?.userId ?? "");
+    setPlayerUserId(injury?.player_user_id ?? presetPlayerUserId ?? "");
     setType(injury?.injury_type ?? "");
     setBodyPart(injury?.body_part ?? "");
     setSeverity(injury?.severity ?? "leve");
@@ -119,24 +120,14 @@ export function InjuryFormDialog({
       </EntitySheetHeader>
 
       <EntitySheetBody>
-        <div className="space-y-1.5">
-          <Label htmlFor="inj-player">Jugador</Label>
-          <select
-            id="inj-player"
-            value={playerUserId}
-            onChange={(e) => setPlayerUserId(e.target.value)}
-            disabled={isEdit}
-            className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm disabled:opacity-60"
-          >
-            <option value="">Selecciona…</option>
-            {players.map((p) => (
-              <option key={p.playerId} value={p.userId}>
-                {p.fullName ?? "Sin nombre"}
-                {p.teamName ? ` · ${p.teamName}` : ""}
-              </option>
-            ))}
-          </select>
-        </div>
+        <PlayerPicker
+          id="inj-player"
+          players={players}
+          value={playerUserId}
+          onChange={setPlayerUserId}
+          disabled={isEdit}
+          emptyMessage="No tienes equipos donde puedas registrar información médica."
+        />
 
         <div className="grid grid-cols-2 gap-2">
           <div className="space-y-1.5">
