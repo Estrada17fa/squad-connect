@@ -124,6 +124,21 @@ export function FeedbackFormDialog({
             placeholder="Qué hizo bien, qué debe mejorar y cómo trabajarlo."
           />
         </div>
+
+        <div className="glass flex items-start justify-between gap-4 rounded-lg p-3">
+          <div className="min-w-0 space-y-1">
+            <Label htmlFor="fb-visible" className="flex items-center gap-1.5">
+              {visible ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+              Visible para el jugador
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              {visible
+                ? "El jugador verá esta nota en Mi Desarrollo."
+                : "Nota interna: solo la ve el cuerpo técnico. El jugador nunca la recibe."}
+            </p>
+          </div>
+          <Switch id="fb-visible" checked={visible} onCheckedChange={setVisible} />
+        </div>
       </EntitySheetBody>
 
       <EntitySheetFooter>
