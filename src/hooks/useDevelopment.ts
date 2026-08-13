@@ -359,6 +359,8 @@ function invalidateDev(qc: ReturnType<typeof useQueryClient>, clubId: string, pl
   qc.invalidateQueries({ queryKey: ["dev-goals", clubId] });
   qc.invalidateQueries({ queryKey: ["dev-assessments", clubId] });
   qc.invalidateQueries({ queryKey: ["dev-routines", clubId] });
+  qc.invalidateQueries({ queryKey: ["dev-measurements", clubId] });
+  qc.invalidateQueries({ queryKey: ["dev-stats", clubId] });
   if (playerUserId) qc.invalidateQueries({ queryKey: ["player-development", playerUserId] });
 }
 
