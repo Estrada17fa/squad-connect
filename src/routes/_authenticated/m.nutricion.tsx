@@ -224,73 +224,94 @@ function NutricionPage() {
       <ModuleTabs activeKey="nutricion" />
       <PageHeader hideTitle title="Nutrición" subtitle="Planes de alimentación y antropometría" />
 
-      {editablePlayers.length > 0 ? (
-        <div className="flex flex-wrap gap-2">
-          <Button className="glow-primary" onClick={() => openNewPlan(null)}>
-            Nuevo plan semanal
-          </Button>
-          <Button variant="secondary" onClick={() => openNewAssessment(null)}>
-            Registrar estudio
-          </Button>
-        </div>
-      ) : null}
+      <Tabs defaultValue="jugadores">
+        <TabsList>
+          <TabsTrigger value="jugadores">Jugadores</TabsTrigger>
+          <TabsTrigger value="guia">Guía de porciones</TabsTrigger>
+          <TabsTrigger value="recetas">Recetas</TabsTrigger>
+        </TabsList>
 
-      <NutricionFilters
-        value={filters}
-        onChange={setFilters}
-        teams={teamChoices}
-        count={filtered.length}
-      />
+        <TabsContent value="jugadores" className="mt-4 space-y-4">
+          {editablePlayers.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              <Button className="glow-primary" onClick={() => openNewPlan(null)}>
+                Nuevo plan semanal
+              </Button>
+              <Button variant="secondary" onClick={() => openNewAssessment(null)}>
+                Registrar estudio
+              </Button>
+            </div>
+          ) : null}
 
-      {rosterQ.isLoading ? (
-        <CardGridSkeleton count={4} />
-      ) : filtered.length === 0 ? (
-        <EmptyState
-          icon={Apple}
-          title="Sin jugadores"
-          message="No hay jugadores con esos filtros en las categorías donde tienes acceso a Nutrición."
-        />
-      ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((p) => {
-            const plan = currentPlanByUser.get(p.userId);
-            const last = lastAssessmentByUser.get(p.userId);
-            return (
-              <button
-                key={p.playerId}
-                type="button"
-                onClick={() => setDetailPlayer(toPlayer(p))}
-                className="glass flex items-start gap-3 p-4 text-left transition-all hover:border-white/15 hover:bg-white/[0.06] active:scale-[0.99]"
-              >
-                <Avatar className="h-12 w-12 shrink-0">
-                  <AvatarImage src={p.avatarUrl ?? undefined} alt="" />
-                  <AvatarFallback>{(p.fullName ?? "?").slice(0, 1).toUpperCase()}</AvatarFallback>
-                </Avatar>
-                <div className="min-w-0 flex-1 space-y-1">
-                  <p className="truncate font-display font-semibold text-foreground">
-                    {p.fullName ?? "—"}
-                  </p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {p.teamName ?? "—"}
-                    {p.position ? ` · ${p.position}` : ""}
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    <StatusBadge variant={plan ? "approved" : "neutral"}>
-                      {plan ? plan.week_type : "Sin plan esta semana"}
-                    </StatusBadge>
-                  </div>
-                  <p className="flex items-center gap-1.5 truncate text-xs text-muted-foreground">
-                    <Ruler className="h-3.5 w-3.5 shrink-0" />
-                    {last
-                      ? `${last.body_mass_kg != null ? `${Number(last.body_mass_kg)} kg · ` : ""}${formatShortDay(last.assessed_at)}`
-                      : "Sin estudio antropométrico"}
-                  </p>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      )}
+          <NutricionFilters
+            value={filters}
+            onChange={setFilters}
+            teams={teamChoices}
+            count={filtered.length}
+          />
+
+          {rosterQ.isLoading ? (
+            <CardGridSkeleton count={4} />
+          ) : filtered.length === 0 ? (
+            <EmptyState
+              icon={Apple}
+              title="Sin jugadores"
+              message="No hay jugadores con esos filtros en las categorías donde tienes acceso a Nutrición."
+            />
+          ) : (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {filtered.map((p) => {
+                const plan = currentPlanByUser.get(p.userId);
+                const last = lastAssessmentByUser.get(p.userId);
+                return (
+                  <button
+                    key={p.playerId}
+                    type="button"
+                    onClick={() => setDetailPlayer(toPlayer(p))}
+                    className="glass flex items-start gap-3 p-4 text-left transition-all hover:border-white/15 hover:bg-white/[0.06] active:scale-[0.99]"
+                  >
+                    <Avatar className="h-12 w-12 shrink-0">
+                      <AvatarImage src={p.avatarUrl ?? undefined} alt="" />
+                      <AvatarFallback>{(p.fullName ?? "?").slice(0, 1).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <p className="truncate font-display font-semibold text-foreground">
+                        {p.fullName ?? "—"}
+                      </p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {p.teamName ?? "—"}
+                        {p.position ? ` · ${p.position}` : ""}
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        <StatusBadge variant={plan ? "approved" : "neutral"}>
+                          {plan ? plan.week_type : "Sin plan esta semana"}
+                        </StatusBadge>
+                      </div>
+                      <p className="flex items-center gap-1.5 truncate text-xs text-muted-foreground">
+                        <Ruler className="h-3.5 w-3.5 shrink-0" />
+                        {last
+                          ? `${last.body_mass_kg != null ? `${Number(last.body_mass_kg)} kg · ` : ""}${formatShortDay(last.assessed_at)}`
+                          : "Sin estudio antropométrico"}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="guia" className="mt-4">
+          {clubId ? (
+            <EquivalencesTab clubId={clubId} userId={user.id} canEdit={canEditClub} />
+          ) : null}
+        </TabsContent>
+
+        <TabsContent value="recetas" className="mt-4">
+          {clubId ? <RecipesTab clubId={clubId} userId={user.id} canEdit={canEditClub} /> : null}
+        </TabsContent>
+      </Tabs>
+
 
       {detailPlayer ? (
         <PlayerNutritionSheet
