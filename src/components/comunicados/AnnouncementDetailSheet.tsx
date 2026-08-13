@@ -10,9 +10,11 @@ import type { TeamOption } from "@/hooks/useAccess";
 import {
   audienceLabel,
   formatAnnouncementDate,
+  useDeleteAnnouncement,
   useMarkRead,
   type AnnouncementRow,
 } from "@/hooks/useAnnouncements";
+import { DeleteAction } from "@/components/squad/DeleteAction";
 import { AnnouncementChip, AttachmentPreview, PriorityBadge } from "./ComunicadosPieces";
 import { AnnouncementFormDialog } from "./AnnouncementFormDialog";
 import { ReadReceipts } from "./ReadReceipts";
