@@ -471,7 +471,7 @@ function MiSaludSection({
     queryFn: async () => {
       const { data, error } = await supabase
         .from("player_profiles")
-        .select("team_id, team:teams(club_id, name)")
+        .select("team_id, availability_status, team:teams(club_id, name)")
         .eq("user_id", userId)
         .limit(1)
         .maybeSingle();
