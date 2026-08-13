@@ -2,6 +2,7 @@ import * as React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { AvailabilityStatus } from "@/hooks/usePlayers";
+import type { AppointmentStatus, CheckupType } from "@/lib/salud";
 
 /**
  * Módulo Salud — datos médicos.
