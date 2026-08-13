@@ -207,7 +207,7 @@ export function usePlayerHealth(playerUserId: string | null | undefined) {
     enabled: !!playerUserId,
     staleTime: 15_000,
     queryFn: async () => {
-      const [profileRes, checkupsRes, prescRes, injuriesRes] = await Promise.all([
+      const [profileRes, checkupsRes, prescRes, injuriesRes, apptRes] = await Promise.all([
         db
           .from("player_medical_profile")
           .select("*")
@@ -228,6 +228,11 @@ export function usePlayerHealth(playerUserId: string | null | undefined) {
           .select(INJURY_SELECT)
           .eq("player_user_id", playerUserId)
           .order("occurred_at", { ascending: false }),
+        db
+          .from("medical_appointments")
+          .select(APPOINTMENT_SELECT)
+          .eq("player_user_id", playerUserId)
+          .order("scheduled_at", { ascending: true }),
       ]);
       if (checkupsRes.error) throw checkupsRes.error;
       return {
@@ -235,6 +240,7 @@ export function usePlayerHealth(playerUserId: string | null | undefined) {
         checkups: (checkupsRes.data ?? []) as CheckupRow[],
         prescriptions: (prescRes.data ?? []) as PrescriptionRow[],
         injuries: (injuriesRes.data ?? []) as InjuryRow[],
+        appointments: (apptRes.data ?? []) as AppointmentRow[],
       };
     },
   });
