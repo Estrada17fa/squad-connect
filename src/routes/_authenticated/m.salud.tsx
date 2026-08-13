@@ -434,8 +434,12 @@ function SaludPage() {
             setAppointmentOpen(true);
           }}
           onOpenAppointment={(a) => {
-            setEditingAppointment(a);
-            setAppointmentOpen(true);
+            setDetailPlayer(null);
+            setDetailAppointment(a);
+          }}
+          onOpenCheckup={(c) => {
+            setDetailPlayer(null);
+            setDetailCheckup(c);
           }}
         />
       ) : null}
