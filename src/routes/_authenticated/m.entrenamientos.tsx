@@ -212,7 +212,7 @@ function EntrenamientosPage() {
           mode={view}
           value={filters}
           onChange={setFilters}
-          teams={teamOptions}
+          teams={teamOptions.flatMap((t) => (t.id ? [{ id: t.id, name: t.name }] : []))}
           count={view === "sesiones" ? sessions.length : exercises.length}
         />
 
