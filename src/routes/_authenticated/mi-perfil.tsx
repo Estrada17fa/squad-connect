@@ -46,6 +46,8 @@ import { PersonDocumentsSection } from "@/components/documentos/PersonDocumentsS
 import { formatShortDate } from "@/lib/calendar-utils";
 import { PLAYER_STATUS_LABEL, type PlayerStatus } from "@/lib/members.schemas";
 import { initials, roleVariant } from "@/components/usuarios/memberUtils";
+import { usePlayerLatestAnthro } from "@/hooks/useNutrition";
+import { formatShortDay } from "@/lib/nutricion";
 
 export const Route = createFileRoute("/_authenticated/mi-perfil")({
   head: () => ({
@@ -113,6 +115,8 @@ function MiPerfilPage() {
   const name = data.full_name ?? data.email ?? "Mi perfil";
   const memberships = membershipsQ.data ?? [];
   const player = playerQ.data;
+  // Peso y talla: fuente única = último estudio antropométrico (Nutrición).
+  const { data: anthro } = usePlayerLatestAnthro(player?.user_id ?? null);
   const isBaja = (data.status ?? "activo") === "baja";
 
   return (
@@ -226,10 +230,15 @@ function MiPerfilPage() {
                 <DetailValue value={player.preferred_foot} />
               </DetailField>
               <DetailField label="Estatura">
-                <DetailValue value={player.height_cm ? `${player.height_cm} cm` : null} />
+                <DetailValue value={anthro?.heightCm ? `${anthro.heightCm} cm` : null} />
               </DetailField>
               <DetailField label="Peso">
-                <DetailValue value={player.weight_kg ? `${player.weight_kg} kg` : null} />
+                <DetailValue value={anthro?.weightKg ? `${anthro.weightKg} kg` : null} />
+                {anthro ? (
+                  <p className="text-xs text-muted-foreground">
+                    Medido el {formatShortDay(anthro.assessedAt)}
+                  </p>
+                ) : null}
               </DetailField>
               <DetailField label="Estatus">
                 {player.player_status ? (
