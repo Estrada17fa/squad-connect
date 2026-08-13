@@ -337,7 +337,7 @@ export function PlayerNutritionContent({
             <p className="text-xs text-muted-foreground">
               {weekRangeLabel(currentPlan.week_start, currentPlan.week_end)} · {currentPlan.week_type}
             </p>
-            <MealPlanView plan={currentPlan} />
+            <MealPlanView plan={currentPlan} clubId={clubId} />
             {currentPlan.notes ? (
               <p className="whitespace-pre-wrap text-sm text-muted-foreground">{currentPlan.notes}</p>
             ) : null}
