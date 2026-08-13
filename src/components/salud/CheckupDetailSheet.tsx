@@ -1,9 +1,17 @@
 import * as React from "react";
-import { Pencil } from "lucide-react";
-import { DetailSheet, DetailField, DetailSection, DetailEmpty } from "@/components/squad/DetailSheet";
+import { CalendarClock, Pencil, Pill } from "lucide-react";
+import {
+  DetailSheet,
+  DetailField,
+  DetailGrid,
+  DetailSection,
+  DetailValue,
+} from "@/components/squad/DetailSheet";
 import { Button } from "@/components/ui/button";
-import { TeamBadge } from "@/components/squad/TeamFilter";
+import { StatusBadge } from "@/components/squad/StatusBadge";
 import { formatDateTime } from "@/lib/calendar-utils";
+import { CHECKUP_TYPE_LABEL, type CheckupType } from "@/lib/salud";
+import { HealthCard, HealthEmpty, HealthPersonHeader } from "./HealthPieces";
 import type { CheckupRow } from "@/hooks/useHealth";
 
 interface Props {
@@ -18,52 +26,78 @@ interface Props {
 export function CheckupDetailSheet({ open, onOpenChange, checkup, canEdit, onEdit }: Props) {
   if (!checkup) return null;
 
+  const type = (checkup.checkup_type ?? "valoracion") as CheckupType;
+  const prescriptions = checkup.prescriptions ?? [];
+
   return (
     <DetailSheet
       open={open}
       onOpenChange={onOpenChange}
       size="lg"
-      title={checkup.player?.full_name ?? "Jugador"}
-      description={checkup.reason}
+      title={checkup.reason}
+      description={`Revisión · ${checkup.player?.full_name ?? "Jugador"}`}
       headerActions={
         canEdit ? (
           <Button type="button" size="sm" variant="secondary" onClick={() => onEdit(checkup)}>
             <Pencil className="mr-2 h-3.5 w-3.5" /> Editar
           </Button>
-        ) : null
+        ) : undefined
       }
     >
-      <div className="flex items-center gap-2">
-        <TeamBadge name={checkup.team?.name} />
-      </div>
+      <div className="space-y-6">
+        <HealthPersonHeader
+          name={checkup.player?.full_name ?? "Jugador"}
+          avatarUrl={checkup.player?.avatar_url}
+          subtitle={checkup.team?.name ?? undefined}
+          badges={<StatusBadge variant="info">{CHECKUP_TYPE_LABEL[type]}</StatusBadge>}
+        />
 
-      <DetailField label="Fecha y hora">{formatDateTime(checkup.checkup_date)}</DetailField>
-      <DetailField label="Motivo">{checkup.reason}</DetailField>
-      <DetailField label="Hallazgos">
-        {checkup.findings ? <span className="whitespace-pre-wrap">{checkup.findings}</span> : <DetailEmpty />}
-      </DetailField>
-      <DetailField label="Diagnóstico">
-        {checkup.diagnosis ? <span className="whitespace-pre-wrap">{checkup.diagnosis}</span> : <DetailEmpty />}
-      </DetailField>
-      <DetailField label="Notas">
-        {checkup.notes ? <span className="whitespace-pre-wrap">{checkup.notes}</span> : <DetailEmpty />}
-      </DetailField>
-
-      {(checkup.prescriptions ?? []).length ? (
-        <DetailSection title="Recetas y tratamientos">
-          <ul className="space-y-2">
-            {(checkup.prescriptions ?? []).map((p) => (
-              <li key={p.id} className="glass space-y-1 p-3 text-sm">
-                <p className="font-medium text-foreground">{p.medication}</p>
-                <p className="text-muted-foreground">
-                  {[p.dosage, p.duration].filter(Boolean).join(" · ") || "Sin dosis especificada"}
-                </p>
-                {p.instructions ? <p className="text-muted-foreground">{p.instructions}</p> : null}
-              </li>
-            ))}
-          </ul>
+        <DetailSection title="Revisión">
+          <div className="glass rounded-lg p-4">
+            <DetailGrid>
+              <DetailField label="Fecha y hora" icon={CalendarClock}>
+                {formatDateTime(checkup.checkup_date)}
+              </DetailField>
+              <DetailField label="Tipo">{CHECKUP_TYPE_LABEL[type]}</DetailField>
+              <DetailField label="Motivo" full>
+                <DetailValue value={checkup.reason} />
+              </DetailField>
+              <DetailField label="Hallazgos" full>
+                <DetailValue value={checkup.findings} />
+              </DetailField>
+              <DetailField label="Diagnóstico" full>
+                <DetailValue value={checkup.diagnosis} />
+              </DetailField>
+              <DetailField label="Notas" full>
+                <DetailValue value={checkup.notes} />
+              </DetailField>
+            </DetailGrid>
+          </div>
         </DetailSection>
-      ) : null}
+
+        <DetailSection title="Recetas y tratamiento">
+          {prescriptions.length === 0 ? (
+            <HealthEmpty icon={Pill} title="Sin recetas" message="Esta revisión no tiene tratamiento asociado." />
+          ) : (
+            <div className="grid gap-2">
+              {prescriptions.map((p) => (
+                <HealthCard
+                  key={p.id}
+                  title={p.medication}
+                  badge={
+                    <StatusBadge variant="neutral">
+                      {[p.dosage, p.duration].filter(Boolean).join(" · ") || "Sin dosis"}
+                    </StatusBadge>
+                  }
+                  metaIcon={CalendarClock}
+                  meta={formatDateTime(p.prescribed_at)}
+                  note={p.instructions ?? undefined}
+                />
+              ))}
+            </div>
+          )}
+        </DetailSection>
+      </div>
     </DetailSheet>
   );
 }
