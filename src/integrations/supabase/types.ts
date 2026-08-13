@@ -56,6 +56,7 @@ export type Database = {
           ends_at: string | null
           event_type: Database["public"]["Enums"]["event_type"]
           id: string
+          is_private: boolean
           location: string | null
           location_id: string | null
           meeting_id: string | null
@@ -74,6 +75,7 @@ export type Database = {
           ends_at?: string | null
           event_type: Database["public"]["Enums"]["event_type"]
           id?: string
+          is_private?: boolean
           location?: string | null
           location_id?: string | null
           meeting_id?: string | null
@@ -92,6 +94,7 @@ export type Database = {
           ends_at?: string | null
           event_type?: Database["public"]["Enums"]["event_type"]
           id?: string
+          is_private?: boolean
           location?: string | null
           location_id?: string | null
           meeting_id?: string | null
@@ -1115,9 +1118,90 @@ export type Database = {
           },
         ]
       }
+      medical_appointments: {
+        Row: {
+          appointment_type: string
+          club_id: string
+          created_at: string
+          created_by: string | null
+          event_id: string | null
+          id: string
+          notes: string | null
+          place: string | null
+          player_user_id: string
+          reason: string
+          scheduled_at: string
+          status: string
+          team_id: string
+          updated_at: string
+        }
+        Insert: {
+          appointment_type?: string
+          club_id: string
+          created_at?: string
+          created_by?: string | null
+          event_id?: string | null
+          id?: string
+          notes?: string | null
+          place?: string | null
+          player_user_id: string
+          reason: string
+          scheduled_at: string
+          status?: string
+          team_id: string
+          updated_at?: string
+        }
+        Update: {
+          appointment_type?: string
+          club_id?: string
+          created_at?: string
+          created_by?: string | null
+          event_id?: string | null
+          id?: string
+          notes?: string | null
+          place?: string | null
+          player_user_id?: string
+          reason?: string
+          scheduled_at?: string
+          status?: string
+          team_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medical_appointments_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medical_appointments_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "calendar_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medical_appointments_player_user_id_fkey"
+            columns: ["player_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medical_appointments_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       medical_checkups: {
         Row: {
           checkup_date: string
+          checkup_type: string
           club_id: string
           created_at: string
           created_by: string | null
@@ -1133,6 +1217,7 @@ export type Database = {
         }
         Insert: {
           checkup_date?: string
+          checkup_type?: string
           club_id: string
           created_at?: string
           created_by?: string | null
@@ -1148,6 +1233,7 @@ export type Database = {
         }
         Update: {
           checkup_date?: string
+          checkup_type?: string
           club_id?: string
           created_at?: string
           created_by?: string | null
@@ -3746,7 +3832,12 @@ export type Database = {
       access_level: "none" | "read" | "editor" | "approver"
       approver_override_mode: "grant" | "revoke"
       attendance_status: "invitado" | "confirmado" | "rechazado"
-      availability_status: "apto" | "lesionado" | "en_duda"
+      availability_status:
+        | "apto"
+        | "lesionado"
+        | "en_duda"
+        | "en_recuperacion"
+        | "baja_medica"
       development_goal_status:
         | "pendiente"
         | "en_progreso"
@@ -3766,6 +3857,7 @@ export type Database = {
         | "viaje"
         | "junta"
         | "evento_especial"
+        | "medico"
       exercise_category:
         | "calentamiento"
         | "tecnica"
@@ -3949,7 +4041,13 @@ export const Constants = {
       access_level: ["none", "read", "editor", "approver"],
       approver_override_mode: ["grant", "revoke"],
       attendance_status: ["invitado", "confirmado", "rechazado"],
-      availability_status: ["apto", "lesionado", "en_duda"],
+      availability_status: [
+        "apto",
+        "lesionado",
+        "en_duda",
+        "en_recuperacion",
+        "baja_medica",
+      ],
       development_goal_status: [
         "pendiente",
         "en_progreso",
@@ -3971,6 +4069,7 @@ export const Constants = {
         "viaje",
         "junta",
         "evento_especial",
+        "medico",
       ],
       exercise_category: [
         "calentamiento",

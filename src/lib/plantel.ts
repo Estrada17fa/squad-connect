@@ -5,6 +5,8 @@ export const AVAILABILITY_META: Record<AvailabilityStatus, { label: string; vari
   apto: { label: "Apto", variant: "info" },
   lesionado: { label: "Lesionado", variant: "rejected" },
   en_duda: { label: "En duda", variant: "pending" },
+  en_recuperacion: { label: "En recuperación", variant: "info" },
+  baja_medica: { label: "Baja médica", variant: "rejected" },
 };
 
 export type PositionGroup = "portero" | "defensa" | "medio" | "delantero" | "otro";

@@ -1,88 +1,95 @@
 import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { AlertTriangle, HeartPulse, Plus, Search, Stethoscope } from "lucide-react";
+import { AlertTriangle, HeartPulse } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { ModuleTabs } from "@/components/squad/ModuleTabs";
 import { EmptyState } from "@/components/squad/EmptyState";
 import { CardGridSkeleton } from "@/components/squad/LoadingState";
-import { StandardCard } from "@/components/squad/StandardCard";
-import { StatusBadge, type StatusVariant } from "@/components/squad/StatusBadge";
-import { TeamFilter, TeamBadge } from "@/components/squad/TeamFilter";
+import { StatusBadge } from "@/components/squad/StatusBadge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useApp } from "@/components/squad/AppLayout";
 import { useTeamAccess } from "@/hooks/useTeamAccess";
-import { formatDateTime } from "@/lib/calendar-utils";
 import {
-  INJURY_STATUS_LABEL,
-  SEVERITY_LABEL,
   daysToReturn,
-  useCheckups,
+  useAppointments,
   useInjuries,
   useMedicalRoster,
+  type AppointmentRow,
   type CheckupRow,
   type InjuryRow,
   type MedicalRosterMember,
 } from "@/hooks/useHealth";
 import { CheckupFormDialog } from "@/components/salud/CheckupFormDialog";
 import { InjuryFormDialog } from "@/components/salud/InjuryFormDialog";
-import { InjuryDetailSheet, INJURY_STATUS_VARIANT } from "@/components/salud/InjuryDetailSheet";
-import { CheckupDetailSheet } from "@/components/salud/CheckupDetailSheet";
-import { PlayerMedicalSheet } from "@/components/salud/PlayerMedicalSheet";
-import { AVAILABILITY_META } from "@/lib/plantel";
+import { InjuryDetailSheet } from "@/components/salud/InjuryDetailSheet";
+import { AppointmentFormDialog } from "@/components/salud/AppointmentFormDialog";
+import {
+  PlayerHealthContent,
+  PlayerHealthSheet,
+  type HealthPlayer,
+} from "@/components/salud/PlayerHealthSheet";
+import {
+  EMPTY_SALUD_FILTERS,
+  SaludFilters,
+  type SaludFilterState,
+} from "@/components/salud/SaludFilters";
+import { HEALTH_STATUS_META, HEALTH_STATUS_ORDER } from "@/lib/salud";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/m/salud")({
   head: () => ({
     meta: [
       { title: "Squad — Salud" },
-      { name: "description", content: "Parte médico, revisiones y lesiones del equipo." },
+      { name: "description", content: "Estado de salud, lesiones, revisiones y citas médicas del equipo." },
       { property: "og:title", content: "Squad — Salud" },
-      { property: "og:description", content: "Expedientes médicos, revisiones y seguimiento de lesiones." },
+      {
+        property: "og:description",
+        content: "Expediente médico por jugador: estado, lesiones, tratamiento y citas.",
+      },
     ],
   }),
   component: SaludPage,
 });
 
-type SubView = "plantel" | "revisiones" | "lesiones";
-
 function SaludPage() {
-  const { profile, user, teamOptions, isSuperAdmin, accessibleModules } = useApp();
+  const { profile, user, isSuperAdmin, accessibleModules, teamOptions } = useApp();
   const clubId = profile?.club_id ?? null;
   const canAccess = isSuperAdmin || accessibleModules.includes("salud");
   const { canEditTeam, canReadTeam, onlyOwnRows } = useTeamAccess("salud");
-  // 'vista_jugador' en un módulo personal: solo se ven los registros propios.
-  const seesOwnOnly = React.useCallback(
-    (teamId: string, playerUserId: string) => !onlyOwnRows(teamId) || playerUserId === user.id,
-    [onlyOwnRows, user.id],
-  );
-
-  const [view, setView] = React.useState<SubView>("plantel");
-  const [teamFilter, setTeamFilter] = React.useState<string | null>(null);
-  const [search, setSearch] = React.useState("");
-  const [checkupOpen, setCheckupOpen] = React.useState(false);
-  const [editingCheckup, setEditingCheckup] = React.useState<CheckupRow | null>(null);
-  const [injuryOpen, setInjuryOpen] = React.useState(false);
-  const [editingInjury, setEditingInjury] = React.useState<InjuryRow | null>(null);
-  const [detailInjury, setDetailInjury] = React.useState<InjuryRow | null>(null);
-  const [detailCheckup, setDetailCheckup] = React.useState<CheckupRow | null>(null);
-  const [detailPlayer, setDetailPlayer] = React.useState<MedicalRosterMember | null>(null);
 
   const rosterQ = useMedicalRoster(canAccess ? clubId : null);
-  const checkupsQ = useCheckups(canAccess ? clubId : null);
   const injuriesQ = useInjuries(canAccess ? clubId : null);
+  const appointmentsQ = useAppointments(canAccess ? clubId : null);
 
-  // Solo equipos donde el usuario tiene algún nivel en 'salud'.
+  const [filters, setFilters] = React.useState<SaludFilterState>(EMPTY_SALUD_FILTERS);
+  const [detailPlayer, setDetailPlayer] = React.useState<HealthPlayer | null>(null);
+  const [detailInjury, setDetailInjury] = React.useState<InjuryRow | null>(null);
+  const [editingInjury, setEditingInjury] = React.useState<InjuryRow | null>(null);
+  const [injuryOpen, setInjuryOpen] = React.useState(false);
+  const [editingCheckup, setEditingCheckup] = React.useState<CheckupRow | null>(null);
+  const [checkupOpen, setCheckupOpen] = React.useState(false);
+  const [editingAppointment, setEditingAppointment] = React.useState<AppointmentRow | null>(null);
+  const [appointmentOpen, setAppointmentOpen] = React.useState(false);
+  const [formPlayer, setFormPlayer] = React.useState<string | null>(null);
+
+  /** Jugadores visibles: 'vista_jugador' solo se ve a sí mismo. */
   const roster = React.useMemo(
-    () => (rosterQ.data ?? []).filter((p) => canReadTeam(p.teamId) && seesOwnOnly(p.teamId, p.userId)),
-    [rosterQ.data, canReadTeam, seesOwnOnly],
+    () =>
+      (rosterQ.data ?? []).filter(
+        (p) => canReadTeam(p.teamId) && (!onlyOwnRows(p.teamId) || p.userId === user.id),
+      ),
+    [rosterQ.data, canReadTeam, onlyOwnRows, user.id],
   );
+
   const editablePlayers = React.useMemo(
     () => roster.filter((p) => canEditTeam(p.teamId)),
     [roster, canEditTeam],
   );
-  const canEditAny = editablePlayers.length > 0;
+
+  /** El propio registro del usuario (si es jugador). */
+  const myRow = roster.find((p) => p.userId === user.id) ?? null;
+  const isPlayerOnlyView = roster.length > 0 && roster.every((p) => p.userId === user.id);
 
   const injuries = injuriesQ.data ?? [];
   const openInjuryByUser = React.useMemo(() => {
@@ -93,18 +100,37 @@ function SaludPage() {
     return m;
   }, [injuries]);
 
-  const matchTeam = (teamId: string) => !teamFilter || teamFilter === teamId;
-  const q = search.trim().toLowerCase();
+  const nextApptByUser = React.useMemo(() => {
+    const m = new Map<string, AppointmentRow>();
+    const now = Date.now();
+    for (const a of appointmentsQ.data ?? []) {
+      if (a.status !== "programada" || new Date(a.scheduled_at).getTime() < now) continue;
+      if (!m.has(a.player_user_id)) m.set(a.player_user_id, a);
+    }
+    return m;
+  }, [appointmentsQ.data]);
 
-  const filteredRoster = roster.filter(
-    (p) => matchTeam(p.teamId) && (!q || (p.fullName ?? "").toLowerCase().includes(q)),
+  const teamChoices = React.useMemo(
+    () =>
+      teamOptions
+        .filter((t) => !!t.id)
+        .map((t) => ({ id: t.id as string, name: t.name })),
+    [teamOptions],
   );
-  const filteredCheckups = (checkupsQ.data ?? []).filter(
-    (c) => matchTeam(c.team_id) && seesOwnOnly(c.team_id, c.player_user_id) && (!q || (c.player?.full_name ?? "").toLowerCase().includes(q)),
+
+  const q = filters.search.trim().toLowerCase();
+  const filtered = roster.filter(
+    (p) =>
+      (!filters.teamId || filters.teamId === p.teamId) &&
+      (!filters.status || filters.status === p.availability) &&
+      (!q || (p.fullName ?? "").toLowerCase().includes(q)),
   );
-  const filteredInjuries = injuries.filter(
-    (i) => matchTeam(i.team_id) && seesOwnOnly(i.team_id, i.player_user_id) && (!q || (i.player?.full_name ?? "").toLowerCase().includes(q)),
-  );
+
+  const counts = React.useMemo(() => {
+    const c = new Map<string, number>();
+    for (const p of roster) c.set(p.availability, (c.get(p.availability) ?? 0) + 1);
+    return c;
+  }, [roster]);
 
   const alerts = injuries.filter((i) => {
     if (i.status === "recuperada") return false;
@@ -112,11 +138,20 @@ function SaludPage() {
     return d != null && d <= 3;
   });
 
+  const toHealthPlayer = (p: MedicalRosterMember): HealthPlayer => ({
+    userId: p.userId,
+    teamId: p.teamId,
+    fullName: p.fullName,
+    avatarUrl: p.avatarUrl,
+    teamName: p.teamName,
+    availability: p.availability,
+  });
+
   if (!canAccess) {
     return (
       <div className="space-y-6">
         <ModuleTabs activeKey="salud" />
-        <PageHeader hideTitle title="Salud" subtitle="Parte médico y lesiones" />
+        <PageHeader hideTitle title="Salud" subtitle="Estado, lesiones y citas médicas" />
         <EmptyState
           icon={HeartPulse}
           title="Sin acceso"
@@ -126,264 +161,257 @@ function SaludPage() {
     );
   }
 
+  const dialogs = clubId ? (
+    <>
+      <InjuryFormDialog
+        open={injuryOpen}
+        onOpenChange={(v) => {
+          setInjuryOpen(v);
+          if (!v) setEditingInjury(null);
+        }}
+        clubId={clubId}
+        userId={user.id}
+        players={editablePlayers}
+        injury={editingInjury}
+      />
+      <CheckupFormDialog
+        open={checkupOpen}
+        onOpenChange={(v) => {
+          setCheckupOpen(v);
+          if (!v) setEditingCheckup(null);
+        }}
+        clubId={clubId}
+        userId={user.id}
+        players={editablePlayers}
+        checkup={editingCheckup}
+        draft={formPlayer && !editingCheckup ? { playerUserId: formPlayer } : null}
+      />
+      <AppointmentFormDialog
+        open={appointmentOpen}
+        onOpenChange={(v) => {
+          setAppointmentOpen(v);
+          if (!v) setEditingAppointment(null);
+        }}
+        clubId={clubId}
+        userId={user.id}
+        players={editablePlayers}
+        appointment={editingAppointment}
+        fixedPlayerUserId={editingAppointment ? null : formPlayer}
+      />
+      <InjuryDetailSheet
+        open={!!detailInjury}
+        onOpenChange={(v) => !v && setDetailInjury(null)}
+        clubId={clubId}
+        userId={user.id}
+        injury={detailInjury}
+        canEdit={!!detailInjury && canEditTeam(detailInjury.team_id)}
+        onEdit={(i) => {
+          setDetailInjury(null);
+          setEditingInjury(i);
+          setInjuryOpen(true);
+        }}
+      />
+    </>
+  ) : null;
+
+  /* ------------------------------- Mi Salud ------------------------------- */
+  if (isPlayerOnlyView && myRow && clubId) {
+    return (
+      <div className="space-y-6">
+        <ModuleTabs activeKey="salud" />
+        <PageHeader hideTitle title="Mi Salud" subtitle="Tu estado, tus lesiones y tus citas" />
+        <PlayerHealthContent
+          clubId={clubId}
+          player={toHealthPlayer(myRow)}
+          canEdit={canEditTeam(myRow.teamId)}
+          self
+          onOpenInjury={(i) => setDetailInjury(i)}
+        />
+        {dialogs}
+      </div>
+    );
+  }
+
+  /* -------------------------------- Panel --------------------------------- */
   return (
     <div className="space-y-6">
       <ModuleTabs activeKey="salud" />
-      <PageHeader hideTitle title="Salud" subtitle="Parte médico y lesiones" />
-      <TeamFilter teams={teamOptions} value={teamFilter} onChange={setTeamFilter} />
+      <PageHeader hideTitle title="Salud" subtitle="Estado, lesiones y citas médicas" />
 
-      <Tabs value={view} onValueChange={(v) => setView(v as SubView)} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="plantel">Plantel médico</TabsTrigger>
-          <TabsTrigger value="revisiones">Revisiones</TabsTrigger>
-          <TabsTrigger value="lesiones">Lesiones</TabsTrigger>
-        </TabsList>
+      {/* Resumen de un vistazo */}
+      <div className="flex flex-wrap gap-2">
+        {HEALTH_STATUS_ORDER.map((s) => {
+          const n = counts.get(s) ?? 0;
+          if (!n) return null;
+          const meta = HEALTH_STATUS_META[s];
+          return (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setFilters((f) => ({ ...f, status: f.status === s ? null : s }))}
+              className={cn(
+                "glass inline-flex items-center gap-2 px-3 py-2 text-sm transition-colors",
+                filters.status === s ? "border-primary/40 bg-primary/10" : "hover:bg-white/[0.06]",
+              )}
+            >
+              <span className={cn("h-2.5 w-2.5 rounded-full", meta.dot)} aria-hidden />
+              <span className="font-semibold text-foreground">{n}</span>
+              <span className="text-muted-foreground">{meta.label.toLowerCase()}</span>
+            </button>
+          );
+        })}
+      </div>
 
-        {canEditAny && view !== "plantel" ? (
-          <Button
-            className="w-full glow-primary"
-            onClick={() => {
-              if (view === "revisiones") {
-                setEditingCheckup(null);
-                setCheckupOpen(true);
-              } else {
-                setEditingInjury(null);
-                setInjuryOpen(true);
-              }
-            }}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            {view === "revisiones" ? "Registrar revisión" : "Registrar lesión"}
-          </Button>
-        ) : null}
-
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar jugador…"
-            className="pl-9"
-          />
+      {alerts.length > 0 ? (
+        <div className="flex items-start gap-2 rounded-lg border border-amber-400/40 bg-amber-400/10 p-3 text-xs text-amber-200">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>
+            {alerts.length} lesión{alerts.length === 1 ? "" : "es"} con regreso estimado próximo o vencido.
+          </span>
         </div>
+      ) : null}
 
-        {alerts.length > 0 ? (
-          <div className="flex items-start gap-2 rounded-lg border border-amber-400/40 bg-amber-400/10 p-3 text-xs text-amber-200">
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-            <span>
-              {alerts.length} lesión{alerts.length === 1 ? "" : "es"} con retorno estimado próximo o vencido.
-            </span>
-          </div>
-        ) : null}
-
-        <TabsContent value="plantel" className="space-y-3">
-          {rosterQ.isLoading ? (
-            <CardGridSkeleton count={4} />
-          ) : filteredRoster.length === 0 ? (
-            <EmptyState
-              icon={HeartPulse}
-              title="Sin jugadores"
-              message="No hay jugadores en los equipos donde tienes acceso a Salud."
-            />
-          ) : (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredRoster.map((p) => {
-                const meta = AVAILABILITY_META[p.availability];
-                const inj = openInjuryByUser.get(p.userId);
-                return (
-                  <button
-                    key={p.playerId}
-                    type="button"
-                    onClick={() => setDetailPlayer(p)}
-                    className="glass flex items-center gap-3 p-4 text-left transition-all hover:border-white/15 hover:bg-white/[0.06] active:scale-[0.99]"
-                  >
-                    <Avatar className="h-12 w-12 shrink-0">
-                      <AvatarImage src={p.avatarUrl ?? undefined} alt="" />
-                      <AvatarFallback>{(p.fullName ?? "?").slice(0, 1).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-display font-semibold text-foreground">
-                        {p.fullName ?? "—"}
-                      </p>
-                      <p className="truncate text-xs text-muted-foreground">
-                        {p.teamName ?? "—"}
-                        {p.position ? ` · ${p.position}` : ""}
-                      </p>
-                      <div className="mt-1 flex flex-wrap items-center gap-2">
-                        <StatusBadge variant={meta.variant}>{meta.label}</StatusBadge>
-                        {inj ? (
-                          <span className="text-[11px] text-destructive">
-                            {inj.injury_type} · {inj.body_part}
-                          </span>
-                        ) : null}
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="revisiones" className="space-y-3">
-          {checkupsQ.isLoading ? (
-            <CardGridSkeleton count={3} />
-          ) : filteredCheckups.length === 0 ? (
-            <EmptyState
-              icon={Stethoscope}
-              title="Sin revisiones"
-              message="Aún no se ha registrado ninguna revisión médica."
-            />
-          ) : (
-            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-              {filteredCheckups.map((c) => (
-                <StandardCard
-                  key={c.id}
-                  icon={Stethoscope}
-                  title={c.player?.full_name ?? "Jugador"}
-                  subtitle={c.reason}
-                  interactive
-                  onClick={() => setDetailCheckup(c)}
-                  action={<TeamBadge name={c.team?.name} />}
-                >
-                  <div className="space-y-1">
-                    <p>{formatDateTime(c.checkup_date)}</p>
-                    {c.diagnosis ? <p>Diagnóstico: {c.diagnosis}</p> : null}
-                  </div>
-                </StandardCard>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="lesiones" className="space-y-3">
-          {injuriesQ.isLoading ? (
-            <CardGridSkeleton count={3} />
-          ) : filteredInjuries.length === 0 ? (
-            <EmptyState
-              icon={HeartPulse}
-              title="Sin lesiones"
-              message="No hay lesiones registradas en tus equipos."
-            />
-          ) : (
-            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-              {filteredInjuries.map((i) => {
-                const d = daysToReturn(i);
-                const overdue = i.status !== "recuperada" && d != null && d < 0;
-                const status: { label: string; variant: StatusVariant } = {
-                  label: INJURY_STATUS_LABEL[i.status],
-                  variant: INJURY_STATUS_VARIANT[i.status],
-                };
-                return (
-                  <StandardCard
-                    key={i.id}
-                    icon={HeartPulse}
-                    title={i.player?.full_name ?? "Jugador"}
-                    subtitle={`${i.injury_type} · ${i.body_part}`}
-                    status={status}
-                    interactive
-                    onClick={() => setDetailInjury(i)}
-                    className={overdue ? "border-destructive/50" : undefined}
-                  >
-                    <div className="space-y-1">
-                      <p>
-                        {SEVERITY_LABEL[i.severity]} ·{" "}
-                        {new Date(`${i.occurred_at}T12:00:00`).toLocaleDateString("es-MX", {
-                          day: "2-digit",
-                          month: "long",
-                        })}
-                      </p>
-                      {i.estimated_return && i.status !== "recuperada" ? (
-                        <p className={overdue ? "text-destructive" : undefined}>
-                          Retorno estimado:{" "}
-                          {new Date(`${i.estimated_return}T12:00:00`).toLocaleDateString("es-MX", {
-                            day: "2-digit",
-                            month: "long",
-                          })}
-                          {d != null ? (overdue ? ` · vencido ${Math.abs(d)} d` : ` · en ${d} d`) : ""}
-                        </p>
-                      ) : null}
-                      <TeamBadge name={i.team?.name} />
-                    </div>
-                  </StandardCard>
-                );
-              })}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
-
-      {clubId ? (
-        <>
-          <CheckupFormDialog
-            open={checkupOpen}
-            onOpenChange={(v) => {
-              setCheckupOpen(v);
-              if (!v) setEditingCheckup(null);
-            }}
-            clubId={clubId}
-            userId={user.id}
-            players={editablePlayers}
-            checkup={editingCheckup}
-          />
-          <InjuryFormDialog
-            open={injuryOpen}
-            onOpenChange={(v) => {
-              setInjuryOpen(v);
-              if (!v) setEditingInjury(null);
-            }}
-            clubId={clubId}
-            userId={user.id}
-            players={editablePlayers}
-            injury={editingInjury}
-          />
-          <CheckupDetailSheet
-            open={!!detailCheckup}
-            onOpenChange={(v) => !v && setDetailCheckup(null)}
-            checkup={detailCheckup}
-            canEdit={!!detailCheckup && canEditTeam(detailCheckup.team_id)}
-            onEdit={(c) => {
-              setDetailCheckup(null);
-              setEditingCheckup(c);
-              setCheckupOpen(true);
-            }}
-          />
-          <InjuryDetailSheet
-            open={!!detailInjury}
-            onOpenChange={(v) => !v && setDetailInjury(null)}
-            clubId={clubId}
-            userId={user.id}
-            injury={detailInjury}
-            canEdit={!!detailInjury && canEditTeam(detailInjury.team_id)}
-            onEdit={(i) => {
-              setDetailInjury(null);
-              setEditingInjury(i);
+      {editablePlayers.length > 0 ? (
+        <div className="flex flex-wrap gap-2">
+          <Button
+            className="glow-primary"
+            onClick={() => {
+              setFormPlayer(null);
+              setEditingInjury(null);
               setInjuryOpen(true);
             }}
-          />
-          <PlayerMedicalSheet
-            open={!!detailPlayer}
-            onOpenChange={(v) => !v && setDetailPlayer(null)}
-            clubId={clubId}
-            player={
-              detailPlayer
-                ? {
-                    userId: detailPlayer.userId,
-                    teamId: detailPlayer.teamId,
-                    fullName: detailPlayer.fullName,
-                    avatarUrl: detailPlayer.avatarUrl,
-                    teamName: detailPlayer.teamName,
-                  }
-                : null
-            }
-            canEdit={!!detailPlayer && canEditTeam(detailPlayer.teamId)}
-            onOpenInjury={(i) => {
-              setDetailPlayer(null);
-              setDetailInjury(i);
+          >
+            Registrar lesión
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setFormPlayer(null);
+              setEditingCheckup(null);
+              setCheckupOpen(true);
             }}
-          />
-        </>
+          >
+            Registrar revisión
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setFormPlayer(null);
+              setEditingAppointment(null);
+              setAppointmentOpen(true);
+            }}
+          >
+            Programar cita
+          </Button>
+        </div>
       ) : null}
+
+      <SaludFilters value={filters} onChange={setFilters} teams={teamChoices} count={filtered.length} />
+
+      {rosterQ.isLoading ? (
+        <CardGridSkeleton count={4} />
+      ) : filtered.length === 0 ? (
+        <EmptyState
+          icon={HeartPulse}
+          title="Sin jugadores"
+          message="No hay jugadores con esos filtros en las categorías donde tienes acceso a Salud."
+        />
+      ) : (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {filtered.map((p) => {
+            const meta = HEALTH_STATUS_META[p.availability] ?? HEALTH_STATUS_META.apto;
+            const inj = openInjuryByUser.get(p.userId);
+            const appt = nextApptByUser.get(p.userId);
+            const d = inj ? daysToReturn(inj) : null;
+            return (
+              <button
+                key={p.playerId}
+                type="button"
+                onClick={() => setDetailPlayer(toHealthPlayer(p))}
+                className="glass flex items-start gap-3 p-4 text-left transition-all hover:border-white/15 hover:bg-white/[0.06] active:scale-[0.99]"
+              >
+                <div className="relative shrink-0">
+                  <Avatar className="h-12 w-12">
+                    <AvatarImage src={p.avatarUrl ?? undefined} alt="" />
+                    <AvatarFallback>{(p.fullName ?? "?").slice(0, 1).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <span
+                    className={cn(
+                      "absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full ring-2 ring-background",
+                      meta.dot,
+                    )}
+                    aria-hidden
+                  />
+                </div>
+                <div className="min-w-0 flex-1 space-y-1">
+                  <p className="truncate font-display font-semibold text-foreground">
+                    {p.fullName ?? "—"}
+                  </p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {p.teamName ?? "—"}
+                    {p.position ? ` · ${p.position}` : ""}
+                  </p>
+                  <StatusBadge variant={meta.variant}>{meta.label}</StatusBadge>
+                  {inj ? (
+                    <p className="truncate text-xs text-muted-foreground">
+                      {inj.injury_type} · {inj.body_part}
+                      {d != null
+                        ? d < 0
+                          ? ` · regreso vencido ${Math.abs(d)} d`
+                          : ` · regreso ~${d} d`
+                        : ""}
+                    </p>
+                  ) : null}
+                  {appt ? (
+                    <p className="truncate text-xs text-muted-foreground">
+                      Próxima cita:{" "}
+                      {new Date(appt.scheduled_at).toLocaleDateString("es-MX", {
+                        day: "2-digit",
+                        month: "short",
+                      })}
+                    </p>
+                  ) : null}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {clubId ? (
+        <PlayerHealthSheet
+          open={!!detailPlayer}
+          onOpenChange={(v) => !v && setDetailPlayer(null)}
+          clubId={clubId}
+          player={detailPlayer}
+          canEdit={!!detailPlayer && canEditTeam(detailPlayer.teamId)}
+          onOpenInjury={(i) => {
+            setDetailPlayer(null);
+            setDetailInjury(i);
+          }}
+          onNewInjury={() => {
+            setFormPlayer(detailPlayer?.userId ?? null);
+            setEditingInjury(null);
+            setInjuryOpen(true);
+          }}
+          onNewCheckup={() => {
+            setFormPlayer(detailPlayer?.userId ?? null);
+            setEditingCheckup(null);
+            setCheckupOpen(true);
+          }}
+          onNewAppointment={() => {
+            setFormPlayer(detailPlayer?.userId ?? null);
+            setEditingAppointment(null);
+            setAppointmentOpen(true);
+          }}
+          onOpenAppointment={(a) => {
+            setEditingAppointment(a);
+            setAppointmentOpen(true);
+          }}
+        />
+      ) : null}
+
+      {dialogs}
     </div>
   );
 }

@@ -11,7 +11,7 @@ import { useApp } from "@/components/squad/AppLayout";
 import { useTeamAccess } from "@/hooks/useTeamAccess";
 import { usePlayer } from "@/hooks/usePlayers";
 import { AVAILABILITY_META } from "@/lib/plantel";
-import { PlayerMedicalSheet } from "@/components/salud/PlayerMedicalSheet";
+import { PlayerHealthSheet } from "@/components/salud/PlayerHealthSheet";
 import { PlayerDevelopmentSheet } from "@/components/desarrollo/PlayerDevelopmentSheet";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -140,7 +140,7 @@ function PlayerDetail() {
       </div>
 
       {clubId ? (
-        <PlayerMedicalSheet
+        <PlayerHealthSheet
           open={healthOpen}
           onOpenChange={setHealthOpen}
           clubId={clubId}
@@ -149,6 +149,7 @@ function PlayerDetail() {
             teamId: player.team_id,
             fullName: player.profile?.full_name ?? null,
             avatarUrl: player.profile?.avatar_url ?? null,
+            availability: player.availability_status,
           }}
           canEdit={canEditHealth}
         />

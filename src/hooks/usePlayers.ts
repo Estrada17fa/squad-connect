@@ -2,7 +2,12 @@ import * as React from "react";
 import { queryOptions, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export type AvailabilityStatus = "apto" | "lesionado" | "en_duda";
+export type AvailabilityStatus =
+  | "apto"
+  | "lesionado"
+  | "en_duda"
+  | "en_recuperacion"
+  | "baja_medica";
 
 export interface PlayerRow {
   id: string;
