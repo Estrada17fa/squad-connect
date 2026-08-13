@@ -45,6 +45,7 @@ export function FeedbackFormDialog({
   const [date, setDate] = React.useState(today());
   const [context, setContext] = React.useState("");
   const [content, setContent] = React.useState("");
+  const [visible, setVisible] = React.useState(true);
 
   React.useEffect(() => {
     if (!open) return;
@@ -52,6 +53,7 @@ export function FeedbackFormDialog({
     setDate(feedback?.feedback_date ?? today());
     setContext(feedback?.context ?? "");
     setContent(feedback?.content ?? "");
+    setVisible(feedback ? feedback.visible_to_player : true);
   }, [open, feedback, defaultPlayerUserId]);
 
   const player = players.find((p) => p.userId === playerUserId);
@@ -67,6 +69,7 @@ export function FeedbackFormDialog({
         feedback_date: date,
         context: context.trim() || null,
         content: content.trim(),
+        visible_to_player: visible,
       },
       {
         onSuccess: () => {
