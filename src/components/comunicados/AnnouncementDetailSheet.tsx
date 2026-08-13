@@ -42,6 +42,7 @@ export function AnnouncementDetailSheet({
   canPublishClubWide,
 }: Props) {
   const markRead = useMarkRead();
+  const del = useDeleteAnnouncement();
   const id = announcement?.id;
   const alreadyRead = announcement?.read;
 
