@@ -123,6 +123,19 @@ export function AnnouncementDetailSheet({
       </DetailSection>
 
       {canEdit ? <ReadReceipts announcement={announcement} /> : null}
+
+      {canEdit ? (
+        <div className="flex justify-end border-t border-white/5 pt-3">
+          <DeleteAction
+            label="Eliminar comunicado"
+            title="¿Eliminar este comunicado?"
+            description="Se quitará del tablón para todas las personas. Esta acción no se puede deshacer."
+            successMessage="Comunicado eliminado"
+            onDelete={() => del.mutateAsync(announcement)}
+            onDeleted={() => onOpenChange(false)}
+          />
+        </div>
+      ) : null}
     </DetailSheet>
   );
 }
