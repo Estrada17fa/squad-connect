@@ -24,12 +24,12 @@ export const ASSIGNMENT_STATUS_VARIANT: Record<AssignmentStatus, StatusVariant> 
 /** Atributos sugeridos para el boletín deportivo (editables en el formulario). */
 export const ASSESSMENT_ATTRIBUTES = ["Técnica", "Físico", "Táctica", "Mental/Actitud"];
 
-/** Mediciones físicas de uso común; el club puede escribir otra. */
+/**
+ * Mediciones físicas de uso común; el club puede escribir otra.
+ * El peso, la talla y la composición corporal NO se capturan aquí: su fuente
+ * única es el estudio antropométrico del módulo Nutrición.
+ */
 export const MEASUREMENT_PRESETS: { metric: string; unit: string }[] = [
-  { metric: "Peso", unit: "kg" },
-  { metric: "Estatura", unit: "cm" },
-  { metric: "% grasa corporal", unit: "%" },
-  { metric: "Masa muscular", unit: "kg" },
   { metric: "Velocidad 30 m", unit: "s" },
   { metric: "Salto vertical", unit: "cm" },
 ];

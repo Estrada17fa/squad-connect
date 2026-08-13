@@ -377,3 +377,32 @@ export function useDeleteAssessment(clubId: string) {
     onSuccess: (a) => invalidate(qc, clubId, a.player_user_id),
   });
 }
+
+/**
+ * Peso y talla más recientes de UN jugador — lo usan Plantel y Desarrollo,
+ * que ya no capturan peso: la fuente única es el estudio antropométrico.
+ * Si el usuario no tiene acceso a 'nutricion', RLS devuelve vacío.
+ */
+export function usePlayerLatestAnthro(playerUserId: string | null | undefined) {
+  return useQuery({
+    queryKey: ["nutri-latest-anthro-player", playerUserId ?? "none"] as const,
+    enabled: !!playerUserId,
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("nutrition_assessments")
+        .select("assessed_at, body_mass_kg, height_cm")
+        .eq("player_user_id", playerUserId)
+        .order("assessed_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) return null;
+      return {
+        assessedAt: data.assessed_at as string,
+        weightKg: data.body_mass_kg == null ? null : Number(data.body_mass_kg),
+        heightCm: data.height_cm == null ? null : Number(data.height_cm),
+      };
+    },
+  });
+}
