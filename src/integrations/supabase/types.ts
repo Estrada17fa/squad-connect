@@ -1646,6 +1646,329 @@ export type Database = {
           },
         ]
       }
+      nutrition_assessments: {
+        Row: {
+          arm_span_cm: number | null
+          assessed_at: string
+          body_mass_kg: number | null
+          brd_ap_abdominal: number | null
+          brd_ap_chest: number | null
+          brd_biacromial: number | null
+          brd_biestyloid: number | null
+          brd_biiliocristal: number | null
+          brd_bimalleolar: number | null
+          brd_femur: number | null
+          brd_humerus: number | null
+          brd_transverse_chest: number | null
+          club_id: string
+          created_at: string
+          created_by: string | null
+          girth_ankle: number | null
+          girth_arm_flexed: number | null
+          girth_arm_relaxed: number | null
+          girth_calf: number | null
+          girth_chest: number | null
+          girth_forearm: number | null
+          girth_head: number | null
+          girth_hips: number | null
+          girth_neck: number | null
+          girth_thigh_1cm: number | null
+          girth_thigh_mid: number | null
+          girth_waist: number | null
+          girth_wrist: number | null
+          height_cm: number | null
+          hgt_iliospinale: number | null
+          hgt_tibiale_laterale: number | null
+          hgt_trochanterion: number | null
+          id: string
+          len_acromiale_radiale: number | null
+          len_foot: number | null
+          len_midstylion_dactylion: number | null
+          len_radiale_stylion: number | null
+          len_tibiale_mediale_sphyrion: number | null
+          len_trochanterion_tibiale: number | null
+          notes: string | null
+          player_user_id: string
+          sitting_height_cm: number | null
+          skf_abdominal: number | null
+          skf_biceps: number | null
+          skf_calf: number | null
+          skf_iliac_crest: number | null
+          skf_subscapular: number | null
+          skf_supraspinale: number | null
+          skf_thigh: number | null
+          skf_triceps: number | null
+          team_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          arm_span_cm?: number | null
+          assessed_at?: string
+          body_mass_kg?: number | null
+          brd_ap_abdominal?: number | null
+          brd_ap_chest?: number | null
+          brd_biacromial?: number | null
+          brd_biestyloid?: number | null
+          brd_biiliocristal?: number | null
+          brd_bimalleolar?: number | null
+          brd_femur?: number | null
+          brd_humerus?: number | null
+          brd_transverse_chest?: number | null
+          club_id: string
+          created_at?: string
+          created_by?: string | null
+          girth_ankle?: number | null
+          girth_arm_flexed?: number | null
+          girth_arm_relaxed?: number | null
+          girth_calf?: number | null
+          girth_chest?: number | null
+          girth_forearm?: number | null
+          girth_head?: number | null
+          girth_hips?: number | null
+          girth_neck?: number | null
+          girth_thigh_1cm?: number | null
+          girth_thigh_mid?: number | null
+          girth_waist?: number | null
+          girth_wrist?: number | null
+          height_cm?: number | null
+          hgt_iliospinale?: number | null
+          hgt_tibiale_laterale?: number | null
+          hgt_trochanterion?: number | null
+          id?: string
+          len_acromiale_radiale?: number | null
+          len_foot?: number | null
+          len_midstylion_dactylion?: number | null
+          len_radiale_stylion?: number | null
+          len_tibiale_mediale_sphyrion?: number | null
+          len_trochanterion_tibiale?: number | null
+          notes?: string | null
+          player_user_id: string
+          sitting_height_cm?: number | null
+          skf_abdominal?: number | null
+          skf_biceps?: number | null
+          skf_calf?: number | null
+          skf_iliac_crest?: number | null
+          skf_subscapular?: number | null
+          skf_supraspinale?: number | null
+          skf_thigh?: number | null
+          skf_triceps?: number | null
+          team_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          arm_span_cm?: number | null
+          assessed_at?: string
+          body_mass_kg?: number | null
+          brd_ap_abdominal?: number | null
+          brd_ap_chest?: number | null
+          brd_biacromial?: number | null
+          brd_biestyloid?: number | null
+          brd_biiliocristal?: number | null
+          brd_bimalleolar?: number | null
+          brd_femur?: number | null
+          brd_humerus?: number | null
+          brd_transverse_chest?: number | null
+          club_id?: string
+          created_at?: string
+          created_by?: string | null
+          girth_ankle?: number | null
+          girth_arm_flexed?: number | null
+          girth_arm_relaxed?: number | null
+          girth_calf?: number | null
+          girth_chest?: number | null
+          girth_forearm?: number | null
+          girth_head?: number | null
+          girth_hips?: number | null
+          girth_neck?: number | null
+          girth_thigh_1cm?: number | null
+          girth_thigh_mid?: number | null
+          girth_waist?: number | null
+          girth_wrist?: number | null
+          height_cm?: number | null
+          hgt_iliospinale?: number | null
+          hgt_tibiale_laterale?: number | null
+          hgt_trochanterion?: number | null
+          id?: string
+          len_acromiale_radiale?: number | null
+          len_foot?: number | null
+          len_midstylion_dactylion?: number | null
+          len_radiale_stylion?: number | null
+          len_tibiale_mediale_sphyrion?: number | null
+          len_trochanterion_tibiale?: number | null
+          notes?: string | null
+          player_user_id?: string
+          sitting_height_cm?: number | null
+          skf_abdominal?: number | null
+          skf_biceps?: number | null
+          skf_calf?: number | null
+          skf_iliac_crest?: number | null
+          skf_subscapular?: number | null
+          skf_supraspinale?: number | null
+          skf_thigh?: number | null
+          skf_triceps?: number | null
+          team_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nutrition_assessments_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nutrition_assessments_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nutrition_meal_plans: {
+        Row: {
+          club_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          player_user_id: string
+          team_id: string | null
+          updated_at: string
+          week_end: string
+          week_start: string
+          week_type: string
+        }
+        Insert: {
+          club_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          player_user_id: string
+          team_id?: string | null
+          updated_at?: string
+          week_end: string
+          week_start: string
+          week_type?: string
+        }
+        Update: {
+          club_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          player_user_id?: string
+          team_id?: string | null
+          updated_at?: string
+          week_end?: string
+          week_start?: string
+          week_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nutrition_meal_plans_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nutrition_meal_plans_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nutrition_plan_meals: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          plan_id: string
+          slot: Database["public"]["Enums"]["nutrition_meal_slot"]
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          plan_id: string
+          slot: Database["public"]["Enums"]["nutrition_meal_slot"]
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          plan_id?: string
+          slot?: Database["public"]["Enums"]["nutrition_meal_slot"]
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nutrition_plan_meals_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "nutrition_meal_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nutrition_plan_portions: {
+        Row: {
+          created_at: string
+          food_group: Database["public"]["Enums"]["nutrition_food_group"]
+          id: string
+          meal_id: string
+          note: string | null
+          plan_id: string
+          portions: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          food_group: Database["public"]["Enums"]["nutrition_food_group"]
+          id?: string
+          meal_id: string
+          note?: string | null
+          plan_id: string
+          portions?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          food_group?: Database["public"]["Enums"]["nutrition_food_group"]
+          id?: string
+          meal_id?: string
+          note?: string | null
+          plan_id?: string
+          portions?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nutrition_plan_portions_meal_id_fkey"
+            columns: ["meal_id"]
+            isOneToOne: false
+            referencedRelation: "nutrition_plan_meals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nutrition_plan_portions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "nutrition_meal_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       player_competition_stats: {
         Row: {
           assists: number
@@ -3744,6 +4067,10 @@ export type Database = {
         Args: { _module_key: string; _team_id: string; _user_id: string }
         Returns: boolean
       }
+      can_edit_nutrition_plan: {
+        Args: { _plan_id: string; _user_id: string }
+        Returns: boolean
+      }
       can_edit_task: {
         Args: { _task_id: string; _user_id: string }
         Returns: boolean
@@ -3782,6 +4109,10 @@ export type Database = {
       }
       can_view_module: {
         Args: { _module_key: string; _team_id: string; _user_id: string }
+        Returns: boolean
+      }
+      can_view_nutrition_plan: {
+        Args: { _plan_id: string; _user_id: string }
         Returns: boolean
       }
       can_view_own_row: {
@@ -4040,6 +4371,22 @@ export type Database = {
       injury_severity: "leve" | "moderada" | "grave"
       injury_status: "activa" | "en_recuperacion" | "recuperada"
       member_status: "activo" | "baja"
+      nutrition_food_group:
+        | "proteinas"
+        | "cereales"
+        | "verduras"
+        | "frutas"
+        | "grasas"
+        | "lacteos"
+        | "leguminosas"
+        | "azucares"
+        | "libres"
+      nutrition_meal_slot:
+        | "desayuno"
+        | "colacion_1"
+        | "comida"
+        | "colacion_2"
+        | "cena"
       payment_status: "pendiente" | "pagado"
       permission_level:
         | "sin_acceso"
@@ -4255,6 +4602,24 @@ export const Constants = {
       injury_severity: ["leve", "moderada", "grave"],
       injury_status: ["activa", "en_recuperacion", "recuperada"],
       member_status: ["activo", "baja"],
+      nutrition_food_group: [
+        "proteinas",
+        "cereales",
+        "verduras",
+        "frutas",
+        "grasas",
+        "lacteos",
+        "leguminosas",
+        "azucares",
+        "libres",
+      ],
+      nutrition_meal_slot: [
+        "desayuno",
+        "colacion_1",
+        "comida",
+        "colacion_2",
+        "cena",
+      ],
       payment_status: ["pendiente", "pagado"],
       permission_level: [
         "sin_acceso",
