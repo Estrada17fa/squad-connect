@@ -35,6 +35,8 @@ interface Props {
   /** Solo editor_global puede dirigir a todo el club. */
   canPublishClubWide: boolean;
   announcement?: AnnouncementRow | null;
+  /** Se ejecuta tras eliminar (para cerrar también la ficha de lectura). */
+  onDeleted?: () => void;
 }
 
 export function AnnouncementFormDialog({
