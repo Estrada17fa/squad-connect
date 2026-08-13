@@ -14,6 +14,138 @@ export type Database = {
   }
   public: {
     Tables: {
+      announcement_reads: {
+        Row: {
+          announcement_id: string
+          id: string
+          read_at: string
+          user_id: string
+        }
+        Insert: {
+          announcement_id: string
+          id?: string
+          read_at?: string
+          user_id: string
+        }
+        Update: {
+          announcement_id?: string
+          id?: string
+          read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcement_reads_announcement_id_fkey"
+            columns: ["announcement_id"]
+            isOneToOne: false
+            referencedRelation: "announcements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "announcement_reads_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      announcement_teams: {
+        Row: {
+          announcement_id: string
+          id: string
+          team_id: string
+        }
+        Insert: {
+          announcement_id: string
+          id?: string
+          team_id: string
+        }
+        Update: {
+          announcement_id?: string
+          id?: string
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcement_teams_announcement_id_fkey"
+            columns: ["announcement_id"]
+            isOneToOne: false
+            referencedRelation: "announcements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "announcement_teams_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      announcements: {
+        Row: {
+          attachment_name: string | null
+          attachment_path: string | null
+          attachment_type: string | null
+          audience: Database["public"]["Enums"]["announcement_audience"]
+          author_id: string | null
+          body: string
+          club_id: string
+          created_at: string
+          id: string
+          priority: Database["public"]["Enums"]["announcement_priority"]
+          published_at: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          attachment_name?: string | null
+          attachment_path?: string | null
+          attachment_type?: string | null
+          audience?: Database["public"]["Enums"]["announcement_audience"]
+          author_id?: string | null
+          body?: string
+          club_id: string
+          created_at?: string
+          id?: string
+          priority?: Database["public"]["Enums"]["announcement_priority"]
+          published_at?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          attachment_name?: string | null
+          attachment_path?: string | null
+          attachment_type?: string | null
+          audience?: Database["public"]["Enums"]["announcement_audience"]
+          author_id?: string | null
+          body?: string
+          club_id?: string
+          created_at?: string
+          id?: string
+          priority?: Database["public"]["Enums"]["announcement_priority"]
+          published_at?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcements_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "announcements_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assessment_scores: {
         Row: {
           assessment_id: string
@@ -4215,6 +4347,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      can_edit_announcement: {
+        Args: { _announcement_id: string; _user_id: string }
+        Returns: boolean
+      }
       can_edit_club_module: {
         Args: { _club_id: string; _module_key: string; _user_id: string }
         Returns: boolean
@@ -4247,6 +4383,10 @@ export type Database = {
         Args: { _task_id: string; _user_id: string }
         Returns: boolean
       }
+      can_edit_team_announcement: {
+        Args: { _team_id: string; _user_id: string }
+        Returns: boolean
+      }
       can_edit_training: {
         Args: { _team_id: string; _user_id: string }
         Returns: boolean
@@ -4261,6 +4401,10 @@ export type Database = {
       }
       can_edit_trip_new: {
         Args: { _trip_id: string; _user_id: string }
+        Returns: boolean
+      }
+      can_view_announcement: {
+        Args: { _announcement_id: string; _user_id: string }
         Returns: boolean
       }
       can_view_club_module: {
@@ -4302,6 +4446,10 @@ export type Database = {
       }
       can_view_task: {
         Args: { _task_id: string; _user_id: string }
+        Returns: boolean
+      }
+      can_view_team_announcement: {
+        Args: { _team_id: string; _user_id: string }
         Returns: boolean
       }
       can_view_training: {
@@ -4496,6 +4644,8 @@ export type Database = {
     }
     Enums: {
       access_level: "none" | "read" | "editor" | "approver"
+      announcement_audience: "club" | "teams"
+      announcement_priority: "normal" | "importante" | "urgente"
       approver_override_mode: "grant" | "revoke"
       attendance_status: "invitado" | "confirmado" | "rechazado"
       availability_status:
@@ -4721,6 +4871,8 @@ export const Constants = {
   public: {
     Enums: {
       access_level: ["none", "read", "editor", "approver"],
+      announcement_audience: ["club", "teams"],
+      announcement_priority: ["normal", "importante", "urgente"],
       approver_override_mode: ["grant", "revoke"],
       attendance_status: ["invitado", "confirmado", "rechazado"],
       availability_status: [
