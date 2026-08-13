@@ -124,24 +124,14 @@ export function AppointmentFormDialog({
       </EntitySheetHeader>
 
       <EntitySheetBody>
-        <div className="space-y-1.5">
-          <Label htmlFor="ap-player">Jugador</Label>
-          <select
-            id="ap-player"
-            value={playerUserId}
-            onChange={(e) => setPlayerUserId(e.target.value)}
-            disabled={isEdit || !!fixedPlayerUserId}
-            className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm disabled:opacity-60"
-          >
-            <option value="">Selecciona…</option>
-            {players.map((p) => (
-              <option key={p.playerId} value={p.userId}>
-                {p.fullName ?? "Sin nombre"}
-                {p.teamName ? ` · ${p.teamName}` : ""}
-              </option>
-            ))}
-          </select>
-        </div>
+        <PlayerPicker
+          id="ap-player"
+          players={players}
+          value={playerUserId}
+          onChange={setPlayerUserId}
+          disabled={isEdit || !!fixedPlayerUserId}
+          emptyMessage="No tienes equipos donde puedas registrar información médica."
+        />
 
         <div className="space-y-1.5">
           <Label htmlFor="ap-when">Fecha y hora</Label>
