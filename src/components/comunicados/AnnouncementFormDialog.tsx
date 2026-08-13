@@ -126,13 +126,9 @@ export function AnnouncementFormDialog({
 
   async function handleDelete() {
     if (!announcement) return;
-    try {
-      await del.mutateAsync(announcement);
-      toast.success("Comunicado eliminado");
-      onOpenChange(false);
-    } catch (e: any) {
-      toast.error(e.message ?? "No se pudo eliminar");
-    }
+    await del.mutateAsync(announcement);
+    onOpenChange(false);
+    onDeleted?.();
   }
 
   return (
