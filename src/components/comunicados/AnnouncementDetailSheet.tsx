@@ -10,9 +10,11 @@ import type { TeamOption } from "@/hooks/useAccess";
 import {
   audienceLabel,
   formatAnnouncementDate,
+  useDeleteAnnouncement,
   useMarkRead,
   type AnnouncementRow,
 } from "@/hooks/useAnnouncements";
+import { DeleteAction } from "@/components/squad/DeleteAction";
 import { AnnouncementChip, AttachmentPreview, PriorityBadge } from "./ComunicadosPieces";
 import { AnnouncementFormDialog } from "./AnnouncementFormDialog";
 import { ReadReceipts } from "./ReadReceipts";
@@ -40,6 +42,7 @@ export function AnnouncementDetailSheet({
   canPublishClubWide,
 }: Props) {
   const markRead = useMarkRead();
+  const del = useDeleteAnnouncement();
   const id = announcement?.id;
   const alreadyRead = announcement?.read;
 
@@ -73,6 +76,7 @@ export function AnnouncementDetailSheet({
                 teams={teams}
                 canPublishClubWide={canPublishClubWide}
                 announcement={announcement}
+                onDeleted={() => onOpenChange(false)}
               />
             )
           : undefined
@@ -119,6 +123,19 @@ export function AnnouncementDetailSheet({
       </DetailSection>
 
       {canEdit ? <ReadReceipts announcement={announcement} /> : null}
+
+      {canEdit ? (
+        <div className="flex justify-end border-t border-white/5 pt-3">
+          <DeleteAction
+            label="Eliminar comunicado"
+            title="¿Eliminar este comunicado?"
+            description="Se quitará del tablón para todas las personas. Esta acción no se puede deshacer."
+            successMessage="Comunicado eliminado"
+            onDelete={() => del.mutateAsync(announcement)}
+            onDeleted={() => onOpenChange(false)}
+          />
+        </div>
+      ) : null}
     </DetailSheet>
   );
 }

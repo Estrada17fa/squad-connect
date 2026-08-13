@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { DeleteAction } from "@/components/squad/DeleteAction";
 import { supabase } from "@/integrations/supabase/client";
 import type { TeamOption } from "@/hooks/useAccess";
 import {
@@ -35,6 +36,8 @@ interface Props {
   /** Solo editor_global puede dirigir a todo el club. */
   canPublishClubWide: boolean;
   announcement?: AnnouncementRow | null;
+  /** Se ejecuta tras eliminar (para cerrar también la ficha de lectura). */
+  onDeleted?: () => void;
 }
 
 export function AnnouncementFormDialog({
@@ -45,6 +48,7 @@ export function AnnouncementFormDialog({
   teams,
   canPublishClubWide,
   announcement,
+  onDeleted,
 }: Props) {
   const isEdit = !!announcement;
   const save = useSaveAnnouncement();
@@ -123,13 +127,9 @@ export function AnnouncementFormDialog({
 
   async function handleDelete() {
     if (!announcement) return;
-    try {
-      await del.mutateAsync(announcement);
-      toast.success("Comunicado eliminado");
-      onOpenChange(false);
-    } catch (e: any) {
-      toast.error(e.message ?? "No se pudo eliminar");
-    }
+    await del.mutateAsync(announcement);
+    onOpenChange(false);
+    onDeleted?.();
   }
 
   return (
@@ -238,9 +238,14 @@ export function AnnouncementFormDialog({
 
       <EntitySheetFooter>
         {isEdit ? (
-          <Button variant="ghost" className="text-destructive" onClick={handleDelete} disabled={busy}>
-            Eliminar
-          </Button>
+          <DeleteAction
+            label="Eliminar"
+            title="¿Eliminar este comunicado?"
+            description="Se quitará del tablón para todas las personas. Esta acción no se puede deshacer."
+            successMessage="Comunicado eliminado"
+            loading={busy}
+            onDelete={handleDelete}
+          />
         ) : null}
         <Button variant="secondary" onClick={() => onOpenChange(false)} disabled={busy}>
           Cancelar
