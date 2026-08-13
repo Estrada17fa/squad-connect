@@ -1,0 +1,2 @@
+ALTER TABLE public.session_exercises ADD COLUMN IF NOT EXISTS sets integer, ADD COLUMN IF NOT EXISTS reps integer;
+ALTER TABLE public.exercises ADD COLUMN IF NOT EXISTS default_sets integer, ADD COLUMN IF NOT EXISTS default_reps integer;

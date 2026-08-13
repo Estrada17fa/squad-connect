@@ -663,6 +663,8 @@ export type Database = {
           club_id: string
           created_at: string
           created_by: string | null
+          default_reps: number | null
+          default_sets: number | null
           description: string | null
           duration_minutes: number | null
           id: string
@@ -678,6 +680,8 @@ export type Database = {
           club_id: string
           created_at?: string
           created_by?: string | null
+          default_reps?: number | null
+          default_sets?: number | null
           description?: string | null
           duration_minutes?: number | null
           id?: string
@@ -693,6 +697,8 @@ export type Database = {
           club_id?: string
           created_at?: string
           created_by?: string | null
+          default_reps?: number | null
+          default_sets?: number | null
           description?: string | null
           duration_minutes?: number | null
           id?: string
@@ -2471,7 +2477,9 @@ export type Database = {
           id: string
           order_index: number
           phase: Database["public"]["Enums"]["session_phase"]
+          reps: number | null
           session_id: string
+          sets: number | null
         }
         Insert: {
           created_at?: string
@@ -2481,7 +2489,9 @@ export type Database = {
           id?: string
           order_index?: number
           phase?: Database["public"]["Enums"]["session_phase"]
+          reps?: number | null
           session_id: string
+          sets?: number | null
         }
         Update: {
           created_at?: string
@@ -2491,7 +2501,9 @@ export type Database = {
           id?: string
           order_index?: number
           phase?: Database["public"]["Enums"]["session_phase"]
+          reps?: number | null
           session_id?: string
+          sets?: number | null
         }
         Relationships: [
           {

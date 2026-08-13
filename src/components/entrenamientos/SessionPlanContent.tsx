@@ -1,43 +1,52 @@
 import * as React from "react";
-import { Clock, Package, Target } from "lucide-react";
+import { Package, Target } from "lucide-react";
 import { DetailSection } from "@/components/squad/DetailSheet";
 import { LoadingState } from "@/components/squad/LoadingState";
+import { EmptyState } from "@/components/squad/EmptyState";
+import { Dumbbell } from "lucide-react";
 import {
   CATEGORY_LABEL,
   PHASES,
-  useExerciseMediaUrl,
+  itemMinutes,
   useSessionPlan,
   type SessionExerciseRow,
   type TrainingSessionRow,
 } from "@/hooks/useTraining";
-
-function ExerciseMedia({ path }: { path: string }) {
-  const { data: url } = useExerciseMediaUrl(path);
-  if (!url) return null;
-  const isVideo = /\.(mp4|mov|webm|m4v)$/i.test(path);
-  return isVideo ? (
-    <video src={url} controls className="mt-2 w-full rounded-lg" />
-  ) : (
-    <img src={url} alt="" className="mt-2 w-full rounded-lg object-cover" loading="lazy" />
-  );
-}
+import {
+  CATEGORY_ICON,
+  ExerciseMedia,
+  ExerciseThumb,
+  LoadChips,
+  PHASE_ICON,
+  TrainingChip,
+} from "@/components/entrenamientos/TrainingPieces";
 
 function PlanItem({ item, index }: { item: SessionExerciseRow; index: number }) {
   const ex = item.exercise;
-  const minutes = item.duration_override ?? ex?.duration_minutes ?? null;
+  const [showMedia, setShowMedia] = React.useState(false);
+  const minutes = itemMinutes(item) || null;
+  const Icon = ex ? CATEGORY_ICON[ex.category] : Dumbbell;
+
   return (
     <div className="glass p-3">
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="text-sm font-medium text-foreground">
-            {index + 1}. {ex?.name ?? "Ejercicio"}
+      <div className="flex items-start gap-3">
+        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-[11px] font-semibold text-primary">
+          {index + 1}
+        </div>
+        {ex ? <ExerciseThumb exercise={ex} size="sm" /> : null}
+        <div className="min-w-0 flex-1 space-y-1.5">
+          <p className="break-words font-display font-semibold text-foreground [overflow-wrap:anywhere]">
+            {ex?.name ?? "Ejercicio"}
           </p>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            {ex ? CATEGORY_LABEL[ex.category] : ""}
-            {minutes ? ` · ${minutes} min` : ""}
-          </p>
+          {ex ? (
+            <TrainingChip icon={Icon} tone="primary">
+              {CATEGORY_LABEL[ex.category]}
+            </TrainingChip>
+          ) : null}
+          <LoadChips minutes={minutes} sets={item.sets} reps={item.reps} />
         </div>
       </div>
+
       {ex?.objective ? (
         <p className="mt-2 flex items-start gap-1.5 text-xs text-muted-foreground">
           <Target className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {ex.objective}
@@ -56,7 +65,19 @@ function PlanItem({ item, index }: { item: SessionExerciseRow; index: number }) 
           <Package className="h-3.5 w-3.5" /> {ex.materials}
         </p>
       ) : null}
-      {ex?.media_path ? <ExerciseMedia path={ex.media_path} /> : null}
+      {ex?.media_path ? (
+        showMedia ? (
+          <ExerciseMedia path={ex.media_path} className="mt-2" />
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShowMedia(true)}
+            className="mt-2 text-xs font-medium text-primary hover:underline"
+          >
+            Ver imagen o video
+          </button>
+        )
+      ) : null}
     </div>
   );
 }
@@ -67,16 +88,20 @@ interface Props {
   readOnly?: boolean;
   /** Cuando es false, no se dispara la consulta del plan. */
   enabled?: boolean;
+  /** Acción para editores cuando la sesión aún no tiene ejercicios. */
+  onAddExercises?: () => void;
 }
 
 /**
- * Contenido de lectura del plan de una sesión: objetivo, ejercicios por fase
- * (con su explicación y media) y notas. Compartido por la ficha de sesión y por
- * el detalle del evento de entrenamiento en la Agenda.
+ * Plan de la sesión en secuencia: fases con su duración, ejercicios como
+ * tarjetas con carga (min / series / reps), material y media.
+ * Compartido por la ficha de sesión y por el detalle del evento en Agenda.
  */
-export function SessionPlanContent({ session, enabled = true }: Props) {
+export function SessionPlanContent({ session, enabled = true, onAddExercises }: Props) {
   const planQ = useSessionPlan(enabled && session ? session.id : null);
   const plan = planQ.data ?? [];
+
+  let counter = 0;
 
   return (
     <>
@@ -90,23 +115,44 @@ export function SessionPlanContent({ session, enabled = true }: Props) {
       {planQ.isLoading ? (
         <LoadingState />
       ) : plan.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Esta sesión aún no tiene ejercicios en su plan.</p>
+        <EmptyState
+          icon={Dumbbell}
+          title="Sin ejercicios"
+          message="Esta sesión aún no tiene un plan armado."
+          action={
+            onAddExercises ? (
+              <button
+                type="button"
+                onClick={onAddExercises}
+                className="text-sm font-medium text-primary hover:underline"
+              >
+                Agregar ejercicios
+              </button>
+            ) : undefined
+          }
+        />
       ) : (
         PHASES.map((phase) => {
           const items = plan.filter((p) => p.phase === phase.key);
           if (!items.length) return null;
+          const minutes = items.reduce((s, i) => s + itemMinutes(i), 0);
+          const PhaseIcon = PHASE_ICON[phase.key];
           return (
             <DetailSection
               key={phase.key}
               title={
-                <span className="flex items-center gap-1.5 normal-case tracking-normal text-foreground">
-                  <Clock className="h-4 w-4 text-primary" /> {phase.label}
+                <span className="flex items-center gap-2 normal-case tracking-normal text-foreground">
+                  <PhaseIcon className="h-4 w-4 text-primary" /> {phase.label}
+                  <span className="text-xs font-normal text-muted-foreground">
+                    {items.length} ej.{minutes ? ` · ${minutes} min` : ""}
+                  </span>
                 </span>
               }
             >
-              {items.map((item, i) => (
-                <PlanItem key={item.id} item={item} index={i} />
-              ))}
+              {items.map((item) => {
+                const index = counter++;
+                return <PlanItem key={item.id} item={item} index={index} />;
+              })}
             </DetailSection>
           );
         })

@@ -46,6 +46,12 @@ export function ExerciseFormDialog({ open, onOpenChange, clubId, userId, teams, 
   const [duration, setDuration] = React.useState(
     exercise?.duration_minutes != null ? String(exercise.duration_minutes) : "",
   );
+  const [sets, setSets] = React.useState(
+    exercise?.default_sets != null ? String(exercise.default_sets) : "",
+  );
+  const [reps, setReps] = React.useState(
+    exercise?.default_reps != null ? String(exercise.default_reps) : "",
+  );
   const [objective, setObjective] = React.useState(exercise?.objective ?? "");
   const [description, setDescription] = React.useState(exercise?.description ?? "");
   const [materials, setMaterials] = React.useState(exercise?.materials ?? "");
@@ -59,6 +65,8 @@ export function ExerciseFormDialog({ open, onOpenChange, clubId, userId, teams, 
     setName(exercise?.name ?? "");
     setCategory(exercise?.category ?? "tecnica");
     setDuration(exercise?.duration_minutes != null ? String(exercise.duration_minutes) : "");
+    setSets(exercise?.default_sets != null ? String(exercise.default_sets) : "");
+    setReps(exercise?.default_reps != null ? String(exercise.default_reps) : "");
     setObjective(exercise?.objective ?? "");
     setDescription(exercise?.description ?? "");
     setMaterials(exercise?.materials ?? "");
@@ -85,6 +93,8 @@ export function ExerciseFormDialog({ open, onOpenChange, clubId, userId, teams, 
         name: name.trim(),
         category,
         duration_minutes: duration ? Number(duration) : null,
+        default_sets: sets ? Number(sets) : null,
+        default_reps: reps ? Number(reps) : null,
         objective: objective.trim() || null,
         description: description.trim() || null,
         materials: materials.trim() || null,
@@ -153,6 +163,30 @@ export function ExerciseFormDialog({ open, onOpenChange, clubId, userId, teams, 
             />
           </div>
         </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="ex-sets">Series sugeridas</Label>
+            <Input
+              id="ex-sets"
+              type="number"
+              min={1}
+              value={sets}
+              onChange={(e) => setSets(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="ex-reps">Repeticiones sugeridas</Label>
+            <Input
+              id="ex-reps"
+              type="number"
+              min={1}
+              value={reps}
+              onChange={(e) => setReps(e.target.value)}
+            />
+          </div>
+        </div>
+
 
         <div className="space-y-1.5">
           <Label htmlFor="ex-scope">Alcance</Label>
