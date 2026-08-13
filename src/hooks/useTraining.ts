@@ -217,6 +217,39 @@ export interface PlanDraftItem {
   phase: SessionPhase;
   custom_notes: string | null;
   duration_override: number | null;
+  sets: number | null;
+  reps: number | null;
+}
+
+export interface SessionSummary {
+  count: number;
+  minutes: number;
+  phases: SessionPhase[];
+}
+
+/** Resumen del plan (ejercicios, minutos y fases) para varias sesiones a la vez. */
+export function useSessionSummaries(sessionIds: string[]) {
+  const key = [...sessionIds].sort().join(",");
+  return useQuery({
+    queryKey: ["session-summaries", key],
+    enabled: sessionIds.length > 0,
+    staleTime: 30_000,
+    queryFn: async (): Promise<Record<string, SessionSummary>> => {
+      const { data, error } = await db
+        .from("session_exercises")
+        .select("session_id, phase, duration_override, exercise:exercises(duration_minutes)")
+        .in("session_id", sessionIds);
+      if (error) throw error;
+      const out: Record<string, SessionSummary> = {};
+      for (const row of (data ?? []) as any[]) {
+        const s = (out[row.session_id] ??= { count: 0, minutes: 0, phases: [] });
+        s.count += 1;
+        s.minutes += itemMinutes(row);
+        if (!s.phases.includes(row.phase)) s.phases.push(row.phase);
+      }
+      return out;
+    },
+  });
 }
 
 export function useSaveSession() {
