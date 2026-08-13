@@ -47,6 +47,7 @@ export function AnnouncementFormDialog({
   teams,
   canPublishClubWide,
   announcement,
+  onDeleted,
 }: Props) {
   const isEdit = !!announcement;
   const save = useSaveAnnouncement();
