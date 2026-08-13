@@ -1,12 +1,20 @@
 import * as React from "react";
 import { toast } from "sonner";
-import { Activity, CalendarClock, CheckCircle2, Trash2, Plus } from "lucide-react";
-import { DetailSheet, DetailSection } from "@/components/squad/DetailSheet";
+import { Activity, CalendarClock, CalendarDays, CheckCircle2, Plus, Trash2 } from "lucide-react";
+import {
+  DetailSheet,
+  DetailSection,
+  DetailField,
+  DetailGrid,
+  DetailValue,
+} from "@/components/squad/DetailSheet";
 import { StatusBadge, type StatusVariant } from "@/components/squad/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { formatDateTime } from "@/lib/calendar-utils";
+import { INJURY_STATUS_BADGE, SEVERITY_VARIANT, formatDay } from "@/lib/salud";
+import { HealthCard, HealthEmpty, HealthPersonHeader } from "./HealthPieces";
 import {
   INJURY_STATUS_LABEL,
   SEVERITY_LABEL,
@@ -28,11 +36,7 @@ interface Props {
   onEdit?: (i: InjuryRow) => void;
 }
 
-export const INJURY_STATUS_VARIANT: Record<string, StatusVariant> = {
-  activa: "rejected",
-  en_recuperacion: "pending",
-  recuperada: "approved",
-};
+export const INJURY_STATUS_VARIANT: Record<string, StatusVariant> = INJURY_STATUS_BADGE;
 
 export function InjuryDetailSheet({ open, onOpenChange, clubId, userId, injury, canEdit, onEdit }: Props) {
   const progressQ = useInjuryProgress(open && injury ? injury.id : null);
@@ -44,7 +48,8 @@ export function InjuryDetailSheet({ open, onOpenChange, clubId, userId, injury, 
   if (!injury) return null;
 
   const days = daysToReturn(injury);
-  const open_ = injury.status !== "recuperada";
+  const isOpen = injury.status !== "recuperada";
+  const overdue = isOpen && days != null && days < 0;
 
   const submitNote = async () => {
     if (!note.trim()) return;
@@ -90,7 +95,6 @@ export function InjuryDetailSheet({ open, onOpenChange, clubId, userId, injury, 
       size="lg"
       title={`${injury.injury_type} · ${injury.body_part}`}
       description={`${injury.player?.full_name ?? "Jugador"}${injury.team?.name ? ` · ${injury.team.name}` : ""}`}
-      canEdit={canEdit}
       headerActions={
         canEdit ? (
           <>
@@ -99,7 +103,7 @@ export function InjuryDetailSheet({ open, onOpenChange, clubId, userId, injury, 
                 Editar
               </Button>
             ) : null}
-            {open_ ? (
+            {isOpen ? (
               <Button type="button" size="sm" onClick={markRecovered} disabled={saveInjury.isPending}>
                 <CheckCircle2 className="mr-2 h-4 w-4" /> Dar de alta
               </Button>
@@ -122,83 +126,105 @@ export function InjuryDetailSheet({ open, onOpenChange, clubId, userId, injury, 
               <Trash2 className="mr-2 h-4 w-4" /> Eliminar
             </Button>
           </>
-        ) : null
+        ) : undefined
       }
     >
-      <div className="glass space-y-2 p-4 text-sm">
-        <div className="flex flex-wrap items-center gap-2">
-          <StatusBadge variant={INJURY_STATUS_VARIANT[injury.status]}>
-            {INJURY_STATUS_LABEL[injury.status]}
-          </StatusBadge>
-          <StatusBadge variant={injury.severity === "grave" ? "rejected" : injury.severity === "moderada" ? "pending" : "info"}>
-            {SEVERITY_LABEL[injury.severity]}
-          </StatusBadge>
-        </div>
-        <p className="text-muted-foreground">
-          Ocurrió el{" "}
-          {new Date(`${injury.occurred_at}T12:00:00`).toLocaleDateString("es-MX", {
-            day: "2-digit",
-            month: "long",
-            year: "numeric",
-          })}
-        </p>
-        {injury.estimated_return ? (
-          <p className={days != null && days < 0 && open_ ? "text-destructive" : "text-muted-foreground"}>
-            <CalendarClock className="mr-1 inline h-3.5 w-3.5" />
-            Retorno estimado:{" "}
-            {new Date(`${injury.estimated_return}T12:00:00`).toLocaleDateString("es-MX", {
-              day: "2-digit",
-              month: "long",
-            })}
-            {open_ && days != null
-              ? days < 0
-                ? ` · vencido hace ${Math.abs(days)} d`
-                : days === 0
-                  ? " · es hoy"
-                  : ` · en ${days} d`
-              : ""}
-          </p>
-        ) : null}
-        {injury.description ? (
-          <p className="whitespace-pre-wrap text-muted-foreground">{injury.description}</p>
-        ) : null}
-      </div>
+      <div className="space-y-6">
+        <HealthPersonHeader
+          name={injury.player?.full_name ?? "Jugador"}
+          avatarUrl={injury.player?.avatar_url}
+          subtitle={injury.team?.name ?? undefined}
+          badges={
+            <>
+              <StatusBadge variant={INJURY_STATUS_BADGE[injury.status]}>
+                {INJURY_STATUS_LABEL[injury.status]}
+              </StatusBadge>
+              <StatusBadge variant={SEVERITY_VARIANT[injury.severity]}>
+                {SEVERITY_LABEL[injury.severity]}
+              </StatusBadge>
+            </>
+          }
+        />
 
-      <DetailSection title="Seguimiento de recuperación">
-        {canEdit ? (
-          <div className="space-y-2">
-            <Label htmlFor="inj-note" className="sr-only">
-              Nota de evolución
-            </Label>
-            <Textarea
-              id="inj-note"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              rows={2}
-              placeholder="Sesión de fisio, avance, indicaciones…"
-            />
-            <Button type="button" size="sm" onClick={submitNote} disabled={!note.trim() || addProgress.isPending}>
-              <Plus className="mr-2 h-4 w-4" /> Agregar avance
-            </Button>
+        <DetailSection title="Lesión">
+          <div className="glass rounded-lg p-4">
+            <DetailGrid>
+              <DetailField label="Tipo">
+                <DetailValue value={injury.injury_type} />
+              </DetailField>
+              <DetailField label="Zona">
+                <DetailValue value={injury.body_part} />
+              </DetailField>
+              <DetailField label="Fecha de la lesión" icon={CalendarDays}>
+                {formatDay(injury.occurred_at)}
+              </DetailField>
+              <DetailField label="Regreso estimado" icon={CalendarClock}>
+                {injury.estimated_return ? (
+                  <span className={overdue ? "text-destructive" : undefined}>
+                    {formatDay(injury.estimated_return)}
+                    {isOpen && days != null
+                      ? days < 0
+                        ? ` · vencido hace ${Math.abs(days)} d`
+                        : days === 0
+                          ? " · es hoy"
+                          : ` · en ${days} d`
+                      : ""}
+                  </span>
+                ) : (
+                  <DetailValue value={null} />
+                )}
+              </DetailField>
+              <DetailField label="Descripción" full>
+                <DetailValue value={injury.description} />
+              </DetailField>
+            </DetailGrid>
           </div>
-        ) : null}
+        </DetailSection>
 
-        {(progressQ.data ?? []).length === 0 ? (
-          <p className="text-sm text-muted-foreground">Aún no hay notas de evolución.</p>
-        ) : (
-          <ul className="space-y-2">
-            {(progressQ.data ?? []).map((p) => (
-              <li key={p.id} className="glass p-3 text-sm">
-                <p className="whitespace-pre-wrap text-foreground">{p.note}</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  <Activity className="mr-1 inline h-3 w-3" />
-                  {formatDateTime(p.progress_date)}
-                </p>
-              </li>
-            ))}
-          </ul>
-        )}
-      </DetailSection>
+        <DetailSection title="Seguimiento de recuperación">
+          {canEdit ? (
+            <div className="glass space-y-2 rounded-lg p-3">
+              <Label htmlFor="inj-note" className="sr-only">
+                Nota de evolución
+              </Label>
+              <Textarea
+                id="inj-note"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                rows={2}
+                placeholder="Sesión de fisio, avance, indicaciones…"
+              />
+              <Button
+                type="button"
+                size="sm"
+                onClick={submitNote}
+                disabled={!note.trim() || addProgress.isPending}
+              >
+                <Plus className="mr-2 h-4 w-4" /> Agregar avance
+              </Button>
+            </div>
+          ) : null}
+
+          {(progressQ.data ?? []).length === 0 ? (
+            <HealthEmpty
+              icon={Activity}
+              title="Sin notas de evolución"
+              message="Aún no se registra avance de recuperación."
+            />
+          ) : (
+            <div className="grid gap-2">
+              {(progressQ.data ?? []).map((p) => (
+                <HealthCard
+                  key={p.id}
+                  title={<span className="whitespace-pre-wrap">{p.note}</span>}
+                  metaIcon={Activity}
+                  meta={formatDateTime(p.progress_date)}
+                />
+              ))}
+            </div>
+          )}
+        </DetailSection>
+      </div>
     </DetailSheet>
   );
 }
