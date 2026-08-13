@@ -30,14 +30,14 @@ import { formatShortDate } from "@/lib/calendar-utils";
 import { PLAYER_STATUS_LABEL, type PlayerStatus } from "@/lib/members.schemas";
 import { UserAdvancedSettings, type MembershipCtx } from "./UserAdvancedSettings";
 import {
-import { usePlayerLatestAnthro } from "@/hooks/useNutrition";
-import { formatShortDay } from "@/lib/nutricion";
   displayName,
   initials,
   roleVariant,
   type MemberProfile,
   type MembershipLite,
 } from "./memberUtils";
+import { usePlayerLatestAnthro } from "@/hooks/useNutrition";
+import { formatShortDay } from "@/lib/nutricion";
 
 /**
  * Ficha del miembro: SIEMPRE abre en lectura. Las acciones de gestión solo
