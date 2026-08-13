@@ -237,9 +237,14 @@ export function AnnouncementFormDialog({
 
       <EntitySheetFooter>
         {isEdit ? (
-          <Button variant="ghost" className="text-destructive" onClick={handleDelete} disabled={busy}>
-            Eliminar
-          </Button>
+          <DeleteAction
+            label="Eliminar"
+            title="¿Eliminar este comunicado?"
+            description="Se quitará del tablón para todas las personas. Esta acción no se puede deshacer."
+            successMessage="Comunicado eliminado"
+            loading={busy}
+            onDelete={handleDelete}
+          />
         ) : null}
         <Button variant="secondary" onClick={() => onOpenChange(false)} disabled={busy}>
           Cancelar
