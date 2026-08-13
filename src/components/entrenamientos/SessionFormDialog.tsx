@@ -144,12 +144,25 @@ export function SessionFormDialog({
         phase: p.phase,
         custom_notes: p.custom_notes,
         duration_override: p.duration_override,
+        sets: p.sets ?? null,
+        reps: p.reps ?? null,
       })),
     );
   }, [open, session, planQ.data]);
 
   function addExercise(exerciseId: string, phase: SessionPhase) {
-    setPlan((prev) => [...prev, { exercise_id: exerciseId, phase, custom_notes: null, duration_override: null }]);
+    const ex = exercisesById.get(exerciseId);
+    setPlan((prev) => [
+      ...prev,
+      {
+        exercise_id: exerciseId,
+        phase,
+        custom_notes: null,
+        duration_override: null,
+        sets: ex?.default_sets ?? null,
+        reps: ex?.default_reps ?? null,
+      },
+    ]);
     setPickerPhase(null);
   }
 
