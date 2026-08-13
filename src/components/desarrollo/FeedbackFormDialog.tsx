@@ -1,5 +1,7 @@
 import * as React from "react";
 import { toast } from "sonner";
+import { Eye, EyeOff } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import {
   EntitySheet,
   EntitySheetBody,
