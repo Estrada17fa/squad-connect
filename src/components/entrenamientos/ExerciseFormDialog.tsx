@@ -164,6 +164,30 @@ export function ExerciseFormDialog({ open, onOpenChange, clubId, userId, teams, 
           </div>
         </div>
 
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="ex-sets">Series sugeridas</Label>
+            <Input
+              id="ex-sets"
+              type="number"
+              min={1}
+              value={sets}
+              onChange={(e) => setSets(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="ex-reps">Repeticiones sugeridas</Label>
+            <Input
+              id="ex-reps"
+              type="number"
+              min={1}
+              value={reps}
+              onChange={(e) => setReps(e.target.value)}
+            />
+          </div>
+        </div>
+
+
         <div className="space-y-1.5">
           <Label htmlFor="ex-scope">Alcance</Label>
           <select
