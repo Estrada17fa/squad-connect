@@ -265,6 +265,7 @@ function AssessmentCard({
 /** Ficha de nutrición — misma vista para la nutrióloga y para el jugador. */
 export function PlayerNutritionContent({
   player,
+  clubId,
   canEdit,
   self,
   onNewPlan,
