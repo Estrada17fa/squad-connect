@@ -54,12 +54,25 @@ interface Props {
   isSelf?: boolean;
 }
 
+export type DevelopmentPlayer = NonNullable<Props["player"]>;
+
 /** Ficha completa de desarrollo de un jugador (cuerpo técnico o él mismo). */
-export function PlayerDevelopmentSheet({ open, onOpenChange, clubId, player, isSelf }: Props) {
-  const q = usePlayerDevelopment(open && player ? player.userId : null);
+export function PlayerDevelopmentContent({
+  clubId,
+  player,
+  isSelf,
+  enabled = true,
+  showHeader = true,
+}: {
+  clubId: string | null;
+  player: DevelopmentPlayer;
+  isSelf?: boolean;
+  enabled?: boolean;
+  showHeader?: boolean;
+}) {
+  const q = usePlayerDevelopment(enabled ? player.userId : null);
   const setStatus = useSetAssignmentStatus(clubId);
 
-  if (!player) return null;
   const data = q.data;
   const assessments = data?.assessments ?? [];
   const goals = data?.goals ?? [];
@@ -78,15 +91,7 @@ export function PlayerDevelopmentSheet({ open, onOpenChange, clubId, player, isS
     .join(" · ");
 
   return (
-    <EntitySheet open={open} onOpenChange={onOpenChange} size="lg">
-      <EntitySheetHeader>
-        <EntitySheetTitle>{isSelf ? "Mi desarrollo" : (player.fullName ?? "Jugador")}</EntitySheetTitle>
-        <EntitySheetDescription>
-          Seguimiento deportivo del cuerpo técnico
-        </EntitySheetDescription>
-      </EntitySheetHeader>
-
-      <EntitySheetBody>
+    <div className="space-y-6">
         <DevPersonHeader
           name={player.fullName ?? "Jugador"}
           avatarUrl={player.avatarUrl}
