@@ -1,5 +1,5 @@
 import * as React from "react";
-import { CalendarDays, MessageSquareQuote, User } from "lucide-react";
+import { CalendarDays, Eye, EyeOff, MessageSquareQuote, User } from "lucide-react";
 import { DetailField, DetailSection, DetailSheet, DetailValue } from "@/components/squad/DetailSheet";
 import { TeamBadge } from "@/components/squad/TeamFilter";
 import {
