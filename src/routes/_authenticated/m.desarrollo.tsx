@@ -1,13 +1,14 @@
 import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
+  BarChart3,
   Dumbbell,
+  EyeOff,
   MessageSquareQuote,
   Plus,
-  Search,
+  Ruler,
   Target,
   TrendingUp,
-  UserCheck,
 } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { ModuleTabs } from "@/components/squad/ModuleTabs";
@@ -15,10 +16,9 @@ import { EmptyState } from "@/components/squad/EmptyState";
 import { CardGridSkeleton } from "@/components/squad/LoadingState";
 import { StandardCard } from "@/components/squad/StandardCard";
 import { StatusBadge } from "@/components/squad/StatusBadge";
-import { TeamFilter, TeamBadge } from "@/components/squad/TeamFilter";
+import { TeamBadge } from "@/components/squad/TeamFilter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useApp } from "@/components/squad/AppLayout";
 import { useTeamAccess } from "@/hooks/useTeamAccess";
@@ -30,30 +30,41 @@ import {
   daysUntil,
   formatDay,
   useAssessments,
+  useCompetitionStats,
   useDevelopmentRoster,
   useFeedback,
   useGoals,
+  useMeasurements,
   useRoutines,
   type AssessmentRow,
+  type CompetitionStatsRow,
   type DevelopmentRosterMember,
   type FeedbackRow,
   type GoalRow,
+  type MeasurementRow,
   type RoutineRow,
 } from "@/hooks/useDevelopment";
+import { ASSIGNMENT_STATUS_VARIANT, GOAL_STATUS_VARIANT, levelLabel } from "@/lib/desarrollo";
 import { FeedbackFormDialog } from "@/components/desarrollo/FeedbackFormDialog";
 import { GoalFormDialog } from "@/components/desarrollo/GoalFormDialog";
 import { AssessmentFormDialog } from "@/components/desarrollo/AssessmentFormDialog";
 import { RoutineFormDialog } from "@/components/desarrollo/RoutineFormDialog";
 import { RoutineAssignDialog } from "@/components/desarrollo/RoutineAssignDialog";
+import { MeasurementFormDialog } from "@/components/desarrollo/MeasurementFormDialog";
+import { StatsFormDialog } from "@/components/desarrollo/StatsFormDialog";
 import {
+  PlayerDevelopmentContent,
   PlayerDevelopmentSheet,
-  ASSIGNMENT_STATUS_VARIANT,
-  GOAL_STATUS_VARIANT,
 } from "@/components/desarrollo/PlayerDevelopmentSheet";
 import { FeedbackDetailSheet } from "@/components/desarrollo/FeedbackDetailSheet";
 import { GoalDetailSheet } from "@/components/desarrollo/GoalDetailSheet";
 import { AssessmentDetailSheet } from "@/components/desarrollo/AssessmentDetailSheet";
 import { RoutineDetailSheet } from "@/components/desarrollo/RoutineDetailSheet";
+import {
+  DesarrolloFilters,
+  EMPTY_DESARROLLO_FILTERS,
+  type DesarrolloFilterState,
+} from "@/components/desarrollo/DesarrolloFilters";
 
 export const Route = createFileRoute("/_authenticated/m/desarrollo")({
   head: () => ({
@@ -61,35 +72,36 @@ export const Route = createFileRoute("/_authenticated/m/desarrollo")({
       { title: "Squad — Desarrollo" },
       {
         name: "description",
-        content: "Seguimiento del progreso del jugador: retro, objetivos, evaluaciones y rutinas.",
+        content: "Seguimiento del progreso del jugador: evaluaciones, objetivos, rutinas y métricas.",
       },
       { property: "og:title", content: "Squad — Desarrollo" },
       {
         property: "og:description",
-        content: "Retroalimentación, objetivos, evaluaciones por atributos y rutinas físicas.",
+        content: "Evaluaciones por habilidades, objetivos, notas, rutinas y estadísticas del jugador.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: DesarrolloPage,
 });
 
-type SubView = "resumen" | "retro" | "objetivos" | "evaluaciones" | "rutinas";
+type SubView = "jugadores" | "evaluaciones" | "objetivos" | "notas" | "rutinas" | "metricas" | "stats";
 
 function DesarrolloPage() {
-  const { profile, user, teamOptions, isSuperAdmin, accessibleModules } = useApp();
+  const { profile, user, isSuperAdmin, accessibleModules, teamOptions } = useApp();
   const clubId = profile?.club_id ?? null;
   const canAccess = isSuperAdmin || accessibleModules.includes("desarrollo");
   const { canEditTeam, canReadTeam, onlyOwnRows } = useTeamAccess("desarrollo");
-  // 'vista_jugador' en un módulo personal: solo se ven los registros propios.
+  const editableTeams = useEditableTeams("desarrollo");
+
   const seesOwnOnly = React.useCallback(
     (teamId: string, playerUserId: string) => !onlyOwnRows(teamId) || playerUserId === user.id,
     [onlyOwnRows, user.id],
   );
-  const editableTeams = useEditableTeams("desarrollo");
 
-  const [view, setView] = React.useState<SubView>("resumen");
-  const [teamFilter, setTeamFilter] = React.useState<string | null>(null);
-  const [search, setSearch] = React.useState("");
+  const [view, setView] = React.useState<SubView>("jugadores");
+  const [filters, setFilters] = React.useState<DesarrolloFilterState>(EMPTY_DESARROLLO_FILTERS);
 
   const [feedbackOpen, setFeedbackOpen] = React.useState(false);
   const [editingFeedback, setEditingFeedback] = React.useState<FeedbackRow | null>(null);
@@ -100,18 +112,24 @@ function DesarrolloPage() {
   const [routineOpen, setRoutineOpen] = React.useState(false);
   const [editingRoutine, setEditingRoutine] = React.useState<RoutineRow | null>(null);
   const [assignRoutine, setAssignRoutine] = React.useState<RoutineRow | null>(null);
+  const [measurementOpen, setMeasurementOpen] = React.useState(false);
+  const [editingMeasurement, setEditingMeasurement] = React.useState<MeasurementRow | null>(null);
+  const [statsOpen, setStatsOpen] = React.useState(false);
+  const [editingStats, setEditingStats] = React.useState<CompetitionStatsRow | null>(null);
+
   const [detailPlayer, setDetailPlayer] = React.useState<DevelopmentRosterMember | null>(null);
   const [detailFeedback, setDetailFeedback] = React.useState<FeedbackRow | null>(null);
   const [detailGoal, setDetailGoal] = React.useState<GoalRow | null>(null);
   const [detailAssessment, setDetailAssessment] = React.useState<AssessmentRow | null>(null);
   const [detailRoutine, setDetailRoutine] = React.useState<RoutineRow | null>(null);
-  const [selfOpen, setSelfOpen] = React.useState(false);
 
   const rosterQ = useDevelopmentRoster(canAccess ? clubId : null);
   const feedbackQ = useFeedback(canAccess ? clubId : null);
   const goalsQ = useGoals(canAccess ? clubId : null);
   const assessmentsQ = useAssessments(canAccess ? clubId : null);
   const routinesQ = useRoutines(canAccess ? clubId : null);
+  const measurementsQ = useMeasurements(canAccess ? clubId : null);
+  const statsQ = useCompetitionStats(canAccess ? clubId : null);
 
   const roster = React.useMemo(
     () => (rosterQ.data ?? []).filter((p) => canReadTeam(p.teamId) && seesOwnOnly(p.teamId, p.userId)),
@@ -123,21 +141,62 @@ function DesarrolloPage() {
   );
   const canEditAny = editablePlayers.length > 0 || editableTeams.length > 0;
 
-  const matchTeam = (teamId: string) => !teamFilter || teamFilter === teamId;
-  const q = search.trim().toLowerCase();
+  /** Vista jugador: solo se ve a sí mismo, entra directo a "Mi desarrollo". */
+  const myRow = roster.find((p) => p.userId === user.id) ?? null;
+  const isPlayerOnlyView = roster.length > 0 && roster.every((p) => p.userId === user.id);
+
+  const teamChoices = React.useMemo(
+    () => teamOptions.filter((t) => !!t.id).map((t) => ({ id: t.id as string, name: t.name })),
+    [teamOptions],
+  );
+
+  const q = filters.search.trim().toLowerCase();
+  const matchTeam = (teamId: string) => !filters.teamId || filters.teamId === teamId;
   const byName = (name: string | null | undefined) => !q || (name ?? "").toLowerCase().includes(q);
 
-  const filteredRoster = roster.filter((p) => matchTeam(p.teamId) && byName(p.fullName));
+  const allAssessments = (assessmentsQ.data ?? []).filter((a) =>
+    seesOwnOnly(a.team_id, a.player_user_id),
+  );
+  const allGoals = (goalsQ.data ?? []).filter((g) => seesOwnOnly(g.team_id, g.player_user_id));
+
+  const lastAssessmentByUser = React.useMemo(() => {
+    const m = new Map<string, AssessmentRow>();
+    for (const a of allAssessments) {
+      const prev = m.get(a.player_user_id);
+      if (!prev || a.assessment_date.localeCompare(prev.assessment_date) > 0) m.set(a.player_user_id, a);
+    }
+    return m;
+  }, [allAssessments]);
+
+  const filteredRoster = roster.filter((p) => {
+    if (!matchTeam(p.teamId) || !byName(p.fullName)) return false;
+    if (filters.onlyEvaluated && !lastAssessmentByUser.has(p.userId)) return false;
+    if (filters.goalStatus) {
+      const has = allGoals.some((g) => g.player_user_id === p.userId && g.status === filters.goalStatus);
+      if (!has) return false;
+    }
+    return true;
+  });
+
   const feedback = (feedbackQ.data ?? []).filter(
     (f) => matchTeam(f.team_id) && seesOwnOnly(f.team_id, f.player_user_id) && byName(f.player?.full_name),
   );
-  const goals = (goalsQ.data ?? []).filter(
-    (g) => matchTeam(g.team_id) && seesOwnOnly(g.team_id, g.player_user_id) && byName(g.player?.full_name),
+  const goals = allGoals.filter(
+    (g) =>
+      matchTeam(g.team_id) &&
+      byName(g.player?.full_name) &&
+      (!filters.goalStatus || g.status === filters.goalStatus),
   );
-  const assessments = (assessmentsQ.data ?? []).filter(
-    (a) => matchTeam(a.team_id) && seesOwnOnly(a.team_id, a.player_user_id) && byName(a.player?.full_name),
+  const assessments = allAssessments.filter(
+    (a) => matchTeam(a.team_id) && byName(a.player?.full_name),
   );
   const routines = (routinesQ.data ?? []).filter((r) => matchTeam(r.team_id) && (!q || byName(r.name)));
+  const measurements = (measurementsQ.data ?? []).filter(
+    (m) => matchTeam(m.team_id) && seesOwnOnly(m.team_id, m.player_user_id) && byName(m.player?.full_name),
+  );
+  const stats = (statsQ.data ?? []).filter(
+    (s) => matchTeam(s.team_id) && seesOwnOnly(s.team_id, s.player_user_id) && byName(s.player?.full_name),
+  );
 
   if (!canAccess) {
     return (
@@ -153,8 +212,31 @@ function DesarrolloPage() {
     );
   }
 
+  /* ------------------------------- Vista jugador ------------------------------- */
+  if (isPlayerOnlyView) {
+    return (
+      <div className="space-y-6">
+        <ModuleTabs activeKey="desarrollo" />
+        <PageHeader hideTitle title="Mi desarrollo" subtitle="Tu progreso deportivo" />
+        <PlayerDevelopmentContent
+          clubId={clubId}
+          player={{
+            userId: user.id,
+            fullName: myRow?.fullName ?? profile?.full_name ?? "Mi desarrollo",
+            avatarUrl: myRow?.avatarUrl ?? null,
+            teamName: myRow?.teamName ?? null,
+            position: myRow?.position ?? null,
+            jerseyNumber: myRow?.jerseyNumber ?? null,
+          }}
+          isSelf
+        />
+      </div>
+    );
+  }
+
+  /* ------------------------------ Cuerpo técnico ------------------------------ */
   const primaryAction = () => {
-    if (view === "retro") {
+    if (view === "notas") {
       setEditingFeedback(null);
       setFeedbackOpen(true);
     } else if (view === "objetivos") {
@@ -166,70 +248,71 @@ function DesarrolloPage() {
     } else if (view === "rutinas") {
       setEditingRoutine(null);
       setRoutineOpen(true);
+    } else if (view === "metricas") {
+      setEditingMeasurement(null);
+      setMeasurementOpen(true);
+    } else if (view === "stats") {
+      setEditingStats(null);
+      setStatsOpen(true);
     }
   };
 
   const actionLabel: Record<SubView, string> = {
-    resumen: "",
-    retro: "Registrar retroalimentación",
-    objetivos: "Nuevo objetivo",
+    jugadores: "",
     evaluaciones: "Nueva evaluación",
+    objetivos: "Nuevo objetivo",
+    notas: "Registrar nota",
     rutinas: "Nueva rutina",
+    metricas: "Nueva medición",
+    stats: "Capturar estadísticas",
   };
 
   return (
     <div className="space-y-6">
       <ModuleTabs activeKey="desarrollo" />
       <PageHeader hideTitle title="Desarrollo" subtitle="Evaluaciones y progresos" />
-      <TeamFilter teams={teamOptions} value={teamFilter} onChange={setTeamFilter} />
 
-      <Button variant="outline" className="w-full" onClick={() => setSelfOpen(true)}>
-        <UserCheck className="mr-2 h-4 w-4" /> Mi desarrollo
-      </Button>
+      <DesarrolloFilters
+        value={filters}
+        onChange={setFilters}
+        teams={teamChoices}
+        count={filteredRoster.length}
+      />
 
       <Tabs value={view} onValueChange={(v) => setView(v as SubView)} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="resumen">Resumen</TabsTrigger>
-          <TabsTrigger value="retro">Retro</TabsTrigger>
-          <TabsTrigger value="objetivos">Objetivos</TabsTrigger>
-          <TabsTrigger value="evaluaciones">Evaluar</TabsTrigger>
-          <TabsTrigger value="rutinas">Rutinas</TabsTrigger>
-        </TabsList>
+        <div className="-mx-1 overflow-x-auto px-1">
+          <TabsList className="inline-flex w-auto">
+            <TabsTrigger value="jugadores">Jugadores</TabsTrigger>
+            <TabsTrigger value="evaluaciones">Evaluaciones</TabsTrigger>
+            <TabsTrigger value="objetivos">Objetivos</TabsTrigger>
+            <TabsTrigger value="notas">Notas</TabsTrigger>
+            <TabsTrigger value="rutinas">Rutinas</TabsTrigger>
+            <TabsTrigger value="metricas">Métricas</TabsTrigger>
+            <TabsTrigger value="stats">Competencia</TabsTrigger>
+          </TabsList>
+        </div>
 
-        {canEditAny && view !== "resumen" ? (
+        {canEditAny && view !== "jugadores" ? (
           <Button className="w-full glow-primary" onClick={primaryAction}>
             <Plus className="mr-2 h-4 w-4" /> {actionLabel[view]}
           </Button>
         ) : null}
 
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar…"
-            className="pl-9"
-          />
-        </div>
-
-        <TabsContent value="resumen" className="space-y-3">
+        <TabsContent value="jugadores" className="space-y-3">
           {rosterQ.isLoading ? (
             <CardGridSkeleton count={4} />
           ) : filteredRoster.length === 0 ? (
             <EmptyState
               icon={TrendingUp}
               title="Sin jugadores visibles"
-              message="Solo ves el desarrollo de los equipos donde tienes acceso. Abre “Mi desarrollo” para ver lo tuyo."
+              message="Solo ves el desarrollo de las categorías donde tienes acceso."
             />
           ) : (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {filteredRoster.map((p) => {
-                const last = assessments
-                  .filter((a) => a.player_user_id === p.userId)
-                  .slice()
-                  .sort((a, b) => b.assessment_date.localeCompare(a.assessment_date))[0];
-                const avg = averageScore(last);
-                const active = goals.filter(
+                const avg = averageScore(lastAssessmentByUser.get(p.userId));
+                const level = levelLabel(avg);
+                const active = allGoals.filter(
                   (g) =>
                     g.player_user_id === p.userId &&
                     (g.status === "pendiente" || g.status === "en_progreso"),
@@ -245,7 +328,7 @@ function DesarrolloPage() {
                       <AvatarImage src={p.avatarUrl ?? undefined} alt="" />
                       <AvatarFallback>{(p.fullName ?? "?").slice(0, 1).toUpperCase()}</AvatarFallback>
                     </Avatar>
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-0 flex-1 space-y-1">
                       <p className="truncate font-display font-semibold text-foreground">
                         {p.fullName ?? "—"}
                       </p>
@@ -253,9 +336,14 @@ function DesarrolloPage() {
                         {p.teamName ?? "—"}
                         {p.position ? ` · ${p.position}` : ""}
                       </p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {avg != null ? `Promedio ${avg}/10` : "Sin evaluaciones"} · {active} objetivo(s)
-                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        <StatusBadge variant={level.variant}>
+                          {avg != null ? `${level.label} · ${avg}/10` : level.label}
+                        </StatusBadge>
+                        {active > 0 ? (
+                          <StatusBadge variant="info">{active} objetivo(s)</StatusBadge>
+                        ) : null}
+                      </div>
                     </div>
                   </button>
                 );
@@ -264,30 +352,32 @@ function DesarrolloPage() {
           )}
         </TabsContent>
 
-        <TabsContent value="retro" className="space-y-3">
-          {feedbackQ.isLoading ? (
+        <TabsContent value="evaluaciones" className="space-y-3">
+          {assessmentsQ.isLoading ? (
             <CardGridSkeleton count={3} />
-          ) : feedback.length === 0 ? (
+          ) : assessments.length === 0 ? (
             <EmptyState
-              icon={MessageSquareQuote}
-              title="Sin retroalimentación"
-              message="Aún no se ha registrado retroalimentación."
+              icon={TrendingUp}
+              title="Sin evaluaciones"
+              message="Registra la primera evaluación por habilidades para ver la evolución."
             />
           ) : (
             <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-              {feedback.map((f) => (
+              {assessments.map((a) => (
                 <StandardCard
-                  key={f.id}
-                  icon={MessageSquareQuote}
-                  title={f.player?.full_name ?? "Jugador"}
-                  subtitle={f.context ?? formatDay(f.feedback_date)}
+                  key={a.id}
+                  icon={TrendingUp}
+                  title={a.player?.full_name ?? "Jugador"}
+                  subtitle={formatDay(a.assessment_date)}
                   interactive
-                  onClick={() => setDetailFeedback(f)}
-                  action={<TeamBadge name={f.team?.name} />}
+                  onClick={() => setDetailAssessment(a)}
+                  action={<TeamBadge name={a.team?.name} />}
                 >
                   <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">{formatDay(f.feedback_date)}</p>
-                    <p className="line-clamp-3 whitespace-pre-wrap">{f.content}</p>
+                    <p>Promedio {averageScore(a) ?? "—"}/10</p>
+                    <p className="text-xs text-muted-foreground">
+                      {(a.scores ?? []).map((s) => `${s.attribute} ${s.score}`).join(" · ")}
+                    </p>
                   </div>
                 </StandardCard>
               ))}
@@ -299,7 +389,7 @@ function DesarrolloPage() {
           {goalsQ.isLoading ? (
             <CardGridSkeleton count={3} />
           ) : goals.length === 0 ? (
-            <EmptyState icon={Target} title="Sin objetivos" message="Aún no hay objetivos definidos." />
+            <EmptyState icon={Target} title="Sin objetivos" message="Aún no hay metas definidas." />
           ) : (
             <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
               {goals.map((g) => {
@@ -334,32 +424,38 @@ function DesarrolloPage() {
           )}
         </TabsContent>
 
-        <TabsContent value="evaluaciones" className="space-y-3">
-          {assessmentsQ.isLoading ? (
+        <TabsContent value="notas" className="space-y-3">
+          {feedbackQ.isLoading ? (
             <CardGridSkeleton count={3} />
-          ) : assessments.length === 0 ? (
+          ) : feedback.length === 0 ? (
             <EmptyState
-              icon={TrendingUp}
-              title="Sin evaluaciones"
-              message="Registra la primera evaluación por atributos para ver la evolución."
+              icon={MessageSquareQuote}
+              title="Sin notas"
+              message="Aún no se ha registrado retroalimentación."
             />
           ) : (
             <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-              {assessments.map((a) => (
+              {feedback.map((f) => (
                 <StandardCard
-                  key={a.id}
-                  icon={TrendingUp}
-                  title={a.player?.full_name ?? "Jugador"}
-                  subtitle={formatDay(a.assessment_date)}
+                  key={f.id}
+                  icon={MessageSquareQuote}
+                  title={f.player?.full_name ?? "Jugador"}
+                  subtitle={f.context ?? formatDay(f.feedback_date)}
                   interactive
-                  onClick={() => setDetailAssessment(a)}
-                  action={<TeamBadge name={a.team?.name} />}
+                  onClick={() => setDetailFeedback(f)}
+                  action={
+                    f.visible_to_player ? (
+                      <TeamBadge name={f.team?.name} />
+                    ) : (
+                      <StatusBadge variant="neutral">
+                        <EyeOff className="mr-1 h-3 w-3" /> Interna
+                      </StatusBadge>
+                    )
+                  }
                 >
                   <div className="space-y-1">
-                    <p>Promedio {averageScore(a) ?? "—"}/10</p>
-                    <p className="text-xs text-muted-foreground">
-                      {(a.scores ?? []).map((s) => `${s.attribute} ${s.score}`).join(" · ")}
-                    </p>
+                    <p className="text-xs text-muted-foreground">{formatDay(f.feedback_date)}</p>
+                    <p className="line-clamp-3 whitespace-pre-wrap">{f.content}</p>
                   </div>
                 </StandardCard>
               ))}
@@ -371,7 +467,7 @@ function DesarrolloPage() {
           {routinesQ.isLoading ? (
             <CardGridSkeleton count={3} />
           ) : routines.length === 0 ? (
-            <EmptyState icon={Dumbbell} title="Sin rutinas" message="Crea la primera rutina física." />
+            <EmptyState icon={Dumbbell} title="Sin rutinas" message="Crea el primer plan individual." />
           ) : (
             <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
               {routines.map((r) => (
@@ -394,6 +490,81 @@ function DesarrolloPage() {
                       ))}
                     </div>
                   </div>
+                </StandardCard>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="metricas" className="space-y-3">
+          {measurementsQ.isLoading ? (
+            <CardGridSkeleton count={3} />
+          ) : measurements.length === 0 ? (
+            <EmptyState
+              icon={Ruler}
+              title="Sin mediciones"
+              message="Registra peso, estatura o pruebas físicas para seguir su evolución."
+            />
+          ) : (
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+              {measurements.map((m) => (
+                <StandardCard
+                  key={m.id}
+                  icon={Ruler}
+                  title={`${m.metric}: ${m.value}${m.unit ? ` ${m.unit}` : ""}`}
+                  subtitle={m.player?.full_name ?? "Jugador"}
+                  interactive={canEditTeam(m.team_id)}
+                  onClick={
+                    canEditTeam(m.team_id)
+                      ? () => {
+                          setEditingMeasurement(m);
+                          setMeasurementOpen(true);
+                        }
+                      : undefined
+                  }
+                  action={<TeamBadge name={m.team?.name} />}
+                >
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">{formatDay(m.measured_on)}</p>
+                    {m.notes ? <p className="line-clamp-2">{m.notes}</p> : null}
+                  </div>
+                </StandardCard>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="stats" className="space-y-3">
+          {statsQ.isLoading ? (
+            <CardGridSkeleton count={3} />
+          ) : stats.length === 0 ? (
+            <EmptyState
+              icon={BarChart3}
+              title="Sin estadísticas"
+              message="Captura partidos, minutos y goles por temporada. Más adelante llegarán desde Torneo."
+            />
+          ) : (
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+              {stats.map((s) => (
+                <StandardCard
+                  key={s.id}
+                  icon={BarChart3}
+                  title={s.player?.full_name ?? "Jugador"}
+                  subtitle={s.season_name}
+                  interactive={canEditTeam(s.team_id) && s.source === "manual"}
+                  onClick={
+                    canEditTeam(s.team_id) && s.source === "manual"
+                      ? () => {
+                          setEditingStats(s);
+                          setStatsOpen(true);
+                        }
+                      : undefined
+                  }
+                  action={<TeamBadge name={s.team?.name} />}
+                >
+                  <p>
+                    {s.matches_played} PJ · {s.minutes_played} min · {s.goals} goles · {s.assists} asist.
+                  </p>
                 </StandardCard>
               ))}
             </div>
@@ -455,6 +626,28 @@ function DesarrolloPage() {
             routine={assignRoutine}
             players={editablePlayers}
           />
+          <MeasurementFormDialog
+            open={measurementOpen}
+            onOpenChange={(v) => {
+              setMeasurementOpen(v);
+              if (!v) setEditingMeasurement(null);
+            }}
+            clubId={clubId}
+            userId={user.id}
+            players={editablePlayers}
+            measurement={editingMeasurement}
+          />
+          <StatsFormDialog
+            open={statsOpen}
+            onOpenChange={(v) => {
+              setStatsOpen(v);
+              if (!v) setEditingStats(null);
+            }}
+            clubId={clubId}
+            userId={user.id}
+            players={editablePlayers}
+            stats={editingStats}
+          />
         </>
       ) : null}
 
@@ -469,23 +662,12 @@ function DesarrolloPage() {
                 fullName: detailPlayer.fullName,
                 avatarUrl: detailPlayer.avatarUrl,
                 teamName: detailPlayer.teamName,
+                position: detailPlayer.position,
+                jerseyNumber: detailPlayer.jerseyNumber,
               }
             : null
         }
         isSelf={detailPlayer?.userId === user.id}
-      />
-
-      <PlayerDevelopmentSheet
-        open={selfOpen}
-        onOpenChange={setSelfOpen}
-        clubId={clubId}
-        player={{
-          userId: user.id,
-          fullName: profile?.full_name ?? "Mi desarrollo",
-          avatarUrl: null,
-          teamName: null,
-        }}
-        isSelf
       />
 
       <FeedbackDetailSheet
