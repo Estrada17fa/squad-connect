@@ -12,8 +12,13 @@ export interface CalendarEventRow {
   starts_at: string;
   ends_at: string | null;
   location: string | null;
+  location_id?: string | null;
   description: string | null;
   details: Record<string, unknown> | null;
+  /** Llaves de origen: el evento lo generó otro módulo. */
+  meeting_id?: string | null;
+  trip_id?: string | null;
+  is_private?: boolean;
   created_by: string | null;
   created_at: string;
 }
