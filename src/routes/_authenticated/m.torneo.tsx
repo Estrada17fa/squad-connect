@@ -146,18 +146,22 @@ function TorneoPage() {
             <>
               <section className="rounded-2xl bg-white/[0.04] p-4 ring-1 ring-inset ring-white/5">
                 <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h2 className="truncate text-lg font-semibold">{current.name}</h2>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {[
-                        current.team_name,
-                        TOURNAMENT_TYPE_LABEL[current.type],
-                        current.season,
-                      ]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </p>
+                  <div className="flex min-w-0 items-center gap-3">
+                    <TournamentLogo path={current.logo_path} name={current.name} />
+                    <div className="min-w-0">
+                      <h2 className="truncate text-lg font-semibold">{current.name}</h2>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {[
+                          current.team_name,
+                          TOURNAMENT_TYPE_LABEL[current.type],
+                          current.season,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    </div>
                   </div>
+
                   <div className="flex items-center gap-2">
                     <StatusBadge variant={current.status === "finalizado" ? "neutral" : "approved"}>
                       {TOURNAMENT_STATUS_LABEL[current.status]}
