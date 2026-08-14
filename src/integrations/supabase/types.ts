@@ -3454,6 +3454,266 @@ export type Database = {
           },
         ]
       }
+      tournament_matches: {
+        Row: {
+          away_goals: number | null
+          away_team_id: string | null
+          calendar_event_id: string | null
+          club_id: string
+          created_at: string
+          created_by: string | null
+          home_goals: number | null
+          home_team_id: string | null
+          id: string
+          kickoff_at: string | null
+          location_id: string | null
+          matchday: number | null
+          notes: string | null
+          shootout_winner_team_id: string | null
+          status: Database["public"]["Enums"]["tournament_match_status"]
+          tournament_id: string
+          updated_at: string
+        }
+        Insert: {
+          away_goals?: number | null
+          away_team_id?: string | null
+          calendar_event_id?: string | null
+          club_id: string
+          created_at?: string
+          created_by?: string | null
+          home_goals?: number | null
+          home_team_id?: string | null
+          id?: string
+          kickoff_at?: string | null
+          location_id?: string | null
+          matchday?: number | null
+          notes?: string | null
+          shootout_winner_team_id?: string | null
+          status?: Database["public"]["Enums"]["tournament_match_status"]
+          tournament_id: string
+          updated_at?: string
+        }
+        Update: {
+          away_goals?: number | null
+          away_team_id?: string | null
+          calendar_event_id?: string | null
+          club_id?: string
+          created_at?: string
+          created_by?: string | null
+          home_goals?: number | null
+          home_team_id?: string | null
+          id?: string
+          kickoff_at?: string | null
+          location_id?: string | null
+          matchday?: number | null
+          notes?: string | null
+          shootout_winner_team_id?: string | null
+          status?: Database["public"]["Enums"]["tournament_match_status"]
+          tournament_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournament_matches_away_team_id_fkey"
+            columns: ["away_team_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_matches_calendar_event_id_fkey"
+            columns: ["calendar_event_id"]
+            isOneToOne: false
+            referencedRelation: "calendar_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_matches_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_matches_home_team_id_fkey"
+            columns: ["home_team_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_matches_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_matches_shootout_winner_team_id_fkey"
+            columns: ["shootout_winner_team_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_matches_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tournament_teams: {
+        Row: {
+          club_id: string
+          created_at: string
+          crest_path: string | null
+          id: string
+          is_our_team: boolean
+          name: string
+          notes: string | null
+          short_name: string | null
+          tournament_id: string
+          updated_at: string
+        }
+        Insert: {
+          club_id: string
+          created_at?: string
+          crest_path?: string | null
+          id?: string
+          is_our_team?: boolean
+          name: string
+          notes?: string | null
+          short_name?: string | null
+          tournament_id: string
+          updated_at?: string
+        }
+        Update: {
+          club_id?: string
+          created_at?: string
+          crest_path?: string | null
+          id?: string
+          is_our_team?: boolean
+          name?: string
+          notes?: string | null
+          short_name?: string | null
+          tournament_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournament_teams_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_teams_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tournaments: {
+        Row: {
+          away_bonus_enabled: boolean
+          away_bonus_min_diff: number
+          away_bonus_points: number
+          club_id: string
+          created_at: string
+          created_by: string | null
+          external_id: string | null
+          external_source: string | null
+          format: string | null
+          id: string
+          name: string
+          notes: string | null
+          points_draw: number
+          points_loss: number
+          points_win: number
+          season: string | null
+          shootout_enabled: boolean
+          shootout_min_goals: number
+          shootout_winner_points: number
+          status: Database["public"]["Enums"]["tournament_status"]
+          team_id: string
+          tiebreakers: Json
+          type: Database["public"]["Enums"]["tournament_type"]
+          updated_at: string
+        }
+        Insert: {
+          away_bonus_enabled?: boolean
+          away_bonus_min_diff?: number
+          away_bonus_points?: number
+          club_id: string
+          created_at?: string
+          created_by?: string | null
+          external_id?: string | null
+          external_source?: string | null
+          format?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          points_draw?: number
+          points_loss?: number
+          points_win?: number
+          season?: string | null
+          shootout_enabled?: boolean
+          shootout_min_goals?: number
+          shootout_winner_points?: number
+          status?: Database["public"]["Enums"]["tournament_status"]
+          team_id: string
+          tiebreakers?: Json
+          type?: Database["public"]["Enums"]["tournament_type"]
+          updated_at?: string
+        }
+        Update: {
+          away_bonus_enabled?: boolean
+          away_bonus_min_diff?: number
+          away_bonus_points?: number
+          club_id?: string
+          created_at?: string
+          created_by?: string | null
+          external_id?: string | null
+          external_source?: string | null
+          format?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          points_draw?: number
+          points_loss?: number
+          points_win?: number
+          season?: string | null
+          shootout_enabled?: boolean
+          shootout_min_goals?: number
+          shootout_winner_points?: number
+          status?: Database["public"]["Enums"]["tournament_status"]
+          team_id?: string
+          tiebreakers?: Json
+          type?: Database["public"]["Enums"]["tournament_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournaments_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournaments_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       training_routines: {
         Row: {
           category: string | null
@@ -4632,6 +4892,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      tournament_team_id: { Args: { _tournament_id: string }; Returns: string }
       training_level: {
         Args: { _team_id: string; _user_id: string }
         Returns: Database["public"]["Enums"]["access_level"]
@@ -4739,6 +5000,9 @@ export type Database = {
       session_phase: "calentamiento" | "principal" | "vuelta_calma"
       task_priority: "baja" | "media" | "alta" | "urgente"
       task_status: "pendiente" | "en_progreso" | "completada" | "en_pausa"
+      tournament_match_status: "programado" | "jugado" | "suspendido"
+      tournament_status: "en_curso" | "finalizado"
+      tournament_type: "liga" | "copa" | "otro"
       trip_leg: "ida" | "regreso"
       trip_meal_type: "desayuno" | "comida" | "cena" | "snack"
       trip_status: "planeacion" | "confirmado" | "en_curso" | "completado"
@@ -4977,6 +5241,9 @@ export const Constants = {
       session_phase: ["calentamiento", "principal", "vuelta_calma"],
       task_priority: ["baja", "media", "alta", "urgente"],
       task_status: ["pendiente", "en_progreso", "completada", "en_pausa"],
+      tournament_match_status: ["programado", "jugado", "suspendido"],
+      tournament_status: ["en_curso", "finalizado"],
+      tournament_type: ["liga", "copa", "otro"],
       trip_leg: ["ida", "regreso"],
       trip_meal_type: ["desayuno", "comida", "cena", "snack"],
       trip_status: ["planeacion", "confirmado", "en_curso", "completado"],
