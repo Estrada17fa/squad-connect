@@ -36,6 +36,7 @@ import { Route as AuthenticatedMComunicadosRouteImport } from './routes/_authent
 import { Route as AuthenticatedMCompras_facturasRouteImport } from './routes/_authenticated/m.compras_facturas'
 import { Route as AuthenticatedMAgendaRouteImport } from './routes/_authenticated/m.agenda'
 import { Route as AuthenticatedMModuleRouteImport } from './routes/_authenticated/m.$module'
+import { Route as AuthenticatedAdminTorneoRouteImport } from './routes/_authenticated/admin.torneo'
 import { Route as AuthenticatedAdminConfiguracionRouteImport } from './routes/_authenticated/admin.configuracion'
 import { Route as AuthenticatedAdminClubsRouteImport } from './routes/_authenticated/admin.clubs'
 import { Route as AuthenticatedMPlantelPlayerIdRouteImport } from './routes/_authenticated/m.plantel.$playerId'
@@ -184,6 +185,12 @@ const AuthenticatedMModuleRoute = AuthenticatedMModuleRouteImport.update({
   path: '/m/$module',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminTorneoRoute =
+  AuthenticatedAdminTorneoRouteImport.update({
+    id: '/torneo',
+    path: '/torneo',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminConfiguracionRoute =
   AuthenticatedAdminConfiguracionRouteImport.update({
     id: '/configuracion',
@@ -214,6 +221,7 @@ export interface FileRoutesByFullPath {
   '/invite/$token': typeof InviteTokenRoute
   '/admin/clubs': typeof AuthenticatedAdminClubsRoute
   '/admin/configuracion': typeof AuthenticatedAdminConfiguracionRoute
+  '/admin/torneo': typeof AuthenticatedAdminTorneoRoute
   '/m/$module': typeof AuthenticatedMModuleRoute
   '/m/agenda': typeof AuthenticatedMAgendaRoute
   '/m/compras_facturas': typeof AuthenticatedMCompras_facturasRoute
@@ -244,6 +252,7 @@ export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
   '/admin/clubs': typeof AuthenticatedAdminClubsRoute
   '/admin/configuracion': typeof AuthenticatedAdminConfiguracionRoute
+  '/admin/torneo': typeof AuthenticatedAdminTorneoRoute
   '/m/$module': typeof AuthenticatedMModuleRoute
   '/m/agenda': typeof AuthenticatedMAgendaRoute
   '/m/compras_facturas': typeof AuthenticatedMCompras_facturasRoute
@@ -277,6 +286,7 @@ export interface FileRoutesById {
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/admin/clubs': typeof AuthenticatedAdminClubsRoute
   '/_authenticated/admin/configuracion': typeof AuthenticatedAdminConfiguracionRoute
+  '/_authenticated/admin/torneo': typeof AuthenticatedAdminTorneoRoute
   '/_authenticated/m/$module': typeof AuthenticatedMModuleRoute
   '/_authenticated/m/agenda': typeof AuthenticatedMAgendaRoute
   '/_authenticated/m/compras_facturas': typeof AuthenticatedMCompras_facturasRoute
@@ -310,6 +320,7 @@ export interface FileRouteTypes {
     | '/invite/$token'
     | '/admin/clubs'
     | '/admin/configuracion'
+    | '/admin/torneo'
     | '/m/$module'
     | '/m/agenda'
     | '/m/compras_facturas'
@@ -340,6 +351,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin/clubs'
     | '/admin/configuracion'
+    | '/admin/torneo'
     | '/m/$module'
     | '/m/agenda'
     | '/m/compras_facturas'
@@ -372,6 +384,7 @@ export interface FileRouteTypes {
     | '/_authenticated/'
     | '/_authenticated/admin/clubs'
     | '/_authenticated/admin/configuracion'
+    | '/_authenticated/admin/torneo'
     | '/_authenticated/m/$module'
     | '/_authenticated/m/agenda'
     | '/_authenticated/m/compras_facturas'
@@ -589,6 +602,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMModuleRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/torneo': {
+      id: '/_authenticated/admin/torneo'
+      path: '/torneo'
+      fullPath: '/admin/torneo'
+      preLoaderRoute: typeof AuthenticatedAdminTorneoRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/configuracion': {
       id: '/_authenticated/admin/configuracion'
       path: '/configuracion'
@@ -616,12 +636,14 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminClubsRoute: typeof AuthenticatedAdminClubsRoute
   AuthenticatedAdminConfiguracionRoute: typeof AuthenticatedAdminConfiguracionRoute
+  AuthenticatedAdminTorneoRoute: typeof AuthenticatedAdminTorneoRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminClubsRoute: AuthenticatedAdminClubsRoute,
   AuthenticatedAdminConfiguracionRoute: AuthenticatedAdminConfiguracionRoute,
+  AuthenticatedAdminTorneoRoute: AuthenticatedAdminTorneoRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 
