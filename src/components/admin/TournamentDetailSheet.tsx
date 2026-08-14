@@ -211,6 +211,8 @@ export function TournamentDetailSheet({
             />
           </TabsContent>
         </Tabs>
+      </DetailSheet>
+
 
       <TournamentTeamFormDialog
         open={teamForm.open}
