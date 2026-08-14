@@ -269,10 +269,89 @@ export function TournamentFormDialog({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
-              placeholder="Formato, sede, observaciones…"
+              placeholder="Sede, observaciones…"
             />
           </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="t-logo">Logo del torneo (opcional)</Label>
+            <Input
+              id="t-logo"
+              type="file"
+              accept="image/*"
+              onChange={(e) => setLogoFile(e.target.files?.[0] ?? null)}
+            />
+            {tournament?.logo_path && !logoFile ? (
+              <p className="text-xs text-muted-foreground">Ya tiene un logo cargado.</p>
+            ) : null}
+          </div>
         </section>
+
+        <section className="space-y-3">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Formato de la competencia
+          </h3>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label>Fase regular</Label>
+              <Select value={format} onValueChange={(v) => setFormat(v as TournamentFormat)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(TOURNAMENT_FORMAT_LABEL) as TournamentFormat[]).map((k) => (
+                    <SelectItem key={k} value={k}>
+                      {TOURNAMENT_FORMAT_LABEL[k]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {format === "grupos" ? (
+              <NumberField
+                label="Número de grupos"
+                value={groupsCount}
+                min={2}
+                onChange={(v) => setGroupsCount(Math.min(8, Math.max(2, v)))}
+              />
+            ) : null}
+          </div>
+
+          <ToggleBlock
+            title="Fase final"
+            description="Liguilla o eliminatoria después de la fase regular. Los cruces se arman a mano."
+            checked={hasPlayoffs}
+            onCheckedChange={setHasPlayoffs}
+          >
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Ronda inicial</Label>
+                <Select value={String(startRound)} onValueChange={(v) => setStartRound(Number(v))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PLAYOFF_ROUNDS.map((r) => (
+                      <SelectItem key={r} value={String(r)}>
+                        {PLAYOFF_ROUND_LABEL[r]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center justify-between gap-3 rounded-lg bg-white/[0.03] px-3 py-2 ring-1 ring-inset ring-white/5">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">Ida y vuelta</p>
+                  <p className="text-xs text-muted-foreground">
+                    Se puede cambiar en cada llave.
+                  </p>
+                </div>
+                <Switch checked={twoLegs} onCheckedChange={setTwoLegs} />
+              </div>
+            </div>
+          </ToggleBlock>
+        </section>
+
+
 
         <section className="space-y-3">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
