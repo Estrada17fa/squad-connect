@@ -29,6 +29,13 @@ import { useTournamentMatches } from "@/hooks/useTournamentMatches";
 import { MatchList } from "@/components/admin/MatchList";
 import { StandingsTable } from "@/components/admin/StandingsTable";
 import { ScorersTable } from "@/components/admin/ScorersTable";
+import { PlayoffTieDialog } from "@/components/admin/PlayoffTieDialog";
+import { BracketView } from "@/components/torneo/BracketView";
+import { TeamCrest } from "@/components/torneo/TeamCrest";
+
+import { useTournamentTies, type PlayoffTieRow } from "@/hooks/useTournamentPlayoffs";
+import { groupLabels } from "@/lib/torneo";
+
 
 interface Props {
   open: boolean;
@@ -54,13 +61,26 @@ export function TournamentDetailSheet({
 }: Props) {
   const teamsQ = useTournamentTeams(open && tournament ? tournament.id : null);
   const matchesQ = useTournamentMatches(open && tournament ? tournament.id : null);
+  const tiesQ = useTournamentTies(open && tournament?.has_playoffs ? tournament.id : null);
   const del = useDeleteTournament();
   const [teamForm, setTeamForm] = React.useState<{ open: boolean; row: TournamentTeamRow | null }>({
     open: false,
     row: null,
   });
+  const [tieForm, setTieForm] = React.useState<{
+    open: boolean;
+    roundSize: number;
+    slot: number;
+    tie: PlayoffTieRow | null;
+  }>({ open: false, roundSize: 2, slot: 0, tie: null });
+
+  const groups = React.useMemo(
+    () => (tournament?.format === "grupos" ? groupLabels(tournament.groups_count) : []),
+    [tournament?.format, tournament?.groups_count],
+  );
 
   if (!tournament) return null;
+
 
   return (
     <>
@@ -103,8 +123,12 @@ export function TournamentDetailSheet({
             <TabsTrigger value="general">General</TabsTrigger>
             <TabsTrigger value="partidos">Partidos</TabsTrigger>
             <TabsTrigger value="posiciones">Posiciones</TabsTrigger>
+            {tournament.has_playoffs ? (
+              <TabsTrigger value="fase-final">Fase final</TabsTrigger>
+            ) : null}
             <TabsTrigger value="goleo">Goleo</TabsTrigger>
           </TabsList>
+
 
           <TabsContent value="general" className="space-y-6 pt-4">
         <DetailSection title="Resumen">
@@ -207,8 +231,24 @@ export function TournamentDetailSheet({
               teams={teamsQ.data ?? []}
               matches={matchesQ.data ?? []}
               canEdit={canEdit}
+              groups={groups}
             />
           </TabsContent>
+
+          {tournament.has_playoffs ? (
+            <TabsContent value="fase-final" className="pt-4">
+              <BracketView
+                startRound={tournament.playoff_start_round}
+                teams={teamsQ.data ?? []}
+                matches={matchesQ.data ?? []}
+                ties={tiesQ.data ?? []}
+                canEdit={canEdit}
+                onOpenTie={(roundSize, slot, tie) =>
+                  setTieForm({ open: true, roundSize, slot, tie })
+                }
+              />
+            </TabsContent>
+          ) : null}
 
           <TabsContent value="goleo" className="pt-4">
             <ScorersTable
@@ -221,14 +261,31 @@ export function TournamentDetailSheet({
         </Tabs>
       </DetailSheet>
 
-
       <TournamentTeamFormDialog
         open={teamForm.open}
         onOpenChange={(v) => setTeamForm((s) => ({ ...s, open: v }))}
         clubId={clubId}
         tournamentId={tournament.id}
         team={teamForm.row}
+        groups={groups}
       />
+
+      {tournament.has_playoffs ? (
+        <PlayoffTieDialog
+          open={tieForm.open}
+          onOpenChange={(v) => setTieForm((s) => ({ ...s, open: v }))}
+          clubId={clubId}
+          userId={userId}
+          tournamentId={tournament.id}
+          teams={teamsQ.data ?? []}
+          matches={matchesQ.data ?? []}
+          roundSize={tieForm.roundSize}
+          slot={tieForm.slot}
+          tie={tieForm.tie}
+          defaultTwoLegs={tournament.playoff_two_legs}
+        />
+      ) : null}
+
     </>
   );
 }
@@ -242,22 +299,18 @@ function TeamRow({
   canEdit: boolean;
   onEdit: () => void;
 }) {
-  const { data: crest } = useCrestUrl(team.crest_path);
   return (
     <div className="flex items-center gap-3 rounded-xl bg-white/[0.04] px-3 py-2 ring-1 ring-inset ring-white/5">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/5">
-        {crest ? (
-          <img src={crest} alt={`Escudo de ${team.name}`} loading="lazy" className="h-full w-full object-contain" />
-        ) : (
-          <Shield className="h-4 w-4 text-muted-foreground" />
-        )}
-      </div>
+      <TeamCrest path={team.crest_path} name={team.name} className="h-9 w-9" />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{team.name}</p>
-        {team.short_name ? (
-          <p className="truncate text-xs text-muted-foreground">{team.short_name}</p>
-        ) : null}
+        <p className="truncate text-xs text-muted-foreground">
+          {[team.short_name, team.group_label ? `Grupo ${team.group_label}` : null]
+            .filter(Boolean)
+            .join(" · ")}
+        </p>
       </div>
+
       {team.is_our_team ? (
         <StatusBadge variant="info">
           <Star className="mr-1 h-3 w-3" /> Nuestro

@@ -376,3 +376,91 @@ export function buildStandings(
   list.forEach((r, i) => (r.position = i + 1));
   return list;
 }
+
+/* ------------------------------------------------------------------ */
+/* Formato del torneo: grupos                                          */
+/* ------------------------------------------------------------------ */
+
+export type TournamentFormat = "sin_grupos" | "grupos";
+
+export const TOURNAMENT_FORMAT_LABEL: Record<TournamentFormat, string> = {
+  sin_grupos: "Sin grupos (una sola tabla)",
+  grupos: "Con grupos",
+};
+
+/** Etiquetas A, B, C… según el número de grupos configurado. */
+export function groupLabels(count: number): string[] {
+  const n = Math.max(2, Math.min(8, Math.round(count || 2)));
+  return Array.from({ length: n }, (_, i) => String.fromCharCode(65 + i));
+}
+
+/* ------------------------------------------------------------------ */
+/* Fase final (bracket)                                                */
+/* ------------------------------------------------------------------ */
+
+export const PLAYOFF_ROUNDS = [16, 8, 4, 2] as const;
+
+export const PLAYOFF_ROUND_LABEL: Record<number, string> = {
+  16: "Octavos de final",
+  8: "Cuartos de final",
+  4: "Semifinales",
+  2: "Final",
+};
+
+/** Rondas desde la inicial hasta la final: 8 → [8, 4, 2]. */
+export function playoffRounds(startRound: number): number[] {
+  const out: number[] = [];
+  let r = Math.max(2, Math.min(16, startRound || 2));
+  while (r >= 2) {
+    out.push(r);
+    r = r / 2;
+  }
+  return out;
+}
+
+export interface TieLegLike {
+  home_team_id: string | null;
+  away_team_id: string | null;
+  home_goals: number | null;
+  away_goals: number | null;
+}
+
+export interface TieAggregate {
+  home: number;
+  away: number;
+  /** Hay al menos un marcador capturado. */
+  hasScore: boolean;
+  /** Ganador por marcador global; null si va empatado o falta capturar. */
+  winner: "home" | "away" | null;
+  tied: boolean;
+}
+
+/** Marcador global de una llave (uno o dos partidos). */
+export function tieAggregate(
+  legs: TieLegLike[],
+  homeTeamId: string | null,
+  awayTeamId: string | null,
+): TieAggregate {
+  let home = 0;
+  let away = 0;
+  let hasScore = false;
+  for (const l of legs) {
+    if (l.home_goals == null || l.away_goals == null) continue;
+    hasScore = true;
+    if (l.home_team_id === homeTeamId) {
+      home += l.home_goals;
+      away += l.away_goals;
+    } else if (l.home_team_id === awayTeamId) {
+      away += l.home_goals;
+      home += l.away_goals;
+    }
+  }
+  const tied = hasScore && home === away;
+  return {
+    home,
+    away,
+    hasScore,
+    tied,
+    winner: !hasScore || tied ? null : home > away ? "home" : "away",
+  };
+}

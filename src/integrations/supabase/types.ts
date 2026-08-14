@@ -3561,11 +3561,13 @@ export type Database = {
           home_team_id: string | null
           id: string
           kickoff_at: string | null
+          leg: number | null
           location_id: string | null
           matchday: number | null
           notes: string | null
           shootout_winner_team_id: string | null
           status: Database["public"]["Enums"]["tournament_match_status"]
+          tie_id: string | null
           tournament_id: string
           updated_at: string
           venue: string | null
@@ -3581,11 +3583,13 @@ export type Database = {
           home_team_id?: string | null
           id?: string
           kickoff_at?: string | null
+          leg?: number | null
           location_id?: string | null
           matchday?: number | null
           notes?: string | null
           shootout_winner_team_id?: string | null
           status?: Database["public"]["Enums"]["tournament_match_status"]
+          tie_id?: string | null
           tournament_id: string
           updated_at?: string
           venue?: string | null
@@ -3601,11 +3605,13 @@ export type Database = {
           home_team_id?: string | null
           id?: string
           kickoff_at?: string | null
+          leg?: number | null
           location_id?: string | null
           matchday?: number | null
           notes?: string | null
           shootout_winner_team_id?: string | null
           status?: Database["public"]["Enums"]["tournament_match_status"]
+          tie_id?: string | null
           tournament_id?: string
           updated_at?: string
           venue?: string | null
@@ -3654,6 +3660,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "tournament_matches_tie_id_fkey"
+            columns: ["tie_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_playoff_ties"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "tournament_matches_tournament_id_fkey"
             columns: ["tournament_id"]
             isOneToOne: false
@@ -3665,6 +3678,94 @@ export type Database = {
             columns: ["tournament_id"]
             isOneToOne: false
             referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tournament_playoff_ties: {
+        Row: {
+          away_team_id: string | null
+          club_id: string
+          created_at: string
+          home_team_id: string | null
+          id: string
+          notes: string | null
+          round_size: number
+          slot: number
+          tournament_id: string
+          two_legs: boolean
+          updated_at: string
+          winner_team_id: string | null
+        }
+        Insert: {
+          away_team_id?: string | null
+          club_id: string
+          created_at?: string
+          home_team_id?: string | null
+          id?: string
+          notes?: string | null
+          round_size: number
+          slot: number
+          tournament_id: string
+          two_legs?: boolean
+          updated_at?: string
+          winner_team_id?: string | null
+        }
+        Update: {
+          away_team_id?: string | null
+          club_id?: string
+          created_at?: string
+          home_team_id?: string | null
+          id?: string
+          notes?: string | null
+          round_size?: number
+          slot?: number
+          tournament_id?: string
+          two_legs?: boolean
+          updated_at?: string
+          winner_team_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournament_playoff_ties_away_team_id_fkey"
+            columns: ["away_team_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_playoff_ties_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_playoff_ties_home_team_id_fkey"
+            columns: ["home_team_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_playoff_ties_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "player_tournament_stats"
+            referencedColumns: ["tournament_id"]
+          },
+          {
+            foreignKeyName: "tournament_playoff_ties_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_playoff_ties_winner_team_id_fkey"
+            columns: ["winner_team_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_teams"
             referencedColumns: ["id"]
           },
         ]
@@ -3746,6 +3847,7 @@ export type Database = {
           club_id: string
           created_at: string
           crest_path: string | null
+          group_label: string | null
           id: string
           is_our_team: boolean
           name: string
@@ -3758,6 +3860,7 @@ export type Database = {
           club_id: string
           created_at?: string
           crest_path?: string | null
+          group_label?: string | null
           id?: string
           is_our_team?: boolean
           name: string
@@ -3770,6 +3873,7 @@ export type Database = {
           club_id?: string
           created_at?: string
           crest_path?: string | null
+          group_label?: string | null
           id?: string
           is_our_team?: boolean
           name?: string
@@ -3813,9 +3917,14 @@ export type Database = {
           external_id: string | null
           external_source: string | null
           format: string | null
+          groups_count: number
+          has_playoffs: boolean
           id: string
+          logo_path: string | null
           name: string
           notes: string | null
+          playoff_start_round: number
+          playoff_two_legs: boolean
           points_draw: number
           points_loss: number
           points_win: number
@@ -3839,9 +3948,14 @@ export type Database = {
           external_id?: string | null
           external_source?: string | null
           format?: string | null
+          groups_count?: number
+          has_playoffs?: boolean
           id?: string
+          logo_path?: string | null
           name: string
           notes?: string | null
+          playoff_start_round?: number
+          playoff_two_legs?: boolean
           points_draw?: number
           points_loss?: number
           points_win?: number
@@ -3865,9 +3979,14 @@ export type Database = {
           external_id?: string | null
           external_source?: string | null
           format?: string | null
+          groups_count?: number
+          has_playoffs?: boolean
           id?: string
+          logo_path?: string | null
           name?: string
           notes?: string | null
+          playoff_start_round?: number
+          playoff_two_legs?: boolean
           points_draw?: number
           points_loss?: number
           points_win?: number

@@ -19,9 +19,18 @@ import { useTeamAccess } from "@/hooks/useTeamAccess";
 import { useTournaments, useTournamentTeams } from "@/hooks/useTournaments";
 import { useTournamentMatches } from "@/hooks/useTournamentMatches";
 import { TournamentMatchesView } from "@/components/torneo/TournamentMatchesView";
+import { BracketView } from "@/components/torneo/BracketView";
+import { TournamentLogo } from "@/components/torneo/TournamentLogo";
+import { useTournamentTies } from "@/hooks/useTournamentPlayoffs";
 import { StandingsTable } from "@/components/admin/StandingsTable";
 import { ScorersTable } from "@/components/admin/ScorersTable";
-import { buildStandings, TOURNAMENT_STATUS_LABEL, TOURNAMENT_TYPE_LABEL } from "@/lib/torneo";
+import {
+  buildStandings,
+  groupLabels,
+  TOURNAMENT_STATUS_LABEL,
+  TOURNAMENT_TYPE_LABEL,
+} from "@/lib/torneo";
+
 
 export const Route = createFileRoute("/_authenticated/m/torneo")({
   head: () => ({
@@ -58,33 +67,49 @@ function TorneoPage() {
 
   const teamsQ = useTournamentTeams(current?.id ?? null);
   const matchesQ = useTournamentMatches(current?.id ?? null);
+  const tiesQ = useTournamentTies(current?.has_playoffs ? current.id : null);
   const teams = teamsQ.data ?? [];
   const matches = matchesQ.data ?? [];
 
+  const groups = React.useMemo(
+    () => (current?.format === "grupos" ? groupLabels(current.groups_count) : []),
+    [current?.format, current?.groups_count],
+  );
+
   const ourRow = React.useMemo(() => {
     if (!current || !teams.length) return null;
+    const ourGroup = teams.find((t) => t.is_our_team)?.group_label ?? null;
+    const scoped = groups.length
+      ? teams.filter((t) => (t.group_label ?? null) === ourGroup)
+      : teams;
+    const ids = new Set(scoped.map((t) => t.id));
     const rows = buildStandings(
       current,
-      teams.map((t) => ({
+      scoped.map((t) => ({
         id: t.id,
         name: t.name,
         is_our_team: t.is_our_team,
         crest_path: t.crest_path,
       })),
-      matches.map((m) => ({
-        home_team_id: m.home_team_id ?? "",
-        away_team_id: m.away_team_id ?? "",
-        home_goals: m.home_goals,
-        away_goals: m.away_goals,
-        status: m.status,
-        shootout_winner_team_id: m.shootout_winner_team_id,
-      })),
+      matches
+        .filter(
+          (m) => !m.tie_id && ids.has(m.home_team_id ?? "") && ids.has(m.away_team_id ?? ""),
+        )
+        .map((m) => ({
+          home_team_id: m.home_team_id ?? "",
+          away_team_id: m.away_team_id ?? "",
+          home_goals: m.home_goals,
+          away_goals: m.away_goals,
+          status: m.status,
+          shootout_winner_team_id: m.shootout_winner_team_id,
+        })),
       [],
     );
     return rows.find((r) => r.is_our_team) ?? null;
-  }, [current, teams, matches]);
+  }, [current, teams, matches, groups.length]);
 
   const canManage = current ? canEditTeam(current.team_id) : false;
+
 
   return (
     <div className="space-y-6">
@@ -121,18 +146,22 @@ function TorneoPage() {
             <>
               <section className="rounded-2xl bg-white/[0.04] p-4 ring-1 ring-inset ring-white/5">
                 <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h2 className="truncate text-lg font-semibold">{current.name}</h2>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {[
-                        current.team_name,
-                        TOURNAMENT_TYPE_LABEL[current.type],
-                        current.season,
-                      ]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </p>
+                  <div className="flex min-w-0 items-center gap-3">
+                    <TournamentLogo path={current.logo_path} name={current.name} />
+                    <div className="min-w-0">
+                      <h2 className="truncate text-lg font-semibold">{current.name}</h2>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {[
+                          current.team_name,
+                          TOURNAMENT_TYPE_LABEL[current.type],
+                          current.season,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    </div>
                   </div>
+
                   <div className="flex items-center gap-2">
                     <StatusBadge variant={current.status === "finalizado" ? "neutral" : "approved"}>
                       {TOURNAMENT_STATUS_LABEL[current.status]}
@@ -164,6 +193,9 @@ function TorneoPage() {
                 <TabsList className="w-full justify-start overflow-x-auto">
                   <TabsTrigger value="partidos">Partidos</TabsTrigger>
                   <TabsTrigger value="posiciones">Posiciones</TabsTrigger>
+                  {current.has_playoffs ? (
+                    <TabsTrigger value="fase-final">Fase final</TabsTrigger>
+                  ) : null}
                   <TabsTrigger value="goleo">Goleo</TabsTrigger>
                 </TabsList>
 
@@ -184,8 +216,22 @@ function TorneoPage() {
                     teams={teams}
                     matches={matches}
                     canEdit={false}
+                    groups={groups}
                   />
                 </TabsContent>
+
+                {current.has_playoffs ? (
+                  <TabsContent value="fase-final" className="pt-4">
+                    <BracketView
+                      startRound={current.playoff_start_round}
+                      teams={teams}
+                      matches={matches}
+                      ties={tiesQ.data ?? []}
+                      canEdit={false}
+                    />
+                  </TabsContent>
+                ) : null}
+
 
                 <TabsContent value="goleo" className="pt-4">
                   <ScorersTable

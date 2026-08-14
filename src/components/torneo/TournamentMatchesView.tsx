@@ -9,6 +9,8 @@ import {
 } from "@/components/ui/select";
 import { EmptyState } from "@/components/squad/EmptyState";
 import { MatchCardView } from "./MatchCardView";
+import { TEAM_FILTER_ALL, TeamFilterSelect, matchesTeamFilter } from "./TeamFilterSelect";
+
 import type { MatchRow } from "@/hooks/useTournamentMatches";
 import type { TournamentTeamRow } from "@/hooks/useTournaments";
 
@@ -23,34 +25,34 @@ interface Props {
 /** Calendario del torneo en solo lectura: próximos destacados + jornadas. */
 export function TournamentMatchesView({ matches, teams, loading }: Props) {
   const [matchday, setMatchday] = React.useState<string>(ALL);
-  const [onlyOurs, setOnlyOurs] = React.useState<string>(ALL);
+  const [teamFilter, setTeamFilter] = React.useState<string>(TEAM_FILTER_ALL);
 
   const ourTeamIds = React.useMemo(
     () => new Set(teams.filter((t) => t.is_our_team).map((t) => t.id)),
     [teams],
   );
 
+  // La fase final tiene su propia vista de bracket.
+  const regular = React.useMemo(() => matches.filter((m) => !m.tie_id), [matches]);
+
   const matchdays = React.useMemo(
     () =>
-      [...new Set(matches.map((m) => m.matchday).filter((d): d is number => d != null))].sort(
+      [...new Set(regular.map((m) => m.matchday).filter((d): d is number => d != null))].sort(
         (a, b) => a - b,
       ),
-    [matches],
+    [regular],
   );
 
   const filtered = React.useMemo(
     () =>
-      matches.filter((m) => {
+      regular.filter((m) => {
         if (matchday !== ALL && String(m.matchday ?? "") !== matchday) return false;
-        if (
-          onlyOurs === "ours" &&
-          !(ourTeamIds.has(m.home_team_id ?? "") || ourTeamIds.has(m.away_team_id ?? ""))
-        )
-          return false;
+        if (!matchesTeamFilter(teamFilter, m.home_team_id, m.away_team_id, ourTeamIds)) return false;
         return true;
       }),
-    [matches, matchday, onlyOurs, ourTeamIds],
+    [regular, matchday, teamFilter, ourTeamIds],
   );
+
 
   const upcoming = React.useMemo(() => {
     const now = Date.now();
@@ -101,17 +103,8 @@ export function TournamentMatchesView({ matches, teams, loading }: Props) {
             ))}
           </SelectContent>
         </Select>
-        {ourTeamIds.size ? (
-          <Select value={onlyOurs} onValueChange={setOnlyOurs}>
-            <SelectTrigger className="w-44">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL}>Todos los equipos</SelectItem>
-              <SelectItem value="ours">Solo nuestro equipo</SelectItem>
-            </SelectContent>
-          </Select>
-        ) : null}
+        <TeamFilterSelect teams={teams} value={teamFilter} onChange={setTeamFilter} />
+
       </div>
 
       {upcoming.length ? (

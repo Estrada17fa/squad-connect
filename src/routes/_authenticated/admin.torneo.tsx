@@ -26,6 +26,8 @@ import {
 } from "@/lib/torneo";
 import { TournamentFormDialog } from "@/components/admin/TournamentFormDialog";
 import { TournamentDetailSheet } from "@/components/admin/TournamentDetailSheet";
+import { TournamentLogo } from "@/components/torneo/TournamentLogo";
+
 
 const ALL = "__all__";
 
@@ -176,18 +178,22 @@ function AdminTorneoPage() {
               className="glass rounded-2xl p-4 text-left ring-1 ring-inset ring-white/5 transition-colors hover:bg-white/[0.06]"
             >
               <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="truncate font-medium">{t.name}</p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {[TOURNAMENT_TYPE_LABEL[t.type], t.season, t.team_name]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </p>
+                <div className="flex min-w-0 items-center gap-3">
+                  <TournamentLogo path={t.logo_path} name={t.name} className="h-10 w-10" />
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">{t.name}</p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {[TOURNAMENT_TYPE_LABEL[t.type], t.season, t.team_name]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </p>
+                  </div>
                 </div>
                 <StatusBadge variant={t.status === "en_curso" ? "approved" : "neutral"}>
                   {TOURNAMENT_STATUS_LABEL[t.status]}
                 </StatusBadge>
               </div>
+
               <p className="mt-3 text-xs text-muted-foreground">{pointsSummary(t)[0]}</p>
               <p className="mt-1 text-xs text-muted-foreground">
                 {t.teams_count} {t.teams_count === 1 ? "equipo" : "equipos"}

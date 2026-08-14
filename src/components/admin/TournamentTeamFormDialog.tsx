@@ -14,6 +14,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 import { DeleteAction } from "@/components/squad/DeleteAction";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -29,7 +37,11 @@ interface Props {
   clubId: string;
   tournamentId: string;
   team?: TournamentTeamRow | null;
+  /** Grupos configurados en el torneo (vacío = torneo sin grupos). */
+  groups?: string[];
 }
+
+const NO_GROUP = "__none__";
 
 export function TournamentTeamFormDialog({
   open,
@@ -37,6 +49,7 @@ export function TournamentTeamFormDialog({
   clubId,
   tournamentId,
   team,
+  groups = [],
 }: Props) {
   const isEdit = !!team;
   const save = useSaveTournamentTeam();
@@ -45,6 +58,7 @@ export function TournamentTeamFormDialog({
   const [name, setName] = React.useState("");
   const [shortName, setShortName] = React.useState("");
   const [isOurTeam, setIsOurTeam] = React.useState(false);
+  const [groupLabel, setGroupLabel] = React.useState<string>(NO_GROUP);
   const [notes, setNotes] = React.useState("");
   const [file, setFile] = React.useState<File | null>(null);
   const [busy, setBusy] = React.useState(false);
@@ -54,9 +68,11 @@ export function TournamentTeamFormDialog({
     setName(team?.name ?? "");
     setShortName(team?.short_name ?? "");
     setIsOurTeam(team?.is_our_team ?? false);
+    setGroupLabel(team?.group_label ?? NO_GROUP);
     setNotes(team?.notes ?? "");
     setFile(null);
   }, [open, team]);
+
 
   async function handleSave() {
     if (!name.trim()) return toast.error("El nombre del equipo es obligatorio");
@@ -79,7 +95,9 @@ export function TournamentTeamFormDialog({
         short_name: shortName.trim() || null,
         crest_path: crest,
         is_our_team: isOurTeam,
+        group_label: groups.length && groupLabel !== NO_GROUP ? groupLabel : null,
         notes: notes.trim() || null,
+
       });
       toast.success(isEdit ? "Equipo actualizado" : "Equipo agregado");
       onOpenChange(false);
@@ -128,6 +146,26 @@ export function TournamentTeamFormDialog({
           </div>
           <Switch checked={isOurTeam} onCheckedChange={setIsOurTeam} />
         </div>
+
+        {groups.length ? (
+          <div className="space-y-1.5">
+            <Label>Grupo</Label>
+            <Select value={groupLabel} onValueChange={setGroupLabel}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sin asignar" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NO_GROUP}>Sin asignar</SelectItem>
+                {groups.map((g) => (
+                  <SelectItem key={g} value={g}>
+                    Grupo {g}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        ) : null}
+
 
         <div className="space-y-1.5">
           <Label htmlFor="tt-crest">Escudo (opcional)</Label>

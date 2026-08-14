@@ -23,19 +23,25 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { TeamOption } from "@/hooks/useAccess";
-import { useSaveTournament, type TournamentRow } from "@/hooks/useTournaments";
+import { supabase } from "@/integrations/supabase/client";
+import { CREST_BUCKET, useSaveTournament, type TournamentRow } from "@/hooks/useTournaments";
 import {
   ALL_TIEBREAKERS,
   DEFAULT_POINTS,
+  PLAYOFF_ROUNDS,
+  PLAYOFF_ROUND_LABEL,
   POINTS_PRESETS,
   TIEBREAKER_LABEL,
+  TOURNAMENT_FORMAT_LABEL,
   TOURNAMENT_STATUS_LABEL,
   TOURNAMENT_TYPE_LABEL,
   type PointsConfig,
   type TiebreakerKey,
+  type TournamentFormat,
   type TournamentStatus,
   type TournamentType,
 } from "@/lib/torneo";
+
 
 interface Props {
   open: boolean;
@@ -70,6 +76,13 @@ export function TournamentFormDialog({
   const [status, setStatus] = React.useState<TournamentStatus>("en_curso");
   const [notes, setNotes] = React.useState("");
   const [points, setPoints] = React.useState<PointsConfig>(DEFAULT_POINTS);
+  const [format, setFormat] = React.useState<TournamentFormat>("sin_grupos");
+  const [groupsCount, setGroupsCount] = React.useState(2);
+  const [hasPlayoffs, setHasPlayoffs] = React.useState(false);
+  const [startRound, setStartRound] = React.useState(4);
+  const [twoLegs, setTwoLegs] = React.useState(false);
+  const [logoFile, setLogoFile] = React.useState<File | null>(null);
+  const [busy, setBusy] = React.useState(false);
 
   React.useEffect(() => {
     if (!open) return;
@@ -79,6 +92,12 @@ export function TournamentFormDialog({
     setType(tournament?.type ?? "liga");
     setStatus(tournament?.status ?? "en_curso");
     setNotes(tournament?.notes ?? "");
+    setFormat((tournament?.format as TournamentFormat) ?? "sin_grupos");
+    setGroupsCount(tournament?.groups_count ?? 2);
+    setHasPlayoffs(tournament?.has_playoffs ?? false);
+    setStartRound(tournament?.playoff_start_round ?? 4);
+    setTwoLegs(tournament?.playoff_two_legs ?? false);
+    setLogoFile(null);
     setPoints(
       tournament
         ? {
@@ -122,7 +141,17 @@ export function TournamentFormDialog({
   async function handleSave() {
     if (!name.trim()) return toast.error("El nombre del torneo es obligatorio");
     if (!teamId) return toast.error("Selecciona la categoría del club");
+    setBusy(true);
     try {
+      let logo = tournament?.logo_path ?? null;
+      if (logoFile) {
+        const ext = logoFile.name.split(".").pop() ?? "png";
+        const path = `${clubId}/torneos/${crypto.randomUUID()}.${ext}`;
+        const { error } = await supabase.storage.from(CREST_BUCKET).upload(path, logoFile);
+        if (error) throw error;
+        if (logo) await supabase.storage.from(CREST_BUCKET).remove([logo]);
+        logo = path;
+      }
       await save.mutateAsync({
         id: tournament?.id,
         club_id: clubId,
@@ -132,6 +161,12 @@ export function TournamentFormDialog({
         type,
         status,
         notes: notes.trim() || null,
+        logo_path: logo,
+        format,
+        groups_count: groupsCount,
+        has_playoffs: hasPlayoffs,
+        playoff_start_round: startRound,
+        playoff_two_legs: twoLegs,
         created_by: userId,
         ...points,
       });
@@ -139,8 +174,11 @@ export function TournamentFormDialog({
       onOpenChange(false);
     } catch (e: any) {
       toast.error(e.message ?? "No se pudo guardar");
+    } finally {
+      setBusy(false);
     }
   }
+
 
   const unused = ALL_TIEBREAKERS.filter((k) => !points.tiebreakers.includes(k));
 
@@ -231,10 +269,89 @@ export function TournamentFormDialog({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
-              placeholder="Formato, sede, observaciones…"
+              placeholder="Sede, observaciones…"
             />
           </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="t-logo">Logo del torneo (opcional)</Label>
+            <Input
+              id="t-logo"
+              type="file"
+              accept="image/*"
+              onChange={(e) => setLogoFile(e.target.files?.[0] ?? null)}
+            />
+            {tournament?.logo_path && !logoFile ? (
+              <p className="text-xs text-muted-foreground">Ya tiene un logo cargado.</p>
+            ) : null}
+          </div>
         </section>
+
+        <section className="space-y-3">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Formato de la competencia
+          </h3>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label>Fase regular</Label>
+              <Select value={format} onValueChange={(v) => setFormat(v as TournamentFormat)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(TOURNAMENT_FORMAT_LABEL) as TournamentFormat[]).map((k) => (
+                    <SelectItem key={k} value={k}>
+                      {TOURNAMENT_FORMAT_LABEL[k]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {format === "grupos" ? (
+              <NumberField
+                label="Número de grupos"
+                value={groupsCount}
+                min={2}
+                onChange={(v) => setGroupsCount(Math.min(8, Math.max(2, v)))}
+              />
+            ) : null}
+          </div>
+
+          <ToggleBlock
+            title="Fase final"
+            description="Liguilla o eliminatoria después de la fase regular. Los cruces se arman a mano."
+            checked={hasPlayoffs}
+            onCheckedChange={setHasPlayoffs}
+          >
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Ronda inicial</Label>
+                <Select value={String(startRound)} onValueChange={(v) => setStartRound(Number(v))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PLAYOFF_ROUNDS.map((r) => (
+                      <SelectItem key={r} value={String(r)}>
+                        {PLAYOFF_ROUND_LABEL[r]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center justify-between gap-3 rounded-lg bg-white/[0.03] px-3 py-2 ring-1 ring-inset ring-white/5">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">Ida y vuelta</p>
+                  <p className="text-xs text-muted-foreground">
+                    Se puede cambiar en cada llave.
+                  </p>
+                </div>
+                <Switch checked={twoLegs} onCheckedChange={setTwoLegs} />
+              </div>
+            </div>
+          </ToggleBlock>
+        </section>
+
+
 
         <section className="space-y-3">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -384,8 +501,9 @@ export function TournamentFormDialog({
         <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
           Cancelar
         </Button>
-        <Button type="button" onClick={handleSave} disabled={save.isPending}>
-          {save.isPending ? "Guardando…" : isEdit ? "Guardar cambios" : "Crear torneo"}
+        <Button type="button" onClick={handleSave} disabled={busy || save.isPending}>
+          {busy || save.isPending ? "Guardando…" : isEdit ? "Guardar cambios" : "Crear torneo"}
+
         </Button>
       </EntitySheetFooter>
     </EntitySheet>
