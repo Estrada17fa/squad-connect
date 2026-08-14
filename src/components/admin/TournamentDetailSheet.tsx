@@ -24,6 +24,11 @@ import {
   pointsSummary,
 } from "@/lib/torneo";
 import { TournamentTeamFormDialog } from "@/components/admin/TournamentTeamFormDialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useTournamentMatches } from "@/hooks/useTournamentMatches";
+import { MatchList } from "@/components/admin/MatchList";
+import { StandingsTable } from "@/components/admin/StandingsTable";
+import { ScorersTable } from "@/components/admin/ScorersTable";
 
 interface Props {
   open: boolean;
