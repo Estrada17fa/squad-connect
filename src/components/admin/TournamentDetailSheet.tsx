@@ -225,8 +225,24 @@ export function TournamentDetailSheet({
               teams={teamsQ.data ?? []}
               matches={matchesQ.data ?? []}
               canEdit={canEdit}
+              groups={groups}
             />
           </TabsContent>
+
+          {tournament.has_playoffs ? (
+            <TabsContent value="fase-final" className="pt-4">
+              <BracketView
+                startRound={tournament.playoff_start_round}
+                teams={teamsQ.data ?? []}
+                matches={matchesQ.data ?? []}
+                ties={tiesQ.data ?? []}
+                canEdit={canEdit}
+                onOpenTie={(roundSize, slot, tie) =>
+                  setTieForm({ open: true, roundSize, slot, tie })
+                }
+              />
+            </TabsContent>
+          ) : null}
 
           <TabsContent value="goleo" className="pt-4">
             <ScorersTable
@@ -239,14 +255,31 @@ export function TournamentDetailSheet({
         </Tabs>
       </DetailSheet>
 
-
       <TournamentTeamFormDialog
         open={teamForm.open}
         onOpenChange={(v) => setTeamForm((s) => ({ ...s, open: v }))}
         clubId={clubId}
         tournamentId={tournament.id}
         team={teamForm.row}
+        groups={groups}
       />
+
+      {tournament.has_playoffs ? (
+        <PlayoffTieDialog
+          open={tieForm.open}
+          onOpenChange={(v) => setTieForm((s) => ({ ...s, open: v }))}
+          clubId={clubId}
+          userId={userId}
+          tournamentId={tournament.id}
+          teams={teamsQ.data ?? []}
+          matches={matchesQ.data ?? []}
+          roundSize={tieForm.roundSize}
+          slot={tieForm.slot}
+          tie={tieForm.tie}
+          defaultTwoLegs={tournament.playoff_two_legs}
+        />
+      ) : null}
+
     </>
   );
 }
