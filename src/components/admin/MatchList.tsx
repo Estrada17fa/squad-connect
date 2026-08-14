@@ -145,7 +145,9 @@ export function MatchList({
             ))}
           </SelectContent>
         </Select>
+        <TeamFilterSelect teams={teams} value={teamFilter} onChange={setTeamFilter} />
       </div>
+
 
       {loading ? (
         <p className="text-sm text-muted-foreground">Cargando partidos…</p>
