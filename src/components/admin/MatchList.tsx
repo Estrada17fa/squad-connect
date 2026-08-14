@@ -16,6 +16,12 @@ import { MATCH_STATUS_LABEL, matchPointsSummary, type MatchStatus, type PointsCo
 import { MatchFormDialog } from "./MatchFormDialog";
 import { MatchdayFormDialog } from "./MatchdayFormDialog";
 import { MatchResultSheet } from "./MatchResultSheet";
+import {
+  TEAM_FILTER_ALL,
+  TeamFilterSelect,
+  matchesTeamFilter,
+} from "@/components/torneo/TeamFilterSelect";
+
 
 const ALL = "__all__";
 
