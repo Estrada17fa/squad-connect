@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Link } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { Building2, Plane, Settings2, type LucideIcon } from "lucide-react";
+import { Building2, Plane, Settings2, Trophy, type LucideIcon } from "lucide-react";
 import { useApp } from "./AppLayout";
 import { MODULE_MAP, type ModuleKey } from "@/lib/modules";
 import { findHubForModule, type PageKey } from "@/lib/rolePages";
@@ -60,6 +60,15 @@ export function ModuleTabs({ activeKey, hubKey, extraActiveKey }: ModuleTabsProp
         active: extraActiveKey === "admin-config",
       });
     }
+    if (hub?.page.key === "admin" && (isSuperAdmin || accessibleModules.includes("torneo"))) {
+      out.push({
+        key: "admin-torneo",
+        label: "Torneos",
+        icon: Trophy,
+        to: "/admin/torneo",
+        active: extraActiveKey === "admin-torneo",
+      });
+    }
     if (hub?.page.key === "admin" && isSuperAdmin) {
       out.push({
         key: "admin-clubs",
@@ -69,6 +78,7 @@ export function ModuleTabs({ activeKey, hubKey, extraActiveKey }: ModuleTabsProp
         active: extraActiveKey === "admin-clubs",
       });
     }
+
 
     // Consulta de viajes desde Agenda (solo lectura).
     if (hub?.page.key === "agenda" && (isSuperAdmin || accessibleModules.includes("viajes"))) {
