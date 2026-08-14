@@ -10,6 +10,7 @@ import {
   Ruler,
   Target,
   TrendingUp,
+  Trophy,
 } from "lucide-react";
 import {
   EntitySheet,
@@ -71,6 +72,8 @@ export function PlayerDevelopmentContent({
   showHeader?: boolean;
 }) {
   const q = usePlayerDevelopment(enabled ? player.userId : null);
+  const tournamentStatsQ = usePlayerTournamentStats(enabled ? player.userId : null);
+  const tournamentStats = tournamentStatsQ.data ?? [];
   const setStatus = useSetAssignmentStatus(clubId);
 
   const data = q.data;
