@@ -22,6 +22,7 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedMViajesRouteImport } from './routes/_authenticated/m.viajes'
 import { Route as AuthenticatedMUsuariosRouteImport } from './routes/_authenticated/m.usuarios'
+import { Route as AuthenticatedMTorneoRouteImport } from './routes/_authenticated/m.torneo'
 import { Route as AuthenticatedMSolicitudesRouteImport } from './routes/_authenticated/m.solicitudes'
 import { Route as AuthenticatedMSaludRouteImport } from './routes/_authenticated/m.salud'
 import { Route as AuthenticatedMPlantelRouteImport } from './routes/_authenticated/m.plantel'
@@ -105,6 +106,11 @@ const AuthenticatedMViajesRoute = AuthenticatedMViajesRouteImport.update({
 const AuthenticatedMUsuariosRoute = AuthenticatedMUsuariosRouteImport.update({
   id: '/m/usuarios',
   path: '/m/usuarios',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMTorneoRoute = AuthenticatedMTorneoRouteImport.update({
+  id: '/m/torneo',
+  path: '/m/torneo',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedMSolicitudesRoute =
@@ -236,6 +242,7 @@ export interface FileRoutesByFullPath {
   '/m/plantel': typeof AuthenticatedMPlantelRouteWithChildren
   '/m/salud': typeof AuthenticatedMSaludRoute
   '/m/solicitudes': typeof AuthenticatedMSolicitudesRoute
+  '/m/torneo': typeof AuthenticatedMTorneoRoute
   '/m/usuarios': typeof AuthenticatedMUsuariosRoute
   '/m/viajes': typeof AuthenticatedMViajesRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -267,6 +274,7 @@ export interface FileRoutesByTo {
   '/m/plantel': typeof AuthenticatedMPlantelRouteWithChildren
   '/m/salud': typeof AuthenticatedMSaludRoute
   '/m/solicitudes': typeof AuthenticatedMSolicitudesRoute
+  '/m/torneo': typeof AuthenticatedMTorneoRoute
   '/m/usuarios': typeof AuthenticatedMUsuariosRoute
   '/m/viajes': typeof AuthenticatedMViajesRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -301,6 +309,7 @@ export interface FileRoutesById {
   '/_authenticated/m/plantel': typeof AuthenticatedMPlantelRouteWithChildren
   '/_authenticated/m/salud': typeof AuthenticatedMSaludRoute
   '/_authenticated/m/solicitudes': typeof AuthenticatedMSolicitudesRoute
+  '/_authenticated/m/torneo': typeof AuthenticatedMTorneoRoute
   '/_authenticated/m/usuarios': typeof AuthenticatedMUsuariosRoute
   '/_authenticated/m/viajes': typeof AuthenticatedMViajesRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -335,6 +344,7 @@ export interface FileRouteTypes {
     | '/m/plantel'
     | '/m/salud'
     | '/m/solicitudes'
+    | '/m/torneo'
     | '/m/usuarios'
     | '/m/viajes'
     | '/admin/'
@@ -366,6 +376,7 @@ export interface FileRouteTypes {
     | '/m/plantel'
     | '/m/salud'
     | '/m/solicitudes'
+    | '/m/torneo'
     | '/m/usuarios'
     | '/m/viajes'
     | '/admin'
@@ -399,6 +410,7 @@ export interface FileRouteTypes {
     | '/_authenticated/m/plantel'
     | '/_authenticated/m/salud'
     | '/_authenticated/m/solicitudes'
+    | '/_authenticated/m/torneo'
     | '/_authenticated/m/usuarios'
     | '/_authenticated/m/viajes'
     | '/_authenticated/admin/'
@@ -502,6 +514,13 @@ declare module '@tanstack/react-router' {
       path: '/m/usuarios'
       fullPath: '/m/usuarios'
       preLoaderRoute: typeof AuthenticatedMUsuariosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/m/torneo': {
+      id: '/_authenticated/m/torneo'
+      path: '/m/torneo'
+      fullPath: '/m/torneo'
+      preLoaderRoute: typeof AuthenticatedMTorneoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/m/solicitudes': {
@@ -685,6 +704,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMPlantelRoute: typeof AuthenticatedMPlantelRouteWithChildren
   AuthenticatedMSaludRoute: typeof AuthenticatedMSaludRoute
   AuthenticatedMSolicitudesRoute: typeof AuthenticatedMSolicitudesRoute
+  AuthenticatedMTorneoRoute: typeof AuthenticatedMTorneoRoute
   AuthenticatedMUsuariosRoute: typeof AuthenticatedMUsuariosRoute
   AuthenticatedMViajesRoute: typeof AuthenticatedMViajesRoute
 }
@@ -712,6 +732,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMPlantelRoute: AuthenticatedMPlantelRouteWithChildren,
   AuthenticatedMSaludRoute: AuthenticatedMSaludRoute,
   AuthenticatedMSolicitudesRoute: AuthenticatedMSolicitudesRoute,
+  AuthenticatedMTorneoRoute: AuthenticatedMTorneoRoute,
   AuthenticatedMUsuariosRoute: AuthenticatedMUsuariosRoute,
   AuthenticatedMViajesRoute: AuthenticatedMViajesRoute,
 }
