@@ -139,6 +139,26 @@ export function TournamentTeamFormDialog({
           <Switch checked={isOurTeam} onCheckedChange={setIsOurTeam} />
         </div>
 
+        {groups.length ? (
+          <div className="space-y-1.5">
+            <Label>Grupo</Label>
+            <Select value={groupLabel} onValueChange={setGroupLabel}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sin asignar" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NO_GROUP}>Sin asignar</SelectItem>
+                {groups.map((g) => (
+                  <SelectItem key={g} value={g}>
+                    Grupo {g}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        ) : null}
+
+
         <div className="space-y-1.5">
           <Label htmlFor="tt-crest">Escudo (opcional)</Label>
           <div className="flex items-center gap-2">
