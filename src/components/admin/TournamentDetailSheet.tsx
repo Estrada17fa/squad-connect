@@ -36,6 +36,7 @@ interface Props {
   tournament: TournamentRow | null;
   canEdit: boolean;
   clubId: string;
+  userId: string;
   /** Abre el formulario del torneo (se gestiona en la página). */
   onEdit: () => void;
   onDeleted?: () => void;
@@ -47,10 +48,12 @@ export function TournamentDetailSheet({
   tournament,
   canEdit,
   clubId,
+  userId,
   onEdit,
   onDeleted,
 }: Props) {
   const teamsQ = useTournamentTeams(open && tournament ? tournament.id : null);
+  const matchesQ = useTournamentMatches(open && tournament ? tournament.id : null);
   const del = useDeleteTournament();
   const [teamForm, setTeamForm] = React.useState<{ open: boolean; row: TournamentTeamRow | null }>({
     open: false,
