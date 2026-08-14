@@ -23,7 +23,9 @@ import {
 import type { TournamentTeamRow } from "@/hooks/useTournaments";
 import { buildStandings, type PointsConfig } from "@/lib/torneo";
 import { TeamSelect } from "./MatchFormDialog";
+import { TeamCrest } from "@/components/torneo/TeamCrest";
 import { cn } from "@/lib/utils";
+
 
 interface Props {
   tournamentId: string;
