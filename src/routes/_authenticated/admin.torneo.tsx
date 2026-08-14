@@ -215,6 +215,7 @@ function AdminTorneoPage() {
             tournament={detailRow}
             canEdit={canEdit}
             clubId={clubId}
+            userId={userId}
             onEdit={() => {
               setEditing(detailRow);
               setDetail(null);

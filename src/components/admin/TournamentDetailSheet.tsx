@@ -24,6 +24,11 @@ import {
   pointsSummary,
 } from "@/lib/torneo";
 import { TournamentTeamFormDialog } from "@/components/admin/TournamentTeamFormDialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useTournamentMatches } from "@/hooks/useTournamentMatches";
+import { MatchList } from "@/components/admin/MatchList";
+import { StandingsTable } from "@/components/admin/StandingsTable";
+import { ScorersTable } from "@/components/admin/ScorersTable";
 
 interface Props {
   open: boolean;
@@ -31,6 +36,7 @@ interface Props {
   tournament: TournamentRow | null;
   canEdit: boolean;
   clubId: string;
+  userId: string;
   /** Abre el formulario del torneo (se gestiona en la página). */
   onEdit: () => void;
   onDeleted?: () => void;
@@ -42,10 +48,12 @@ export function TournamentDetailSheet({
   tournament,
   canEdit,
   clubId,
+  userId,
   onEdit,
   onDeleted,
 }: Props) {
   const teamsQ = useTournamentTeams(open && tournament ? tournament.id : null);
+  const matchesQ = useTournamentMatches(open && tournament ? tournament.id : null);
   const del = useDeleteTournament();
   const [teamForm, setTeamForm] = React.useState<{ open: boolean; row: TournamentTeamRow | null }>({
     open: false,
@@ -90,6 +98,15 @@ export function TournamentDetailSheet({
           ) : null
         }
       >
+        <Tabs defaultValue="general">
+          <TabsList className="w-full justify-start overflow-x-auto">
+            <TabsTrigger value="general">General</TabsTrigger>
+            <TabsTrigger value="partidos">Partidos</TabsTrigger>
+            <TabsTrigger value="posiciones">Posiciones</TabsTrigger>
+            <TabsTrigger value="goleo">Goleo</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="general" className="space-y-6 pt-4">
         <DetailSection title="Resumen">
           <DetailGrid>
             <DetailField label="Estado" icon={Trophy}>
@@ -165,7 +182,45 @@ export function TournamentDetailSheet({
             </ul>
           )}
         </DetailSection>
+          </TabsContent>
+
+          <TabsContent value="partidos" className="pt-4">
+            <MatchList
+              tournamentId={tournament.id}
+              clubId={clubId}
+              userId={userId}
+              teamId={tournament.team_id}
+              config={tournament}
+              teams={teamsQ.data ?? []}
+              matches={matchesQ.data ?? []}
+              canEdit={canEdit}
+              loading={matchesQ.isLoading}
+            />
+          </TabsContent>
+
+          <TabsContent value="posiciones" className="pt-4">
+            <StandingsTable
+              tournamentId={tournament.id}
+              clubId={clubId}
+              userId={userId}
+              config={tournament}
+              teams={teamsQ.data ?? []}
+              matches={matchesQ.data ?? []}
+              canEdit={canEdit}
+            />
+          </TabsContent>
+
+          <TabsContent value="goleo" className="pt-4">
+            <ScorersTable
+              tournamentId={tournament.id}
+              clubId={clubId}
+              teamId={tournament.team_id}
+              teams={teamsQ.data ?? []}
+            />
+          </TabsContent>
+        </Tabs>
       </DetailSheet>
+
 
       <TournamentTeamFormDialog
         open={teamForm.open}
