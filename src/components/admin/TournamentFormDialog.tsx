@@ -70,6 +70,13 @@ export function TournamentFormDialog({
   const [status, setStatus] = React.useState<TournamentStatus>("en_curso");
   const [notes, setNotes] = React.useState("");
   const [points, setPoints] = React.useState<PointsConfig>(DEFAULT_POINTS);
+  const [format, setFormat] = React.useState<TournamentFormat>("sin_grupos");
+  const [groupsCount, setGroupsCount] = React.useState(2);
+  const [hasPlayoffs, setHasPlayoffs] = React.useState(false);
+  const [startRound, setStartRound] = React.useState(4);
+  const [twoLegs, setTwoLegs] = React.useState(false);
+  const [logoFile, setLogoFile] = React.useState<File | null>(null);
+  const [busy, setBusy] = React.useState(false);
 
   React.useEffect(() => {
     if (!open) return;
@@ -79,6 +86,12 @@ export function TournamentFormDialog({
     setType(tournament?.type ?? "liga");
     setStatus(tournament?.status ?? "en_curso");
     setNotes(tournament?.notes ?? "");
+    setFormat((tournament?.format as TournamentFormat) ?? "sin_grupos");
+    setGroupsCount(tournament?.groups_count ?? 2);
+    setHasPlayoffs(tournament?.has_playoffs ?? false);
+    setStartRound(tournament?.playoff_start_round ?? 4);
+    setTwoLegs(tournament?.playoff_two_legs ?? false);
+    setLogoFile(null);
     setPoints(
       tournament
         ? {
@@ -122,7 +135,17 @@ export function TournamentFormDialog({
   async function handleSave() {
     if (!name.trim()) return toast.error("El nombre del torneo es obligatorio");
     if (!teamId) return toast.error("Selecciona la categoría del club");
+    setBusy(true);
     try {
+      let logo = tournament?.logo_path ?? null;
+      if (logoFile) {
+        const ext = logoFile.name.split(".").pop() ?? "png";
+        const path = `${clubId}/torneos/${crypto.randomUUID()}.${ext}`;
+        const { error } = await supabase.storage.from(CREST_BUCKET).upload(path, logoFile);
+        if (error) throw error;
+        if (logo) await supabase.storage.from(CREST_BUCKET).remove([logo]);
+        logo = path;
+      }
       await save.mutateAsync({
         id: tournament?.id,
         club_id: clubId,
@@ -132,6 +155,12 @@ export function TournamentFormDialog({
         type,
         status,
         notes: notes.trim() || null,
+        logo_path: logo,
+        format,
+        groups_count: groupsCount,
+        has_playoffs: hasPlayoffs,
+        playoff_start_round: startRound,
+        playoff_two_legs: twoLegs,
         created_by: userId,
         ...points,
       });
@@ -139,8 +168,11 @@ export function TournamentFormDialog({
       onOpenChange(false);
     } catch (e: any) {
       toast.error(e.message ?? "No se pudo guardar");
+    } finally {
+      setBusy(false);
     }
   }
+
 
   const unused = ALL_TIEBREAKERS.filter((k) => !points.tiebreakers.includes(k));
 
