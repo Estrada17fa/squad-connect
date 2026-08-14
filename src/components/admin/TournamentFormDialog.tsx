@@ -23,19 +23,25 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { TeamOption } from "@/hooks/useAccess";
-import { useSaveTournament, type TournamentRow } from "@/hooks/useTournaments";
+import { supabase } from "@/integrations/supabase/client";
+import { CREST_BUCKET, useSaveTournament, type TournamentRow } from "@/hooks/useTournaments";
 import {
   ALL_TIEBREAKERS,
   DEFAULT_POINTS,
+  PLAYOFF_ROUNDS,
+  PLAYOFF_ROUND_LABEL,
   POINTS_PRESETS,
   TIEBREAKER_LABEL,
+  TOURNAMENT_FORMAT_LABEL,
   TOURNAMENT_STATUS_LABEL,
   TOURNAMENT_TYPE_LABEL,
   type PointsConfig,
   type TiebreakerKey,
+  type TournamentFormat,
   type TournamentStatus,
   type TournamentType,
 } from "@/lib/torneo";
+
 
 interface Props {
   open: boolean;
