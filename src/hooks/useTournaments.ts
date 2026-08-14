@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   parseTiebreakers,
   type PointsConfig,
+  type TournamentFormat,
   type TournamentStatus,
   type TournamentType,
 } from "@/lib/torneo";
@@ -16,7 +17,16 @@ import {
 const db = supabase as any;
 export const CREST_BUCKET = "tournament-crests";
 
-export interface TournamentRow extends PointsConfig {
+/** Formato de la fase regular y configuración opcional de fase final. */
+export interface TournamentFormatConfig {
+  format: TournamentFormat;
+  groups_count: number;
+  has_playoffs: boolean;
+  playoff_start_round: number;
+  playoff_two_legs: boolean;
+}
+
+export interface TournamentRow extends PointsConfig, TournamentFormatConfig {
   id: string;
   club_id: string;
   team_id: string;
@@ -24,8 +34,8 @@ export interface TournamentRow extends PointsConfig {
   season: string | null;
   type: TournamentType;
   status: TournamentStatus;
-  format: string | null;
   notes: string | null;
+  logo_path: string | null;
   created_at: string;
   updated_at: string;
   team_name: string | null;
@@ -40,12 +50,13 @@ export interface TournamentTeamRow {
   short_name: string | null;
   crest_path: string | null;
   is_our_team: boolean;
+  group_label: string | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
 }
 
-export interface TournamentInput extends PointsConfig {
+export interface TournamentInput extends PointsConfig, TournamentFormatConfig {
   id?: string;
   club_id: string;
   team_id: string;
@@ -54,8 +65,10 @@ export interface TournamentInput extends PointsConfig {
   type: TournamentType;
   status: TournamentStatus;
   notes: string | null;
+  logo_path: string | null;
   created_by: string;
 }
+
 
 /* ------------------------------------------------------------------ */
 /* Realtime                                                            */
