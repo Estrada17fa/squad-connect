@@ -54,13 +54,26 @@ export function TournamentDetailSheet({
 }: Props) {
   const teamsQ = useTournamentTeams(open && tournament ? tournament.id : null);
   const matchesQ = useTournamentMatches(open && tournament ? tournament.id : null);
+  const tiesQ = useTournamentTies(open && tournament?.has_playoffs ? tournament.id : null);
   const del = useDeleteTournament();
   const [teamForm, setTeamForm] = React.useState<{ open: boolean; row: TournamentTeamRow | null }>({
     open: false,
     row: null,
   });
+  const [tieForm, setTieForm] = React.useState<{
+    open: boolean;
+    roundSize: number;
+    slot: number;
+    tie: PlayoffTieRow | null;
+  }>({ open: false, roundSize: 2, slot: 0, tie: null });
+
+  const groups = React.useMemo(
+    () => (tournament?.format === "grupos" ? groupLabels(tournament.groups_count) : []),
+    [tournament?.format, tournament?.groups_count],
+  );
 
   if (!tournament) return null;
+
 
   return (
     <>
