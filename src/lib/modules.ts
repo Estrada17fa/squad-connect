@@ -81,7 +81,7 @@ export const MODULES: ModuleDef[] = [
   { key: "usuarios", label: "Usuarios", icon: UserCog, description: "Miembros, roles y permisos", scope: "club" , playerView: "mine" },
   { key: "comunicados", label: "Comunicados", icon: Megaphone, description: "Avisos oficiales del club", scope: "club" , playerView: "team" },
   { key: "multimedia", label: "Multimedia", icon: ImageIcon, description: "Fotos y videos", scope: "team" , playerView: "team" },
-  { key: "torneo", label: "Torneo", icon: Trophy, description: "Competencias y clasificaciones", scope: "club" , playerView: "team" },
+  { key: "torneo", label: "Torneo", icon: Trophy, description: "Competencias y clasificaciones", scope: "team" , playerView: "team" },
   { key: "tacticas", label: "Tácticas", icon: LayoutGrid, description: "Formaciones y jugadas", scope: "team" , playerView: "team" },
   { key: "salud", label: "Salud", icon: HeartPulse, description: "Parte médico y lesiones", scope: "team" , playerView: "mine" },
   { key: "desarrollo", label: "Desarrollo", icon: TrendingUp, description: "Evaluaciones y progresos", scope: "team" , playerView: "mine" },
