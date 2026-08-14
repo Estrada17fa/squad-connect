@@ -28,6 +28,7 @@ import { Route as AuthenticatedMSaludRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedMPlantelRouteImport } from './routes/_authenticated/m.plantel'
 import { Route as AuthenticatedMPartidosRouteImport } from './routes/_authenticated/m.partidos'
 import { Route as AuthenticatedMNutricionRouteImport } from './routes/_authenticated/m.nutricion'
+import { Route as AuthenticatedMMultimedia_gestionRouteImport } from './routes/_authenticated/m.multimedia_gestion'
 import { Route as AuthenticatedMMultimediaRouteImport } from './routes/_authenticated/m.multimedia'
 import { Route as AuthenticatedMMesRouteImport } from './routes/_authenticated/m.mes'
 import { Route as AuthenticatedMInventarioRouteImport } from './routes/_authenticated/m.inventario'
@@ -141,6 +142,12 @@ const AuthenticatedMNutricionRoute = AuthenticatedMNutricionRouteImport.update({
   path: '/m/nutricion',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMMultimedia_gestionRoute =
+  AuthenticatedMMultimedia_gestionRouteImport.update({
+    id: '/m/multimedia_gestion',
+    path: '/m/multimedia_gestion',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMMultimediaRoute =
   AuthenticatedMMultimediaRouteImport.update({
     id: '/m/multimedia',
@@ -252,6 +259,7 @@ export interface FileRoutesByFullPath {
   '/m/inventario': typeof AuthenticatedMInventarioRoute
   '/m/mes': typeof AuthenticatedMMesRoute
   '/m/multimedia': typeof AuthenticatedMMultimediaRoute
+  '/m/multimedia_gestion': typeof AuthenticatedMMultimedia_gestionRoute
   '/m/nutricion': typeof AuthenticatedMNutricionRoute
   '/m/partidos': typeof AuthenticatedMPartidosRoute
   '/m/plantel': typeof AuthenticatedMPlantelRouteWithChildren
@@ -286,6 +294,7 @@ export interface FileRoutesByTo {
   '/m/inventario': typeof AuthenticatedMInventarioRoute
   '/m/mes': typeof AuthenticatedMMesRoute
   '/m/multimedia': typeof AuthenticatedMMultimediaRoute
+  '/m/multimedia_gestion': typeof AuthenticatedMMultimedia_gestionRoute
   '/m/nutricion': typeof AuthenticatedMNutricionRoute
   '/m/partidos': typeof AuthenticatedMPartidosRoute
   '/m/plantel': typeof AuthenticatedMPlantelRouteWithChildren
@@ -323,6 +332,7 @@ export interface FileRoutesById {
   '/_authenticated/m/inventario': typeof AuthenticatedMInventarioRoute
   '/_authenticated/m/mes': typeof AuthenticatedMMesRoute
   '/_authenticated/m/multimedia': typeof AuthenticatedMMultimediaRoute
+  '/_authenticated/m/multimedia_gestion': typeof AuthenticatedMMultimedia_gestionRoute
   '/_authenticated/m/nutricion': typeof AuthenticatedMNutricionRoute
   '/_authenticated/m/partidos': typeof AuthenticatedMPartidosRoute
   '/_authenticated/m/plantel': typeof AuthenticatedMPlantelRouteWithChildren
@@ -360,6 +370,7 @@ export interface FileRouteTypes {
     | '/m/inventario'
     | '/m/mes'
     | '/m/multimedia'
+    | '/m/multimedia_gestion'
     | '/m/nutricion'
     | '/m/partidos'
     | '/m/plantel'
@@ -394,6 +405,7 @@ export interface FileRouteTypes {
     | '/m/inventario'
     | '/m/mes'
     | '/m/multimedia'
+    | '/m/multimedia_gestion'
     | '/m/nutricion'
     | '/m/partidos'
     | '/m/plantel'
@@ -430,6 +442,7 @@ export interface FileRouteTypes {
     | '/_authenticated/m/inventario'
     | '/_authenticated/m/mes'
     | '/_authenticated/m/multimedia'
+    | '/_authenticated/m/multimedia_gestion'
     | '/_authenticated/m/nutricion'
     | '/_authenticated/m/partidos'
     | '/_authenticated/m/plantel'
@@ -581,6 +594,13 @@ declare module '@tanstack/react-router' {
       path: '/m/nutricion'
       fullPath: '/m/nutricion'
       preLoaderRoute: typeof AuthenticatedMNutricionRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/m/multimedia_gestion': {
+      id: '/_authenticated/m/multimedia_gestion'
+      path: '/m/multimedia_gestion'
+      fullPath: '/m/multimedia_gestion'
+      preLoaderRoute: typeof AuthenticatedMMultimedia_gestionRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/m/multimedia': {
@@ -740,6 +760,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMInventarioRoute: typeof AuthenticatedMInventarioRoute
   AuthenticatedMMesRoute: typeof AuthenticatedMMesRoute
   AuthenticatedMMultimediaRoute: typeof AuthenticatedMMultimediaRoute
+  AuthenticatedMMultimedia_gestionRoute: typeof AuthenticatedMMultimedia_gestionRoute
   AuthenticatedMNutricionRoute: typeof AuthenticatedMNutricionRoute
   AuthenticatedMPartidosRoute: typeof AuthenticatedMPartidosRoute
   AuthenticatedMPlantelRoute: typeof AuthenticatedMPlantelRouteWithChildren
@@ -770,6 +791,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMInventarioRoute: AuthenticatedMInventarioRoute,
   AuthenticatedMMesRoute: AuthenticatedMMesRoute,
   AuthenticatedMMultimediaRoute: AuthenticatedMMultimediaRoute,
+  AuthenticatedMMultimedia_gestionRoute: AuthenticatedMMultimedia_gestionRoute,
   AuthenticatedMNutricionRoute: AuthenticatedMNutricionRoute,
   AuthenticatedMPartidosRoute: AuthenticatedMPartidosRoute,
   AuthenticatedMPlantelRoute: AuthenticatedMPlantelRouteWithChildren,

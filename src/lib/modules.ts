@@ -36,6 +36,12 @@ export type ModuleKey =
   | "usuarios"
   | "comunicados"
   | "multimedia"
+  /**
+   * Entrada de navegación de GESTIÓN de multimedia dentro de la página
+   * Coordinación. No es un permiso propio: se resuelve contra `multimedia`
+   * (ver `permissionKeyFor`) y por eso no aparece en las matrices de permisos.
+   */
+  | "multimedia_gestion"
   | "torneo"
   | "tacticas"
   | "salud"
@@ -92,8 +98,31 @@ export const MODULES: ModuleDef[] = [
   { key: "nutricion", label: "Nutrición", icon: Apple, description: "Planes alimenticios", scope: "team" , playerView: "mine" },
 ];
 
+/**
+ * Entradas de navegación que NO son un permiso propio: reutilizan el
+ * `module_key` de otro módulo. Se excluyen de `MODULES` para que no aparezcan
+ * en las matrices de permisos ni en `accessibleModules`.
+ */
+export const NAV_ALIAS_MODULES: ModuleDef[] = [
+  { key: "multimedia_gestion", label: "Multimedia", icon: ImageIcon, description: "Subir y gestionar fotos y videos", scope: "team", playerView: "team" },
+];
+
+const NAV_ALIAS_PERMISSION: Partial<Record<ModuleKey, ModuleKey>> = {
+  multimedia_gestion: "multimedia",
+};
+
+/** Módulo de permisos real detrás de una entrada de navegación. */
+export function permissionKeyFor(key: ModuleKey): ModuleKey {
+  return NAV_ALIAS_PERMISSION[key] ?? key;
+}
+
+/** ¿La entrada es solo navegación (alias de otro módulo)? */
+export function isNavAlias(key: ModuleKey): boolean {
+  return key in NAV_ALIAS_PERMISSION;
+}
+
 export const MODULE_MAP: Record<ModuleKey, ModuleDef> = Object.fromEntries(
-  MODULES.map((m) => [m.key, m]),
+  [...MODULES, ...NAV_ALIAS_MODULES].map((m) => [m.key, m]),
 ) as Record<ModuleKey, ModuleDef>;
 
 export const HOME_MODULE: { key: "home"; label: string; icon: LucideIcon } = {

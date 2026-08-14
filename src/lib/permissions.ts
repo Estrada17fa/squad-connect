@@ -183,7 +183,7 @@ export function coerceLevelFor(_key: ModuleKey, level: PermissionLevel): Permiss
 /* Valores por defecto de los roles del sistema                        */
 /* ------------------------------------------------------------------ */
 
-export const DEFAULT_ROLE_LEVELS: Record<string, Record<ModuleKey, PermissionLevel>> = {
+export const DEFAULT_ROLE_LEVELS: Record<string, Partial<Record<ModuleKey, PermissionLevel>>> = {
   admin: {
     agenda: "editor_global", mes: "editor_global", plantel: "editor_global",
     viajes: "editor_global", inventario: "editor_global", coordinacion_interna: "editor_global",
@@ -231,7 +231,7 @@ export const DEFAULT_ROLE_LEVELS: Record<string, Record<ModuleKey, PermissionLev
   },
 };
 
-export function defaultLevelsFor(baseRole: string | null | undefined): Record<ModuleKey, PermissionLevel> | null {
+export function defaultLevelsFor(baseRole: string | null | undefined): Partial<Record<ModuleKey, PermissionLevel>> | null {
   const key = (baseRole ?? "").toLowerCase();
   return DEFAULT_ROLE_LEVELS[key] ?? null;
 }
