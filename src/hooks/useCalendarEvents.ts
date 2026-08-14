@@ -102,3 +102,51 @@ export function useEventAttendees(eventId: string | null | undefined) {
     },
   });
 }
+
+/**
+ * Próximos eventos del usuario, listos para Home/Inicio.
+ *
+ * La RLS de `calendar_events` ya limita las filas al permiso del módulo de
+ * origen de cada evento (entrenamientos, juntas, partidos, viajes, salud),
+ * así que aquí solo se acota la ventana de tiempo.
+ */
+export function useUpcomingEvents(clubId: string | null | undefined, limit = 5) {
+  return useQuery({
+    queryKey: ["calendar-events", "upcoming", clubId ?? "none", limit] as const,
+    enabled: !!clubId,
+    staleTime: 30_000,
+    queryFn: async (): Promise<CalendarEventRow[]> => {
+      const { data, error } = await supabase
+        .from("calendar_events")
+        .select("*")
+        .eq("club_id", clubId!)
+        .gte("starts_at", new Date().toISOString())
+        .order("starts_at", { ascending: true })
+        .limit(limit);
+      if (error) throw error;
+      return (data ?? []) as CalendarEventRow[];
+    },
+  });
+}
+
+/** Próximo evento de un tipo concreto (próximo entrenamiento, partido, viaje…). */
+export function useNextEventOfType(clubId: string | null | undefined, type: EventType) {
+  return useQuery({
+    queryKey: ["calendar-events", "next", clubId ?? "none", type] as const,
+    enabled: !!clubId,
+    staleTime: 30_000,
+    queryFn: async (): Promise<CalendarEventRow | null> => {
+      const { data, error } = await supabase
+        .from("calendar_events")
+        .select("*")
+        .eq("club_id", clubId!)
+        .eq("event_type", type)
+        .gte("starts_at", new Date().toISOString())
+        .order("starts_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return (data ?? null) as CalendarEventRow | null;
+    },
+  });
+}
