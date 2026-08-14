@@ -29,6 +29,7 @@ import { MeetingDetailSheet } from "@/components/coordinacion/MeetingDetailSheet
 import { TaskBoard } from "@/components/coordinacion/TaskBoard";
 import { AvatarStack } from "@/components/coordinacion/AvatarStack";
 import { CoordFilters, EMPTY_COORD_FILTERS, type CoordFilterState } from "@/components/coordinacion/CoordFilters";
+import { MediaManagerPanel } from "@/components/multimedia/MediaManagerPanel";
 import { supabase } from "@/integrations/supabase/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
@@ -64,6 +65,12 @@ function CoordinacionPage() {
   const playerScoped = isPlayerScoped(null);
   const canAccess = isSuperAdmin || accessibleModules.includes("coordinacion_interna");
 
+  // La pestaña Multimedia (gestión) es para lectores y editores; Vista Jugador no entra.
+  const mediaAccess = useTeamAccess("multimedia");
+  const canSeeMedia =
+    isSuperAdmin ||
+    (accessibleModules.includes("multimedia") && !mediaAccess.isPlayerScoped(null));
+
   const tasksQ = useTasks(clubId);
   const meetingsQ = useMeetings(clubId);
   const qc = useQueryClient();
@@ -74,7 +81,7 @@ function CoordinacionPage() {
   const [meetingDialog, setMeetingDialog] = React.useState(false);
   const [editingMeeting, setEditingMeeting] = React.useState<MeetingRow | null>(null);
   const [detailMeetingId, setDetailMeetingId] = React.useState<string | null>(null);
-  const [tab, setTab] = React.useState<"tareas" | "juntas">("tareas");
+  const [tab, setTab] = React.useState<"tareas" | "juntas" | "multimedia">("tareas");
   const [taskFilters, setTaskFilters] = React.useState<CoordFilterState>({
     ...EMPTY_COORD_FILTERS,
     mine: true,
@@ -180,7 +187,14 @@ function CoordinacionPage() {
         <TabsList>
           <TabsTrigger value="tareas">Tareas</TabsTrigger>
           <TabsTrigger value="juntas">Juntas</TabsTrigger>
+          {canSeeMedia ? <TabsTrigger value="multimedia">Multimedia</TabsTrigger> : null}
         </TabsList>
+
+        {canSeeMedia ? (
+          <TabsContent value="multimedia" className="mt-4">
+            <MediaManagerPanel />
+          </TabsContent>
+        ) : null}
 
         <TabsContent value="tareas" className="mt-4 space-y-4">
           {canCreate ? (

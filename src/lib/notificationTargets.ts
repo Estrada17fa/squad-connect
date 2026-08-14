@@ -32,6 +32,8 @@ export function notificationTarget(n: NotificationRow): NotificationTarget | nul
       };
     case "partidos":
       return { module: "partidos", to: "/m/partidos", search: { open: n.related_id } };
+    case "multimedia":
+      return { module: "multimedia", to: "/m/multimedia", search: { open: n.related_id } };
     case "viajes":
       return { module: "viajes", to: "/m/viajes", search: { open: n.related_id } };
     case "inventario":
