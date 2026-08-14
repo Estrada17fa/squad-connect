@@ -174,7 +174,43 @@ export function TournamentDetailSheet({
             </ul>
           )}
         </DetailSection>
-      </DetailSheet>
+          </TabsContent>
+
+          <TabsContent value="partidos" className="pt-4">
+            <MatchList
+              tournamentId={tournament.id}
+              clubId={clubId}
+              userId={userId}
+              teamId={tournament.team_id}
+              config={tournament}
+              teams={teamsQ.data ?? []}
+              matches={matchesQ.data ?? []}
+              canEdit={canEdit}
+              loading={matchesQ.isLoading}
+            />
+          </TabsContent>
+
+          <TabsContent value="posiciones" className="pt-4">
+            <StandingsTable
+              tournamentId={tournament.id}
+              clubId={clubId}
+              userId={userId}
+              config={tournament}
+              teams={teamsQ.data ?? []}
+              matches={matchesQ.data ?? []}
+              canEdit={canEdit}
+            />
+          </TabsContent>
+
+          <TabsContent value="goleo" className="pt-4">
+            <ScorersTable
+              tournamentId={tournament.id}
+              clubId={clubId}
+              teamId={tournament.team_id}
+              teams={teamsQ.data ?? []}
+            />
+          </TabsContent>
+        </Tabs>
 
       <TournamentTeamFormDialog
         open={teamForm.open}
