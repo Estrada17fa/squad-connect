@@ -1319,6 +1319,146 @@ export type Database = {
           },
         ]
       }
+      match_callups: {
+        Row: {
+          club_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          match_id: string
+          player_profile_id: string | null
+          user_id: string
+        }
+        Insert: {
+          club_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          match_id: string
+          player_profile_id?: string | null
+          user_id: string
+        }
+        Update: {
+          club_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          match_id?: string
+          player_profile_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_callups_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_callups_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_callups_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_callups_player_profile_id_fkey"
+            columns: ["player_profile_id"]
+            isOneToOne: false
+            referencedRelation: "player_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_callups_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      match_logistics: {
+        Row: {
+          call_time_at: string | null
+          club_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          kit: string | null
+          logistics_notes: string | null
+          match_id: string
+          meeting_location_id: string | null
+          meeting_point: string | null
+          post_match_notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          call_time_at?: string | null
+          club_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kit?: string | null
+          logistics_notes?: string | null
+          match_id: string
+          meeting_location_id?: string | null
+          meeting_point?: string | null
+          post_match_notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          call_time_at?: string | null
+          club_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kit?: string | null
+          logistics_notes?: string | null
+          match_id?: string
+          meeting_location_id?: string | null
+          meeting_point?: string | null
+          post_match_notes?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_logistics_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_logistics_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_logistics_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: true
+            referencedRelation: "tournament_matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_logistics_meeting_location_id_fkey"
+            columns: ["meeting_location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       medical_appointments: {
         Row: {
           appointment_type: string
@@ -4964,6 +5104,10 @@ export type Database = {
         Args: { _team_id: string; _user_id: string }
         Returns: boolean
       }
+      can_edit_match_ops: {
+        Args: { _match_id: string; _user_id: string }
+        Returns: boolean
+      }
       can_edit_meeting: {
         Args: { _meeting_id: string; _user_id: string }
         Returns: boolean
@@ -5014,6 +5158,10 @@ export type Database = {
       }
       can_view_event_new: {
         Args: { _event_id: string; _user_id: string }
+        Returns: boolean
+      }
+      can_view_match_ops: {
+        Args: { _match_id: string; _user_id: string }
         Returns: boolean
       }
       can_view_meeting: {
@@ -5188,6 +5336,9 @@ export type Database = {
         }
         Returns: string
       }
+      match_club_id: { Args: { _match_id: string }; Returns: string }
+      match_notify_label: { Args: { _match_id: string }; Returns: string }
+      match_team_id: { Args: { _match_id: string }; Returns: string }
       max_permission_any_team: {
         Args: { _module_key: string; _user_id: string }
         Returns: Database["public"]["Enums"]["permission_level"]
