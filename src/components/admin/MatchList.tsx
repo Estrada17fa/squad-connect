@@ -55,6 +55,7 @@ export function MatchList({
 }: Props) {
   const [statusFilter, setStatusFilter] = React.useState<string>(ALL);
   const [matchdayFilter, setMatchdayFilter] = React.useState<string>(ALL);
+  const [teamFilter, setTeamFilter] = React.useState<string>(TEAM_FILTER_ALL);
   const [form, setForm] = React.useState<{ open: boolean; row: MatchRow | null }>({
     open: false,
     row: null,
@@ -62,19 +63,29 @@ export function MatchList({
   const [dayForm, setDayForm] = React.useState(false);
   const [result, setResult] = React.useState<MatchRow | null>(null);
 
-  const matchdays = React.useMemo(
-    () =>
-      [...new Set(matches.map((m) => m.matchday).filter((d): d is number => d != null))].sort(
-        (a, b) => a - b,
-      ),
-    [matches],
+  // La fase final se gestiona en su propia pestaña.
+  const regular = React.useMemo(() => matches.filter((m) => !m.tie_id), [matches]);
+
+  const ourTeamIds = React.useMemo(
+    () => new Set(teams.filter((t) => t.is_our_team).map((t) => t.id)),
+    [teams],
   );
 
-  const filtered = matches.filter((m) => {
+  const matchdays = React.useMemo(
+    () =>
+      [...new Set(regular.map((m) => m.matchday).filter((d): d is number => d != null))].sort(
+        (a, b) => a - b,
+      ),
+    [regular],
+  );
+
+  const filtered = regular.filter((m) => {
     if (statusFilter !== ALL && m.status !== statusFilter) return false;
     if (matchdayFilter !== ALL && String(m.matchday ?? "") !== matchdayFilter) return false;
+    if (!matchesTeamFilter(teamFilter, m.home_team_id, m.away_team_id, ourTeamIds)) return false;
     return true;
   });
+
 
   const groups = React.useMemo(() => {
     const map = new Map<string, MatchRow[]>();
