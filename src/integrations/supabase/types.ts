@@ -3537,6 +3537,13 @@ export type Database = {
             foreignKeyName: "tournament_match_goals_tournament_id_fkey"
             columns: ["tournament_id"]
             isOneToOne: false
+            referencedRelation: "player_tournament_stats"
+            referencedColumns: ["tournament_id"]
+          },
+          {
+            foreignKeyName: "tournament_match_goals_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
             referencedRelation: "tournaments"
             referencedColumns: ["id"]
           },
@@ -3650,6 +3657,13 @@ export type Database = {
             foreignKeyName: "tournament_matches_tournament_id_fkey"
             columns: ["tournament_id"]
             isOneToOne: false
+            referencedRelation: "player_tournament_stats"
+            referencedColumns: ["tournament_id"]
+          },
+          {
+            foreignKeyName: "tournament_matches_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
             referencedRelation: "tournaments"
             referencedColumns: ["id"]
           },
@@ -3715,6 +3729,13 @@ export type Database = {
             foreignKeyName: "tournament_point_adjustments_tournament_id_fkey"
             columns: ["tournament_id"]
             isOneToOne: false
+            referencedRelation: "player_tournament_stats"
+            referencedColumns: ["tournament_id"]
+          },
+          {
+            foreignKeyName: "tournament_point_adjustments_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
             referencedRelation: "tournaments"
             referencedColumns: ["id"]
           },
@@ -3764,6 +3785,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "clubs"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_teams_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "player_tournament_stats"
+            referencedColumns: ["tournament_id"]
           },
           {
             foreignKeyName: "tournament_teams_tournament_id_fkey"
@@ -4748,7 +4776,41 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      player_tournament_stats: {
+        Row: {
+          club_id: string | null
+          goals: number | null
+          matches_scored: number | null
+          player_user_id: string | null
+          season_name: string | null
+          team_id: string | null
+          tournament_id: string | null
+          tournament_name: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournament_match_goals_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_match_goals_player_user_id_fkey"
+            columns: ["player_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournaments_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       can_access_health: {
@@ -4996,6 +5058,16 @@ export type Database = {
       is_task_assignee: {
         Args: { _task_id: string; _user_id: string }
         Returns: boolean
+      }
+      match_calendar_title: {
+        Args: {
+          _ag: number
+          _away: string
+          _hg: number
+          _home: string
+          _status: string
+        }
+        Returns: string
       }
       max_permission_any_team: {
         Args: { _module_key: string; _user_id: string }
