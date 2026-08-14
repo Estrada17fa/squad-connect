@@ -15,7 +15,7 @@ import {
 } from "@/lib/permissions";
 
 
-import { MODULES, MODULE_MAP, moduleFromPath, type ModuleKey } from "@/lib/modules";
+import { MODULES, MODULE_MAP, moduleFromPath, permissionKeyFor, type ModuleKey } from "@/lib/modules";
 import { resolvePagesForUser, inferBaseRole, type BaseRole, type ResolvedPage } from "@/lib/rolePages";
 import { LoadingState } from "./LoadingState";
 import { FAB } from "./FAB";
@@ -116,8 +116,11 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
   // Equivalente cliente de max_permission_any_team: el mejor nivel del usuario
   // en cualquier equipo (los módulos de ámbito club usan el contexto 'club').
   const getModuleAccess = React.useCallback(
-    (key: ModuleKey): PermissionLevel => {
+    (navKey: ModuleKey): PermissionLevel => {
       if (data?.isSuperAdmin) return "editor_global";
+      // Las entradas de navegación alias (p. ej. gestión de Multimedia)
+      // resuelven contra el module_key real de permisos.
+      const key = permissionKeyFor(navKey);
       const scope = MODULE_MAP[key].scope;
       const globalLvl = data?.globalPermissions?.[key];
       if (scope === "club" && !viewsAllClub) return maxLevel(clubPerms[key], globalLvl);
@@ -157,8 +160,16 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
   // modo que la navegación nunca oculta elementos con display:none — los que no
   // pasan el predicado simplemente no se incluyen en el array renderizado.
   const isModuleAccessible = React.useCallback(
-    (key: ModuleKey) =>
-      key === "usuarios" ? canSeeUsers(getModuleAccess("usuarios")) : canViewModule(key),
+    (key: ModuleKey) => {
+      if (key === "usuarios") return canSeeUsers(getModuleAccess("usuarios"));
+      // La gestión de Multimedia (Coordinación) no es para Vista Jugador:
+      // ese nivel solo accede al feed de Mi Club.
+      if (key === "multimedia_gestion") {
+        const lvl = getModuleAccess("multimedia_gestion");
+        return levelCanRead(lvl) && lvl !== "vista_jugador";
+      }
+      return canViewModule(key);
+    },
     [canViewModule, getModuleAccess],
   );
   // La sección Admin exige nivel global en `usuarios` (o super admin):
