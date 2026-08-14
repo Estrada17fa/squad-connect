@@ -20,6 +20,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LocationPicker } from "@/components/calendar/LocationPicker";
+import { AttendeePicker, type AttendeeMode } from "@/components/calendar/AttendeePicker";
+import { syncEventAttendees } from "@/lib/calendarEvents";
+import { supabase } from "@/integrations/supabase/client";
 import { fromLocalInputValue, toLocalInputValue } from "@/lib/calendar-utils";
 import { useSaveMatch, type MatchRow } from "@/hooks/useTournamentMatches";
 import type { TournamentTeamRow } from "@/hooks/useTournaments";
@@ -31,6 +34,8 @@ interface Props {
   clubId: string;
   userId: string;
   tournamentId: string;
+  /** Categoría del torneo, para la convocatoria. */
+  teamId?: string | null;
   teams: TournamentTeamRow[];
   match?: MatchRow | null;
 }
@@ -41,6 +46,7 @@ export function MatchFormDialog({
   clubId,
   userId,
   tournamentId,
+  teamId = null,
   teams,
   match,
 }: Props) {
@@ -55,6 +61,8 @@ export function MatchFormDialog({
   const [locationId, setLocationId] = React.useState<string | null>(null);
   const [status, setStatus] = React.useState<MatchStatus>("programado");
   const [notes, setNotes] = React.useState("");
+  const [attendees, setAttendees] = React.useState<Set<string>>(new Set());
+  const [attendeeMode, setAttendeeMode] = React.useState<AttendeeMode>("auto");
 
   React.useEffect(() => {
     if (!open) return;
@@ -66,6 +74,18 @@ export function MatchFormDialog({
     setLocationId(match?.location_id ?? null);
     setStatus((match?.status as MatchStatus) ?? "programado");
     setNotes(match?.notes ?? "");
+    setAttendees(new Set());
+    setAttendeeMode(match ? "detect" : "auto");
+    const eventId = match?.calendar_event_id;
+    if (eventId) {
+      void (async () => {
+        const { data } = await (supabase as any)
+          .from("event_attendees")
+          .select("user_id")
+          .eq("event_id", eventId);
+        setAttendees(new Set((data ?? []).map((r: any) => r.user_id as string)));
+      })();
+    }
   }, [open, match]);
 
   async function handleSave() {
@@ -86,6 +106,15 @@ export function MatchFormDialog({
         notes: notes.trim() || null,
         created_by: userId,
       });
+      if (teamId) {
+        const { data: row } = await (supabase as any)
+          .from("tournament_matches")
+          .select("calendar_event_id")
+          .eq("id", match?.id ?? "")
+          .maybeSingle();
+        const eventId = row?.calendar_event_id ?? null;
+        if (eventId) await syncEventAttendees(eventId, [...attendees]);
+      }
       toast.success(isEdit ? "Partido actualizado" : "Partido creado");
       onOpenChange(false);
     } catch (e: any) {
@@ -163,6 +192,18 @@ export function MatchFormDialog({
           label="Sede"
           placeholder="Estadio o cancha"
         />
+
+        {teamId && isEdit ? (
+          <AttendeePicker
+            clubId={clubId}
+            teamId={teamId}
+            value={attendees}
+            onChange={setAttendees}
+            mode={attendeeMode}
+            onModeChange={setAttendeeMode}
+            label="Convocatoria"
+          />
+        ) : null}
 
         <div className="space-y-1.5">
           <Label htmlFor="tm-notes">Notas</Label>
