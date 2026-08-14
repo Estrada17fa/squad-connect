@@ -121,8 +121,12 @@ export function TournamentDetailSheet({
             <TabsTrigger value="general">General</TabsTrigger>
             <TabsTrigger value="partidos">Partidos</TabsTrigger>
             <TabsTrigger value="posiciones">Posiciones</TabsTrigger>
+            {tournament.has_playoffs ? (
+              <TabsTrigger value="fase-final">Fase final</TabsTrigger>
+            ) : null}
             <TabsTrigger value="goleo">Goleo</TabsTrigger>
           </TabsList>
+
 
           <TabsContent value="general" className="space-y-6 pt-4">
         <DetailSection title="Resumen">
