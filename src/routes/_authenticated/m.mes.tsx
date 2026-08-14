@@ -6,7 +6,7 @@ import { EmptyState } from "@/components/squad/EmptyState";
 import { Button } from "@/components/ui/button";
 import { useApp } from "@/components/squad/AppLayout";
 import { useCalendarEvents, type CalendarEventRow } from "@/hooks/useCalendarEvents";
-import { EVENT_TYPES, EVENT_TYPE_MAP } from "@/lib/eventTypes";
+import { EVENT_TYPES, EVENT_TYPE_MAP, type EventType } from "@/lib/eventTypes";
 import { addMonths, isSameDay, monthGrid, monthLabel, startOfDay, weekdayLabels } from "@/lib/calendar-utils";
 import { useClubPrefs } from "@/hooks/useClubSettings";
 import { EventFormDialog } from "@/components/calendar/EventFormDialog";
@@ -41,12 +41,16 @@ function MesModulePage() {
   const [editing, setEditing] = React.useState<CalendarEventRow | null>(null);
   const [detailEvent, setDetailEvent] = React.useState<CalendarEventRow | null>(null);
   const [teamFilter, setTeamFilter] = React.useState<string | null>(null);
+  const [typeFilter, setTypeFilter] = React.useState<EventType | null>(null);
   const clubId = profile?.club_id ?? null;
 
   const { data: allEvents } = useCalendarEvents({ mode: "club", clubId });
   const events = React.useMemo(
-    () => (allEvents ?? []).filter((e) => !teamFilter || e.team_id === teamFilter),
-    [allEvents, teamFilter],
+    () =>
+      (allEvents ?? [])
+        .filter((e) => !teamFilter || e.team_id === teamFilter)
+        .filter((e) => !typeFilter || e.event_type === typeFilter),
+    [allEvents, teamFilter, typeFilter],
   );
 
   const eventsByDay = React.useMemo(() => {
@@ -144,13 +148,25 @@ function MesModulePage() {
           })}
         </div>
 
-        <div className="mt-4 flex flex-wrap gap-3 border-t border-border/60 pt-3 text-xs text-muted-foreground">
-          {EVENT_TYPES.map((t) => (
-            <span key={t.key} className="inline-flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: t.cssVar }} />
-              {t.label}
-            </span>
-          ))}
+        <div className="mt-4 flex flex-wrap gap-2 border-t border-border/60 pt-3 text-xs">
+          {EVENT_TYPES.map((t) => {
+            const active = typeFilter === t.key;
+            return (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => setTypeFilter(active ? null : t.key)}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 transition-colors",
+                  active ? "border-transparent text-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
+                )}
+                style={active ? { backgroundColor: `${t.cssVar}1f` } : undefined}
+              >
+                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: t.cssVar }} />
+                {t.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
