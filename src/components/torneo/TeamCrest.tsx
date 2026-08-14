@@ -2,7 +2,10 @@ import { Shield } from "lucide-react";
 import { useCrestUrl } from "@/hooks/useTournaments";
 import { cn } from "@/lib/utils";
 
-/** Escudo del equipo (bucket privado); si no hay, muestra un icono neutro. */
+/**
+ * Escudo del equipo (bucket privado).
+ * Caja cuadrada, sin fondo ni marco: respeta la transparencia del PNG y nunca recorta.
+ */
 export function TeamCrest({
   path,
   name,
@@ -16,14 +19,19 @@ export function TeamCrest({
   return (
     <span
       className={cn(
-        "inline-flex shrink-0 items-center justify-center overflow-hidden rounded-md bg-white/5 ring-1 ring-inset ring-white/10",
+        "inline-flex shrink-0 items-center justify-center",
         className ?? "h-10 w-10",
       )}
     >
       {url ? (
-        <img src={url} alt={`Escudo de ${name}`} loading="lazy" className="h-full w-full object-contain" />
+        <img
+          src={url}
+          alt={`Escudo de ${name}`}
+          loading="lazy"
+          className="h-full w-full object-contain"
+        />
       ) : (
-        <Shield className="h-1/2 w-1/2 text-muted-foreground" />
+        <Shield className="h-2/3 w-2/3 text-muted-foreground/60" />
       )}
     </span>
   );
