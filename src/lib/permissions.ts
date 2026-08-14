@@ -187,6 +187,7 @@ export const DEFAULT_ROLE_LEVELS: Record<string, Record<ModuleKey, PermissionLev
   admin: {
     agenda: "editor_global", mes: "editor_global", plantel: "editor_global",
     viajes: "editor_global", inventario: "editor_global", coordinacion_interna: "editor_global",
+    partidos: "editor_global",
     solicitudes: "editor_global", compras_facturas: "editor_global", documentos: "editor_global",
     usuarios: "editor_global", comunicados: "editor_global", multimedia: "editor_global",
     torneo: "editor_global", tacticas: "editor_global", salud: "editor_global",
@@ -195,6 +196,7 @@ export const DEFAULT_ROLE_LEVELS: Record<string, Record<ModuleKey, PermissionLev
   tecnico: {
     agenda: "editor_categoria", mes: "editor_categoria", plantel: "editor_categoria",
     viajes: "lector_categoria", inventario: "lector_global", coordinacion_interna: "editor_global",
+    partidos: "editor_categoria",
     solicitudes: "lector_global", compras_facturas: "sin_acceso", documentos: "lector_categoria",
     usuarios: "sin_acceso", comunicados: "editor_categoria", multimedia: "lector_categoria",
     torneo: "editor_categoria", tacticas: "editor_categoria", salud: "sin_acceso",
@@ -203,6 +205,7 @@ export const DEFAULT_ROLE_LEVELS: Record<string, Record<ModuleKey, PermissionLev
   medico: {
     agenda: "lector_categoria", mes: "lector_categoria", plantel: "lector_categoria",
     viajes: "lector_categoria", inventario: "lector_global", coordinacion_interna: "lector_global",
+    partidos: "lector_categoria",
     solicitudes: "lector_global", compras_facturas: "sin_acceso", documentos: "lector_categoria",
     usuarios: "sin_acceso", comunicados: "lector_categoria", multimedia: "lector_categoria",
     torneo: "lector_categoria", tacticas: "sin_acceso", salud: "editor_categoria",
@@ -211,6 +214,7 @@ export const DEFAULT_ROLE_LEVELS: Record<string, Record<ModuleKey, PermissionLev
   staff: {
     agenda: "lector_categoria", mes: "lector_categoria", plantel: "lector_categoria",
     viajes: "editor_categoria", inventario: "editor_global", coordinacion_interna: "lector_global",
+    partidos: "lector_categoria",
     solicitudes: "editor_global", compras_facturas: "editor_global", documentos: "lector_categoria",
     usuarios: "sin_acceso", comunicados: "lector_categoria", multimedia: "lector_categoria",
     torneo: "lector_categoria", tacticas: "sin_acceso", salud: "sin_acceso",
@@ -219,6 +223,7 @@ export const DEFAULT_ROLE_LEVELS: Record<string, Record<ModuleKey, PermissionLev
   jugador: {
     agenda: "vista_jugador", mes: "vista_jugador", plantel: "vista_jugador",
     viajes: "vista_jugador", inventario: "sin_acceso", coordinacion_interna: "sin_acceso",
+    partidos: "vista_jugador",
     solicitudes: "lector_global", compras_facturas: "sin_acceso", documentos: "sin_acceso",
     usuarios: "sin_acceso", comunicados: "vista_jugador", multimedia: "vista_jugador",
     torneo: "vista_jugador", tacticas: "vista_jugador", salud: "vista_jugador",

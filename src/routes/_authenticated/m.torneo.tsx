@@ -204,7 +204,9 @@ function TorneoPage() {
                     matches={matches}
                     teams={teams}
                     loading={matchesQ.isLoading}
+                    currentUserId={userId}
                   />
+
                 </TabsContent>
 
                 <TabsContent value="posiciones" className="pt-4">

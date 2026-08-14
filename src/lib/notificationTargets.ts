@@ -30,6 +30,8 @@ export function notificationTarget(n: NotificationRow): NotificationTarget | nul
         to: "/m/compras_facturas",
         search: { open: n.related_id },
       };
+    case "partidos":
+      return { module: "partidos", to: "/m/partidos", search: { open: n.related_id } };
     case "viajes":
       return { module: "viajes", to: "/m/viajes", search: { open: n.related_id } };
     case "inventario":

@@ -18,12 +18,14 @@ const ALL = "__all__";
 
 interface Props {
   matches: MatchRow[];
+  /** Usuario actual, para resaltarlo en la lista de convocados. */
+  currentUserId?: string | null;
   teams: TournamentTeamRow[];
   loading?: boolean;
 }
 
 /** Calendario del torneo en solo lectura: próximos destacados + jornadas. */
-export function TournamentMatchesView({ matches, teams, loading }: Props) {
+export function TournamentMatchesView({ matches, teams, loading, currentUserId }: Props) {
   const [matchday, setMatchday] = React.useState<string>(ALL);
   const [teamFilter, setTeamFilter] = React.useState<string>(TEAM_FILTER_ALL);
 
@@ -114,7 +116,7 @@ export function TournamentMatchesView({ matches, teams, loading }: Props) {
           </h3>
           <div className="space-y-2">
             {upcoming.map((m) => (
-              <MatchCardView key={m.id} match={m} teams={teams} highlight />
+              <MatchCardView key={m.id} match={m} teams={teams} currentUserId={currentUserId} highlight />
             ))}
           </div>
         </section>
@@ -127,7 +129,7 @@ export function TournamentMatchesView({ matches, teams, loading }: Props) {
           </h3>
           <div className="space-y-2">
             {rows.map((m) => (
-              <MatchCardView key={m.id} match={m} teams={teams} />
+              <MatchCardView key={m.id} match={m} teams={teams} currentUserId={currentUserId} />
             ))}
           </div>
         </section>

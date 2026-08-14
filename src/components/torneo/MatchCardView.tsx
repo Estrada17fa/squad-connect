@@ -1,9 +1,12 @@
-import { CalendarDays, MapPin } from "lucide-react";
+import * as React from "react";
+import { CalendarDays, ChevronDown, ChevronUp, MapPin, Users } from "lucide-react";
 import { StatusBadge } from "@/components/squad/StatusBadge";
 import { TeamCrest } from "./TeamCrest";
 import type { MatchRow } from "@/hooks/useTournamentMatches";
 import type { TournamentTeamRow } from "@/hooks/useTournaments";
 import { MATCH_STATUS_LABEL } from "@/lib/torneo";
+import { CallupList } from "@/components/partidos/CallupList";
+import { useMatchCallups } from "@/hooks/useMatchOps";
 import { cn } from "@/lib/utils";
 
 export function formatKickoff(iso: string | null, withYear = false) {
@@ -23,10 +26,12 @@ interface Props {
   teams: TournamentTeamRow[];
   /** Tarjeta grande para "próximos partidos". */
   highlight?: boolean;
+  /** Id del usuario actual, para resaltarlo si está convocado. */
+  currentUserId?: string | null;
 }
 
 /** Tarjeta de partido de solo lectura, con escudos y nuestro equipo resaltado. */
-export function MatchCardView({ match, teams, highlight }: Props) {
+export function MatchCardView({ match, teams, highlight, currentUserId }: Props) {
   const home = teams.find((t) => t.id === match.home_team_id) ?? null;
   const away = teams.find((t) => t.id === match.away_team_id) ?? null;
   const played = match.status === "jugado" && match.home_goals != null && match.away_goals != null;
@@ -87,7 +92,45 @@ export function MatchCardView({ match, teams, highlight }: Props) {
           </span>
         ) : null}
       </div>
+
+      {ours ? <CallupsSection matchId={match.id} currentUserId={currentUserId} /> : null}
     </article>
+  );
+}
+
+/** Convocados del partido, en solo lectura (la gestión vive en Coordinación/Partidos). */
+function CallupsSection({
+  matchId,
+  currentUserId,
+}: {
+  matchId: string;
+  currentUserId?: string | null;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const ids = React.useMemo(() => [matchId], [matchId]);
+  const callupsQ = useMatchCallups(ids);
+  const callups = callupsQ.data ?? [];
+
+  if (!callupsQ.isLoading && !callups.length) return null;
+
+  return (
+    <div className="mt-3 border-t border-white/5 pt-2">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between gap-2 text-xs text-muted-foreground hover:text-foreground"
+      >
+        <span className="inline-flex items-center gap-1">
+          <Users className="h-3.5 w-3.5" /> Convocados ({callups.length})
+        </span>
+        {open ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+      </button>
+      {open ? (
+        <div className="mt-2">
+          <CallupList callups={callups} highlightUserId={currentUserId} />
+        </div>
+      ) : null}
+    </div>
   );
 }
 
