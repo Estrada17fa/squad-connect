@@ -90,6 +90,15 @@ export function TournamentDetailSheet({
           ) : null
         }
       >
+        <Tabs defaultValue="general">
+          <TabsList className="w-full justify-start overflow-x-auto">
+            <TabsTrigger value="general">General</TabsTrigger>
+            <TabsTrigger value="partidos">Partidos</TabsTrigger>
+            <TabsTrigger value="posiciones">Posiciones</TabsTrigger>
+            <TabsTrigger value="goleo">Goleo</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="general" className="space-y-6 pt-4">
         <DetailSection title="Resumen">
           <DetailGrid>
             <DetailField label="Estado" icon={Trophy}>
