@@ -31,6 +31,8 @@ import { StandingsTable } from "@/components/admin/StandingsTable";
 import { ScorersTable } from "@/components/admin/ScorersTable";
 import { PlayoffTieDialog } from "@/components/admin/PlayoffTieDialog";
 import { BracketView } from "@/components/torneo/BracketView";
+import { TeamCrest } from "@/components/torneo/TeamCrest";
+
 import { useTournamentTies, type PlayoffTieRow } from "@/hooks/useTournamentPlayoffs";
 import { groupLabels } from "@/lib/torneo";
 
