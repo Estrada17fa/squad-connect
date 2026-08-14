@@ -101,17 +101,8 @@ export function TournamentMatchesView({ matches, teams, loading }: Props) {
             ))}
           </SelectContent>
         </Select>
-        {ourTeamIds.size ? (
-          <Select value={onlyOurs} onValueChange={setOnlyOurs}>
-            <SelectTrigger className="w-44">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL}>Todos los equipos</SelectItem>
-              <SelectItem value="ours">Solo nuestro equipo</SelectItem>
-            </SelectContent>
-          </Select>
-        ) : null}
+        <TeamFilterSelect teams={teams} value={teamFilter} onChange={setTeamFilter} />
+
       </div>
 
       {upcoming.length ? (
