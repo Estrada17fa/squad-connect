@@ -1,6 +1,6 @@
 import * as React from "react";
-import { Link } from "@tanstack/react-router";
-import { Download, Heart, MessageCircle, Maximize2, Swords } from "lucide-react";
+
+import { Download, Heart, MessageCircle, Maximize2 } from "lucide-react";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,9 @@ import {
   useToggleMediaLike,
   type MediaPost,
 } from "@/hooks/useMultimedia";
+import { TeamCrest } from "@/components/torneo/TeamCrest";
 import { MediaCarousel } from "./MediaCarousel";
+
 import { MediaLightbox } from "./MediaLightbox";
 import { MediaComments } from "./MediaComments";
 
@@ -136,16 +138,13 @@ export function MediaFeedCard({
       ) : null}
 
       {post.match ? (
-        <Link
-          to="/m/partidos"
-          search={{ open: post.match.id }}
-          className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/[0.06] px-2.5 py-1 text-xs text-foreground/80 hover:bg-white/10"
-        >
-          <Swords className="h-3.5 w-3.5" />
+        <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/[0.06] px-2.5 py-1 text-xs text-foreground/80">
+          <TeamCrest path={post.match.rivalCrest} name={post.match.rival ?? "rival"} className="h-4 w-4" />
           vs {post.match.rival ?? "rival"}
           {post.match.matchday ? ` · Jornada ${post.match.matchday}` : ""}
-        </Link>
+        </span>
       ) : null}
+
 
       {showComments ? (
         <div className="mt-3 border-t border-white/5 pt-3">

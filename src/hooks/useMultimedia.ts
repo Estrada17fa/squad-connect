@@ -29,7 +29,9 @@ export interface MediaMatchInfo {
   matchday: number | null;
   kickoff_at: string | null;
   rival: string | null;
+  rivalCrest: string | null;
 }
+
 
 export interface MediaPost {
   id: string;
@@ -121,8 +123,8 @@ export function useMediaPosts(clubId: string | null | undefined, userId: string)
            media_comments(id),
            match:tournament_matches(
              id, matchday, kickoff_at,
-             home:tournament_teams!tournament_matches_home_team_id_fkey(name, is_our_team),
-             away:tournament_teams!tournament_matches_away_team_id_fkey(name, is_our_team)
+             home:tournament_teams!tournament_matches_home_team_id_fkey(name, is_our_team, crest_path),
+             away:tournament_teams!tournament_matches_away_team_id_fkey(name, is_our_team, crest_path)
            )`,
         )
         .eq("club_id", clubId)
@@ -131,11 +133,8 @@ export function useMediaPosts(clubId: string | null | undefined, userId: string)
 
       return (data ?? []).map((row: any): MediaPost => {
         const m = row.match;
-        const rival = m
-          ? m.home?.is_our_team
-            ? (m.away?.name ?? null)
-            : (m.home?.name ?? null)
-          : null;
+        const rivalTeam = m ? (m.home?.is_our_team ? m.away : m.home) : null;
+        const rival = rivalTeam?.name ?? null;
         return {
           ...row,
           files: [...(row.media_post_files ?? [])].sort(
@@ -145,7 +144,16 @@ export function useMediaPosts(clubId: string | null | undefined, userId: string)
             team_id: t.team_id,
             name: t.teams?.name ?? null,
           })),
-          match: m ? { id: m.id, matchday: m.matchday, kickoff_at: m.kickoff_at, rival } : null,
+          match: m
+            ? {
+                id: m.id,
+                matchday: m.matchday,
+                kickoff_at: m.kickoff_at,
+                rival,
+                rivalCrest: rivalTeam?.crest_path ?? null,
+              }
+            : null,
+
           likeCount: (row.media_likes ?? []).length,
           liked: (row.media_likes ?? []).some((l: any) => l.user_id === userId),
           commentCount: (row.media_comments ?? []).length,
