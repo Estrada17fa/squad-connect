@@ -87,7 +87,9 @@ export function TournamentTeamFormDialog({
         short_name: shortName.trim() || null,
         crest_path: crest,
         is_our_team: isOurTeam,
+        group_label: groups.length && groupLabel !== NO_GROUP ? groupLabel : null,
         notes: notes.trim() || null,
+
       });
       toast.success(isEdit ? "Equipo actualizado" : "Equipo agregado");
       onOpenChange(false);
