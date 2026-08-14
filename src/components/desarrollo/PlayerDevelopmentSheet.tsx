@@ -22,6 +22,7 @@ import {
 } from "@/components/squad/EntitySheet";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/squad/StatusBadge";
+import { usePlayerTournamentStats } from "@/hooks/usePlayerTournamentStats";
 import {
   ASSIGNMENT_STATUS_LABEL,
   GOAL_STATUS_LABEL,
