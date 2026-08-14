@@ -26,6 +26,8 @@ import {
 } from "@/lib/torneo";
 import { TournamentFormDialog } from "@/components/admin/TournamentFormDialog";
 import { TournamentDetailSheet } from "@/components/admin/TournamentDetailSheet";
+import { TournamentLogo } from "@/components/torneo/TournamentLogo";
+
 
 const ALL = "__all__";
 
