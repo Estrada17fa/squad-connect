@@ -13,7 +13,9 @@ import {
   useToggleMediaLike,
   type MediaPost,
 } from "@/hooks/useMultimedia";
+import { TeamCrest } from "@/components/torneo/TeamCrest";
 import { MediaCarousel } from "./MediaCarousel";
+
 import { MediaLightbox } from "./MediaLightbox";
 import { MediaComments } from "./MediaComments";
 
