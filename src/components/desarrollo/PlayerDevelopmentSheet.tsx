@@ -22,7 +22,7 @@ import {
 } from "@/components/squad/EntitySheet";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/squad/StatusBadge";
-import { usePlayerTournamentStats } from "@/hooks/usePlayerTournamentStats";
+import { usePlayerTournamentStats, type PlayerTournamentStatRow } from "@/hooks/usePlayerTournamentStats";
 import {
   ASSIGNMENT_STATUS_LABEL,
   GOAL_STATUS_LABEL,
@@ -263,7 +263,7 @@ export function PlayerDevelopmentContent({
             />
           ) : (
             <div className="space-y-3">
-              {tournamentStats.map((t) => (
+              {tournamentStats.map((t: PlayerTournamentStatRow) => (
                 <div key={t.tournament_id} className="space-y-2">
                   <p className="text-xs text-muted-foreground">
                     {[t.tournament_name, t.season_name].filter(Boolean).join(" · ")}
