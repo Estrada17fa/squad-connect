@@ -180,7 +180,14 @@ function CoordinacionPage() {
         <TabsList>
           <TabsTrigger value="tareas">Tareas</TabsTrigger>
           <TabsTrigger value="juntas">Juntas</TabsTrigger>
+          {canSeeMedia ? <TabsTrigger value="multimedia">Multimedia</TabsTrigger> : null}
         </TabsList>
+
+        {canSeeMedia ? (
+          <TabsContent value="multimedia" className="mt-4">
+            <MediaManagerPanel />
+          </TabsContent>
+        ) : null}
 
         <TabsContent value="tareas" className="mt-4 space-y-4">
           {canCreate ? (

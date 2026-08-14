@@ -28,6 +28,7 @@ import { Route as AuthenticatedMSaludRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedMPlantelRouteImport } from './routes/_authenticated/m.plantel'
 import { Route as AuthenticatedMPartidosRouteImport } from './routes/_authenticated/m.partidos'
 import { Route as AuthenticatedMNutricionRouteImport } from './routes/_authenticated/m.nutricion'
+import { Route as AuthenticatedMMultimediaRouteImport } from './routes/_authenticated/m.multimedia'
 import { Route as AuthenticatedMMesRouteImport } from './routes/_authenticated/m.mes'
 import { Route as AuthenticatedMInventarioRouteImport } from './routes/_authenticated/m.inventario'
 import { Route as AuthenticatedMEntrenamientosRouteImport } from './routes/_authenticated/m.entrenamientos'
@@ -140,6 +141,12 @@ const AuthenticatedMNutricionRoute = AuthenticatedMNutricionRouteImport.update({
   path: '/m/nutricion',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMMultimediaRoute =
+  AuthenticatedMMultimediaRouteImport.update({
+    id: '/m/multimedia',
+    path: '/m/multimedia',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMMesRoute = AuthenticatedMMesRouteImport.update({
   id: '/m/mes',
   path: '/m/mes',
@@ -244,6 +251,7 @@ export interface FileRoutesByFullPath {
   '/m/entrenamientos': typeof AuthenticatedMEntrenamientosRoute
   '/m/inventario': typeof AuthenticatedMInventarioRoute
   '/m/mes': typeof AuthenticatedMMesRoute
+  '/m/multimedia': typeof AuthenticatedMMultimediaRoute
   '/m/nutricion': typeof AuthenticatedMNutricionRoute
   '/m/partidos': typeof AuthenticatedMPartidosRoute
   '/m/plantel': typeof AuthenticatedMPlantelRouteWithChildren
@@ -277,6 +285,7 @@ export interface FileRoutesByTo {
   '/m/entrenamientos': typeof AuthenticatedMEntrenamientosRoute
   '/m/inventario': typeof AuthenticatedMInventarioRoute
   '/m/mes': typeof AuthenticatedMMesRoute
+  '/m/multimedia': typeof AuthenticatedMMultimediaRoute
   '/m/nutricion': typeof AuthenticatedMNutricionRoute
   '/m/partidos': typeof AuthenticatedMPartidosRoute
   '/m/plantel': typeof AuthenticatedMPlantelRouteWithChildren
@@ -313,6 +322,7 @@ export interface FileRoutesById {
   '/_authenticated/m/entrenamientos': typeof AuthenticatedMEntrenamientosRoute
   '/_authenticated/m/inventario': typeof AuthenticatedMInventarioRoute
   '/_authenticated/m/mes': typeof AuthenticatedMMesRoute
+  '/_authenticated/m/multimedia': typeof AuthenticatedMMultimediaRoute
   '/_authenticated/m/nutricion': typeof AuthenticatedMNutricionRoute
   '/_authenticated/m/partidos': typeof AuthenticatedMPartidosRoute
   '/_authenticated/m/plantel': typeof AuthenticatedMPlantelRouteWithChildren
@@ -349,6 +359,7 @@ export interface FileRouteTypes {
     | '/m/entrenamientos'
     | '/m/inventario'
     | '/m/mes'
+    | '/m/multimedia'
     | '/m/nutricion'
     | '/m/partidos'
     | '/m/plantel'
@@ -382,6 +393,7 @@ export interface FileRouteTypes {
     | '/m/entrenamientos'
     | '/m/inventario'
     | '/m/mes'
+    | '/m/multimedia'
     | '/m/nutricion'
     | '/m/partidos'
     | '/m/plantel'
@@ -417,6 +429,7 @@ export interface FileRouteTypes {
     | '/_authenticated/m/entrenamientos'
     | '/_authenticated/m/inventario'
     | '/_authenticated/m/mes'
+    | '/_authenticated/m/multimedia'
     | '/_authenticated/m/nutricion'
     | '/_authenticated/m/partidos'
     | '/_authenticated/m/plantel'
@@ -570,6 +583,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMNutricionRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/m/multimedia': {
+      id: '/_authenticated/m/multimedia'
+      path: '/m/multimedia'
+      fullPath: '/m/multimedia'
+      preLoaderRoute: typeof AuthenticatedMMultimediaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/m/mes': {
       id: '/_authenticated/m/mes'
       path: '/m/mes'
@@ -719,6 +739,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMEntrenamientosRoute: typeof AuthenticatedMEntrenamientosRoute
   AuthenticatedMInventarioRoute: typeof AuthenticatedMInventarioRoute
   AuthenticatedMMesRoute: typeof AuthenticatedMMesRoute
+  AuthenticatedMMultimediaRoute: typeof AuthenticatedMMultimediaRoute
   AuthenticatedMNutricionRoute: typeof AuthenticatedMNutricionRoute
   AuthenticatedMPartidosRoute: typeof AuthenticatedMPartidosRoute
   AuthenticatedMPlantelRoute: typeof AuthenticatedMPlantelRouteWithChildren
@@ -748,6 +769,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMEntrenamientosRoute: AuthenticatedMEntrenamientosRoute,
   AuthenticatedMInventarioRoute: AuthenticatedMInventarioRoute,
   AuthenticatedMMesRoute: AuthenticatedMMesRoute,
+  AuthenticatedMMultimediaRoute: AuthenticatedMMultimediaRoute,
   AuthenticatedMNutricionRoute: AuthenticatedMNutricionRoute,
   AuthenticatedMPartidosRoute: AuthenticatedMPartidosRoute,
   AuthenticatedMPlantelRoute: AuthenticatedMPlantelRouteWithChildren,
