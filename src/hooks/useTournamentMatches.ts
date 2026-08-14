@@ -28,6 +28,8 @@ export interface MatchRow {
   /** Partido de fase final: llave a la que pertenece y tramo (1 ida, 2 vuelta). */
   tie_id: string | null;
   leg: number | null;
+  notes: string | null;
+
 
   created_at: string;
   updated_at: string;
