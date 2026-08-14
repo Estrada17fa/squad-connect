@@ -9,6 +9,8 @@ import {
 } from "@/components/ui/select";
 import { EmptyState } from "@/components/squad/EmptyState";
 import { MatchCardView } from "./MatchCardView";
+import { TEAM_FILTER_ALL, TeamFilterSelect, matchesTeamFilter } from "./TeamFilterSelect";
+
 import type { MatchRow } from "@/hooks/useTournamentMatches";
 import type { TournamentTeamRow } from "@/hooks/useTournaments";
 
