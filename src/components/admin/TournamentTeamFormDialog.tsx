@@ -29,7 +29,11 @@ interface Props {
   clubId: string;
   tournamentId: string;
   team?: TournamentTeamRow | null;
+  /** Grupos configurados en el torneo (vacío = torneo sin grupos). */
+  groups?: string[];
 }
+
+const NO_GROUP = "__none__";
 
 export function TournamentTeamFormDialog({
   open,
@@ -37,6 +41,7 @@ export function TournamentTeamFormDialog({
   clubId,
   tournamentId,
   team,
+  groups = [],
 }: Props) {
   const isEdit = !!team;
   const save = useSaveTournamentTeam();
@@ -45,6 +50,7 @@ export function TournamentTeamFormDialog({
   const [name, setName] = React.useState("");
   const [shortName, setShortName] = React.useState("");
   const [isOurTeam, setIsOurTeam] = React.useState(false);
+  const [groupLabel, setGroupLabel] = React.useState<string>(NO_GROUP);
   const [notes, setNotes] = React.useState("");
   const [file, setFile] = React.useState<File | null>(null);
   const [busy, setBusy] = React.useState(false);
@@ -54,9 +60,11 @@ export function TournamentTeamFormDialog({
     setName(team?.name ?? "");
     setShortName(team?.short_name ?? "");
     setIsOurTeam(team?.is_our_team ?? false);
+    setGroupLabel(team?.group_label ?? NO_GROUP);
     setNotes(team?.notes ?? "");
     setFile(null);
   }, [open, team]);
+
 
   async function handleSave() {
     if (!name.trim()) return toast.error("El nombre del equipo es obligatorio");
