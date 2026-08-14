@@ -106,11 +106,11 @@ export function MatchFormDialog({
         notes: notes.trim() || null,
         created_by: userId,
       });
-      if (teamId) {
+      if (teamId && match?.id) {
         const { data: row } = await (supabase as any)
           .from("tournament_matches")
           .select("calendar_event_id")
-          .eq("id", match?.id ?? "")
+          .eq("id", match.id)
           .maybeSingle();
         const eventId = row?.calendar_event_id ?? null;
         if (eventId) await syncEventAttendees(eventId, [...attendees]);
