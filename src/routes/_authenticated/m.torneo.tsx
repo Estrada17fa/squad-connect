@@ -193,6 +193,9 @@ function TorneoPage() {
                 <TabsList className="w-full justify-start overflow-x-auto">
                   <TabsTrigger value="partidos">Partidos</TabsTrigger>
                   <TabsTrigger value="posiciones">Posiciones</TabsTrigger>
+                  {current.has_playoffs ? (
+                    <TabsTrigger value="fase-final">Fase final</TabsTrigger>
+                  ) : null}
                   <TabsTrigger value="goleo">Goleo</TabsTrigger>
                 </TabsList>
 
@@ -213,8 +216,22 @@ function TorneoPage() {
                     teams={teams}
                     matches={matches}
                     canEdit={false}
+                    groups={groups}
                   />
                 </TabsContent>
+
+                {current.has_playoffs ? (
+                  <TabsContent value="fase-final" className="pt-4">
+                    <BracketView
+                      startRound={current.playoff_start_round}
+                      teams={teams}
+                      matches={matches}
+                      ties={tiesQ.data ?? []}
+                      canEdit={false}
+                    />
+                  </TabsContent>
+                ) : null}
+
 
                 <TabsContent value="goleo" className="pt-4">
                   <ScorersTable
