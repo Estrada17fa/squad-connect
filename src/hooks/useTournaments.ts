@@ -200,7 +200,9 @@ export interface TournamentTeamInput {
   short_name: string | null;
   crest_path: string | null;
   is_our_team: boolean;
+  group_label: string | null;
   notes: string | null;
+
 }
 
 export function useSaveTournamentTeam() {
