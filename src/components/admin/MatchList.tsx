@@ -168,6 +168,7 @@ export function MatchList({
         userId={userId}
         tournamentId={tournamentId}
         teams={teams}
+        teamId={teamId}
         match={form.row}
       />
       <MatchdayFormDialog

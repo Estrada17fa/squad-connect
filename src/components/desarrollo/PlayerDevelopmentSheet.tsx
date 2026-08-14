@@ -10,6 +10,7 @@ import {
   Ruler,
   Target,
   TrendingUp,
+  Trophy,
 } from "lucide-react";
 import {
   EntitySheet,
@@ -21,6 +22,7 @@ import {
 } from "@/components/squad/EntitySheet";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/squad/StatusBadge";
+import { usePlayerTournamentStats, type PlayerTournamentStatRow } from "@/hooks/usePlayerTournamentStats";
 import {
   ASSIGNMENT_STATUS_LABEL,
   GOAL_STATUS_LABEL,
@@ -71,6 +73,8 @@ export function PlayerDevelopmentContent({
   showHeader?: boolean;
 }) {
   const q = usePlayerDevelopment(enabled ? player.userId : null);
+  const tournamentStatsQ = usePlayerTournamentStats(enabled ? player.userId : null);
+  const tournamentStats = tournamentStatsQ.data ?? [];
   const setStatus = useSetAssignmentStatus(clubId);
 
   const data = q.data;
@@ -250,9 +254,34 @@ export function PlayerDevelopmentContent({
           )}
         </DevSection>
 
-        <DevSection icon={BarChart3} title="Estadísticas de competencia">
+        <DevSection icon={Trophy} title="Estadísticas de torneo">
+          {tournamentStats.length === 0 ? (
+            <DevEmpty
+              icon={Trophy}
+              title="Sin registros de torneo"
+              message="Se llenan solas con los goles capturados en el módulo Torneo."
+            />
+          ) : (
+            <div className="space-y-3">
+              {tournamentStats.map((t: PlayerTournamentStatRow) => (
+                <div key={t.tournament_id} className="space-y-2">
+                  <p className="text-xs text-muted-foreground">
+                    {[t.tournament_name, t.season_name].filter(Boolean).join(" · ")}
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <StatTile value={t.goals} label="Goles" />
+                    <StatTile value={t.matches_scored} label="Partidos con gol" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </DevSection>
+
+        <DevSection icon={BarChart3} title="Estadísticas manuales (histórico)">
           {!season ? (
             <DevEmpty icon={Activity} title="Sin estadísticas" message="Aún no se capturan partidos ni minutos." />
+
           ) : (
             <div className="space-y-3">
               <p className="text-xs text-muted-foreground">{season.season_name}</p>

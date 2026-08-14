@@ -23,6 +23,7 @@ export interface MatchRow {
   home_goals: number | null;
   away_goals: number | null;
   shootout_winner_team_id: string | null;
+  calendar_event_id: string | null;
   status: MatchStatus;
   notes: string | null;
   created_at: string;
