@@ -33,6 +33,8 @@ interface Props {
   teams: TournamentTeamRow[];
   matches: MatchRow[];
   canEdit: boolean;
+  /** Grupos configurados en el torneo (vacío = una sola tabla). */
+  groups?: string[];
 }
 
 export function StandingsTable({
@@ -43,21 +45,39 @@ export function StandingsTable({
   teams,
   matches,
   canEdit,
+  groups = [],
 }: Props) {
   const adjQ = useTournamentAdjustments(tournamentId);
   const [dialog, setDialog] = React.useState(false);
 
-  const rows = React.useMemo(
-    () =>
-      buildStandings(
-        config,
-        teams.map((t) => ({
-          id: t.id,
-          name: t.name,
-          is_our_team: t.is_our_team,
-          crest_path: t.crest_path,
-        })),
-        matches.map((m) => ({
+  // La fase final no cuenta para la tabla de la fase regular.
+  const regular = React.useMemo(() => matches.filter((m) => !m.tie_id), [matches]);
+
+  const ourGroup = teams.find((t) => t.is_our_team)?.group_label ?? null;
+  const [group, setGroup] = React.useState<string>(ourGroup ?? groups[0] ?? "");
+  React.useEffect(() => {
+    if (!groups.length) return;
+    setGroup((g) => (groups.includes(g) ? g : ourGroup ?? groups[0] ?? ""));
+  }, [groups.join("|"), ourGroup]);
+
+  const activeTeams = React.useMemo(() => {
+    if (!groups.length) return teams;
+    return teams.filter((t) => (t.group_label ?? "") === group);
+  }, [teams, groups.length, group]);
+
+  const rows = React.useMemo(() => {
+    const ids = new Set(activeTeams.map((t) => t.id));
+    return buildStandings(
+      config,
+      activeTeams.map((t) => ({
+        id: t.id,
+        name: t.name,
+        is_our_team: t.is_our_team,
+        crest_path: t.crest_path,
+      })),
+      regular
+        .filter((m) => ids.has(m.home_team_id ?? "") && ids.has(m.away_team_id ?? ""))
+        .map((m) => ({
           home_team_id: m.home_team_id ?? "",
           away_team_id: m.away_team_id ?? "",
           home_goals: m.home_goals,
@@ -65,10 +85,9 @@ export function StandingsTable({
           status: m.status,
           shootout_winner_team_id: m.shootout_winner_team_id,
         })),
-        adjQ.data ?? [],
-      ),
-    [config, teams, matches, adjQ.data],
-  );
+      (adjQ.data ?? []).filter((a) => ids.has(a.team_id)),
+    );
+  }, [config, activeTeams, regular, adjQ.data]);
 
   if (!teams.length) {
     return <p className="text-sm text-muted-foreground">Registra equipos participantes para ver la tabla.</p>;
@@ -80,6 +99,27 @@ export function StandingsTable({
         <Button size="sm" variant="secondary" onClick={() => setDialog(true)}>
           <Plus className="mr-2 h-3.5 w-3.5" /> Ajuste de puntos
         </Button>
+      ) : null}
+
+      {groups.length ? (
+        <div className="flex flex-wrap gap-1.5">
+          {groups.map((g) => (
+            <Button
+              key={g}
+              size="sm"
+              variant={g === group ? "secondary" : "ghost"}
+              onClick={() => setGroup(g)}
+            >
+              Grupo {g}
+            </Button>
+          ))}
+        </div>
+      ) : null}
+
+      {groups.length && !activeTeams.length ? (
+        <p className="text-sm text-muted-foreground">
+          Aún no hay equipos asignados al grupo {group}.
+        </p>
       ) : null}
 
       <div className="-mx-1 overflow-x-auto px-1">
@@ -109,16 +149,19 @@ export function StandingsTable({
               >
                 <td className="rounded-l-lg px-2 py-2 text-muted-foreground">{r.position}</td>
                 <td className="px-2 py-2">
-                  <span className="font-medium">{r.name}</span>
-                  {r.adjustment !== 0 ? (
-                    <span
-                      className="ml-2 inline-flex items-center gap-1 text-xs text-amber-400"
-                      title={r.adjustment_reasons.join(" · ") || "Ajuste manual"}
-                    >
-                      <Info className="h-3 w-3" />
-                      {r.adjustment > 0 ? `+${r.adjustment}` : r.adjustment}
-                    </span>
-                  ) : null}
+                  <span className="flex items-center gap-2">
+                    <TeamCrest path={r.crest_path} name={r.name} className="h-5 w-5" />
+                    <span className="font-medium">{r.name}</span>
+                    {r.adjustment !== 0 ? (
+                      <span
+                        className="inline-flex items-center gap-1 text-xs text-amber-400"
+                        title={r.adjustment_reasons.join(" · ") || "Ajuste manual"}
+                      >
+                        <Info className="h-3 w-3" />
+                        {r.adjustment > 0 ? `+${r.adjustment}` : r.adjustment}
+                      </span>
+                    ) : null}
+                  </span>
                 </td>
                 <td className="px-2 py-2 text-right">{r.played}</td>
                 <td className="px-2 py-2 text-right">{r.won}</td>
@@ -133,6 +176,7 @@ export function StandingsTable({
           </tbody>
         </table>
       </div>
+
 
       {(adjQ.data ?? []).length ? (
         <div className="space-y-1.5">
