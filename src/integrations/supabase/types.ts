@@ -1459,6 +1459,219 @@ export type Database = {
           },
         ]
       }
+      media_comments: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          post_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          post_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "media_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      media_likes: {
+        Row: {
+          created_at: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "media_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      media_post_files: {
+        Row: {
+          created_at: string
+          file_name: string
+          id: string
+          kind: Database["public"]["Enums"]["media_file_kind"]
+          mime_type: string | null
+          post_id: string
+          sort_order: number
+          storage_path: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          id?: string
+          kind?: Database["public"]["Enums"]["media_file_kind"]
+          mime_type?: string | null
+          post_id: string
+          sort_order?: number
+          storage_path: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["media_file_kind"]
+          mime_type?: string | null
+          post_id?: string
+          sort_order?: number
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_post_files_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "media_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      media_post_teams: {
+        Row: {
+          post_id: string
+          team_id: string
+        }
+        Insert: {
+          post_id: string
+          team_id: string
+        }
+        Update: {
+          post_id?: string
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_post_teams_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "media_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_post_teams_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      media_posts: {
+        Row: {
+          album_id: string
+          audience: Database["public"]["Enums"]["media_audience"]
+          author_id: string | null
+          club_id: string
+          created_at: string
+          description: string | null
+          id: string
+          match_id: string | null
+          published_at: string
+          title: string | null
+          type: Database["public"]["Enums"]["media_post_type"]
+          updated_at: string
+        }
+        Insert: {
+          album_id?: string
+          audience?: Database["public"]["Enums"]["media_audience"]
+          author_id?: string | null
+          club_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          match_id?: string | null
+          published_at?: string
+          title?: string | null
+          type?: Database["public"]["Enums"]["media_post_type"]
+          updated_at?: string
+        }
+        Update: {
+          album_id?: string
+          audience?: Database["public"]["Enums"]["media_audience"]
+          author_id?: string | null
+          club_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          match_id?: string | null
+          published_at?: string
+          title?: string | null
+          type?: Database["public"]["Enums"]["media_post_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_posts_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_posts_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_posts_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       medical_appointments: {
         Row: {
           appointment_type: string
@@ -5108,6 +5321,10 @@ export type Database = {
         Args: { _match_id: string; _user_id: string }
         Returns: boolean
       }
+      can_edit_media_post: {
+        Args: { _post_id: string; _user_id: string }
+        Returns: boolean
+      }
       can_edit_meeting: {
         Args: { _meeting_id: string; _user_id: string }
         Returns: boolean
@@ -5125,6 +5342,10 @@ export type Database = {
         Returns: boolean
       }
       can_edit_team_announcement: {
+        Args: { _team_id: string; _user_id: string }
+        Returns: boolean
+      }
+      can_edit_team_media: {
         Args: { _team_id: string; _user_id: string }
         Returns: boolean
       }
@@ -5164,6 +5385,10 @@ export type Database = {
         Args: { _match_id: string; _user_id: string }
         Returns: boolean
       }
+      can_view_media_post: {
+        Args: { _post_id: string; _user_id: string }
+        Returns: boolean
+      }
       can_view_meeting: {
         Args: { _meeting_id: string; _user_id: string }
         Returns: boolean
@@ -5194,6 +5419,10 @@ export type Database = {
         Returns: boolean
       }
       can_view_team_announcement: {
+        Args: { _team_id: string; _user_id: string }
+        Returns: boolean
+      }
+      can_view_team_media: {
         Args: { _team_id: string; _user_id: string }
         Returns: boolean
       }
@@ -5451,6 +5680,15 @@ export type Database = {
         | "otro"
       injury_severity: "leve" | "moderada" | "grave"
       injury_status: "activa" | "en_recuperacion" | "recuperada"
+      media_audience: "club" | "teams"
+      media_file_kind: "image" | "video"
+      media_post_type:
+        | "entrenamiento"
+        | "partido"
+        | "evento_especial"
+        | "convivencia"
+        | "institucional"
+        | "otro"
       member_status: "activo" | "baja"
       nutrition_food_group:
         | "proteinas"
@@ -5687,6 +5925,16 @@ export const Constants = {
       ],
       injury_severity: ["leve", "moderada", "grave"],
       injury_status: ["activa", "en_recuperacion", "recuperada"],
+      media_audience: ["club", "teams"],
+      media_file_kind: ["image", "video"],
+      media_post_type: [
+        "entrenamiento",
+        "partido",
+        "evento_especial",
+        "convivencia",
+        "institucional",
+        "otro",
+      ],
       member_status: ["activo", "baja"],
       nutrition_food_group: [
         "proteinas",
