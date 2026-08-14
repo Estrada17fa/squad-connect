@@ -297,22 +297,18 @@ function TeamRow({
   canEdit: boolean;
   onEdit: () => void;
 }) {
-  const { data: crest } = useCrestUrl(team.crest_path);
   return (
     <div className="flex items-center gap-3 rounded-xl bg-white/[0.04] px-3 py-2 ring-1 ring-inset ring-white/5">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/5">
-        {crest ? (
-          <img src={crest} alt={`Escudo de ${team.name}`} loading="lazy" className="h-full w-full object-contain" />
-        ) : (
-          <Shield className="h-4 w-4 text-muted-foreground" />
-        )}
-      </div>
+      <TeamCrest path={team.crest_path} name={team.name} className="h-9 w-9" />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{team.name}</p>
-        {team.short_name ? (
-          <p className="truncate text-xs text-muted-foreground">{team.short_name}</p>
-        ) : null}
+        <p className="truncate text-xs text-muted-foreground">
+          {[team.short_name, team.group_label ? `Grupo ${team.group_label}` : null]
+            .filter(Boolean)
+            .join(" · ")}
+        </p>
       </div>
+
       {team.is_our_team ? (
         <StatusBadge variant="info">
           <Star className="mr-1 h-3 w-3" /> Nuestro
