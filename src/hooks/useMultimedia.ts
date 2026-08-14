@@ -29,7 +29,9 @@ export interface MediaMatchInfo {
   matchday: number | null;
   kickoff_at: string | null;
   rival: string | null;
+  rivalCrest: string | null;
 }
+
 
 export interface MediaPost {
   id: string;
