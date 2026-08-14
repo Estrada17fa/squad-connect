@@ -287,3 +287,59 @@ export function useSaveMatchLogistics() {
     },
   });
 }
+
+/**
+ * Partido asociado a un evento del calendario (para el detalle en Agenda).
+ * La RLS de `tournament_matches` decide si el usuario puede verlo.
+ */
+export function useMatchByEvent(eventId: string | null | undefined) {
+  return useQuery({
+    queryKey: ["match-by-event", eventId ?? "none"],
+    enabled: !!eventId,
+    staleTime: 30_000,
+    queryFn: async (): Promise<OurMatch | null> => {
+      const { data: m, error } = await db
+        .from("tournament_matches")
+        .select(
+          "id, club_id, tournament_id, matchday, kickoff_at, venue, location_id, status, home_goals, away_goals, home_team_id, away_team_id, tie_id",
+        )
+        .eq("calendar_event_id", eventId!)
+        .maybeSingle();
+      if (error) throw error;
+      if (!m) return null;
+
+      const [{ data: teams }, { data: tour }] = await Promise.all([
+        db
+          .from("tournament_teams")
+          .select("id, tournament_id, name, short_name, crest_path, is_our_team")
+          .eq("tournament_id", m.tournament_id),
+        db.from("tournaments").select("id, name, team_id").eq("id", m.tournament_id).maybeSingle(),
+      ]);
+      const byId = new Map<string, OurMatchTeam>();
+      for (const t of teams ?? []) byId.set(t.id, t as OurMatchTeam);
+      const home = m.home_team_id ? byId.get(m.home_team_id) ?? null : null;
+      const away = m.away_team_id ? byId.get(m.away_team_id) ?? null : null;
+      const isHome = !!home?.is_our_team;
+      return {
+        id: m.id,
+        club_id: m.club_id,
+        tournament_id: m.tournament_id,
+        tournament_name: (tour as any)?.name ?? "Torneo",
+        tournament_team_id: (tour as any)?.team_id ?? null,
+        matchday: m.matchday,
+        kickoff_at: m.kickoff_at,
+        venue: m.venue,
+        location_id: m.location_id,
+        status: m.status,
+        home_goals: m.home_goals,
+        away_goals: m.away_goals,
+        home,
+        away,
+        ours: isHome ? home : away,
+        rival: isHome ? away : home,
+        isHome,
+        tie_id: m.tie_id ?? null,
+      };
+    },
+  });
+}

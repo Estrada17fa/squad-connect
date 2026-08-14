@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { EVENT_TYPES, type EventType } from "@/lib/eventTypes";
+import { CREATABLE_EVENT_TYPES, EVENT_TYPES, type EventType } from "@/lib/eventTypes";
 import { toLocalInputValue, fromLocalInputValue } from "@/lib/calendar-utils";
 import { saveCalendarEvent } from "@/lib/calendarEvents";
 import { AttendeePicker, type AttendeeMode } from "@/components/calendar/AttendeePicker";
@@ -169,7 +169,7 @@ export function EventFormDialog({ open, onOpenChange, clubId, teams, defaultTeam
       <EntitySheetBody>
         {step === "type" && !isEdit ? (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {EVENT_TYPES.map((t) => (
+            {CREATABLE_EVENT_TYPES.map((t) => (
               <button
                 key={t.key}
                 type="button"

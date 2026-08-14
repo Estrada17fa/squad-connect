@@ -10,6 +10,9 @@ import { useApp } from "@/components/squad/AppLayout";
 import { formatDateTime } from "@/lib/calendar-utils";
 import { useTrips, TRIP_STATUS_LABEL, TRIP_STATUS_VARIANT } from "@/hooks/useTrips";
 import { TripDetailSheet } from "@/components/viajes/TripDetailSheet";
+import { MyTripView } from "@/components/viajes/MyTripView";
+import { DetailSheet } from "@/components/squad/DetailSheet";
+import { useTeamAccess } from "@/hooks/useTeamAccess";
 import { TeamFilter, TeamBadge } from "@/components/squad/TeamFilter";
 
 export const Route = createFileRoute("/_authenticated/agenda-viajes")({
@@ -29,7 +32,8 @@ export const Route = createFileRoute("/_authenticated/agenda-viajes")({
 
 /** Pestaña "Viajes" dentro de Agenda: solo consulta (readOnly). */
 function AgendaViajesPage() {
-  const { profile, isSuperAdmin, accessibleModules, teamOptions } = useApp();
+  const { user, profile, isSuperAdmin, accessibleModules, teamOptions } = useApp();
+  const { canEditTeam } = useTeamAccess("viajes");
   const clubId = profile?.club_id ?? null;
   const canAccess = isSuperAdmin || accessibleModules.includes("viajes");
   const [teamFilter, setTeamFilter] = React.useState<string | null>(null);
@@ -99,7 +103,19 @@ function AgendaViajesPage() {
         </div>
       )}
 
-      <TripDetailSheet open={!!detail} onOpenChange={(v) => !v && setDetailId(null)} trip={detail} readOnly />
+      {/* Staff de viajes ve el viaje completo; el resto ve solo SU itinerario y SU pase. */}
+      {detail && canEditTeam(detail.team_id) ? (
+        <TripDetailSheet open onOpenChange={(v) => !v && setDetailId(null)} trip={detail} readOnly />
+      ) : (
+        <DetailSheet
+          open={!!detail}
+          onOpenChange={(v) => !v && setDetailId(null)}
+          title={detail?.title ?? ""}
+          description="Mi viaje"
+        >
+          {detail ? <MyTripView trip={detail} userId={user.id} /> : null}
+        </DetailSheet>
+      )}
     </div>
   );
 }
