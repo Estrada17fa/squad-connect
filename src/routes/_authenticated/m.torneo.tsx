@@ -58,33 +58,49 @@ function TorneoPage() {
 
   const teamsQ = useTournamentTeams(current?.id ?? null);
   const matchesQ = useTournamentMatches(current?.id ?? null);
+  const tiesQ = useTournamentTies(current?.has_playoffs ? current.id : null);
   const teams = teamsQ.data ?? [];
   const matches = matchesQ.data ?? [];
 
+  const groups = React.useMemo(
+    () => (current?.format === "grupos" ? groupLabels(current.groups_count) : []),
+    [current?.format, current?.groups_count],
+  );
+
   const ourRow = React.useMemo(() => {
     if (!current || !teams.length) return null;
+    const ourGroup = teams.find((t) => t.is_our_team)?.group_label ?? null;
+    const scoped = groups.length
+      ? teams.filter((t) => (t.group_label ?? null) === ourGroup)
+      : teams;
+    const ids = new Set(scoped.map((t) => t.id));
     const rows = buildStandings(
       current,
-      teams.map((t) => ({
+      scoped.map((t) => ({
         id: t.id,
         name: t.name,
         is_our_team: t.is_our_team,
         crest_path: t.crest_path,
       })),
-      matches.map((m) => ({
-        home_team_id: m.home_team_id ?? "",
-        away_team_id: m.away_team_id ?? "",
-        home_goals: m.home_goals,
-        away_goals: m.away_goals,
-        status: m.status,
-        shootout_winner_team_id: m.shootout_winner_team_id,
-      })),
+      matches
+        .filter(
+          (m) => !m.tie_id && ids.has(m.home_team_id ?? "") && ids.has(m.away_team_id ?? ""),
+        )
+        .map((m) => ({
+          home_team_id: m.home_team_id ?? "",
+          away_team_id: m.away_team_id ?? "",
+          home_goals: m.home_goals,
+          away_goals: m.away_goals,
+          status: m.status,
+          shootout_winner_team_id: m.shootout_winner_team_id,
+        })),
       [],
     );
     return rows.find((r) => r.is_our_team) ?? null;
-  }, [current, teams, matches]);
+  }, [current, teams, matches, groups.length]);
 
   const canManage = current ? canEditTeam(current.team_id) : false;
+
 
   return (
     <div className="space-y-6">
