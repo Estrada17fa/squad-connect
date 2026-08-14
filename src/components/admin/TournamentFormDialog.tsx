@@ -501,8 +501,9 @@ export function TournamentFormDialog({
         <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
           Cancelar
         </Button>
-        <Button type="button" onClick={handleSave} disabled={save.isPending}>
-          {save.isPending ? "Guardando…" : isEdit ? "Guardar cambios" : "Crear torneo"}
+        <Button type="button" onClick={handleSave} disabled={busy || save.isPending}>
+          {busy || save.isPending ? "Guardando…" : isEdit ? "Guardar cambios" : "Crear torneo"}
+
         </Button>
       </EntitySheetFooter>
     </EntitySheet>
