@@ -36,6 +36,12 @@ export type ModuleKey =
   | "usuarios"
   | "comunicados"
   | "multimedia"
+  /**
+   * Entrada de navegación de GESTIÓN de multimedia dentro de la página
+   * Coordinación. No es un permiso propio: se resuelve contra `multimedia`
+   * (ver `permissionKeyFor`) y por eso no aparece en las matrices de permisos.
+   */
+  | "multimedia_gestion"
   | "torneo"
   | "tacticas"
   | "salud"
