@@ -1,5 +1,5 @@
 import * as React from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Swords } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { ModuleTabs } from "@/components/squad/ModuleTabs";
@@ -19,6 +19,9 @@ import { MatchOpsCard } from "@/components/partidos/MatchOpsCard";
 import { MatchOpsSheet } from "@/components/partidos/MatchOpsSheet";
 
 export const Route = createFileRoute("/_authenticated/m/partidos")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    open: typeof search.open === "string" ? search.open : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Squad — Partidos" },
@@ -39,7 +42,9 @@ export const Route = createFileRoute("/_authenticated/m/partidos")({
 });
 
 function PartidosPage() {
-  const { profile, user, isSuperAdmin, accessibleModules } = useApp();
+  const { profile, user, teamOptions, isSuperAdmin, accessibleModules } = useApp();
+  const navigate = useNavigate();
+  const { open: openParam } = Route.useSearch();
   const clubId = profile?.club_id ?? null;
   const userId = user?.id ?? "";
   const canAccess = isSuperAdmin || accessibleModules.includes("partidos");
@@ -48,6 +53,15 @@ function PartidosPage() {
   const [view, setView] = React.useState<"proximos" | "jugados">("proximos");
   const [teamId, setTeamId] = React.useState<string | null>(null);
   const [openId, setOpenId] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (openParam) setOpenId(openParam);
+  }, [openParam]);
+
+  const closeSheet = React.useCallback(() => {
+    setOpenId(null);
+    if (openParam) navigate({ to: "/m/partidos", search: () => ({ open: undefined }), replace: true });
+  }, [openParam, navigate]);
 
   const matchesQ = useOurMatches(canAccess ? clubId : null);
   const allMatches = matchesQ.data ?? [];
@@ -129,7 +143,7 @@ function PartidosPage() {
       <ModuleTabs activeKey="partidos" />
       <PageHeader hideTitle title="Partidos" subtitle="Nuestros partidos: convocatoria y logística" />
 
-      <TeamFilter value={teamId} onChange={setTeamId} />
+      <TeamFilter teams={teamOptions} value={teamId} onChange={setTeamId} />
 
       <Tabs value={view} onValueChange={(v) => setView(v as typeof view)}>
         <TabsList>
@@ -146,7 +160,9 @@ function PartidosPage() {
 
       <MatchOpsSheet
         open={!!open}
-        onOpenChange={(v) => !v && setOpenId(null)}
+        onOpenChange={(v) => {
+          if (!v) closeSheet();
+        }}
         match={open}
         callups={open ? callupsByMatch.get(open.id) ?? [] : []}
         logistics={open ? logisticsByMatch.get(open.id) ?? null : null}
