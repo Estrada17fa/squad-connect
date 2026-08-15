@@ -230,6 +230,7 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
           userId={user.id}
           isSuperAdmin={data.isSuperAdmin}
           canOpenModule={(key) => isModuleAccessible(key as ModuleKey)}
+          showSolicitudes={needsSolicitudesShortcut(visiblePages, isModuleAccessible("solicitudes"))}
           onSignOut={signOut}
         />
         <DesktopNav pages={visiblePages} />
