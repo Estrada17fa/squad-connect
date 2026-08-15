@@ -41,7 +41,7 @@ export function EventCard({
         className,
       )}
     >
-      <span className="absolute inset-y-0 left-0 w-1" style={{ backgroundColor: color }} />
+      <AccentBar color={color} label={def.label} />
       <div className="flex items-stretch gap-3 py-3 pl-4 pr-3">
         <div className="flex shrink-0 flex-col items-start justify-center">
           <span className="whitespace-nowrap font-display text-sm font-bold leading-none text-foreground">
