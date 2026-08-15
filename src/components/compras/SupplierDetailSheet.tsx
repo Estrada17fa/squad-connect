@@ -22,6 +22,7 @@ export function SupplierDetailSheet({ open, onOpenChange, supplier, canEdit, onE
       open={open}
       onOpenChange={onOpenChange}
       title={supplier.name}
+      icon={Receipt}
       description="Proveedor"
       size="md"
       headerActions={

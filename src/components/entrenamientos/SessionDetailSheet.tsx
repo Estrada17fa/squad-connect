@@ -1,5 +1,5 @@
 import * as React from "react";
-import { CalendarDays, Pencil } from "lucide-react";
+import { CalendarDays, Dumbbell, Pencil } from "lucide-react";
 import { DetailSection, DetailSheet } from "@/components/squad/DetailSheet";
 import { Button } from "@/components/ui/button";
 import { AttendeeSummary } from "@/components/calendar/AttendeeSummary";
@@ -37,6 +37,8 @@ export function SessionDetailSheet({ open, onOpenChange, session, readOnly, onEd
       onOpenChange={onOpenChange}
       size="xl"
       title={session?.title ?? "Sesión"}
+      icon={Dumbbell}
+      accent="var(--event-entrenamiento)"
       description={session ? formatSessionDate(session.session_date) : ""}
       headerActions={
         canEdit ? (

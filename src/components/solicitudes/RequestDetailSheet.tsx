@@ -295,6 +295,7 @@ export function RequestDetailSheet({
       open={open}
       onOpenChange={onOpenChange}
       title={requestSummary(request)}
+      icon={def.icon}
       description={`${def.label} · Solicitada por ${request.requester?.full_name ?? request.requester?.email ?? "—"}`}
       headerActions={headerActions}
     >

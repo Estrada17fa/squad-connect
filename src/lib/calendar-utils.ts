@@ -100,6 +100,23 @@ export function formatDayLabel(d: Date) {
   });
 }
 
+/** "HOY", "MAÑANA" o "Vie 15 ago" — encabezado de día de la Agenda. */
+export function formatRelativeDayLabel(d: Date) {
+  const today = startOfDay(new Date());
+  const target = startOfDay(d);
+  const diff = Math.round((target.getTime() - today.getTime()) / 86400000);
+  if (diff === 0) return "HOY";
+  if (diff === 1) return "MAÑANA";
+  if (diff === -1) return "AYER";
+  const label = target.toLocaleDateString("es-MX", {
+    timeZone: clubTimeZone,
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
+  return label.replace(/\./g, "");
+}
+
 export function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString("es-MX", {
     timeZone: clubTimeZone,

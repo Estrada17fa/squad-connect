@@ -9,6 +9,7 @@ import {
   FileSpreadsheet,
   FileText,
   Pencil,
+  Receipt,
   Trash2,
 } from "lucide-react";
 import {
@@ -139,6 +140,7 @@ export function ExpenseDetailSheet({ open, onOpenChange, expense, canEdit, onEdi
         open={open}
         onOpenChange={onOpenChange}
         title={expense.concept}
+        icon={Receipt}
         description={`${formatMoney(expense.amount, expense.currency)} · ${cat.label}`}
         headerActions={
           canEdit ? (

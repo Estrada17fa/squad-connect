@@ -63,6 +63,7 @@ export function EquivalenceSheet({
       open={open}
       onOpenChange={onOpenChange}
       title={group ? `1 porción de ${FOOD_GROUP_LABEL[group].toLowerCase()}` : "Guía de equivalencias"}
+      icon={Scale}
       description="Referencia del club: a qué equivale una porción de cada grupo."
       size="md"
     >

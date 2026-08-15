@@ -4,18 +4,18 @@ import { Plus } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { EmptyState } from "@/components/squad/EmptyState";
 import { AgendaSkeleton } from "@/components/squad/LoadingState";
-import { StandardCard } from "@/components/squad/StandardCard";
 import { ModuleTabs } from "@/components/squad/ModuleTabs";
 import { Button } from "@/components/ui/button";
 import { useApp } from "@/components/squad/AppLayout";
 import { useCalendarEvents, type CalendarEventRow } from "@/hooks/useCalendarEvents";
 import { EVENT_TYPES, EVENT_TYPE_MAP, type EventType } from "@/lib/eventTypes";
-import { formatDayLabel, formatTime, startOfDay } from "@/lib/calendar-utils";
+import { formatDayLabel, formatRelativeDayLabel, startOfDay } from "@/lib/calendar-utils";
 import { useEditableTeams } from "@/hooks/useEditableTeams";
 import { useTeamAccess } from "@/hooks/useTeamAccess";
 import { EventFormDialog } from "@/components/calendar/EventFormDialog";
 import { EventDetailSheet } from "@/components/calendar/EventDetailSheet";
-import { TeamFilter, TeamBadge } from "@/components/squad/TeamFilter";
+import { TeamFilter } from "@/components/squad/TeamFilter";
+import { EventCard } from "@/components/calendar/EventCard";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/m/agenda")({
@@ -151,35 +151,43 @@ function AgendaModulePage() {
             }
           />
         ) : (
-          days.map(([dayIso, dayEvents]) => (
-            <section key={dayIso} className="space-y-3">
-              <h2 className="font-display text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                {formatDayLabel(new Date(dayIso))}
-              </h2>
-              {dayEvents.map((e, i) => {
-                const def = EVENT_TYPE_MAP[e.event_type];
-                return (
-                  <div key={e.id} className="animate-card-in" style={{ animationDelay: `${i * 30}ms` }}>
-                    <StandardCard
-                      interactive
-                      onClick={() => setDetailEvent(e)}
-                      icon={def.icon}
-                      title={e.title}
-                      subtitle={`${formatTime(e.starts_at)}${e.location ? ` · ${e.location}` : ""}`}
-                    >
-                      <TeamBadge name={e.team_id ? teamNames[e.team_id] : "Todo el club"} className="mr-2" />
-                      <span
-                        className="inline-block rounded-full px-2 py-0.5 text-xs"
-                        style={{ backgroundColor: `${def.cssVar}20`, color: def.cssVar }}
-                      >
-                        {def.label}
-                      </span>
-                    </StandardCard>
-                  </div>
-                );
-              })}
-            </section>
-          ))
+          days.map(([dayIso, dayEvents]) => {
+            const day = new Date(dayIso);
+            const rel = formatRelativeDayLabel(day);
+            const highlight = rel === "HOY" || rel === "MAÑANA";
+            return (
+              <section key={dayIso} className="space-y-2.5">
+                <div className="flex items-center gap-3">
+                  <h2
+                    className={cn(
+                      "font-display text-xs font-bold uppercase tracking-[0.14em]",
+                      highlight ? "text-primary" : "text-muted-foreground",
+                    )}
+                  >
+                    {rel}
+                  </h2>
+                  {highlight ? (
+                    <span className="truncate text-[11px] capitalize text-muted-foreground/70">
+                      {formatDayLabel(day)}
+                    </span>
+                  ) : null}
+                  <span className="h-px flex-1 bg-white/5" />
+                  <span className="shrink-0 rounded-full bg-white/[0.06] px-2 py-0.5 text-[11px] text-muted-foreground">
+                    {dayEvents.length}
+                  </span>
+                </div>
+                {dayEvents.map((e, i) => (
+                  <EventCard
+                    key={e.id}
+                    event={e}
+                    index={i}
+                    teamLabel={e.team_id ? teamNames[e.team_id] : "Todo el club"}
+                    onClick={() => setDetailEvent(e)}
+                  />
+                ))}
+              </section>
+            );
+          })
         )}
       </div>
 
