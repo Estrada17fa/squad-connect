@@ -1,5 +1,5 @@
 import * as React from "react";
-import { CalendarClock, User, Users } from "lucide-react";
+import { CalendarClock, Megaphone, User, Users } from "lucide-react";
 import {
   DetailField,
   DetailSection,

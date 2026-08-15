@@ -30,7 +30,7 @@ export function AssessmentDetailSheet({ open, onOpenChange, assessment, canEdit,
       open={open}
       onOpenChange={onOpenChange}
       title={assessment.player?.full_name ?? "Jugador"}
-      icon={LineChart}
+      icon={TrendingUp}
       description={formatDay(assessment.assessment_date)}
       canEdit={canEdit && !!clubId}
       renderEdit={
