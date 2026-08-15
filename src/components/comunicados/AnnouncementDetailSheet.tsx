@@ -1,7 +1,8 @@
 import * as React from "react";
-import { CalendarClock, Megaphone, User, Users } from "lucide-react";
+import { CalendarClock, FileText, Info, Megaphone, Paperclip, User, Users } from "lucide-react";
 import {
   DetailField,
+  DetailGrid,
   DetailSection,
   DetailSheet,
   DetailValue,
@@ -14,10 +15,12 @@ import {
   useMarkRead,
   type AnnouncementRow,
 } from "@/hooks/useAnnouncements";
+import { ANNOUNCEMENT_ACCENT } from "@/lib/accents";
 import { DeleteAction } from "@/components/squad/DeleteAction";
 import { AnnouncementChip, AttachmentPreview, PriorityBadge } from "./ComunicadosPieces";
 import { AnnouncementFormDialog } from "./AnnouncementFormDialog";
 import { ReadReceipts } from "./ReadReceipts";
+
 
 interface Props {
   open: boolean;
