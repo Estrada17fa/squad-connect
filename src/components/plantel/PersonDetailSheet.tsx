@@ -138,7 +138,7 @@ export function PersonDetailSheet({
           </DetailSection>
         ) : null}
 
-        <DetailSection title="Perfil">
+        <DetailSection title="Perfil" icon={Briefcase}>
           <DetailGrid>
             <DetailField label="Categoría" icon={Layers}>
               <DetailValue value={member.teamName ?? "Todo el club"} />
@@ -164,7 +164,7 @@ export function PersonDetailSheet({
           </DetailGrid>
         </DetailSection>
 
-        <DetailSection title="Contacto">
+        <DetailSection title="Contacto" icon={Mail}>
           <DetailGrid>
             <DetailField label="Correo" icon={Mail} full>
               <DetailLink value={member.email} type="email" />

@@ -80,7 +80,9 @@ export function EventDetailSheet({ open, onOpenChange, event, canEdit, clubId, u
         open={open}
         onOpenChange={onOpenChange}
         title={event.title}
-        description={def.label}
+        icon={def.icon}
+        accent={def.cssVar}
+        description={`${formatDayLabel(new Date(event.starts_at))} · ${formatTime(event.starts_at)}`}
         canEdit={editable && !!clubId}
         renderEdit={
           clubId
