@@ -54,6 +54,10 @@ export function DetailSheet({
   canEdit,
   size = "lg",
   headerActions,
+  media,
+  icon: Icon,
+  accent,
+  badges,
   children,
   renderEdit,
   footer,
@@ -70,14 +74,38 @@ export function DetailSheet({
   }, [open]);
 
   const showEdit = editing && !!renderEdit && !!canEdit;
+  const showActions = !showEdit && ((canEdit && renderEdit) || !!headerActions);
 
   return (
     <EntitySheet open={open} onOpenChange={onOpenChange} size={size}>
-      <EntitySheetHeader>
-        <EntitySheetTitle>{title}</EntitySheetTitle>
-        {description ? <EntitySheetDescription>{description}</EntitySheetDescription> : null}
-        {!showEdit && (canEdit && renderEdit ? true : !!headerActions) ? (
-          <div className="mt-3 flex flex-wrap gap-2">
+      <EntitySheetHeader className="pb-4">
+        {accent ? (
+          <div
+            className="absolute inset-x-0 top-0 h-1"
+            style={{ background: `linear-gradient(90deg, ${accent}, transparent)` }}
+          />
+        ) : null}
+        <div className="flex items-start gap-3">
+          {media ? (
+            <div className="shrink-0">{media}</div>
+          ) : Icon ? (
+            <div
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl"
+              style={{
+                backgroundColor: accent ? `color-mix(in oklab, ${accent} 18%, transparent)` : undefined,
+              }}
+            >
+              <Icon className="h-6 w-6" style={{ color: accent }} />
+            </div>
+          ) : null}
+          <div className="min-w-0 flex-1">
+            <EntitySheetTitle className="text-xl leading-tight">{title}</EntitySheetTitle>
+            {description ? <EntitySheetDescription>{description}</EntitySheetDescription> : null}
+            {badges ? <div className="mt-2 flex flex-wrap items-center gap-1.5">{badges}</div> : null}
+          </div>
+        </div>
+        {showActions ? (
+          <div className="mt-3 flex flex-wrap justify-end gap-2">
             {canEdit && renderEdit ? (
               <Button size="sm" variant="secondary" onClick={() => setEditing(true)}>
                 <Pencil className="mr-2 h-3.5 w-3.5" /> {editLabel}
@@ -87,6 +115,7 @@ export function DetailSheet({
           </div>
         ) : null}
       </EntitySheetHeader>
+
 
       {showEdit ? (
         <>{renderEdit!({ done: () => setEditing(false), cancel: () => setEditing(false) })}</>
