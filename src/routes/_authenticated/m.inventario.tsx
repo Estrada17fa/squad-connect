@@ -431,6 +431,12 @@ function LoanCard({
       title={`${loan.item?.name ?? "Artículo"} ×${loan.quantity}`}
       subtitle={loan.item?.category ?? SIN_CATEGORIA}
       status={status}
+      accent={loanAccent({
+        returned: !!loan.returned_at,
+        overdue,
+        partial: loan.returned_quantity > 0,
+      })}
+      accentLabel={status.label}
       className={cn(overdue && "border-destructive/50")}
       action={
         thumb ? (
