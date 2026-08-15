@@ -1,6 +1,6 @@
 import * as React from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Swords } from "lucide-react";
+import { Volleyball } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { ModuleTabs } from "@/components/squad/ModuleTabs";
 import { EmptyState } from "@/components/squad/EmptyState";
@@ -115,14 +115,14 @@ function PartidosPage() {
       <div className="space-y-4">
         <ModuleTabs activeKey="partidos" />
         <PageHeader hideTitle title="Partidos" subtitle="Convocatoria y logística" />
-        <EmptyState icon={Swords} title="Sin acceso" message="Tu rol actual no tiene permisos para este módulo." />
+        <EmptyState icon={Volleyball} title="Sin acceso" message="Tu rol actual no tiene permisos para este módulo." />
       </div>
     );
   }
 
   function renderList(list: OurMatch[], emptyMsg: string, highlightFirst = false) {
     if (loading) return <CardGridSkeleton />;
-    if (!list.length) return <EmptyState icon={Swords} title="Sin partidos" message={emptyMsg} />;
+    if (!list.length) return <EmptyState icon={Volleyball} title="Sin partidos" message={emptyMsg} />;
     return (
       <div className="space-y-3">
         {list.map((m, i) => (
