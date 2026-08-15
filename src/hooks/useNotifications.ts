@@ -54,7 +54,9 @@ export function useNotifications(userId: string | null | undefined) {
   }, [userId, qc]);
 
   const items = query.data ?? [];
-  const unreadCount = items.filter((n) => !n.read_at).length;
+  const unread = React.useMemo(() => items.filter((n) => !n.read_at), [items]);
+  const read = React.useMemo(() => items.filter((n) => !!n.read_at), [items]);
+  const unreadCount = unread.length;
 
   const markRead = React.useCallback(
     async (id: string) => {
