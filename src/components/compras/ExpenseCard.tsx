@@ -31,6 +31,8 @@ export function ExpenseCard({
       icon={cat.icon}
       title={expense.concept}
       subtitle={[supplier, cat.label].filter(Boolean).join(" · ")}
+      accent={FISCAL_ACCENT[fiscal]}
+      accentLabel={FISCAL_LABEL[fiscal]}
       onClick={() => onOpen(expense)}
     >
       <div className="space-y-2">
