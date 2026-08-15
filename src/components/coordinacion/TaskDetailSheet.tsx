@@ -1,17 +1,27 @@
 import * as React from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Trash2, Pencil, AlertTriangle, CalendarClock, Layers, ListChecks } from "lucide-react";
-import { DetailSheet, DetailField, DetailGrid, DetailSection, DetailValue } from "@/components/squad/DetailSheet";
+import { Trash2, Pencil, AlertTriangle, CalendarClock, Info, Layers, ListChecks, Users } from "lucide-react";
+import {
+  DetailSheet,
+  DetailBadge,
+  DetailField,
+  DetailGrid,
+  DetailPeopleList,
+  DetailSection,
+  DetailValue,
+  DetailEmptyBlock,
+} from "@/components/squad/DetailSheet";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/squad/ConfirmDialog";
-import { AvatarStack } from "./AvatarStack";
 import { TaskChecklist } from "./TaskChecklist";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDateTime } from "@/lib/calendar-utils";
 import type { TaskRow, TaskStatus } from "@/hooks/useCoordinacion";
 import { PRIORITY_DOT, PRIORITY_LABEL, STATUS_LABEL } from "@/lib/coordinacion";
+import { TASK_PRIORITY_ACCENT } from "@/lib/accents";
 import { cn } from "@/lib/utils";
+
 
 const STATUSES: TaskStatus[] = ["pendiente", "en_progreso", "en_pausa", "completada"];
 
