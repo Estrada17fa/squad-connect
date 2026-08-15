@@ -4,6 +4,8 @@ import { TeamCrest } from "@/components/torneo/TeamCrest";
 import { MATCH_STATUS_LABEL } from "@/lib/torneo";
 import type { OurMatch } from "@/hooks/useMatchOps";
 import { cn } from "@/lib/utils";
+import { AccentBar } from "@/components/squad/StandardCard";
+import { matchAccent } from "@/lib/accents";
 
 export function formatMatchWhen(iso: string | null) {
   if (!iso) return null;
