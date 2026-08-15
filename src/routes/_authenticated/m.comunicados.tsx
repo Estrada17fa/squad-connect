@@ -14,8 +14,11 @@ import {
   formatAnnouncementDate,
   sortAnnouncements,
   useAnnouncements,
+  PRIORITY_LABEL,
   type AnnouncementRow,
 } from "@/hooks/useAnnouncements";
+import { AccentBar } from "@/components/squad/StandardCard";
+import { ANNOUNCEMENT_ACCENT } from "@/lib/accents";
 import {
   AnnouncementChip,
   PriorityBadge,
