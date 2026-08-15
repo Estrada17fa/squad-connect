@@ -80,5 +80,5 @@ export function useNotifications(userId: string | null | undefined) {
     qc.invalidateQueries({ queryKey: KEY(userId) });
   }, [qc, userId]);
 
-  return { ...query, items, unreadCount, markRead, markAllRead };
+  return { ...query, items, unread, read, unreadCount, markRead, markAllRead };
 }
