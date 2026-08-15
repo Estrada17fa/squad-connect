@@ -31,7 +31,7 @@ interface DetailSheetProps {
   /** Foto/avatar/escudo a buen tamaño en la cabecera. */
   media?: React.ReactNode;
   /** Icono de tipo (se usa si no hay `media`). */
-  icon?: React.ComponentType<{ className?: string }>;
+  icon?: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
   /** Color de acento (var CSS o hsl) para el icono y la barra superior. */
   accent?: string;
   /** Badges de estado/tipo bajo el título. */
