@@ -8,7 +8,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { AvatarStack } from "./AvatarStack";
-import { PRIORITY_DOT, PRIORITY_LABEL, STATUS_LABEL } from "@/lib/coordinacion";
+import { PRIORITY_LABEL, STATUS_LABEL } from "@/lib/coordinacion";
+import { AccentBar } from "@/components/squad/StandardCard";
+import { TASK_PRIORITY_ACCENT } from "@/lib/accents";
 import { TASK_GROUPS, groupOf, type TaskGroup, type TaskRow, type TaskStatus } from "@/hooks/useCoordinacion";
 import { formatDateTime } from "@/lib/calendar-utils";
 import { cn } from "@/lib/utils";
