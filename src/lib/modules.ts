@@ -17,7 +17,7 @@ import {
   Apple,
   Dumbbell,
   Receipt,
-  Swords,
+  Volleyball,
   Home,
   type LucideIcon,
 } from "lucide-react";
@@ -83,7 +83,7 @@ export const MODULES: ModuleDef[] = [
   { key: "viajes", label: "Viajes", icon: Plane, description: "Logística de traslados y hospedajes", scope: "mixed" , playerView: "mine" },
   { key: "inventario", label: "Inventario", icon: Package, description: "Material deportivo y equipamiento", scope: "mixed" , playerView: "mine" },
   { key: "coordinacion_interna", label: "Coordinación", icon: MessagesSquare, description: "Comunicación interna del staff", scope: "club" , playerView: "mine" },
-  { key: "partidos", label: "Partidos", icon: Swords, description: "Convocatoria y logística de nuestros partidos", scope: "team" , playerView: "mine" },
+  { key: "partidos", label: "Partidos", icon: Volleyball, description: "Convocatoria y logística de nuestros partidos", scope: "team" , playerView: "mine" },
   { key: "solicitudes", label: "Solicitudes", icon: ClipboardList, description: "Aprobaciones y peticiones", scope: "club" , playerView: "mine" },
   { key: "compras_facturas", label: "Compras y facturas", icon: Receipt, description: "Compras, pagos a proveedores y reembolsos", scope: "club" , playerView: "mine" },
   { key: "documentos", label: "Documentos", icon: FileText, description: "Contratos y archivos del club", scope: "club" , playerView: "mine" },

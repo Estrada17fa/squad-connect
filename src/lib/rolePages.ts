@@ -28,14 +28,14 @@ const ROLE_PAGES: Record<BaseRole, Record<PageKey, ModuleKey[]>> = {
     home: [],
     agenda: ["agenda", "mes"],
     club: ["plantel", "salud", "desarrollo", "entrenamientos", "nutricion", "tacticas", "torneo", "comunicados", "multimedia"],
-    coordinacion: ["coordinacion_interna", "partidos", "solicitudes", "compras_facturas", "inventario", "viajes", "multimedia_gestion"],
+    coordinacion: ["coordinacion_interna", "solicitudes", "inventario", "compras_facturas", "partidos", "viajes", "multimedia_gestion"],
     admin: ["usuarios", "documentos"],
   },
   tecnico: {
     home: [],
     agenda: ["agenda", "mes"],
     club: ["plantel", "desarrollo", "entrenamientos", "nutricion", "tacticas", "torneo", "comunicados", "multimedia"],
-    coordinacion: ["coordinacion_interna", "partidos", "solicitudes", "viajes", "multimedia_gestion"],
+    coordinacion: ["coordinacion_interna", "solicitudes", "partidos", "viajes", "multimedia_gestion"],
     admin: [],
   },
   medico: {
@@ -49,7 +49,7 @@ const ROLE_PAGES: Record<BaseRole, Record<PageKey, ModuleKey[]>> = {
     home: [],
     agenda: ["agenda", "mes"],
     club: ["plantel", "entrenamientos", "comunicados", "multimedia"],
-    coordinacion: ["coordinacion_interna", "partidos", "solicitudes", "inventario", "viajes", "multimedia_gestion"],
+    coordinacion: ["coordinacion_interna", "solicitudes", "inventario", "partidos", "viajes", "multimedia_gestion"],
     admin: [],
   },
   jugador: {
@@ -83,6 +83,29 @@ const DEFAULT_PAGE_FOR_MODULE: Record<ModuleKey, PageKey> = {
   usuarios: "admin",
   documentos: "admin",
 };
+
+/**
+ * Orden fijo de los módulos dentro de la página Coordinación. Se aplica tanto
+ * a la navegación como a la matriz de permisos para que ambas coincidan.
+ */
+const COORDINACION_ORDER: ModuleKey[] = [
+  "coordinacion_interna",
+  "solicitudes",
+  "inventario",
+  "compras_facturas",
+  "partidos",
+  "viajes",
+  "multimedia_gestion",
+  "multimedia",
+];
+
+function sortCoordinacion(keys: ModuleKey[]): ModuleKey[] {
+  const idx = (k: ModuleKey) => {
+    const i = COORDINACION_ORDER.indexOf(k);
+    return i === -1 ? COORDINACION_ORDER.length : i;
+  };
+  return [...keys].sort((a, b) => idx(a) - idx(b));
+}
 
 export interface ResolvedPage {
   page: PageDef;
@@ -136,6 +159,8 @@ export function resolvePagesForUser(
       perPage[dest].push(mk);
     }
   }
+
+  perPage.coordinacion = sortCoordinacion(perPage.coordinacion);
 
   // 3) Construye la lista final SOLO con páginas que tienen módulos visibles.
   //    Home siempre presente. Cero display:none: si no está en el array, no se renderiza.
@@ -222,6 +247,8 @@ export function groupModulesByPage(
     perPage[dest].push(mk);
     placed.add(mk);
   }
+
+  perPage.coordinacion = sortCoordinacion(perPage.coordinacion);
 
   const out: Array<{ page: PageDef; modules: ModuleKey[] }> = [];
   for (const p of PAGES) {

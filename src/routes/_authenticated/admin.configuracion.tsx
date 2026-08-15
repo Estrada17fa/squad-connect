@@ -7,7 +7,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LocationsTab } from "@/components/admin/LocationsTab";
 import { CategoriesTab } from "@/components/admin/CategoriesTab";
 import { ClubIdentityTab } from "@/components/admin/ClubIdentityTab";
-import { ClubLeagueTab } from "@/components/admin/ClubLeagueTab";
 import { ClubPreferencesTab } from "@/components/admin/ClubPreferencesTab";
 import { useApp } from "@/components/squad/AppLayout";
 
@@ -17,7 +16,7 @@ export const Route = createFileRoute("/_authenticated/admin/configuracion")({
       { title: "Squad — Configuración del club" },
       {
         name: "description",
-        content: "Ajustes del club: identidad, ubicaciones, categorías, liga y preferencias.",
+        content: "Ajustes del club: identidad, ubicaciones, categorías y preferencias.",
       },
     ],
   }),
@@ -55,7 +54,6 @@ function ClubSettingsPage() {
             <TabsTrigger value="identidad" className="shrink-0">Identidad</TabsTrigger>
             <TabsTrigger value="ubicaciones" className="shrink-0">Ubicaciones</TabsTrigger>
             <TabsTrigger value="categorias" className="shrink-0">Categorías</TabsTrigger>
-            <TabsTrigger value="liga" className="shrink-0">Torneo / Liga</TabsTrigger>
             <TabsTrigger value="preferencias" className="shrink-0">Preferencias</TabsTrigger>
           </TabsList>
 
@@ -68,9 +66,6 @@ function ClubSettingsPage() {
           </TabsContent>
           <TabsContent value="categorias">
             <CategoriesTab clubId={clubId} canEdit={canEdit} />
-          </TabsContent>
-          <TabsContent value="liga">
-            <ClubLeagueTab clubId={clubId} canEdit={canEdit} />
           </TabsContent>
           <TabsContent value="preferencias">
             <ClubPreferencesTab clubId={clubId} canEdit={canEdit} />
