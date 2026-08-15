@@ -37,6 +37,8 @@ export function SessionDetailSheet({ open, onOpenChange, session, readOnly, onEd
       onOpenChange={onOpenChange}
       size="xl"
       title={session?.title ?? "Sesión"}
+      icon={Dumbbell}
+      accent="var(--event-entrenamiento)"
       description={session ? formatSessionDate(session.session_date) : ""}
       headerActions={
         canEdit ? (

@@ -100,7 +100,9 @@ export function MeetingDetailSheet({ open, onOpenChange, meeting, userId, clubId
         open={open}
         onOpenChange={onOpenChange}
         title={meeting.title}
-        description={
+        icon={Users}
+        accent="var(--event-junta)"
+        badges={
           <StatusBadge variant={M_STATUS_VARIANT[meeting.status]}>{MEETING_STATUS_LABEL[meeting.status]}</StatusBadge>
         }
         headerActions={

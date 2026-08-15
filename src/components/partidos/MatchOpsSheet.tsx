@@ -69,10 +69,12 @@ export function MatchOpsSheet({
       open={open}
       onOpenChange={onOpenChange}
       title={`vs ${match.rival?.name ?? "Rival por definir"}`}
+      icon={Trophy}
+      accent="var(--event-partido)"
       description={`${match.tournament_name}${match.matchday != null ? ` · Jornada ${match.matchday}` : ""}`}
       canEdit={canEdit && !!clubId}
       editLabel="Gestionar"
-      headerActions={
+      badges={
         <StatusBadge
           variant={match.status === "jugado" ? "approved" : match.status === "suspendido" ? "rejected" : "info"}
         >

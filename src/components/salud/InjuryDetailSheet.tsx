@@ -94,6 +94,8 @@ export function InjuryDetailSheet({ open, onOpenChange, clubId, userId, injury, 
       onOpenChange={onOpenChange}
       size="lg"
       title={`${injury.injury_type} · ${injury.body_part}`}
+      icon={HeartPulse}
+      accent="var(--event-medico)"
       description={`${injury.player?.full_name ?? "Jugador"}${injury.team?.name ? ` · ${injury.team.name}` : ""}`}
       headerActions={
         canEdit ? (

@@ -68,6 +68,7 @@ export function TaskDetailSheet({ open, onOpenChange, task, userId, clubId, canE
         open={open}
         onOpenChange={onOpenChange}
         title={task.title}
+        icon={ListChecks}
         description={task.team?.name ?? "Todo el club"}
         headerActions={
           canEdit ? (
