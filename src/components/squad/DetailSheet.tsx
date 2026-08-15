@@ -28,6 +28,14 @@ interface DetailSheetProps {
   size?: "md" | "lg" | "xl";
   /** Acciones no destructivas/estado visibles en modo lectura (junto a "Editar"). */
   headerActions?: React.ReactNode;
+  /** Foto/avatar/escudo a buen tamaño en la cabecera. */
+  media?: React.ReactNode;
+  /** Icono de tipo (se usa si no hay `media`). */
+  icon?: React.ComponentType<{ className?: string }>;
+  /** Color de acento (var CSS o hsl) para el icono y la barra superior. */
+  accent?: string;
+  /** Badges de estado/tipo bajo el título. */
+  badges?: React.ReactNode;
   /** Ficha de información (modo lectura). */
   children: React.ReactNode;
   /** Formulario del modo edición. */
@@ -36,6 +44,7 @@ interface DetailSheetProps {
   footer?: React.ReactNode;
   editLabel?: string;
 }
+
 
 export function DetailSheet({
   open,
