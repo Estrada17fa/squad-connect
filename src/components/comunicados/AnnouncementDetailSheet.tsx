@@ -64,7 +64,9 @@ export function AnnouncementDetailSheet({
       onOpenChange={onOpenChange}
       title={announcement.title}
       icon={Megaphone}
+      accent={ANNOUNCEMENT_ACCENT[announcement.priority]}
       description={formatAnnouncementDate(announcement.published_at)}
+
       canEdit={canEdit && !!clubId}
       badges={<PriorityBadge priority={announcement.priority} />}
       renderEdit={
