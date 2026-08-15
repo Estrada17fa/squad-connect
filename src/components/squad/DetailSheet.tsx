@@ -141,22 +141,34 @@ export function DetailSheet({
 
 export function DetailSection({
   title,
+  icon: Icon,
+  action,
   className,
   children,
 }: {
   title?: React.ReactNode;
+  icon?: React.ComponentType<{ className?: string }>;
+  /** Acción opcional alineada a la derecha del encabezado. */
+  action?: React.ReactNode;
   className?: string;
   children: React.ReactNode;
 }) {
   return (
-    <section className={cn("space-y-3", className)}>
+    <section className={cn("space-y-3 border-t border-white/5 pt-4 first:border-0 first:pt-0", className)}>
       {title ? (
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</h3>
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="flex min-w-0 items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+            {Icon ? <Icon className="h-3.5 w-3.5 shrink-0 text-primary" /> : null}
+            <span className="truncate">{title}</span>
+          </h3>
+          {action}
+        </div>
       ) : null}
       {children}
     </section>
   );
 }
+
 
 export function DetailField({
   label,
