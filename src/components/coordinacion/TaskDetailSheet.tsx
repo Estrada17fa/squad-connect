@@ -79,7 +79,18 @@ export function TaskDetailSheet({ open, onOpenChange, task, userId, clubId, canE
         onOpenChange={onOpenChange}
         title={task.title}
         icon={ListChecks}
+        accent={TASK_PRIORITY_ACCENT[task.priority]}
         description={task.team?.name ?? "Todo el club"}
+        badges={
+          <>
+            <DetailBadge color={TASK_PRIORITY_ACCENT[task.priority]}>
+              {PRIORITY_LABEL[task.priority]}
+            </DetailBadge>
+            <DetailBadge>{STATUS_LABEL[task.status]}</DetailBadge>
+            {overdue ? <DetailBadge icon={AlertTriangle}>Vencida</DetailBadge> : null}
+          </>
+        }
+
         headerActions={
           canEdit ? (
             <>
