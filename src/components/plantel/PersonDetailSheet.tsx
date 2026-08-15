@@ -64,6 +64,26 @@ export function PersonDetailSheet({
       onOpenChange={onOpenChange}
       title={name}
       description={isPlayer ? member.position ?? "Sin posición" : member.jobTitle ?? member.roleName ?? undefined}
+      media={
+        <div className="relative">
+          <Avatar className="h-20 w-20 ring-1 ring-white/10">
+            {member.avatarUrl ? <AvatarImage src={member.avatarUrl} alt={name} /> : null}
+            <AvatarFallback className="font-display text-lg font-semibold">{initials(name)}</AvatarFallback>
+          </Avatar>
+          {isPlayer && member.jerseyNumber != null ? (
+            <span className="absolute -bottom-1.5 -right-1.5 flex h-8 min-w-8 items-center justify-center rounded-full bg-primary px-1.5 font-display text-sm font-extrabold text-primary-foreground shadow-lg">
+              {member.jerseyNumber}
+            </span>
+          ) : null}
+        </div>
+      }
+      badges={
+        <>
+          {member.roleName ? <StatusBadge variant="info">{member.roleName}</StatusBadge> : null}
+          {isPlayer && meta ? <StatusBadge variant={meta.variant}>{meta.label}</StatusBadge> : null}
+          {member.teamName ? <StatusBadge variant="pending">{member.teamName}</StatusBadge> : null}
+        </>
+      }
       headerActions={
         <>
           {isPlayer && member.playerId ? (
@@ -87,32 +107,8 @@ export function PersonDetailSheet({
 
     >
       <div className="space-y-6">
-        <div className="flex items-start gap-4">
-          <div className="relative shrink-0">
-            <Avatar className="h-20 w-20">
-              {member.avatarUrl ? <AvatarImage src={member.avatarUrl} alt={name} /> : null}
-              <AvatarFallback className="text-lg font-semibold">{initials(name)}</AvatarFallback>
-            </Avatar>
-            {isPlayer && member.jerseyNumber != null ? (
-              <span className="absolute -bottom-1 -right-1 rounded-full bg-primary px-2 py-0.5 font-display text-xs font-bold text-primary-foreground">
-                {member.jerseyNumber}
-              </span>
-            ) : null}
-          </div>
-          <div className="min-w-0 flex-1 space-y-2">
-            <p className="break-words font-display text-lg font-semibold leading-tight [overflow-wrap:anywhere]">
-              {name}
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {member.roleName ? <StatusBadge variant="info">{member.roleName}</StatusBadge> : null}
-              {isPlayer && meta ? <StatusBadge variant={meta.variant}>{meta.label}</StatusBadge> : null}
-              {member.teamName ? <StatusBadge variant="pending">{member.teamName}</StatusBadge> : null}
-            </div>
-          </div>
-        </div>
-
         {isPlayer ? (
-          <DetailSection title="Datos deportivos">
+          <DetailSection title="Datos deportivos" icon={Shirt}>
             <DetailGrid>
               <DetailField label="Dorsal" icon={Shirt}>
                 <DetailValue value={member.jerseyNumber} />
