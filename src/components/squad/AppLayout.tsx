@@ -3,7 +3,7 @@ import { useClubPrefs } from "@/hooks/useClubSettings";
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { prefetchModule } from "@/lib/prefetch";
-import { ChevronDown, LogOut, User } from "lucide-react";
+import { ChevronDown, ClipboardList, LogOut, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccess, hasAccess, type TeamOption } from "@/hooks/useAccess";
 import {
@@ -16,7 +16,13 @@ import {
 
 
 import { MODULES, MODULE_MAP, moduleFromPath, permissionKeyFor, type ModuleKey } from "@/lib/modules";
-import { resolvePagesForUser, inferBaseRole, type BaseRole, type ResolvedPage } from "@/lib/rolePages";
+import {
+  resolvePagesForUser,
+  inferBaseRole,
+  needsSolicitudesShortcut,
+  type BaseRole,
+  type ResolvedPage,
+} from "@/lib/rolePages";
 import { LoadingState } from "./LoadingState";
 import { FAB } from "./FAB";
 import { NotificationBell } from "@/components/notificaciones/NotificationBell";
@@ -224,6 +230,7 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
           userId={user.id}
           isSuperAdmin={data.isSuperAdmin}
           canOpenModule={(key) => isModuleAccessible(key as ModuleKey)}
+          showSolicitudes={needsSolicitudesShortcut(visiblePages, isModuleAccessible("solicitudes"))}
           onSignOut={signOut}
         />
         <DesktopNav pages={visiblePages} />
@@ -251,6 +258,7 @@ function Header({
   userId,
   isSuperAdmin,
   canOpenModule,
+  showSolicitudes,
   onSignOut,
 }: {
   clubName: string | null;
@@ -259,6 +267,8 @@ function Header({
   userId: string;
   isSuperAdmin: boolean;
   canOpenModule: (key: string) => boolean;
+  /** Atajo "Mis Solicitudes" para quien no ve la página Coordinación. */
+  showSolicitudes: boolean;
   onSignOut: () => void;
 }) {
   const fallback = initials(userName || "?");
@@ -301,6 +311,14 @@ function Header({
                   Mi perfil
                 </Link>
               </DropdownMenuItem>
+              {showSolicitudes ? (
+                <DropdownMenuItem asChild>
+                  <Link to="/m/$module" params={{ module: "solicitudes" }}>
+                    <ClipboardList className="mr-2 h-4 w-4" />
+                    Mis Solicitudes
+                  </Link>
+                </DropdownMenuItem>
+              ) : null}
               <DropdownMenuItem onSelect={onSignOut}>
                 <LogOut className="mr-2 h-4 w-4" />
                 Cerrar sesión
