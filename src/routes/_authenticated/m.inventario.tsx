@@ -218,8 +218,14 @@ function InventarioPage() {
                     type="button"
                     key={i.id}
                     onClick={() => setDetailItem(i)}
-                    className="glass flex items-center gap-3 p-4 text-left transition-colors hover:bg-white/[0.04]"
+                    className="glass relative flex items-center gap-3 overflow-hidden p-4 pl-5 text-left transition-colors hover:bg-white/[0.04]"
                   >
+                    <AccentBar
+                      color={stockAccent(i.available_quantity, min)}
+                      label={
+                        i.available_quantity <= 0 ? "Agotado" : low ? "Stock bajo" : "Disponible"
+                      }
+                    />
                     {thumb ? (
                       <img src={thumb} alt="" className="h-14 w-14 shrink-0 rounded-xl object-cover" loading="lazy" />
                     ) : (
