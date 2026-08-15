@@ -229,11 +229,25 @@ export function TripDetailSheet({
 
   return (
     <EntitySheet open={open} onOpenChange={onOpenChange} size="xl">
-      <EntitySheetHeader>
-        <EntitySheetTitle>{trip?.title ?? "Viaje"}</EntitySheetTitle>
-        <EntitySheetDescription>
-          {trip?.destination ? `Destino: ${trip.destination}` : "Sin destino especificado"}
-        </EntitySheetDescription>
+      <EntitySheetHeader className="pb-4">
+        <div
+          className="absolute inset-x-0 top-0 h-1"
+          style={{ background: "linear-gradient(90deg, var(--event-viaje), transparent)" }}
+        />
+        <div className="flex items-start gap-3">
+          <div
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl"
+            style={{ backgroundColor: "color-mix(in oklab, var(--event-viaje) 18%, transparent)" }}
+          >
+            <Plane className="h-6 w-6" style={{ color: "var(--event-viaje)" }} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <EntitySheetTitle className="text-xl leading-tight">{trip?.title ?? "Viaje"}</EntitySheetTitle>
+            <EntitySheetDescription>
+              {trip?.destination ? `Destino: ${trip.destination}` : "Sin destino especificado"}
+            </EntitySheetDescription>
+          </div>
+        </div>
         {editable && trip && onEdit ? (
           <div className="mt-3 flex flex-wrap gap-2">
             <Button type="button" size="sm" variant="secondary" onClick={() => onEdit(trip)}>

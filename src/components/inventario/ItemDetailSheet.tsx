@@ -1,5 +1,5 @@
 import * as React from "react";
-import { AlertTriangle, Pencil } from "lucide-react";
+import { AlertTriangle, Package, Pencil } from "lucide-react";
 import { DetailSheet, DetailField, DetailGrid, DetailEmpty } from "@/components/squad/DetailSheet";
 import { Button } from "@/components/ui/button";
 import { categoryIcon, SIN_CATEGORIA } from "@/lib/inventory";
