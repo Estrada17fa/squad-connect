@@ -161,22 +161,25 @@ export function TaskDetailSheet({ open, onOpenChange, task, userId, clubId, canE
           ) : null}
         </DetailGrid>
 
-        <DetailSection title={`Asignados (${task.assignees.length})`}>
-          <AvatarStack people={task.assignees} max={8} size="md" />
-          {task.assignees.length > 0 ? (
-            <ul className="space-y-1 text-sm">
-              {task.assignees.map((a) => (
-                <li key={a.id} className="text-foreground [overflow-wrap:anywhere]">
-                  {a.full_name ?? a.email ?? "—"}
-                </li>
-              ))}
-            </ul>
-          ) : null}
+        <DetailSection title={`Asignados (${task.assignees.length})`} icon={Users}>
+          {task.assignees.length === 0 ? (
+            <DetailEmptyBlock icon={Users}>Sin personas asignadas.</DetailEmptyBlock>
+          ) : (
+            <DetailPeopleList
+              people={task.assignees.map((a) => ({
+                id: a.id,
+                name: a.full_name ?? a.email ?? "Sin nombre",
+                avatarUrl: (a as any).avatar_url ?? null,
+                detail: a.full_name ? a.email : undefined,
+              }))}
+            />
+          )}
         </DetailSection>
 
-        <DetailSection title={<span className="inline-flex items-center gap-1.5"><ListChecks className="h-3.5 w-3.5" /> Subtareas</span>}>
+        <DetailSection title="Subtareas" icon={ListChecks}>
           <TaskChecklist taskId={task.id} canEdit={canChangeStatus} />
         </DetailSection>
+
 
         <DetailGrid className="pt-1 text-xs">
           <DetailField label="Creada">{formatDateTime(task.created_at)}</DetailField>
