@@ -13,6 +13,7 @@ import {
 } from "@/lib/requestTypes";
 import type { RequestRow } from "@/hooks/useRequests";
 import { cn } from "@/lib/utils";
+import { REQUEST_ACCENT } from "@/lib/accents";
 
 export interface QuickActions {
   onApprove: (r: RequestRow) => void;
