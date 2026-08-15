@@ -58,3 +58,20 @@ export const StandardCard = React.forwardRef<HTMLDivElement, StandardCardProps>(
   },
 );
 StandardCard.displayName = "StandardCard";
+
+/**
+ * Barra de color sólida al costado izquierdo de una tarjeta.
+ * Mismo grosor y posición en todos los módulos: es el código visual de la app.
+ * El contenedor debe ser `relative overflow-hidden` y dejar padding a la izquierda.
+ */
+export function AccentBar({ color, label }: { color: string; label?: string }) {
+  return (
+    <span
+      aria-hidden={label ? undefined : true}
+      aria-label={label}
+      title={label}
+      className="pointer-events-none absolute inset-y-0 left-0 w-1"
+      style={{ backgroundColor: color }}
+    />
+  );
+}
