@@ -82,7 +82,8 @@ export function DetailSheet({
         {accent ? (
           <div
             className="absolute inset-x-0 top-0 h-1"
-            style={{ background: `linear-gradient(90deg, ${accent}, transparent)` }}
+            style={{ backgroundColor: accent }}
+
           />
         ) : null}
         <div className="flex items-start gap-3">
