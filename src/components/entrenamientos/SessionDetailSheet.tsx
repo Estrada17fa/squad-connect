@@ -1,5 +1,5 @@
 import * as React from "react";
-import { CalendarDays, Pencil } from "lucide-react";
+import { CalendarDays, Dumbbell, Pencil } from "lucide-react";
 import { DetailSection, DetailSheet } from "@/components/squad/DetailSheet";
 import { Button } from "@/components/ui/button";
 import { AttendeeSummary } from "@/components/calendar/AttendeeSummary";

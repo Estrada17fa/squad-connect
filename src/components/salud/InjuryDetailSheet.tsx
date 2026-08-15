@@ -1,6 +1,6 @@
 import * as React from "react";
 import { toast } from "sonner";
-import { Activity, CalendarClock, CalendarDays, CheckCircle2, Plus, Trash2 } from "lucide-react";
+import { Activity, HeartPulse, CalendarClock, CalendarDays, CheckCircle2, Plus, Trash2 } from "lucide-react";
 import {
   DetailSheet,
   DetailSection,

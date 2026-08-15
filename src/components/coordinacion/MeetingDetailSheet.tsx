@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Trash2, Pencil, Check, X as XIcon, MapPin, CalendarClock, Video, Layers } from "lucide-react";
+import { Trash2, Pencil, Check, X as XIcon, MapPin, CalendarClock, Video, Layers, Users } from "lucide-react";
 import { isMeetingUrl } from "./MeetingFormDialog";
 import { DetailSheet, DetailField, DetailGrid, DetailSection, DetailValue } from "@/components/squad/DetailSheet";
 import { LocationDisplay } from "@/components/calendar/LocationDisplay";
