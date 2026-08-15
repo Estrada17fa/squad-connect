@@ -109,7 +109,7 @@ export function TaskDetailSheet({ open, onOpenChange, task, userId, clubId, canE
           ) : undefined
         }
       >
-        <DetailSection title="Estado">
+        <DetailSection title="Estado" icon={ListChecks}>
           <div className="flex flex-wrap gap-1.5">
             {STATUSES.map((s) => {
               const active = task.status === s;
@@ -138,6 +138,7 @@ export function TaskDetailSheet({ open, onOpenChange, task, userId, clubId, canE
           ) : null}
         </DetailSection>
 
+        <DetailSection title="Detalle" icon={Info}>
         <DetailGrid>
           <DetailField label="Prioridad">
             <span className="inline-flex items-center gap-2">
@@ -171,6 +172,7 @@ export function TaskDetailSheet({ open, onOpenChange, task, userId, clubId, canE
             </DetailField>
           ) : null}
         </DetailGrid>
+        </DetailSection>
 
         <DetailSection title={`Asignados (${task.assignees.length})`} icon={Users}>
           {task.assignees.length === 0 ? (
