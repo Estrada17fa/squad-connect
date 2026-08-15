@@ -232,3 +232,117 @@ export function DetailLink({
     </a>
   );
 }
+
+/* ------------------------------ Mini-tarjetas y vacíos ----------------------------- */
+
+/**
+ * Mini-tarjeta escaneable para elementos repetidos dentro de una ficha
+ * (una lesión, un gasto, un partido, un comentario, un vuelo…).
+ */
+export function DetailItemCard({
+  icon: Icon,
+  accent,
+  title,
+  subtitle,
+  meta,
+  badge,
+  onClick,
+  children,
+  className,
+}: {
+  icon?: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
+  accent?: string;
+  title: React.ReactNode;
+  subtitle?: React.ReactNode;
+  /** Dato a la derecha (hora, monto, cantidad). */
+  meta?: React.ReactNode;
+  badge?: React.ReactNode;
+  onClick?: () => void;
+  children?: React.ReactNode;
+  className?: string;
+}) {
+  const Comp: any = onClick ? "button" : "div";
+  return (
+    <Comp
+      {...(onClick ? { type: "button", onClick } : {})}
+      className={cn(
+        "relative w-full overflow-hidden rounded-xl border border-white/5 bg-white/[0.03] p-3 text-left",
+        onClick && "transition-colors hover:border-white/15 hover:bg-white/[0.06] active:scale-[0.995]",
+        className,
+      )}
+    >
+      {accent ? <span className="absolute inset-y-0 left-0 w-1" style={{ backgroundColor: accent }} /> : null}
+      <div className={cn("flex items-start gap-3", accent && "pl-2")}>
+        {Icon ? (
+          <div
+            className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/[0.06]"
+            style={accent ? { backgroundColor: `color-mix(in oklab, ${accent} 16%, transparent)` } : undefined}
+          >
+            <Icon className="h-4 w-4" style={accent ? { color: accent } : undefined} />
+          </div>
+        ) : null}
+        <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">{title}</span>
+            {meta ? <span className="shrink-0 text-xs text-muted-foreground">{meta}</span> : null}
+          </div>
+          {subtitle ? (
+            <p className="mt-0.5 truncate text-xs text-muted-foreground">{subtitle}</p>
+          ) : null}
+          {badge ? <div className="mt-1.5 flex flex-wrap gap-1.5">{badge}</div> : null}
+          {children ? <div className="mt-2 text-sm text-foreground">{children}</div> : null}
+        </div>
+      </div>
+    </Comp>
+  );
+}
+
+/** Estado vacío suave dentro de una sección de la ficha. */
+export function DetailEmptyBlock({
+  icon: Icon,
+  children,
+}: {
+  icon?: React.ComponentType<{ className?: string }>;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-center gap-2.5 rounded-xl border border-dashed border-white/8 bg-white/[0.02] px-3 py-4 text-sm text-muted-foreground">
+      {Icon ? <Icon className="h-4 w-4 shrink-0 opacity-70" /> : null}
+      <span className="min-w-0">{children}</span>
+    </div>
+  );
+}
+
+/** Badge de color para la cabecera y las mini-tarjetas. */
+export function DetailBadge({
+  color,
+  icon: Icon,
+  children,
+  className,
+}: {
+  color?: string;
+  icon?: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.06] px-2.5 py-1 text-[11px] font-medium text-foreground",
+        className,
+      )}
+      style={
+        color
+          ? {
+              backgroundColor: `color-mix(in oklab, ${color} 16%, transparent)`,
+              borderColor: `color-mix(in oklab, ${color} 40%, transparent)`,
+              color,
+            }
+          : undefined
+      }
+    >
+      {Icon ? <Icon className="h-3 w-3" /> : null}
+      {children}
+    </span>
+  );
+}
