@@ -34,6 +34,7 @@ export function GoalDetailSheet({ open, onOpenChange, goal, canEdit, clubId, use
       open={open}
       onOpenChange={onOpenChange}
       title={goal.title}
+      icon={Target}
       description={goal.player?.full_name ?? "Jugador"}
       canEdit={canEdit && !!clubId}
       headerActions={

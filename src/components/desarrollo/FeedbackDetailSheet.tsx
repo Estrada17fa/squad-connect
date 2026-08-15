@@ -28,6 +28,7 @@ export function FeedbackDetailSheet({ open, onOpenChange, feedback, canEdit, clu
       open={open}
       onOpenChange={onOpenChange}
       title={feedback.player?.full_name ?? "Jugador"}
+      icon={MessageSquare}
       description={feedback.context ?? formatDay(feedback.feedback_date)}
       canEdit={canEdit && !!clubId}
       renderEdit={

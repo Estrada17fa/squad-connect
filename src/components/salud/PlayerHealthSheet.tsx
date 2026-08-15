@@ -436,6 +436,8 @@ export function PlayerHealthSheet({
       onOpenChange={onOpenChange}
       size="lg"
       title={player.fullName ?? "Jugador"}
+      icon={HeartPulse}
+      accent="var(--event-medico)"
       description={`Expediente médico${player.teamName ? ` · ${player.teamName}` : ""}`}
       headerActions={
         canEdit ? (

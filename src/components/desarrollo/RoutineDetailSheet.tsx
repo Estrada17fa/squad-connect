@@ -33,6 +33,7 @@ export function RoutineDetailSheet({ open, onOpenChange, routine, canEdit, clubI
       open={open}
       onOpenChange={onOpenChange}
       title={routine.name}
+      icon={Dumbbell}
       description={routine.category ?? `${(routine.exercises ?? []).length} ejercicio(s)`}
       canEdit={canEdit && !!clubId}
       headerActions={

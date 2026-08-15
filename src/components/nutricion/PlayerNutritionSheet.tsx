@@ -429,6 +429,7 @@ export function PlayerNutritionSheet({
       open={open}
       onOpenChange={onOpenChange}
       title={player.fullName ?? "Jugador"}
+      icon={Apple}
       description={[player.teamName, player.position].filter(Boolean).join(" · ") || undefined}
       size="lg"
     >

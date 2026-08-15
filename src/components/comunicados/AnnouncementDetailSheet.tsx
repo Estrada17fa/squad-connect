@@ -60,9 +60,10 @@ export function AnnouncementDetailSheet({
       open={open}
       onOpenChange={onOpenChange}
       title={announcement.title}
+      icon={Megaphone}
       description={formatAnnouncementDate(announcement.published_at)}
       canEdit={canEdit && !!clubId}
-      headerActions={<PriorityBadge priority={announcement.priority} />}
+      badges={<PriorityBadge priority={announcement.priority} />}
       renderEdit={
         clubId
           ? ({ done }) => (

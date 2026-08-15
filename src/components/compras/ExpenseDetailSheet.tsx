@@ -139,6 +139,7 @@ export function ExpenseDetailSheet({ open, onOpenChange, expense, canEdit, onEdi
         open={open}
         onOpenChange={onOpenChange}
         title={expense.concept}
+        icon={Receipt}
         description={`${formatMoney(expense.amount, expense.currency)} · ${cat.label}`}
         headerActions={
           canEdit ? (
