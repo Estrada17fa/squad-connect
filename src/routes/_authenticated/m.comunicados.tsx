@@ -118,11 +118,12 @@ function ComunicadosPage() {
         type="button"
         onClick={() => setDetail(a)}
         className={cn(
-          "glass w-full p-4 text-left transition-all hover:border-white/15 hover:bg-white/[0.06] active:scale-[0.99]",
+          "glass relative w-full overflow-hidden p-4 pl-5 text-left transition-all hover:border-white/15 hover:bg-white/[0.06] active:scale-[0.99]",
           urgent && "border-status-rejected/40",
           !a.read && "ring-1 ring-inset ring-primary/30",
         )}
       >
+        <AccentBar color={ANNOUNCEMENT_ACCENT[a.priority]} label={PRIORITY_LABEL[a.priority]} />
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <div className="flex items-center gap-2">
