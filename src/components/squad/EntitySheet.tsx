@@ -62,7 +62,7 @@ export function EntitySheetHeader({ className, ...props }: React.HTMLAttributes<
   return (
     <div
       className={cn(
-        "shrink-0 border-b border-white/5 px-5 pt-4 pb-3 pr-12 bg-background/95 backdrop-blur",
+        "relative shrink-0 overflow-hidden border-b border-white/5 px-5 pt-4 pb-3 pr-12 bg-background/95 backdrop-blur",
         className,
       )}
       {...props}
