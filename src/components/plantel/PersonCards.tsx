@@ -43,33 +43,39 @@ export function PlayerCard({
   return (
     <Frame onClick={onClick} delay={index * 20}>
       <div className="relative shrink-0">
-        <Avatar className="h-14 w-14">
+        <Avatar className="h-16 w-16 ring-1 ring-white/10">
           {member.avatarUrl ? <AvatarImage src={member.avatarUrl} alt={name} /> : null}
-          <AvatarFallback>{initials(name)}</AvatarFallback>
+          <AvatarFallback className="font-display text-base">{initials(name)}</AvatarFallback>
         </Avatar>
         {member.jerseyNumber != null ? (
-          <span className="absolute -bottom-1 -right-1 rounded-full bg-primary px-1.5 py-0.5 font-display text-[11px] font-bold leading-none text-primary-foreground">
+          <span className="absolute -bottom-1.5 -right-1.5 flex h-7 min-w-7 items-center justify-center rounded-full bg-primary px-1.5 font-display text-sm font-extrabold leading-none text-primary-foreground shadow-lg">
             {member.jerseyNumber}
           </span>
         ) : null}
       </div>
-      <div className="min-w-0 flex-1 space-y-1">
-        <p className="truncate font-display font-semibold text-foreground">{name}</p>
-        <p className="truncate text-xs text-muted-foreground">{member.position ?? "Sin posición"}</p>
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-          {foot ? (
-            <span className="inline-flex items-center gap-1">
-              <Footprints className="h-3.5 w-3.5" /> {foot}
-            </span>
-          ) : null}
-          {member.nationality ? (
-            <span className="inline-flex items-center gap-1">
-              <Flag className="h-3.5 w-3.5" /> {member.nationality}
-            </span>
-          ) : null}
+      <div className="min-w-0 flex-1 space-y-1.5">
+        <p className="truncate font-display text-base font-semibold leading-tight text-foreground">{name}</p>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="rounded-full bg-primary/12 px-2 py-0.5 text-[11px] font-medium text-primary">
+            {member.position ?? "Sin posición"}
+          </span>
+          {meta ? <StatusBadge variant={meta.variant}>{meta.label}</StatusBadge> : null}
         </div>
+        {foot || member.nationality ? (
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+            {foot ? (
+              <span className="inline-flex items-center gap-1">
+                <Footprints className="h-3.5 w-3.5" /> {foot}
+              </span>
+            ) : null}
+            {member.nationality ? (
+              <span className="inline-flex items-center gap-1">
+                <Flag className="h-3.5 w-3.5" /> {member.nationality}
+              </span>
+            ) : null}
+          </div>
+        ) : null}
       </div>
-      {meta ? <StatusBadge variant={meta.variant}>{meta.label}</StatusBadge> : null}
     </Frame>
   );
 }
