@@ -311,6 +311,14 @@ function Header({
                   Mi perfil
                 </Link>
               </DropdownMenuItem>
+              {showSolicitudes ? (
+                <DropdownMenuItem asChild>
+                  <Link to="/m/$module" params={{ module: "solicitudes" }}>
+                    <ClipboardList className="mr-2 h-4 w-4" />
+                    Mis Solicitudes
+                  </Link>
+                </DropdownMenuItem>
+              ) : null}
               <DropdownMenuItem onSelect={onSignOut}>
                 <LogOut className="mr-2 h-4 w-4" />
                 Cerrar sesión
