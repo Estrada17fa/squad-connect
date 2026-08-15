@@ -5,6 +5,8 @@ import { StatusBadge } from "@/components/squad/StatusBadge";
 import type { RosterMember } from "@/hooks/useRoster";
 import { AVAILABILITY_META, PREFERRED_FOOT_LABEL } from "@/lib/plantel";
 import { initials } from "@/components/usuarios/memberUtils";
+import { AccentBar } from "@/components/squad/StandardCard";
+import { ACCENT, AVAILABILITY_ACCENT } from "@/lib/accents";
 
 function Frame({
   onClick,
@@ -46,7 +48,12 @@ export function PlayerCard({
   const foot = member.preferredFoot ? PREFERRED_FOOT_LABEL[member.preferredFoot] ?? member.preferredFoot : null;
 
   return (
-    <Frame onClick={onClick} delay={index * 20}>
+    <Frame
+      onClick={onClick}
+      delay={index * 20}
+      accent={member.availability ? AVAILABILITY_ACCENT[member.availability] : ACCENT.neutral}
+      accentLabel={member.availability ? AVAILABILITY_META[member.availability].label : undefined}
+    >
       <div className="relative shrink-0">
         <Avatar className="h-16 w-16 ring-1 ring-white/10">
           {member.avatarUrl ? <AvatarImage src={member.avatarUrl} alt={name} /> : null}
@@ -97,7 +104,7 @@ export function StaffCard({
   const name = member.fullName ?? "Sin nombre";
   const title = member.jobTitle ?? member.roleName ?? "Staff";
   return (
-    <Frame onClick={onClick} delay={index * 20}>
+    <Frame onClick={onClick} delay={index * 20} accent={ACCENT.brand}>
       <Avatar className="h-11 w-11 shrink-0">
         {member.avatarUrl ? <AvatarImage src={member.avatarUrl} alt={name} /> : null}
         <AvatarFallback>{initials(name)}</AvatarFallback>
