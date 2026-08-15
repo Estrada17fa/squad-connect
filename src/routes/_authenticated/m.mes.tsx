@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/button";
 import { useApp } from "@/components/squad/AppLayout";
 import { useCalendarEvents, type CalendarEventRow } from "@/hooks/useCalendarEvents";
 import { EVENT_TYPES, EVENT_TYPE_MAP, type EventType } from "@/lib/eventTypes";
-import { addMonths, isSameDay, monthGrid, monthLabel, startOfDay, weekdayLabels } from "@/lib/calendar-utils";
+import { addMonths, formatRelativeDayLabel, formatDayLabel, isSameDay, monthGrid, monthLabel, startOfDay, weekdayLabels } from "@/lib/calendar-utils";
 import { useClubPrefs } from "@/hooks/useClubSettings";
 import { EventFormDialog } from "@/components/calendar/EventFormDialog";
-import { DaySheet } from "@/components/calendar/DaySheet";
+import { EventCard } from "@/components/calendar/EventCard";
 import { EventDetailSheet } from "@/components/calendar/EventDetailSheet";
 import { ModuleTabs } from "@/components/squad/ModuleTabs";
 import { cn } from "@/lib/utils";
@@ -120,21 +120,26 @@ function MesModulePage() {
             const isToday = isSameDay(day, today);
             const dayEvents = eventsByDay.get(startOfDay(day).toISOString()) ?? [];
             const types = Array.from(new Set(dayEvents.map((e) => e.event_type)));
+            const isSelected = !!selectedDay && isSameDay(day, selectedDay);
             return (
               <button
                 key={day.toISOString()}
                 type="button"
-                onClick={() => setSelectedDay(day)}
+                onClick={() => setSelectedDay(isSelected ? null : day)}
                 className={cn(
-                  "flex aspect-square flex-col items-center justify-start gap-1 rounded-lg p-1.5 text-xs transition-colors",
-                  inMonth ? "text-foreground" : "text-muted-foreground/40",
-                  isToday
-                    ? "bg-primary/10 ring-1 ring-primary/60 text-primary"
-                    : "hover:bg-white/[0.04]",
+                  "flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border text-xs transition-colors",
+                  inMonth ? "text-foreground" : "text-muted-foreground/35",
+                  isSelected
+                    ? "border-primary bg-primary/15 text-primary"
+                    : isToday
+                      ? "border-primary/50 bg-primary/[0.07] text-primary"
+                      : "border-transparent hover:bg-white/[0.05]",
                 )}
               >
-                <span className="font-medium">{day.getDate()}</span>
-                <span className="flex flex-wrap justify-center gap-0.5">
+                <span className={cn("font-display leading-none", (isToday || isSelected) && "font-bold")}>
+                  {day.getDate()}
+                </span>
+                <span className="flex h-1.5 items-center justify-center gap-0.5">
                   {types.slice(0, 4).map((t) => (
                     <span
                       key={t}
@@ -170,12 +175,35 @@ function MesModulePage() {
         </div>
       </div>
 
-      <DaySheet
-        day={selectedDay}
-        events={selectedEvents}
-        onClose={() => setSelectedDay(null)}
-        onSelect={(e) => setDetailEvent(e)}
-      />
+      {selectedDay ? (
+        <section className="space-y-2.5">
+          <div className="flex items-center gap-3">
+            <h2 className="font-display text-xs font-bold uppercase tracking-[0.14em] text-primary">
+              {formatRelativeDayLabel(selectedDay)}
+            </h2>
+            <span className="truncate text-[11px] capitalize text-muted-foreground/70">
+              {formatDayLabel(selectedDay)}
+            </span>
+            <span className="h-px flex-1 bg-white/5" />
+            <span className="shrink-0 rounded-full bg-white/[0.06] px-2 py-0.5 text-[11px] text-muted-foreground">
+              {selectedEvents.length}
+            </span>
+          </div>
+          {selectedEvents.length === 0 ? (
+            <EmptyState title="Sin eventos" message="No hay nada agendado este día." />
+          ) : (
+            selectedEvents.map((e, i) => (
+              <EventCard
+                key={e.id}
+                event={e}
+                index={i}
+                teamLabel={e.team_id ? teamOptions.find((t) => t.id === e.team_id)?.name ?? null : "Todo el club"}
+                onClick={() => setDetailEvent(e)}
+              />
+            ))
+          )}
+        </section>
+      ) : null}
 
       {clubId ? (
         <EventFormDialog
