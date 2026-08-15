@@ -43,12 +43,12 @@ export function EventCard({
     >
       <span className="absolute inset-y-0 left-0 w-1" style={{ backgroundColor: color }} />
       <div className="flex items-stretch gap-3 py-3 pl-4 pr-3">
-        <div className="flex w-14 shrink-0 flex-col items-start justify-center">
-          <span className="font-display text-base font-bold leading-none text-foreground">
+        <div className="flex shrink-0 flex-col items-start justify-center">
+          <span className="whitespace-nowrap font-display text-sm font-bold leading-none text-foreground">
             {formatTime(event.starts_at)}
           </span>
           {event.ends_at ? (
-            <span className="mt-1 text-[11px] leading-none text-muted-foreground">
+            <span className="mt-1 whitespace-nowrap text-[11px] leading-none text-muted-foreground">
               {formatTime(event.ends_at)}
             </span>
           ) : null}
