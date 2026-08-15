@@ -48,10 +48,7 @@ export function TaskCard({
         draggable && canChangeStatus && "cursor-grab active:cursor-grabbing",
       )}
     >
-      <span
-        className={cn("absolute inset-y-0 left-0 w-1", PRIORITY_DOT[task.priority])}
-        title={PRIORITY_LABEL[task.priority]}
-      />
+      <AccentBar color={TASK_PRIORITY_ACCENT[task.priority]} label={PRIORITY_LABEL[task.priority]} />
       <button type="button" onClick={onOpen} className="min-w-0 flex-1 pl-1.5 text-left">
         <p className="truncate text-sm font-medium text-foreground">{task.title}</p>
         <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
