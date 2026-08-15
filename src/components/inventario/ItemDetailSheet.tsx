@@ -30,6 +30,7 @@ export function ItemDetailSheet({ open, onOpenChange, item, availableQuantity, c
       open={open}
       onOpenChange={onOpenChange}
       title={item.name}
+      icon={Package}
       description={item.category ?? SIN_CATEGORIA}
       headerActions={
         canEdit ? (

@@ -39,6 +39,7 @@ export function LoanDetailSheet({ open, onOpenChange, loan, canEdit, onReturn }:
       open={open}
       onOpenChange={onOpenChange}
       title={loan.item?.name ?? "Artículo"}
+      icon={PackageOpen}
       description={`${loan.quantity} ${loan.item?.unit ?? "piezas"} prestadas a ${borrowerName}`}
       headerActions={
         canEdit && pending > 0 ? (
