@@ -12,6 +12,7 @@ import {
   formatDay,
   formatMoney,
 } from "@/lib/expenses";
+import { FISCAL_ACCENT } from "@/lib/accents";
 
 /** Tarjeta escaneable del gasto: monto, categoría, pago y estado fiscal. */
 export function ExpenseCard({
