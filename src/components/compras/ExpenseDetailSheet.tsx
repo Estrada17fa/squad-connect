@@ -25,7 +25,6 @@ import {
   DetailEmptyBlock,
   DetailStat,
 } from "@/components/squad/DetailSheet";
-import { StatusBadge } from "@/components/squad/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,9 +32,7 @@ import { useReceiptUrl, type ExpenseRow } from "@/hooks/useExpenses";
 import {
   EXPENSE_CATEGORY_MAP,
   FISCAL_LABEL,
-  FISCAL_VARIANT,
   PAYMENT_LABEL,
-  PAYMENT_VARIANT,
   fiscalStatus,
   formatDay,
   formatMoney,
