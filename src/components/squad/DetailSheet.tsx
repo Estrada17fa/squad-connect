@@ -347,3 +347,104 @@ export function DetailBadge({
     </span>
   );
 }
+
+/* ------------------------------ Personas y métricas ----------------------------- */
+
+export interface DetailPerson {
+  id: string;
+  name: string | null;
+  avatarUrl?: string | null;
+  /** Texto discreto bajo el nombre (hora de lectura, dorsal, rol…). */
+  detail?: React.ReactNode;
+  /** Icono de estado a la derecha (leído / pendiente). */
+  status?: React.ReactNode;
+}
+
+function personInitials(name: string | null) {
+  if (!name) return "?";
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((n) => n[0]?.toUpperCase())
+    .join("");
+}
+
+/** Avatares apilados para un resumen rápido de personas. */
+export function DetailAvatars({ people, max = 8 }: { people: DetailPerson[]; max?: number }) {
+  const shown = people.slice(0, max);
+  const rest = people.length - shown.length;
+  if (people.length === 0) return null;
+  return (
+    <div className="flex -space-x-2">
+      {shown.map((p) => (
+        <span
+          key={p.id}
+          title={p.name ?? ""}
+          className="inline-flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-background bg-white/10 text-xs font-semibold text-foreground/80"
+        >
+          {p.avatarUrl ? (
+            <img src={p.avatarUrl} alt="" className="h-full w-full object-cover" />
+          ) : (
+            personInitials(p.name)
+          )}
+        </span>
+      ))}
+      {rest > 0 ? (
+        <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-background bg-primary/20 text-xs font-semibold text-primary">
+          +{rest}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
+/** Lista de personas como mini-tarjetas (convocados, lectores, responsables). */
+export function DetailPeopleList({ people }: { people: DetailPerson[] }) {
+  return (
+    <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+      {people.map((p) => (
+        <li
+          key={p.id}
+          className="flex items-center gap-2.5 rounded-xl border border-white/5 bg-white/[0.03] px-3 py-2"
+        >
+          <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/10 text-xs font-semibold text-foreground/80">
+            {p.avatarUrl ? (
+              <img src={p.avatarUrl} alt="" className="h-full w-full object-cover" />
+            ) : (
+              personInitials(p.name)
+            )}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm text-foreground">{p.name ?? "Sin nombre"}</p>
+            {p.detail ? <p className="truncate text-xs text-muted-foreground">{p.detail}</p> : null}
+          </div>
+          {p.status ? <span className="shrink-0">{p.status}</span> : null}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** Dato numérico destacado (stock, monto, conteo). */
+export function DetailStat({
+  label,
+  value,
+  hint,
+  color,
+}: {
+  label: React.ReactNode;
+  value: React.ReactNode;
+  hint?: React.ReactNode;
+  color?: string;
+}) {
+  return (
+    <div className="rounded-xl border border-white/5 bg-white/[0.03] px-3 py-2.5">
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="font-display text-xl font-semibold tabular-nums" style={color ? { color } : undefined}>
+        {value}
+      </p>
+      {hint ? <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p> : null}
+    </div>
+  );
+}
