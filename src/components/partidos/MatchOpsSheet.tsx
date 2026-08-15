@@ -1,11 +1,13 @@
 import * as React from "react";
 import { toast } from "sonner";
-import { CalendarDays, ClipboardList, Clock, MapPin, Shirt, Trophy, Users } from "lucide-react";
+import { CalendarDays, ClipboardList, Clock, FileText, MapPin, Shirt, Trophy, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  DetailBadge,
+  DetailEmptyBlock,
   DetailField,
   DetailGrid,
   DetailSection,
@@ -13,7 +15,6 @@ import {
   DetailValue,
 } from "@/components/squad/DetailSheet";
 import { EntitySheetBody, EntitySheetFooter } from "@/components/squad/EntitySheet";
-import { StatusBadge } from "@/components/squad/StatusBadge";
 import { LocationDisplay } from "@/components/calendar/LocationDisplay";
 import { LocationPicker } from "@/components/calendar/LocationPicker";
 import { TeamCrest } from "@/components/torneo/TeamCrest";
@@ -29,6 +30,7 @@ import {
   type OurMatch,
 } from "@/hooks/useMatchOps";
 import { MATCH_STATUS_LABEL } from "@/lib/torneo";
+import { matchAccent } from "@/lib/accents";
 
 interface Props {
   open: boolean;
@@ -70,16 +72,16 @@ export function MatchOpsSheet({
       onOpenChange={onOpenChange}
       title={`vs ${match.rival?.name ?? "Rival por definir"}`}
       icon={Trophy}
-      accent="var(--event-partido)"
+      accent={matchAccent(match.status)}
       description={`${match.tournament_name}${match.matchday != null ? ` · Jornada ${match.matchday}` : ""}`}
       canEdit={canEdit && !!clubId}
       editLabel="Gestionar"
       badges={
-        <StatusBadge
-          variant={match.status === "jugado" ? "approved" : match.status === "suspendido" ? "rejected" : "info"}
-        >
-          {MATCH_STATUS_LABEL[match.status]}
-        </StatusBadge>
+        <>
+          <DetailBadge color={matchAccent(match.status)}>{MATCH_STATUS_LABEL[match.status]}</DetailBadge>
+          <DetailBadge>{match.isHome ? "Local" : "Visitante"}</DetailBadge>
+          {match.matchday != null ? <DetailBadge>{`Jornada ${match.matchday}`}</DetailBadge> : null}
+        </>
       }
       renderEdit={
         clubId
@@ -96,17 +98,19 @@ export function MatchOpsSheet({
           : undefined
       }
     >
-      <DetailSection title="Partido">
-        <div className="flex items-center gap-3 rounded-xl bg-white/[0.04] p-3">
+      <DetailSection title="Partido" icon={Trophy}>
+        <div className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.03] p-3">
           <TeamCrest name={match.rival?.name ?? "Rival"} path={match.rival?.crest_path ?? null} className="h-12 w-12" />
           <div className="min-w-0 flex-1">
-            <p className="truncate font-medium text-foreground">{match.rival?.name ?? "Rival por definir"}</p>
+            <p className="truncate font-display text-base font-semibold text-foreground">
+              {match.rival?.name ?? "Rival por definir"}
+            </p>
             <p className="text-xs text-muted-foreground">
               {match.isHome ? "Jugamos de local" : "Jugamos de visitante"}
             </p>
           </div>
           {played ? (
-            <p className="text-xl font-semibold tabular-nums">
+            <p className="font-display text-xl font-semibold tabular-nums text-foreground">
               {ourGoals} - {rivalGoals}
             </p>
           ) : null}
@@ -128,11 +132,15 @@ export function MatchOpsSheet({
         </DetailGrid>
       </DetailSection>
 
-      <DetailSection title={`Convocatoria (${callups.length})`}>
-        <CallupList callups={callups} highlightUserId={userId} />
+      <DetailSection title={`Convocatoria (${callups.length})`} icon={Users}>
+        {callups.length === 0 ? (
+          <DetailEmptyBlock icon={Users}>Sin convocatoria publicada.</DetailEmptyBlock>
+        ) : (
+          <CallupList callups={callups} highlightUserId={userId} />
+        )}
       </DetailSection>
 
-      <DetailSection title="Logística">
+      <DetailSection title="Logística" icon={ClipboardList}>
         <DetailGrid>
           <DetailField label="Citación" icon={Clock}>
             <DetailValue value={formatMatchWhen(logistics?.call_time_at ?? null) ?? undefined} />
@@ -158,8 +166,12 @@ export function MatchOpsSheet({
       </DetailSection>
 
       {played || logistics?.post_match_notes ? (
-        <DetailSection title="Notas post-partido">
-          <DetailValue value={logistics?.post_match_notes} />
+        <DetailSection title="Notas post-partido" icon={FileText}>
+          {logistics?.post_match_notes ? (
+            <DetailValue value={logistics.post_match_notes} />
+          ) : (
+            <DetailEmptyBlock icon={FileText}>Sin notas del partido.</DetailEmptyBlock>
+          )}
         </DetailSection>
       ) : null}
     </DetailSheet>
