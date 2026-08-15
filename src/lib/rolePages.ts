@@ -174,7 +174,12 @@ export function resolvePagesForUser(
     }
 
     if (p.key === "coordinacion" && role === "jugador") {
-      if (perPage.coordinacion.length > 0) {
+      // Si lo único accesible es Solicitudes, el punto de entrada pasa al menú
+      // del avatar ("Mis Solicitudes") y no se ocupa un lugar en la navegación.
+      const onlySolicitudes =
+        perPage.coordinacion.length > 0 &&
+        perPage.coordinacion.every((mk) => mk === "solicitudes");
+      if (perPage.coordinacion.length > 0 && !onlySolicitudes) {
         out.push({
           page: p,
           modules: perPage.coordinacion,
