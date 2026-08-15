@@ -31,6 +31,7 @@ import { formatShortDate } from "@/lib/calendar-utils";
 import { initials } from "@/components/usuarios/memberUtils";
 import type { RosterMember } from "@/hooks/useRoster";
 import { AVAILABILITY_META, PREFERRED_FOOT_LABEL } from "@/lib/plantel";
+import { ACCENT, AVAILABILITY_ACCENT } from "@/lib/accents";
 import { usePlayerLatestAnthro } from "@/hooks/useNutrition";
 import { formatShortDay } from "@/lib/nutricion";
 
@@ -63,12 +64,13 @@ export function PersonDetailSheet({
       open={open}
       onOpenChange={onOpenChange}
       title={name}
+      accent={member.availability ? AVAILABILITY_ACCENT[member.availability] : ACCENT.neutral}
       description={isPlayer ? member.position ?? "Sin posición" : member.jobTitle ?? member.roleName ?? undefined}
       media={
         <div className="relative">
-          <Avatar className="h-20 w-20 ring-1 ring-white/10">
+          <Avatar className="h-24 w-24 ring-1 ring-white/10">
             {member.avatarUrl ? <AvatarImage src={member.avatarUrl} alt={name} /> : null}
-            <AvatarFallback className="font-display text-lg font-semibold">{initials(name)}</AvatarFallback>
+            <AvatarFallback className="font-display text-xl font-semibold">{initials(name)}</AvatarFallback>
           </Avatar>
           {isPlayer && member.jerseyNumber != null ? (
             <span className="absolute -bottom-1.5 -right-1.5 flex h-8 min-w-8 items-center justify-center rounded-full bg-primary px-1.5 font-display text-sm font-extrabold text-primary-foreground shadow-lg">

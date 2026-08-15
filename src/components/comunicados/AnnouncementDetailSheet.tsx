@@ -1,7 +1,8 @@
 import * as React from "react";
-import { CalendarClock, Megaphone, User, Users } from "lucide-react";
+import { CalendarClock, FileText, Info, Megaphone, Paperclip, User, Users } from "lucide-react";
 import {
   DetailField,
+  DetailGrid,
   DetailSection,
   DetailSheet,
   DetailValue,
@@ -14,10 +15,12 @@ import {
   useMarkRead,
   type AnnouncementRow,
 } from "@/hooks/useAnnouncements";
+import { ANNOUNCEMENT_ACCENT } from "@/lib/accents";
 import { DeleteAction } from "@/components/squad/DeleteAction";
 import { AnnouncementChip, AttachmentPreview, PriorityBadge } from "./ComunicadosPieces";
 import { AnnouncementFormDialog } from "./AnnouncementFormDialog";
 import { ReadReceipts } from "./ReadReceipts";
+
 
 interface Props {
   open: boolean;
@@ -61,7 +64,9 @@ export function AnnouncementDetailSheet({
       onOpenChange={onOpenChange}
       title={announcement.title}
       icon={Megaphone}
+      accent={ANNOUNCEMENT_ACCENT[announcement.priority]}
       description={formatAnnouncementDate(announcement.published_at)}
+
       canEdit={canEdit && !!clubId}
       badges={<PriorityBadge priority={announcement.priority} />}
       renderEdit={
@@ -95,14 +100,14 @@ export function AnnouncementDetailSheet({
         </AnnouncementChip>
       </div>
 
-      <DetailSection title="Comunicado">
+      <DetailSection title="Comunicado" icon={FileText}>
         <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90 [overflow-wrap:anywhere]">
           {announcement.body}
         </p>
       </DetailSection>
 
       {announcement.attachment_path ? (
-        <DetailSection title="Adjunto">
+        <DetailSection title="Adjunto" icon={Paperclip}>
           <AttachmentPreview
             path={announcement.attachment_path}
             name={announcement.attachment_name}
@@ -111,17 +116,20 @@ export function AnnouncementDetailSheet({
         </DetailSection>
       ) : null}
 
-      <DetailSection title="Detalle">
-        <DetailField label="Dirigido a" icon={Users}>
-          <DetailValue value={audienceLabel(announcement)} />
-        </DetailField>
-        <DetailField label="Publicado por" icon={User}>
-          <DetailValue value={announcement.author?.full_name ?? "—"} />
-        </DetailField>
-        <DetailField label="Fecha" icon={CalendarClock}>
-          {formatAnnouncementDate(announcement.published_at)}
-        </DetailField>
+      <DetailSection title="Detalle" icon={Info}>
+        <DetailGrid>
+          <DetailField label="Dirigido a" icon={Users}>
+            <DetailValue value={audienceLabel(announcement)} />
+          </DetailField>
+          <DetailField label="Publicado por" icon={User}>
+            <DetailValue value={announcement.author?.full_name ?? "—"} />
+          </DetailField>
+          <DetailField label="Fecha" icon={CalendarClock} full>
+            {formatAnnouncementDate(announcement.published_at)}
+          </DetailField>
+        </DetailGrid>
       </DetailSection>
+
 
       {canEdit ? <ReadReceipts announcement={announcement} /> : null}
 

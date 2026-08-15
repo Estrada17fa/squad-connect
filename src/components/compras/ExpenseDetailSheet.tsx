@@ -9,17 +9,22 @@ import {
   FileSpreadsheet,
   FileText,
   Pencil,
+  Info,
+  Link2,
+  Paperclip,
   Receipt,
   Trash2,
 } from "lucide-react";
 import {
   DetailSheet,
+  DetailBadge,
   DetailSection,
   DetailGrid,
   DetailField,
   DetailValue,
+  DetailEmptyBlock,
+  DetailStat,
 } from "@/components/squad/DetailSheet";
-import { StatusBadge } from "@/components/squad/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,14 +32,13 @@ import { useReceiptUrl, type ExpenseRow } from "@/hooks/useExpenses";
 import {
   EXPENSE_CATEGORY_MAP,
   FISCAL_LABEL,
-  FISCAL_VARIANT,
   PAYMENT_LABEL,
-  PAYMENT_VARIANT,
   fiscalStatus,
   formatDay,
   formatMoney,
 } from "@/lib/expenses";
 import { formatDateTime } from "@/lib/calendar-utils";
+import { FISCAL_ACCENT } from "@/lib/accents";
 
 interface Props {
   open: boolean;
@@ -141,7 +145,15 @@ export function ExpenseDetailSheet({ open, onOpenChange, expense, canEdit, onEdi
         onOpenChange={onOpenChange}
         title={expense.concept}
         icon={Receipt}
+        accent={FISCAL_ACCENT[fiscal]}
         description={`${formatMoney(expense.amount, expense.currency)} · ${cat.label}`}
+        badges={
+          <>
+            <DetailBadge color={FISCAL_ACCENT[fiscal]}>{FISCAL_LABEL[fiscal]}</DetailBadge>
+            <DetailBadge icon={Icon}>{cat.label}</DetailBadge>
+            <DetailBadge>{PAYMENT_LABEL[expense.payment_status]}</DetailBadge>
+          </>
+        }
         headerActions={
           canEdit ? (
             <>
@@ -173,25 +185,17 @@ export function ExpenseDetailSheet({ open, onOpenChange, expense, canEdit, onEdi
           ) : undefined
         }
       >
-        <div className="glass flex items-center gap-3 p-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/5 text-primary">
-            <Icon className="h-5 w-5" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="font-display text-lg font-semibold text-foreground">
-              {formatMoney(expense.amount, expense.currency)}
-            </p>
-            <p className="text-xs text-muted-foreground">Registrado el {formatDateTime(expense.created_at)}</p>
-          </div>
-          <div className="flex shrink-0 flex-col items-end gap-1">
-            <StatusBadge variant={PAYMENT_VARIANT[expense.payment_status]}>
-              {PAYMENT_LABEL[expense.payment_status]}
-            </StatusBadge>
-            <StatusBadge variant={FISCAL_VARIANT[fiscal]}>{FISCAL_LABEL[fiscal]}</StatusBadge>
-          </div>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <DetailStat label="Importe" value={formatMoney(expense.amount, expense.currency)} />
+          <DetailStat
+            label="Pago"
+            value={PAYMENT_LABEL[expense.payment_status]}
+            hint={expense.paid_at ? formatDateTime(expense.paid_at) : undefined}
+          />
+          <DetailStat label="Fiscal" value={FISCAL_LABEL[fiscal]} color={FISCAL_ACCENT[fiscal]} />
         </div>
 
-        <DetailSection title="Datos del gasto">
+        <DetailSection title="Datos del gasto" icon={Info}>
           <DetailGrid>
             <DetailField label="Categoría"><DetailValue value={cat.label} /></DetailField>
             <DetailField label="Proveedor"><DetailValue value={supplier} /></DetailField>
@@ -210,9 +214,9 @@ export function ExpenseDetailSheet({ open, onOpenChange, expense, canEdit, onEdi
           </DetailGrid>
         </DetailSection>
 
-        <DetailSection title="Comprobante">
+        <DetailSection title="Comprobante" icon={Paperclip}>
           {!expense.receipt_path ? (
-            <p className="text-sm text-muted-foreground">Sin comprobante adjunto.</p>
+            <DetailEmptyBlock icon={Paperclip}>Sin comprobante adjunto.</DetailEmptyBlock>
           ) : !receiptQ.data ? (
             <p className="text-sm text-muted-foreground">Cargando…</p>
           ) : isImage ? (
@@ -234,11 +238,9 @@ export function ExpenseDetailSheet({ open, onOpenChange, expense, canEdit, onEdi
           )}
         </DetailSection>
 
-        <DetailSection title="Factura">
+        <DetailSection title="Factura" icon={FileText}>
           {!expense.has_invoice ? (
-            <p className="text-sm text-muted-foreground">
-              Este gasto no tiene factura registrada.
-            </p>
+            <DetailEmptyBlock icon={FileText}>Este gasto no tiene factura registrada.</DetailEmptyBlock>
           ) : (
             <div className="space-y-3">
               <DetailGrid>
@@ -283,8 +285,8 @@ export function ExpenseDetailSheet({ open, onOpenChange, expense, canEdit, onEdi
         </DetailSection>
 
         {expense.request_id ? (
-          <div className="glass space-y-1 p-3 text-sm">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">Solicitud de origen</p>
+          <DetailSection title="Solicitud de origen" icon={Link2}>
+          <div className="rounded-xl border border-white/5 bg-white/[0.03] p-3 text-sm">
             <p className="text-foreground">{requestQ.data?.title ?? "Solicitud"}</p>
             <p className="text-xs text-muted-foreground">
               Solicitó {requestQ.data?.requester?.full_name ?? requestQ.data?.requester?.email ?? "—"}
@@ -304,6 +306,7 @@ export function ExpenseDetailSheet({ open, onOpenChange, expense, canEdit, onEdi
               <ExternalLink className="mr-2 h-4 w-4" /> Ver solicitud
             </Button>
           </div>
+          </DetailSection>
         ) : null}
       </DetailSheet>
 

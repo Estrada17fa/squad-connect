@@ -1,10 +1,19 @@
 import * as React from "react";
-import { AlertTriangle, Package, Pencil } from "lucide-react";
-import { DetailSheet, DetailField, DetailGrid, DetailEmpty } from "@/components/squad/DetailSheet";
+import { AlertTriangle, Boxes, FileText, Info, Package, Pencil } from "lucide-react";
+import {
+  DetailBadge,
+  DetailEmptyBlock,
+  DetailField,
+  DetailGrid,
+  DetailSection,
+  DetailSheet,
+  DetailStat,
+  DetailValue,
+} from "@/components/squad/DetailSheet";
 import { Button } from "@/components/ui/button";
 import { categoryIcon, SIN_CATEGORIA } from "@/lib/inventory";
+import { stockAccent } from "@/lib/accents";
 import { useInventoryThumbnails, type InventoryItemRow } from "@/hooks/useInventory";
-import { cn } from "@/lib/utils";
 
 interface Props {
   open: boolean;
@@ -24,6 +33,8 @@ export function ItemDetailSheet({ open, onOpenChange, item, availableQuantity, c
 
   const Icon = categoryIcon(item.category);
   const low = availableQuantity <= item.min_quantity;
+  const accent = stockAccent(availableQuantity, item.min_quantity);
+  const loaned = Math.max(0, item.total_quantity - availableQuantity);
 
   return (
     <DetailSheet
@@ -31,7 +42,25 @@ export function ItemDetailSheet({ open, onOpenChange, item, availableQuantity, c
       onOpenChange={onOpenChange}
       title={item.name}
       icon={Package}
+      accent={accent}
       description={item.category ?? SIN_CATEGORIA}
+      media={
+        thumb ? (
+          <img src={thumb} alt="" className="h-20 w-20 rounded-xl object-cover ring-1 ring-white/10" />
+        ) : (
+          <span className="flex h-20 w-20 items-center justify-center rounded-xl bg-white/5 text-primary">
+            <Icon className="h-8 w-8" />
+          </span>
+        )
+      }
+      badges={
+        <>
+          <DetailBadge color={accent}>
+            {availableQuantity <= 0 ? "Sin disponibles" : low ? "Stock bajo" : "Disponible"}
+          </DetailBadge>
+          {item.unit ? <DetailBadge>{item.unit}</DetailBadge> : null}
+        </>
+      }
       headerActions={
         canEdit ? (
           <Button type="button" size="sm" variant="secondary" onClick={() => onEdit(item)}>
@@ -40,42 +69,46 @@ export function ItemDetailSheet({ open, onOpenChange, item, availableQuantity, c
         ) : null
       }
     >
-      <div className="flex items-center gap-3">
-        {thumb ? (
-          <img src={thumb} alt="" className="h-16 w-16 rounded-xl object-cover" />
-        ) : (
-          <span className="flex h-16 w-16 items-center justify-center rounded-xl bg-white/5 text-primary">
-            <Icon className="h-7 w-7" />
-          </span>
-        )}
-        <div className="min-w-0 flex-1">
-          <p className="truncate font-display text-base font-semibold text-foreground">{item.name}</p>
-          <p className="truncate text-xs text-muted-foreground">
-            {item.category ?? SIN_CATEGORIA}
-            {item.unit ? ` · ${item.unit}` : ""}
-          </p>
+      <DetailSection title="Stock" icon={Boxes}>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <DetailStat label="Total" value={item.total_quantity} />
+          <DetailStat
+            label="Disponibles"
+            value={availableQuantity}
+            color={accent}
+            hint={
+              low ? (
+                <span className="inline-flex items-center gap-1">
+                  <AlertTriangle className="h-3 w-3" /> Stock bajo
+                </span>
+              ) : undefined
+            }
+          />
+          <DetailStat label="Prestados" value={loaned} />
         </div>
-      </div>
+      </DetailSection>
 
-      <DetailGrid>
-        <DetailField label="Total">{item.total_quantity}</DetailField>
-        <DetailField label="Disponibles">
-          <span className={cn(low && "text-amber-400")}>
-            {availableQuantity}
-            {low ? (
-              <span className="ml-2 inline-flex items-center gap-1 text-xs">
-                <AlertTriangle className="h-3 w-3" /> Stock bajo
-              </span>
-            ) : null}
-          </span>
-        </DetailField>
-        <DetailField label="Stock mínimo">{item.min_quantity}</DetailField>
-        <DetailField label="Unidad">{item.unit || <DetailEmpty />}</DetailField>
-      </DetailGrid>
+      <DetailSection title="Datos del artículo" icon={Info}>
+        <DetailGrid>
+          <DetailField label="Categoría">
+            <DetailValue value={item.category ?? SIN_CATEGORIA} />
+          </DetailField>
+          <DetailField label="Unidad">
+            <DetailValue value={item.unit} />
+          </DetailField>
+          <DetailField label="Stock mínimo">{item.min_quantity}</DetailField>
+        </DetailGrid>
+      </DetailSection>
 
-      <DetailField label="Notas">
-        {item.description ? <span className="whitespace-pre-wrap">{item.description}</span> : <DetailEmpty />}
-      </DetailField>
+      <DetailSection title="Notas" icon={FileText}>
+        {item.description ? (
+          <p className="whitespace-pre-wrap text-sm text-foreground/90 [overflow-wrap:anywhere]">
+            {item.description}
+          </p>
+        ) : (
+          <DetailEmptyBlock icon={FileText}>Sin notas para este artículo.</DetailEmptyBlock>
+        )}
+      </DetailSection>
     </DetailSheet>
   );
 }

@@ -1,17 +1,27 @@
 import * as React from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Trash2, Pencil, AlertTriangle, CalendarClock, Layers, ListChecks } from "lucide-react";
-import { DetailSheet, DetailField, DetailGrid, DetailSection, DetailValue } from "@/components/squad/DetailSheet";
+import { Trash2, Pencil, AlertTriangle, CalendarClock, Info, Layers, ListChecks, Users } from "lucide-react";
+import {
+  DetailSheet,
+  DetailBadge,
+  DetailField,
+  DetailGrid,
+  DetailPeopleList,
+  DetailSection,
+  DetailValue,
+  DetailEmptyBlock,
+} from "@/components/squad/DetailSheet";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/squad/ConfirmDialog";
-import { AvatarStack } from "./AvatarStack";
 import { TaskChecklist } from "./TaskChecklist";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDateTime } from "@/lib/calendar-utils";
 import type { TaskRow, TaskStatus } from "@/hooks/useCoordinacion";
 import { PRIORITY_DOT, PRIORITY_LABEL, STATUS_LABEL } from "@/lib/coordinacion";
+import { TASK_PRIORITY_ACCENT } from "@/lib/accents";
 import { cn } from "@/lib/utils";
+
 
 const STATUSES: TaskStatus[] = ["pendiente", "en_progreso", "en_pausa", "completada"];
 
@@ -69,7 +79,18 @@ export function TaskDetailSheet({ open, onOpenChange, task, userId, clubId, canE
         onOpenChange={onOpenChange}
         title={task.title}
         icon={ListChecks}
+        accent={TASK_PRIORITY_ACCENT[task.priority]}
         description={task.team?.name ?? "Todo el club"}
+        badges={
+          <>
+            <DetailBadge color={TASK_PRIORITY_ACCENT[task.priority]}>
+              {PRIORITY_LABEL[task.priority]}
+            </DetailBadge>
+            <DetailBadge>{STATUS_LABEL[task.status]}</DetailBadge>
+            {overdue ? <DetailBadge icon={AlertTriangle}>Vencida</DetailBadge> : null}
+          </>
+        }
+
         headerActions={
           canEdit ? (
             <>
@@ -88,7 +109,7 @@ export function TaskDetailSheet({ open, onOpenChange, task, userId, clubId, canE
           ) : undefined
         }
       >
-        <DetailSection title="Estado">
+        <DetailSection title="Estado" icon={ListChecks}>
           <div className="flex flex-wrap gap-1.5">
             {STATUSES.map((s) => {
               const active = task.status === s;
@@ -117,6 +138,7 @@ export function TaskDetailSheet({ open, onOpenChange, task, userId, clubId, canE
           ) : null}
         </DetailSection>
 
+        <DetailSection title="Detalle" icon={Info}>
         <DetailGrid>
           <DetailField label="Prioridad">
             <span className="inline-flex items-center gap-2">
@@ -150,23 +172,27 @@ export function TaskDetailSheet({ open, onOpenChange, task, userId, clubId, canE
             </DetailField>
           ) : null}
         </DetailGrid>
-
-        <DetailSection title={`Asignados (${task.assignees.length})`}>
-          <AvatarStack people={task.assignees} max={8} size="md" />
-          {task.assignees.length > 0 ? (
-            <ul className="space-y-1 text-sm">
-              {task.assignees.map((a) => (
-                <li key={a.id} className="text-foreground [overflow-wrap:anywhere]">
-                  {a.full_name ?? a.email ?? "—"}
-                </li>
-              ))}
-            </ul>
-          ) : null}
         </DetailSection>
 
-        <DetailSection title={<span className="inline-flex items-center gap-1.5"><ListChecks className="h-3.5 w-3.5" /> Subtareas</span>}>
+        <DetailSection title={`Asignados (${task.assignees.length})`} icon={Users}>
+          {task.assignees.length === 0 ? (
+            <DetailEmptyBlock icon={Users}>Sin personas asignadas.</DetailEmptyBlock>
+          ) : (
+            <DetailPeopleList
+              people={task.assignees.map((a) => ({
+                id: a.id,
+                name: a.full_name ?? a.email ?? "Sin nombre",
+                avatarUrl: (a as any).avatar_url ?? null,
+                detail: a.full_name ? a.email : undefined,
+              }))}
+            />
+          )}
+        </DetailSection>
+
+        <DetailSection title="Subtareas" icon={ListChecks}>
           <TaskChecklist taskId={task.id} canEdit={canChangeStatus} />
         </DetailSection>
+
 
         <DetailGrid className="pt-1 text-xs">
           <DetailField label="Creada">{formatDateTime(task.created_at)}</DetailField>
