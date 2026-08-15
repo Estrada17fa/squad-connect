@@ -9,6 +9,7 @@ import {
   FileSpreadsheet,
   FileText,
   Pencil,
+  Receipt,
   Trash2,
 } from "lucide-react";
 import {
