@@ -3,15 +3,28 @@ import { Link } from "@tanstack/react-router";
 import {
   CalendarDays,
   ClipboardList,
+  Clock,
+  Info,
   Lock,
   MapPin,
   Pencil,
   Plane,
   Plus,
+  Shirt,
   Trophy,
   Users,
 } from "lucide-react";
-import { DetailField, DetailSection, DetailSheet, DetailValue } from "@/components/squad/DetailSheet";
+import {
+  DetailAvatars,
+  DetailBadge,
+  DetailEmptyBlock,
+  DetailField,
+  DetailGrid,
+  DetailPeopleList,
+  DetailSection,
+  DetailSheet,
+  DetailValue,
+} from "@/components/squad/DetailSheet";
 import { Button } from "@/components/ui/button";
 import { TeamBadge } from "@/components/squad/TeamFilter";
 import { EVENT_TYPE_MAP } from "@/lib/eventTypes";
@@ -22,6 +35,7 @@ import { useSessionByEvent } from "@/hooks/useTraining";
 import { useTeamAccess } from "@/hooks/useTeamAccess";
 import { useMatchByEvent, useMatchCallups, useMatchLogistics } from "@/hooks/useMatchOps";
 import { MATCH_STATUS_LABEL } from "@/lib/torneo";
+import { matchAccent } from "@/lib/accents";
 import { TeamCrest } from "@/components/torneo/TeamCrest";
 import { SessionPlanContent } from "@/components/entrenamientos/SessionPlanContent";
 import { SessionFormDialog } from "@/components/entrenamientos/SessionFormDialog";
@@ -73,6 +87,12 @@ export function EventDetailSheet({ open, onOpenChange, event, canEdit, clubId, u
   const def = EVENT_TYPE_MAP[event.event_type];
   // Las citas médicas nunca son editables desde la Agenda.
   const editable = canEdit && !isMedical && !isMatch && !isTrip && !event.meeting_id;
+  const team = teamName?.(event.team_id) ?? undefined;
+  const callupPeople = callups.map((c) => ({
+    id: c.id,
+    name: c.profile?.full_name ?? "Convocado",
+    avatarUrl: (c.profile as any)?.avatar_url ?? null,
+  }));
 
   return (
     <>
@@ -84,6 +104,17 @@ export function EventDetailSheet({ open, onOpenChange, event, canEdit, clubId, u
         accent={def.cssVar}
         description={`${formatDayLabel(new Date(event.starts_at))} · ${formatTime(event.starts_at)}`}
         canEdit={editable && !!clubId}
+        badges={
+          <>
+            <DetailBadge color={def.cssVar} icon={def.icon}>
+              {def.label}
+            </DetailBadge>
+            {team ? <DetailBadge>{team}</DetailBadge> : null}
+            {isMatch && match ? (
+              <DetailBadge color={matchAccent(match.status)}>{MATCH_STATUS_LABEL[match.status]}</DetailBadge>
+            ) : null}
+          </>
+        }
         renderEdit={
           clubId
             ? ({ done }) => (
@@ -101,84 +132,110 @@ export function EventDetailSheet({ open, onOpenChange, event, canEdit, clubId, u
             : undefined
         }
       >
-        <DetailSection title="Detalle">
-          <DetailField label="Fecha y hora" icon={CalendarDays}>
-            {formatDayLabel(new Date(event.starts_at))} · {formatTime(event.starts_at)}
-            {event.ends_at ? ` – ${formatTime(event.ends_at)}` : ""}
-          </DetailField>
-          {event.location || event.location_id ? (
-            <DetailField label="Ubicación" icon={MapPin}>
-              <LocationDisplay clubId={clubId} locationId={event.location_id ?? null} text={event.location} />
+        <DetailSection title="Detalle" icon={Info}>
+          <DetailGrid>
+            <DetailField label="Fecha y hora" icon={CalendarDays}>
+              {formatDayLabel(new Date(event.starts_at))} · {formatTime(event.starts_at)}
+              {event.ends_at ? ` – ${formatTime(event.ends_at)}` : ""}
             </DetailField>
-          ) : null}
-          <DetailField label="Equipo" icon={Users}>
-            <TeamBadge name={teamName?.(event.team_id) ?? undefined} />
-          </DetailField>
-          {event.description && !isMedical ? (
-            <DetailField label="Notas">
-              <DetailValue value={event.description} />
+            <DetailField label="Equipo" icon={Users}>
+              <TeamBadge name={team} />
             </DetailField>
-          ) : null}
+            {event.location || event.location_id ? (
+              <DetailField label="Ubicación" icon={MapPin} full>
+                <LocationDisplay clubId={clubId} locationId={event.location_id ?? null} text={event.location} />
+              </DetailField>
+            ) : null}
+            {event.description && !isMedical ? (
+              <DetailField label="Notas" full>
+                <DetailValue value={event.description} />
+              </DetailField>
+            ) : null}
+          </DetailGrid>
         </DetailSection>
 
         {/* Cita médica: solo lo genérico. El detalle clínico vive en Salud. */}
         {isMedical ? (
-          <p className="flex items-start gap-2 rounded-xl border border-border/60 bg-white/[0.03] p-3 text-xs text-muted-foreground">
-            <Lock className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-            Cita privada. El motivo, el diagnóstico y las notas clínicas solo se consultan en el módulo Salud.
-          </p>
+          <DetailSection title="Privacidad" icon={Lock}>
+            <DetailEmptyBlock icon={Lock}>
+              Cita privada. El motivo, el diagnóstico y las notas clínicas solo se consultan en el módulo Salud.
+            </DetailEmptyBlock>
+          </DetailSection>
         ) : null}
 
         {/* Partido: rival, resultado, convocatoria y logística según permiso. */}
         {isMatch && match ? (
           <>
-            <DetailSection title="Partido">
-              <DetailField label="Rival" icon={Trophy}>
-                <span className="inline-flex items-center gap-2">
-                  <TeamCrest path={match.rival?.crest_path} name={match.rival?.name ?? "Rival"} className="h-6 w-6" />
-                  {match.rival?.name ?? "Por definir"}
-                  <span className="text-muted-foreground">· {match.isHome ? "Local" : "Visitante"}</span>
-                </span>
-              </DetailField>
-              <DetailField label="Torneo">
-                {match.tournament_name}
-                {match.matchday ? ` · Jornada ${match.matchday}` : ""}
-              </DetailField>
-              <DetailField label="Estado">
-                {MATCH_STATUS_LABEL[match.status]}
-                {match.status === "jugado" && match.home_goals != null && match.away_goals != null
-                  ? ` · ${match.home_goals} - ${match.away_goals}`
-                  : ""}
-              </DetailField>
-              {match.venue ? <DetailField label="Sede">{match.venue}</DetailField> : null}
+            <DetailSection title="Partido" icon={Trophy}>
+              <div className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.03] p-3">
+                <TeamCrest
+                  path={match.rival?.crest_path}
+                  name={match.rival?.name ?? "Rival"}
+                  className="h-12 w-12"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-display text-base font-semibold text-foreground">
+                    {match.rival?.name ?? "Por definir"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {match.isHome ? "Jugamos de local" : "Jugamos de visitante"}
+                  </p>
+                </div>
+                {match.status === "jugado" && match.home_goals != null && match.away_goals != null ? (
+                  <p className="shrink-0 font-display text-xl font-semibold tabular-nums text-foreground">
+                    {match.home_goals} - {match.away_goals}
+                  </p>
+                ) : null}
+              </div>
+              <DetailGrid>
+                <DetailField label="Torneo" icon={Trophy}>
+                  {match.tournament_name}
+                  {match.matchday ? ` · Jornada ${match.matchday}` : ""}
+                </DetailField>
+                <DetailField label="Estado">{MATCH_STATUS_LABEL[match.status]}</DetailField>
+                {match.venue ? (
+                  <DetailField label="Sede" icon={MapPin} full>
+                    {match.venue}
+                  </DetailField>
+                ) : null}
+              </DetailGrid>
             </DetailSection>
 
             {matchLogistics ? (
-              <DetailSection title="Logística">
-                {matchLogistics.call_time_at ? (
-                  <DetailField label="Citación">{formatTime(matchLogistics.call_time_at)}</DetailField>
-                ) : null}
-                {matchLogistics.meeting_point ? (
-                  <DetailField label="Punto de reunión">{matchLogistics.meeting_point}</DetailField>
-                ) : null}
-                {matchLogistics.kit ? <DetailField label="Uniforme">{matchLogistics.kit}</DetailField> : null}
-                {matchLogistics.logistics_notes ? (
-                  <DetailField label="Notas">
-                    <DetailValue value={matchLogistics.logistics_notes} />
-                  </DetailField>
-                ) : null}
+              <DetailSection title="Logística" icon={ClipboardList}>
+                <DetailGrid>
+                  {matchLogistics.call_time_at ? (
+                    <DetailField label="Citación" icon={Clock}>
+                      {formatTime(matchLogistics.call_time_at)}
+                    </DetailField>
+                  ) : null}
+                  {matchLogistics.kit ? (
+                    <DetailField label="Uniforme" icon={Shirt}>
+                      {matchLogistics.kit}
+                    </DetailField>
+                  ) : null}
+                  {matchLogistics.meeting_point ? (
+                    <DetailField label="Punto de reunión" icon={MapPin} full>
+                      {matchLogistics.meeting_point}
+                    </DetailField>
+                  ) : null}
+                  {matchLogistics.logistics_notes ? (
+                    <DetailField label="Notas" full>
+                      <DetailValue value={matchLogistics.logistics_notes} />
+                    </DetailField>
+                  ) : null}
+                </DetailGrid>
               </DetailSection>
             ) : null}
 
-            <DetailSection title={`Convocatoria (${callups.length})`}>
+            <DetailSection title={`Convocatoria (${callups.length})`} icon={Users}>
               {callups.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Sin convocatoria publicada.</p>
+                <DetailEmptyBlock icon={Users}>Sin convocatoria publicada.</DetailEmptyBlock>
               ) : (
-                <ul className="space-y-1 text-sm text-foreground">
-                  {callups.map((c) => (
-                    <li key={c.id}>{c.profile?.full_name ?? "Convocado"}</li>
-                  ))}
-                </ul>
+                <div className="space-y-3">
+                  <DetailAvatars people={callupPeople} />
+                  <DetailPeopleList people={callupPeople} />
+                </div>
               )}
             </DetailSection>
           </>
@@ -186,16 +243,18 @@ export function EventDetailSheet({ open, onOpenChange, event, canEdit, clubId, u
 
         {/* Viaje: la información completa vive en la pestaña Viajes. */}
         {isTrip ? (
-          <Button asChild variant="outline" className="w-full">
-            <Link to="/agenda-viajes">
-              <Plane className="mr-2 h-4 w-4" /> Ver el viaje
-            </Link>
-          </Button>
+          <DetailSection title="Viaje" icon={Plane}>
+            <Button asChild variant="outline" className="w-full">
+              <Link to="/agenda-viajes">
+                <Plane className="mr-2 h-4 w-4" /> Ver el viaje
+              </Link>
+            </Button>
+          </DetailSection>
         ) : null}
 
         {/* Convocatoria de juntas y eventos sueltos. */}
         {!isMedical && !isMatch && !isTrip ? (
-          <DetailSection title="Convocatoria">
+          <DetailSection title="Convocatoria" icon={Users}>
             <AttendeeSummary eventId={event.id} clubId={clubId} teamId={event.team_id} />
           </DetailSection>
         ) : null}
@@ -203,27 +262,28 @@ export function EventDetailSheet({ open, onOpenChange, event, canEdit, clubId, u
         {isTraining ? (
           session ? (
             <DetailSection
-              title={
-                <span className="flex items-center justify-between gap-2">
-                  <span className="flex items-center gap-1.5 normal-case tracking-normal text-foreground">
-                    <ClipboardList className="h-4 w-4 text-primary" /> Plan de entrenamiento
-                  </span>
-                  {canEditPlan ? (
-                    <Button type="button" size="sm" variant="secondary" onClick={() => setPlanForm("edit")}>
-                      <Pencil className="mr-2 h-3.5 w-3.5" /> Editar plan
-                    </Button>
-                  ) : null}
-                </span>
+              title="Plan de entrenamiento"
+              icon={ClipboardList}
+              action={
+                canEditPlan ? (
+                  <Button type="button" size="sm" variant="secondary" onClick={() => setPlanForm("edit")}>
+                    <Pencil className="mr-2 h-3.5 w-3.5" /> Editar plan
+                  </Button>
+                ) : null
               }
             >
               <SessionPlanContent session={session} enabled={open} readOnly={!canEditPlan} />
             </DetailSection>
-          ) : sessionQ.isLoading ? null : canEditPlan && clubId ? (
-            <Button type="button" variant="outline" className="w-full" onClick={() => setPlanForm("new")}>
-              <Plus className="mr-2 h-4 w-4" /> Agregar plan de entrenamiento
-            </Button>
-          ) : (
-            <p className="text-sm text-muted-foreground">Sin plan de entrenamiento aún.</p>
+          ) : sessionQ.isLoading ? null : (
+            <DetailSection title="Plan de entrenamiento" icon={ClipboardList}>
+              {canEditPlan && clubId ? (
+                <Button type="button" variant="outline" className="w-full" onClick={() => setPlanForm("new")}>
+                  <Plus className="mr-2 h-4 w-4" /> Agregar plan de entrenamiento
+                </Button>
+              ) : (
+                <DetailEmptyBlock icon={ClipboardList}>Sin plan de entrenamiento aún.</DetailEmptyBlock>
+              )}
+            </DetailSection>
           )
         ) : null}
       </DetailSheet>
