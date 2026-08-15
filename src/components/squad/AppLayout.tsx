@@ -16,7 +16,13 @@ import {
 
 
 import { MODULES, MODULE_MAP, moduleFromPath, permissionKeyFor, type ModuleKey } from "@/lib/modules";
-import { resolvePagesForUser, inferBaseRole, type BaseRole, type ResolvedPage } from "@/lib/rolePages";
+import {
+  resolvePagesForUser,
+  inferBaseRole,
+  needsSolicitudesShortcut,
+  type BaseRole,
+  type ResolvedPage,
+} from "@/lib/rolePages";
 import { LoadingState } from "./LoadingState";
 import { FAB } from "./FAB";
 import { NotificationBell } from "@/components/notificaciones/NotificationBell";
