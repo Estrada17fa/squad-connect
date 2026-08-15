@@ -4,6 +4,8 @@ import { TeamCrest } from "@/components/torneo/TeamCrest";
 import { MATCH_STATUS_LABEL } from "@/lib/torneo";
 import type { OurMatch } from "@/hooks/useMatchOps";
 import { cn } from "@/lib/utils";
+import { AccentBar } from "@/components/squad/StandardCard";
+import { matchAccent } from "@/lib/accents";
 
 export function formatMatchWhen(iso: string | null) {
   if (!iso) return null;
@@ -50,10 +52,11 @@ export function MatchOpsCard({ match, callupCount, highlight, onOpen }: Props) {
       type="button"
       onClick={onOpen}
       className={cn(
-        "w-full rounded-xl bg-white/[0.04] p-3 text-left ring-1 ring-inset ring-white/5 transition-colors hover:bg-white/[0.07]",
-        highlight && "bg-primary/10 p-4 ring-primary/25",
+        "relative w-full overflow-hidden rounded-xl bg-white/[0.04] p-3 pl-5 text-left ring-1 ring-inset ring-white/5 transition-colors hover:bg-white/[0.07]",
+        highlight && "bg-primary/10 p-4 pl-5 ring-primary/25",
       )}
     >
+      <AccentBar color={matchAccent(match.status)} label={MATCH_STATUS_LABEL[match.status]} />
       <div className="flex items-center justify-between gap-2">
         <span className="truncate text-xs uppercase tracking-wider text-muted-foreground">
           {match.tournament_name}

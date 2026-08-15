@@ -13,6 +13,7 @@ import {
 } from "@/lib/requestTypes";
 import type { RequestRow } from "@/hooks/useRequests";
 import { cn } from "@/lib/utils";
+import { REQUEST_ACCENT } from "@/lib/accents";
 
 export interface QuickActions {
   onApprove: (r: RequestRow) => void;
@@ -45,6 +46,8 @@ export function RequestCard({
       title={requestSummary(request)}
       subtitle={def.label}
       status={{ label: STATUS_LABEL[request.status], variant: STATUS_VARIANT[request.status] }}
+      accent={REQUEST_ACCENT[request.status]}
+      accentLabel={STATUS_LABEL[request.status]}
       onClick={() => onOpen(request)}
       className={cn(highlighted && "border-primary/40 ring-1 ring-primary/25")}
     >

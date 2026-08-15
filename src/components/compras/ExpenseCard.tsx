@@ -12,6 +12,7 @@ import {
   formatDay,
   formatMoney,
 } from "@/lib/expenses";
+import { FISCAL_ACCENT } from "@/lib/accents";
 
 /** Tarjeta escaneable del gasto: monto, categoría, pago y estado fiscal. */
 export function ExpenseCard({
@@ -31,6 +32,8 @@ export function ExpenseCard({
       icon={cat.icon}
       title={expense.concept}
       subtitle={[supplier, cat.label].filter(Boolean).join(" · ")}
+      accent={FISCAL_ACCENT[fiscal]}
+      accentLabel={FISCAL_LABEL[fiscal]}
       onClick={() => onOpen(expense)}
     >
       <div className="space-y-2">

@@ -5,7 +5,8 @@ import { PageHeader } from "@/components/squad/PageHeader";
 import { ModuleTabs } from "@/components/squad/ModuleTabs";
 import { EmptyState } from "@/components/squad/EmptyState";
 import { CardGridSkeleton } from "@/components/squad/LoadingState";
-import { StandardCard } from "@/components/squad/StandardCard";
+import { StandardCard, AccentBar } from "@/components/squad/StandardCard";
+import { stockAccent, loanAccent } from "@/lib/accents";
 import { StatusBadge, type StatusVariant } from "@/components/squad/StatusBadge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -218,8 +219,14 @@ function InventarioPage() {
                     type="button"
                     key={i.id}
                     onClick={() => setDetailItem(i)}
-                    className="glass flex items-center gap-3 p-4 text-left transition-colors hover:bg-white/[0.04]"
+                    className="glass relative flex items-center gap-3 overflow-hidden p-4 pl-5 text-left transition-colors hover:bg-white/[0.04]"
                   >
+                    <AccentBar
+                      color={stockAccent(i.available_quantity, min)}
+                      label={
+                        i.available_quantity <= 0 ? "Agotado" : low ? "Stock bajo" : "Disponible"
+                      }
+                    />
                     {thumb ? (
                       <img src={thumb} alt="" className="h-14 w-14 shrink-0 rounded-xl object-cover" loading="lazy" />
                     ) : (
@@ -424,6 +431,12 @@ function LoanCard({
       title={`${loan.item?.name ?? "Artículo"} ×${loan.quantity}`}
       subtitle={loan.item?.category ?? SIN_CATEGORIA}
       status={status}
+      accent={loanAccent({
+        returned: !!loan.returned_at,
+        overdue,
+        partial: loan.returned_quantity > 0,
+      })}
+      accentLabel={status.label}
       className={cn(overdue && "border-destructive/50")}
       action={
         thumb ? (

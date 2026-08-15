@@ -5,14 +5,20 @@ import { StatusBadge } from "@/components/squad/StatusBadge";
 import type { RosterMember } from "@/hooks/useRoster";
 import { AVAILABILITY_META, PREFERRED_FOOT_LABEL } from "@/lib/plantel";
 import { initials } from "@/components/usuarios/memberUtils";
+import { AccentBar } from "@/components/squad/StandardCard";
+import { ACCENT, AVAILABILITY_ACCENT } from "@/lib/accents";
 
 function Frame({
   onClick,
   delay,
+  accent,
+  accentLabel,
   children,
 }: {
   onClick: () => void;
   delay: number;
+  accent: string;
+  accentLabel?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -20,8 +26,9 @@ function Frame({
       type="button"
       onClick={onClick}
       style={{ animationDelay: `${delay}ms` }}
-      className="animate-card-in glass flex w-full items-center gap-3 p-3 text-left transition-all hover:border-white/15 hover:bg-white/[0.06] active:scale-[0.99]"
+      className="animate-card-in glass relative flex w-full items-center gap-3 overflow-hidden p-3 pl-5 text-left transition-all hover:border-white/15 hover:bg-white/[0.06] active:scale-[0.99]"
     >
+      <AccentBar color={accent} label={accentLabel} />
       {children}
     </button>
   );
@@ -41,7 +48,12 @@ export function PlayerCard({
   const foot = member.preferredFoot ? PREFERRED_FOOT_LABEL[member.preferredFoot] ?? member.preferredFoot : null;
 
   return (
-    <Frame onClick={onClick} delay={index * 20}>
+    <Frame
+      onClick={onClick}
+      delay={index * 20}
+      accent={member.availability ? AVAILABILITY_ACCENT[member.availability] : ACCENT.neutral}
+      accentLabel={member.availability ? AVAILABILITY_META[member.availability].label : undefined}
+    >
       <div className="relative shrink-0">
         <Avatar className="h-16 w-16 ring-1 ring-white/10">
           {member.avatarUrl ? <AvatarImage src={member.avatarUrl} alt={name} /> : null}
@@ -92,7 +104,7 @@ export function StaffCard({
   const name = member.fullName ?? "Sin nombre";
   const title = member.jobTitle ?? member.roleName ?? "Staff";
   return (
-    <Frame onClick={onClick} delay={index * 20}>
+    <Frame onClick={onClick} delay={index * 20} accent={ACCENT.brand}>
       <Avatar className="h-11 w-11 shrink-0">
         {member.avatarUrl ? <AvatarImage src={member.avatarUrl} alt={name} /> : null}
         <AvatarFallback>{initials(name)}</AvatarFallback>
