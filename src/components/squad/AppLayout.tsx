@@ -258,6 +258,7 @@ function Header({
   userId,
   isSuperAdmin,
   canOpenModule,
+  showSolicitudes,
   onSignOut,
 }: {
   clubName: string | null;
@@ -266,6 +267,8 @@ function Header({
   userId: string;
   isSuperAdmin: boolean;
   canOpenModule: (key: string) => boolean;
+  /** Atajo "Mis Solicitudes" para quien no ve la página Coordinación. */
+  showSolicitudes: boolean;
   onSignOut: () => void;
 }) {
   const fallback = initials(userName || "?");
