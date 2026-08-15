@@ -104,6 +104,14 @@
   --event-junta: hsl(220 15% 70%);
   --event-especial: hsl(330 85% 65%);
   --event-medico: hsl(0 85% 65%);
+
+  /* Semáforo: significado consistente de la barra lateral en toda la app. */
+  --level-low: hsl(150 80% 50%);
+  --level-mid: hsl(38 95% 58%);
+  --level-high: hsl(0 84% 62%);
+  --level-critical: hsl(348 90% 58%);
+  --level-info: hsl(200 90% 60%);
+  --level-neutral: hsl(220 12% 45%);
 }
 
 
