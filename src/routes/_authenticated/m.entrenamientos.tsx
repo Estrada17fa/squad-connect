@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { CalendarDays, Dumbbell, Library, Plus } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
@@ -10,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useApp } from "@/components/squad/AppLayout";
 import { useTeamAccess } from "@/hooks/useTeamAccess";
 import { useEditableTeams } from "@/hooks/useEditableTeams";
-import { useCalendarEvents, type CalendarEventRow } from "@/hooks/useCalendarEvents";
+import { calendarEventsQueryOptions, type CalendarEventRow } from "@/hooks/useCalendarEvents";
 import {
   PHASE_LABEL,
   formatSessionDate,
@@ -104,7 +105,7 @@ function EntrenamientosPage() {
    * "Por planear": entrenamientos ya agendados (eventos futuros) que todavía no
    * tienen ejercicios. Solo de las categorías donde el usuario puede editar.
    */
-  const eventsQ = useCalendarEvents({ mode: "club", clubId: canAccess ? clubId : null });
+  const eventsQ = useQuery(calendarEventsQueryOptions({ mode: "club", clubId: canAccess ? clubId : null }));
   const plannedEventIds = React.useMemo(() => {
     const ids = new Set<string>();
     for (const s of visibleSessions) {
