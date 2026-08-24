@@ -26,7 +26,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { supabase } from "@/integrations/supabase/client";
 import { toLocalInputValue, fromLocalInputValue } from "@/lib/calendar-utils";
 import {
   createTrip,
