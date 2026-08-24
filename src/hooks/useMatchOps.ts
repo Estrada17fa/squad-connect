@@ -40,6 +40,7 @@ export interface OurMatch {
   rival: OurMatchTeam | null;
   isHome: boolean;
   tie_id: string | null;
+  calendar_event_id: string | null;
 }
 
 export interface CallupRow {
@@ -103,7 +104,7 @@ export function useOurMatches(clubId: string | null | undefined) {
         db
           .from("tournament_matches")
           .select(
-            "id, club_id, tournament_id, matchday, kickoff_at, venue, location_id, status, home_goals, away_goals, home_team_id, away_team_id, tie_id",
+            "id, club_id, tournament_id, matchday, kickoff_at, venue, location_id, status, home_goals, away_goals, home_team_id, away_team_id, tie_id, calendar_event_id",
           )
           .in("tournament_id", tIds),
       ]);
@@ -141,6 +142,7 @@ export function useOurMatches(clubId: string | null | undefined) {
           rival: isHome ? away : home,
           isHome,
           tie_id: m.tie_id ?? null,
+          calendar_event_id: m.calendar_event_id ?? null,
         });
       }
       return out.sort((a, b) => (a.kickoff_at ?? "").localeCompare(b.kickoff_at ?? ""));
@@ -301,7 +303,7 @@ export function useMatchByEvent(eventId: string | null | undefined) {
       const { data: m, error } = await db
         .from("tournament_matches")
         .select(
-          "id, club_id, tournament_id, matchday, kickoff_at, venue, location_id, status, home_goals, away_goals, home_team_id, away_team_id, tie_id",
+          "id, club_id, tournament_id, matchday, kickoff_at, venue, location_id, status, home_goals, away_goals, home_team_id, away_team_id, tie_id, calendar_event_id",
         )
         .eq("calendar_event_id", eventId!)
         .maybeSingle();
@@ -339,6 +341,7 @@ export function useMatchByEvent(eventId: string | null | undefined) {
         rival: isHome ? away : home,
         isHome,
         tie_id: m.tie_id ?? null,
+        calendar_event_id: m.calendar_event_id ?? null,
       };
     },
   });
