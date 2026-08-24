@@ -176,25 +176,8 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
     }
   }
 
-  async function handleHardDelete(m: MemberProfile) {
-    const name = displayName(m);
-    const typed = prompt(
-      `Esto elimina la cuenta de forma permanente.\nEscribe "${name}" para confirmar:`,
-    );
-    if (typed?.trim() !== name) return;
-    try {
-      const res = await hardDeleteFn({ data: { user_id: m.id } });
-      if (!res.ok) {
-        toast.error(res.reason);
-        return;
-      }
-      toast.success("Miembro eliminado");
-      setSelectedUserId(null);
-      refreshMembers();
-      qc.invalidateQueries({ queryKey: ["roster"] });
-    } catch (e: any) {
-      toast.error(e?.message ?? "No se pudo eliminar");
-    }
+  function handleHardDelete(m: MemberProfile) {
+    setDeleteTarget(m);
   }
 
   if (membersQ.isLoading) return <LoadingState />;
