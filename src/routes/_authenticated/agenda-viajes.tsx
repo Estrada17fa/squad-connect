@@ -111,11 +111,28 @@ function AgendaViajesPage() {
           open={!!detail}
           onOpenChange={(v) => !v && setDetailId(null)}
           title={detail?.title ?? ""}
-          description="Mi viaje"
+          icon={Plane}
+          accent="var(--event-viaje)"
+          description={
+            detail
+              ? `${formatDateTime(detail.departure_at)}${detail.return_at ? ` → ${formatDateTime(detail.return_at)}` : ""}`
+              : undefined
+          }
+          badges={
+            detail ? (
+              <>
+                <DetailBadge color="var(--event-viaje)" icon={Plane}>
+                  {TRIP_STATUS_LABEL[detail.status]}
+                </DetailBadge>
+                {teamNames[detail.team_id] ? <DetailBadge>{teamNames[detail.team_id]}</DetailBadge> : null}
+                {detail.destination ? <DetailBadge>{detail.destination}</DetailBadge> : null}
+              </>
+            ) : null
+          }
         >
           {detail ? <MyTripView trip={detail} userId={user.id} /> : null}
         </DetailSheet>
-      )}
+
     </div>
   );
 }
