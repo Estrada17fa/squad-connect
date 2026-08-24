@@ -79,14 +79,14 @@ export function DetailSheet({
   return (
     <EntitySheet open={open} onOpenChange={onOpenChange} size={size}>
       <EntitySheetHeader className="pb-4">
-        {accent ? (
-          <div
-            className="absolute inset-x-0 top-0 h-1"
-            style={{ backgroundColor: accent }}
-
-          />
-        ) : null}
-        <div className="flex items-start gap-3">
+        <div className="flex items-stretch gap-3">
+          {accent ? (
+            <span
+              aria-hidden
+              className="w-[3px] shrink-0 self-stretch rounded-full"
+              style={{ backgroundColor: accent }}
+            />
+          ) : null}
           {media ? (
             <div className="shrink-0">{media}</div>
           ) : Icon ? (
