@@ -24,7 +24,8 @@ import {
   type ResolvedPage,
 } from "@/lib/rolePages";
 import { LoadingState } from "./LoadingState";
-import { FAB } from "./FAB";
+import { ClubCrest } from "./ClubCrest";
+
 import { NotificationBell } from "@/components/notificaciones/NotificationBell";
 import { cn } from "@/lib/utils";
 import squadLogo from "@/assets/squad-logo.png.asset.json";
