@@ -80,6 +80,22 @@ export function fieldVisible(f: RequestFieldDef, values: Record<string, any>): b
   return String(current ?? "") === f.showIf.equals;
 }
 
+/**
+ * Normaliza detalles guardados antes del cambio de formulario: las solicitudes
+ * de material anteriores no tienen `se_devuelve`, pero sí fecha de devolución,
+ * así que se leen como préstamo.
+ */
+export function normalizeDetails(
+  type: RequestType,
+  details: Record<string, any> | null | undefined,
+): Record<string, any> {
+  const d = { ...(details ?? {}) };
+  if (type === "material" && !d.se_devuelve) {
+    d.se_devuelve = d.fecha_devolucion ? "prestamo" : "consumible";
+  }
+  return d;
+}
+
 export interface RequestTypeDef {
   key: RequestType;
   label: string;
