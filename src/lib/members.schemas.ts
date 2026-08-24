@@ -67,6 +67,11 @@ export const updateMemberSchema = baseMemberSchema.extend({
 
 export const memberTargetSchema = z.object({ user_id: z.string().uuid() });
 
+export const memberDeleteSchema = z.object({
+  user_id: z.string().uuid(),
+  force: z.boolean().optional(),
+});
+
 export type PlayerInput = z.infer<typeof playerSchema>;
 export type CreateClubMemberInput = z.infer<typeof createMemberSchema>;
 export type UpdateClubMemberInput = z.infer<typeof updateMemberSchema>;

@@ -4,13 +4,15 @@ import {
   createMemberSchema,
   updateMemberSchema,
   memberTargetSchema,
+  memberDeleteSchema,
 } from "@/lib/members.schemas";
 import {
   assertNotLastAdmin,
   authorizeMemberAdmin,
   fullNameOf,
   isPlayerRole,
-  linkedDataLabels,
+  linkedDataCounts,
+  purgePersonalData,
   loadClubRole,
   norm,
   syncMemberships,
@@ -190,13 +192,13 @@ export const checkMemberReferences = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await authorizeMemberAdmin(context as unknown as MemberCtx);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const labels = await linkedDataLabels(supabaseAdmin, data.user_id);
-    return { hasData: labels.length > 0, labels };
+    const items = await linkedDataCounts(supabaseAdmin, data.user_id);
+    return { hasData: items.length > 0, items, labels: items.map((i) => i.label) };
   });
 
 export const hardDeleteClubMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => memberTargetSchema.parse(data))
+  .inputValidator((data: unknown) => memberDeleteSchema.parse(data))
   .handler(async ({ data, context }) => {
     const ctx = context as unknown as MemberCtx;
     const clubId = await authorizeMemberAdmin(ctx);
@@ -211,19 +213,19 @@ export const hardDeleteClubMember = createServerFn({ method: "POST" })
     await assertNotLastAdmin(ctx.supabase, clubId, data.user_id);
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const labels = await linkedDataLabels(supabaseAdmin, data.user_id);
-    if (labels.length) {
+    const items = await linkedDataCounts(supabaseAdmin, data.user_id);
+    if (items.length && !data.force) {
       return {
         ok: false as const,
         reason:
-          "Este miembro tiene historial en el club. Usa 'Dar de baja' para conservar sus registros.",
-        labels,
+          "Este miembro tiene historial en el club. Confirma para eliminarlo junto con sus registros personales.",
+        items,
+        labels: items.map((i) => i.label),
       };
     }
 
-    await supabaseAdmin.from("player_profiles").delete().eq("user_id", data.user_id);
-    await supabaseAdmin.from("team_memberships").delete().eq("user_id", data.user_id);
+    await purgePersonalData(supabaseAdmin, data.user_id);
     const { error } = await supabaseAdmin.auth.admin.deleteUser(data.user_id);
     if (error) throw new Error("No se pudo eliminar la cuenta");
-    return { ok: true as const };
+    return { ok: true as const, items: [] as { label: string; count: number }[] };
   });

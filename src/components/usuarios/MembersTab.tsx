@@ -10,11 +10,8 @@ import { EmptyState } from "@/components/squad/EmptyState";
 import { LoadingState } from "@/components/squad/LoadingState";
 import { Button } from "@/components/ui/button";
 import { MemberForm } from "./MemberForm";
-import {
-  deactivateClubMember,
-  hardDeleteClubMember,
-  reactivateClubMember,
-} from "@/lib/members.functions";
+import { deactivateClubMember, reactivateClubMember } from "@/lib/members.functions";
+import { DeleteMemberDialog } from "./DeleteMemberDialog";
 import { MemberCard } from "./MemberCard";
 import { MemberDetailSheet } from "./MemberDetailSheet";
 import { MembersFilters, EMPTY_FILTERS, type MembersFilterState } from "./MembersFilters";
@@ -33,10 +30,10 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
   const [addOpen, setAddOpen] = React.useState(false);
   const [createOpen, setCreateOpen] = React.useState(false);
   const [editUserId, setEditUserId] = React.useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = React.useState<MemberProfile | null>(null);
 
   const deactivateFn = useServerFn(deactivateClubMember);
   const reactivateFn = useServerFn(reactivateClubMember);
-  const hardDeleteFn = useServerFn(hardDeleteClubMember);
 
   const membersQ = useQuery({
     queryKey: ["club-members", clubId],
@@ -176,25 +173,8 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
     }
   }
 
-  async function handleHardDelete(m: MemberProfile) {
-    const name = displayName(m);
-    const typed = prompt(
-      `Esto elimina la cuenta de forma permanente.\nEscribe "${name}" para confirmar:`,
-    );
-    if (typed?.trim() !== name) return;
-    try {
-      const res = await hardDeleteFn({ data: { user_id: m.id } });
-      if (!res.ok) {
-        toast.error(res.reason);
-        return;
-      }
-      toast.success("Miembro eliminado");
-      setSelectedUserId(null);
-      refreshMembers();
-      qc.invalidateQueries({ queryKey: ["roster"] });
-    } catch (e: any) {
-      toast.error(e?.message ?? "No se pudo eliminar");
-    }
+  function handleHardDelete(m: MemberProfile) {
+    setDeleteTarget(m);
   }
 
   if (membersQ.isLoading) return <LoadingState />;
@@ -294,6 +274,18 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
           }}
         />
       ) : null}
+
+      <DeleteMemberDialog
+        member={deleteTarget}
+        open={!!deleteTarget}
+        onOpenChange={(o) => !o && setDeleteTarget(null)}
+        onDeleted={() => {
+          setDeleteTarget(null);
+          setSelectedUserId(null);
+          refreshMembers();
+          qc.invalidateQueries({ queryKey: ["roster"] });
+        }}
+      />
     </div>
   );
 }
