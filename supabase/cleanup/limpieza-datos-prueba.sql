@@ -166,11 +166,10 @@ DELETE FROM public.user_permission_overrides
 DELETE FROM public.request_type_user_overrides
  WHERE user_id NOT IN (SELECT id FROM keep_users);
 
-DELETE FROM public.role_request_approvals
- WHERE user_id NOT IN (SELECT id FROM keep_users);
+-- NOTA: public.role_request_approvals es CONFIGURACIÓN (aprobadores por ROL,
+-- no por persona), así que NO se toca.
 
-DELETE FROM public.membership_audit_log
- WHERE user_id NOT IN (SELECT id FROM keep_users);
+DELETE FROM public.membership_audit_log;                    -- bitácora de pruebas
 
 DELETE FROM public.club_invitations;                        -- invitaciones pendientes de prueba
 
