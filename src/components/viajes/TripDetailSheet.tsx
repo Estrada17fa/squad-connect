@@ -230,13 +230,14 @@ export function TripDetailSheet({
   return (
     <EntitySheet open={open} onOpenChange={onOpenChange} size="xl">
       <EntitySheetHeader className="pb-4">
-        <div
-          className="absolute inset-x-0 top-0 h-1"
-          style={{ background: "linear-gradient(90deg, var(--event-viaje), transparent)" }}
-        />
-        <div className="flex items-start gap-3">
+        <div className="flex items-stretch gap-3">
+          <span
+            aria-hidden
+            className="w-[3px] shrink-0 self-stretch rounded-full"
+            style={{ backgroundColor: "var(--event-viaje)" }}
+          />
           <div
-            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl"
+            className="flex h-12 w-12 shrink-0 self-start items-center justify-center rounded-xl"
             style={{ backgroundColor: "color-mix(in oklab, var(--event-viaje) 18%, transparent)" }}
           >
             <Plane className="h-6 w-6" style={{ color: "var(--event-viaje)" }} />
