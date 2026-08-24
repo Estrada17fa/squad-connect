@@ -132,6 +132,8 @@ function AgendaViajesPage() {
         >
           {detail ? <MyTripView trip={detail} userId={user.id} /> : null}
         </DetailSheet>
+      )}
+
 
     </div>
   );
