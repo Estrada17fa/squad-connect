@@ -153,7 +153,7 @@ export const REQUEST_TYPES: RequestTypeDef[] = [
     fields: [
       { key: "que_comprar", label: "Qué comprar", type: "text", required: true },
       { key: "costo_estimado", label: "Costo estimado", type: "money", required: true },
-      { key: "justificacion", label: "Justificación", type: "textarea", required: true },
+      { key: "justificacion", label: "Justificación", type: "textarea" },
       {
         key: "referencia_url",
         label: "Link de referencia",
