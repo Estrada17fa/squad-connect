@@ -180,11 +180,64 @@ export const LINKED_TABLES: { table: string; column: string; label: string }[] =
   { table: "trip_travelers", column: "user_id", label: "viajes" },
 ];
 
-export async function linkedDataLabels(admin: any, userId: string): Promise<string[]> {
-  const labels: string[] = [];
+export async function linkedDataCounts(
+  admin: any,
+  userId: string,
+): Promise<{ label: string; count: number }[]> {
+  const out: { label: string; count: number }[] = [];
   for (const t of LINKED_TABLES) {
     const { count } = await admin.from(t.table).select("*", { count: "exact", head: true }).eq(t.column, userId);
-    if ((count ?? 0) > 0) labels.push(t.label);
+    if ((count ?? 0) > 0) out.push({ label: t.label, count: count ?? 0 });
   }
-  return labels;
+  return out;
+}
+
+export async function linkedDataLabels(admin: any, userId: string): Promise<string[]> {
+  return (await linkedDataCounts(admin, userId)).map((r) => r.label);
+}
+
+/** Datos personales que se eliminan al borrar definitivamente a un miembro. */
+export const PERSONAL_DATA_TABLES: { table: string; column: string }[] = [
+  { table: "player_profiles", column: "user_id" },
+  { table: "team_memberships", column: "user_id" },
+  { table: "user_permission_overrides", column: "user_id" },
+  { table: "request_type_user_overrides", column: "user_id" },
+  { table: "push_subscriptions", column: "user_id" },
+  { table: "notifications", column: "user_id" },
+  { table: "announcement_reads", column: "user_id" },
+  { table: "media_likes", column: "user_id" },
+  { table: "media_comments", column: "user_id" },
+  { table: "event_attendees", column: "user_id" },
+  { table: "task_assignees", column: "user_id" },
+  { table: "meeting_attendees", column: "user_id" },
+  { table: "request_comments", column: "user_id" },
+  { table: "requests", column: "requester_id" },
+  { table: "inventory_loans", column: "borrower_user_id" },
+  { table: "match_callups", column: "user_id" },
+  { table: "trip_travelers", column: "user_id" },
+  { table: "trip_flight_passengers", column: "user_id" },
+  { table: "trip_flight_baggage_handlers", column: "user_id" },
+  { table: "trip_transport_passengers", column: "user_id" },
+  { table: "trip_room_occupants", column: "user_id" },
+  { table: "trip_boarding_passes", column: "user_id" },
+  { table: "injuries", column: "player_user_id" },
+  { table: "medical_checkups", column: "player_user_id" },
+  { table: "medical_prescriptions", column: "player_user_id" },
+  { table: "medical_appointments", column: "player_user_id" },
+  { table: "player_medical_profile", column: "player_user_id" },
+  { table: "development_feedback", column: "player_user_id" },
+  { table: "development_goals", column: "player_user_id" },
+  { table: "development_assessments", column: "player_user_id" },
+  { table: "development_measurements", column: "player_user_id" },
+  { table: "routine_assignments", column: "player_user_id" },
+  { table: "nutrition_assessments", column: "player_user_id" },
+  { table: "nutrition_meal_plans", column: "player_user_id" },
+  { table: "player_competition_stats", column: "player_user_id" },
+];
+
+/** Borra los datos personales del miembro antes de eliminar su cuenta. */
+export async function purgePersonalData(admin: any, userId: string) {
+  for (const t of PERSONAL_DATA_TABLES) {
+    await admin.from(t.table).delete().eq(t.column, userId);
+  }
 }
