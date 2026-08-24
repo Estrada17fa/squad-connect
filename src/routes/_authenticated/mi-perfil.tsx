@@ -282,9 +282,34 @@ function MiPerfilPage() {
         </p>
       </div>
 
-      <MiSaludSection userId={user.id} fullName={data.full_name} avatarUrl={data.avatar_url} />
+      {showSalud ? (
+        <MiSaludSection
+          userId={user.id}
+          fullName={data.full_name}
+          avatarUrl={data.avatar_url}
+          clubId={playerClubId!}
+          teamId={playerTeamId!}
+          teamName={player?.team?.name ?? null}
+          availability={player?.availability_status ?? "apto"}
+        />
+      ) : null}
 
-      <MiDesarrolloSection userId={user.id} fullName={data.full_name} avatarUrl={data.avatar_url} />
+      {showDesarrollo ? (
+        <MiDesarrolloSection userId={user.id} fullName={data.full_name} avatarUrl={data.avatar_url} />
+      ) : null}
+
+      {showNutricion ? (
+        <MiNutricionSection
+          userId={user.id}
+          fullName={data.full_name}
+          avatarUrl={data.avatar_url}
+          clubId={profile?.club_id ?? null}
+          teamId={playerTeamId!}
+          teamName={player?.team?.name ?? null}
+          position={player?.position ?? null}
+        />
+      ) : null}
+
 
       <PersonDocumentsSection clubId={profile?.club_id ?? null} userId={user.id} />
 
