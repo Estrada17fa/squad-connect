@@ -207,9 +207,12 @@ export const hardDeleteClubMember = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const labels = await linkedDataLabels(supabaseAdmin, data.user_id);
     if (labels.length) {
-      throw new Error(
-        "Este miembro tiene historial en el club. Usa 'Dar de baja' para conservar sus registros.",
-      );
+      return {
+        ok: false as const,
+        reason:
+          "Este miembro tiene historial en el club. Usa 'Dar de baja' para conservar sus registros.",
+        labels,
+      };
     }
 
     await supabaseAdmin.from("player_profiles").delete().eq("user_id", data.user_id);
