@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ChevronDown, ChevronUp, Plus, Trash2, X } from "lucide-react";
 import {
@@ -19,7 +20,11 @@ import { toLocalInputValue, fromLocalInputValue } from "@/lib/calendar-utils";
 import { saveCalendarEvent } from "@/lib/calendarEvents";
 import { AttendeePicker, type AttendeeMode } from "@/components/calendar/AttendeePicker";
 import { LocationPicker } from "@/components/calendar/LocationPicker";
-import { useCalendarEvents } from "@/hooks/useCalendarEvents";
+import {
+  calendarEventsQueryOptions,
+  useEventAttendees,
+  type CalendarEventRow,
+} from "@/hooks/useCalendarEvents";
 import {
   CATEGORY_LABEL,
   PHASES,
@@ -41,8 +46,10 @@ interface Props {
   userId: string;
   teams: TeamOption[];
   defaultTeamId?: string | null;
-  /** Evento del calendario al que queda ligada la sesión (desde el detalle del evento). */
+  /** Entrenamiento ya agendado al que se le va a armar el plan. */
   defaultEventId?: string | null;
+  /** Igual que arriba, pero con los datos ya cargados (desde "Por planear"). */
+  pendingEvent?: CalendarEventRow | null;
   session?: TrainingSessionRow | null;
 }
 
@@ -54,25 +61,25 @@ export function SessionFormDialog({
   teams,
   defaultTeamId,
   defaultEventId,
+  pendingEvent,
   session,
 }: Props) {
   const isEdit = !!session;
   const save = useSaveSession();
   const del = useDeleteSession();
 
+  const initialEventId = session?.event_id ?? pendingEvent?.id ?? defaultEventId ?? null;
+
   const [teamId, setTeamId] = React.useState<string | null>(
-    session?.team_id ?? defaultTeamId ?? teams[0]?.id ?? null,
+    session?.team_id ?? pendingEvent?.team_id ?? defaultTeamId ?? teams[0]?.id ?? null,
   );
-  const [title, setTitle] = React.useState(session?.title ?? "");
+  const [title, setTitle] = React.useState(session?.title ?? pendingEvent?.title ?? "");
   const [objective, setObjective] = React.useState(session?.objective ?? "");
   const [notes, setNotes] = React.useState(session?.notes ?? "");
   const [date, setDate] = React.useState(
     session?.session_date ? toLocalInputValue(session.session_date) : "",
   );
-  const [eventMode, setEventMode] = React.useState<"none" | "link" | "create">(
-    session?.event_id || defaultEventId ? "link" : "create",
-  );
-  const [eventId, setEventId] = React.useState<string | null>(session?.event_id ?? defaultEventId ?? null);
+  const [eventId] = React.useState<string | null>(initialEventId);
   const [location, setLocation] = React.useState("");
   const [locationId, setLocationId] = React.useState<string | null>(null);
   const [attendeeIds, setAttendeeIds] = React.useState<Set<string>>(new Set());
@@ -84,7 +91,14 @@ export function SessionFormDialog({
 
   const exercisesQ = useExercises(clubId);
   const planQ = useSessionPlan(open && session ? session.id : null);
-  const { data: events } = useCalendarEvents({ mode: "club", clubId });
+  const { data: events } = useQuery(calendarEventsQueryOptions({ mode: "club", clubId }));
+  const attendeesQ = useEventAttendees(open && initialEventId ? initialEventId : null);
+
+  /** Entrenamiento ya agendado al que pertenece este plan (si lo hay). */
+  const linkedEvent: CalendarEventRow | null = React.useMemo(() => {
+    if (!initialEventId) return null;
+    return (events ?? []).find((e) => e.id === initialEventId) ?? pendingEvent ?? null;
+  }, [events, initialEventId, pendingEvent]);
 
   const exercisesById = React.useMemo(() => {
     const m = new Map<string, ExerciseRow>();
@@ -97,23 +111,13 @@ export function SessionFormDialog({
     [exercisesQ.data, teamId],
   );
 
-  const trainingEvents = React.useMemo(
-    () =>
-      (events ?? []).filter(
-        (e) => e.event_type === "entrenamiento" && (!teamId || e.team_id === teamId),
-      ),
-    [events, teamId],
-  );
-
   React.useEffect(() => {
     if (!open) return;
-    setTeamId(session?.team_id ?? defaultTeamId ?? teams[0]?.id ?? null);
-    setTitle(session?.title ?? "");
+    setTeamId(session?.team_id ?? pendingEvent?.team_id ?? defaultTeamId ?? teams[0]?.id ?? null);
+    setTitle(session?.title ?? pendingEvent?.title ?? "");
     setObjective(session?.objective ?? "");
     setNotes(session?.notes ?? "");
     setDate(session?.session_date ? toLocalInputValue(session.session_date) : "");
-    setEventMode(session?.event_id || defaultEventId ? "link" : "create");
-    setEventId(session?.event_id ?? defaultEventId ?? null);
     setLocation("");
     setLocationId(null);
     setAttendeeIds(new Set());
@@ -121,7 +125,7 @@ export function SessionFormDialog({
 
     setPickerPhase(null);
     if (!session) setPlan([]);
-  }, [open, session, defaultTeamId, defaultEventId, teams]);
+  }, [open, session, defaultTeamId, pendingEvent, teams]);
 
   // Al cambiar de equipo, la convocatoria se recalcula al equipo completo.
   const prevTeamRef = React.useRef<string | null>(teamId);
@@ -134,7 +138,36 @@ export function SessionFormDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamId]);
 
+  // Cuando ya existe el entrenamiento en la agenda, sus datos mandan (una sola vez).
+  const hydratedRef = React.useRef<string | null>(null);
+  React.useEffect(() => {
+    if (!open) {
+      hydratedRef.current = null;
+      return;
+    }
+    if (!linkedEvent || hydratedRef.current === linkedEvent.id) return;
+    hydratedRef.current = linkedEvent.id;
+    setTeamId(linkedEvent.team_id ?? null);
+    setDate(toLocalInputValue(linkedEvent.starts_at));
+    setLocation(linkedEvent.location ?? "");
+    setLocationId(linkedEvent.location_id ?? null);
+    prevTeamRef.current = linkedEvent.team_id ?? null;
+  }, [open, linkedEvent]);
 
+  const attendeesHydratedRef = React.useRef(false);
+  React.useEffect(() => {
+    if (!open) {
+      attendeesHydratedRef.current = false;
+      return;
+    }
+    if (attendeesHydratedRef.current || !attendeesQ.data) return;
+    attendeesHydratedRef.current = true;
+    const ids = (attendeesQ.data as any[]).map((a) => a.user_id as string);
+    if (ids.length) {
+      setAttendeeIds(new Set(ids));
+      setAttendeeMode("detect");
+    }
+  }, [open, attendeesQ.data]);
 
   React.useEffect(() => {
     if (!open || !session || !planQ.data) return;
@@ -187,32 +220,26 @@ export function SessionFormDialog({
   async function handleSave() {
     if (!teamId) return toast.error("Selecciona un equipo");
     if (!title.trim()) return toast.error("El título es obligatorio");
-    if (eventMode !== "link" && !date) return toast.error("Indica la fecha y hora");
-    if (eventMode === "link" && !eventId) return toast.error("Selecciona el evento del calendario");
+    if (!date) return toast.error("Indica la fecha y hora");
 
     setBusy(true);
     try {
-      let finalEventId: string | null = null;
-      let sessionDate = date ? fromLocalInputValue(date) : new Date().toISOString();
+      const sessionDate = fromLocalInputValue(date);
 
-      if (eventMode === "link" && eventId) {
-        finalEventId = eventId;
-        const ev = trainingEvents.find((e) => e.id === eventId);
-        if (ev) sessionDate = ev.starts_at;
-      } else if (eventMode === "create") {
-        finalEventId = await saveCalendarEvent({
-          clubId,
-          teamId,
-          eventType: "entrenamiento",
-          title,
-          startsAt: sessionDate,
-          location,
-          locationId,
-          description: objective,
-          attendeeIds: [...attendeeIds],
-          userId,
-        });
-      }
+      // Crea el entrenamiento en la agenda, o actualiza el que ya estaba agendado.
+      const finalEventId = await saveCalendarEvent({
+        eventId,
+        clubId,
+        teamId,
+        eventType: "entrenamiento",
+        title,
+        startsAt: sessionDate,
+        location,
+        locationId,
+        description: objective,
+        attendeeIds: attendeeIds.size ? [...attendeeIds] : undefined,
+        userId,
+      });
 
       await save.mutateAsync({
         id: session?.id,
@@ -228,7 +255,7 @@ export function SessionFormDialog({
         },
         plan,
       });
-      toast.success(isEdit ? "Sesión actualizada" : "Sesión creada");
+      toast.success(isEdit ? "Entrenamiento actualizado" : "Entrenamiento guardado");
       onOpenChange(false);
     } catch (e: any) {
       toast.error(e.message ?? "No se pudo guardar");
@@ -241,7 +268,7 @@ export function SessionFormDialog({
     if (!session) return;
     try {
       await del.mutateAsync(session.id);
-      toast.success("Sesión eliminada");
+      toast.success("Entrenamiento eliminado");
       onOpenChange(false);
     } catch (e: any) {
       toast.error(e.message ?? "No se pudo eliminar");
@@ -251,14 +278,22 @@ export function SessionFormDialog({
   return (
     <EntitySheet open={open} onOpenChange={onOpenChange} size="xl">
       <EntitySheetHeader>
-        <EntitySheetTitle>{isEdit ? "Editar sesión" : "Nueva sesión"}</EntitySheetTitle>
+        <EntitySheetTitle>
+          {isEdit ? "Editar entrenamiento" : linkedEvent ? "Planear entrenamiento" : "Nuevo entrenamiento"}
+        </EntitySheetTitle>
         <EntitySheetDescription>
-          Arma el plan con ejercicios de la biblioteca, por fase y en orden.
+          Datos del entrenamiento y su plan de ejercicios. Puedes guardarlo sin plan y armarlo después.
         </EntitySheetDescription>
       </EntitySheetHeader>
 
       <EntitySheetBody>
-        <TeamSelectField id="sess-team" teams={teams} value={teamId} onChange={setTeamId} disabled={isEdit} />
+        <TeamSelectField
+          id="sess-team"
+          teams={teams}
+          value={teamId}
+          onChange={setTeamId}
+          disabled={isEdit || !!linkedEvent}
+        />
 
         <div className="space-y-1.5">
           <Label htmlFor="sess-title">Título</Label>
@@ -276,81 +311,37 @@ export function SessionFormDialog({
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="sess-evmode">Evento del calendario</Label>
-          <select
-            id="sess-evmode"
-            value={eventMode}
-            onChange={(e) => setEventMode(e.target.value as "none" | "link" | "create")}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          >
-            <option value="create">Crear evento nuevo</option>
-            <option value="link">Ligar a un entrenamiento existente</option>
-            <option value="none">Sin evento (solo plan)</option>
-          </select>
+          <Label htmlFor="sess-date">Fecha y hora</Label>
+          <Input
+            id="sess-date"
+            type="datetime-local"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+          />
         </div>
 
-        {eventMode === "link" ? (
-          <div className="space-y-1.5">
-            <Label htmlFor="sess-event">Entrenamiento</Label>
-            <select
-              id="sess-event"
-              value={eventId ?? ""}
-              onChange={(e) => setEventId(e.target.value || null)}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            >
-              <option value="">Selecciona un evento</option>
-              {trainingEvents.map((e) => (
-                <option key={e.id} value={e.id}>
-                  {new Date(e.starts_at).toLocaleString("es-MX", {
-                    day: "numeric",
-                    month: "short",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}{" "}
-                  · {e.title}
-                </option>
-              ))}
-            </select>
-          </div>
-        ) : (
-          <>
-            <div className="space-y-1.5">
-              <Label htmlFor="sess-date">Fecha y hora</Label>
-              <Input
-                id="sess-date"
-                type="datetime-local"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-              />
-            </div>
-            {eventMode === "create" ? (
-              <>
-                <LocationPicker
-                  id="sess-loc"
-                  clubId={clubId}
-                  userId={userId}
-                  value={location}
-                  onChange={setLocation}
-                  locationId={locationId}
-                  onLocationIdChange={setLocationId}
-                />
-                <AttendeePicker
-                  clubId={clubId}
-                  teamId={teamId}
-                  value={attendeeIds}
-                  onChange={setAttendeeIds}
-                  label="Convocados"
-                  mode={attendeeMode}
-                  onModeChange={setAttendeeMode}
+        <LocationPicker
+          id="sess-loc"
+          clubId={clubId}
+          userId={userId}
+          value={location}
+          onChange={setLocation}
+          locationId={locationId}
+          onLocationIdChange={setLocationId}
+        />
 
-                />
-              </>
-            ) : null}
-          </>
-        )}
+        <AttendeePicker
+          clubId={clubId}
+          teamId={teamId}
+          value={attendeeIds}
+          onChange={setAttendeeIds}
+          label="Convocados"
+          mode={attendeeMode}
+          onModeChange={setAttendeeMode}
+        />
 
         <div className="space-y-3 pt-2">
-          <Label>Plan de la sesión</Label>
+          <Label>Plan de ejercicios</Label>
           {PHASES.map((phase) => {
             const items = plan
               .map((p, i) => ({ ...p, index: i }))
@@ -486,7 +477,7 @@ export function SessionFormDialog({
           Cancelar
         </Button>
         <Button type="button" onClick={handleSave} disabled={busy}>
-          {isEdit ? "Guardar cambios" : "Crear sesión"}
+          {isEdit ? "Guardar cambios" : "Guardar entrenamiento"}
         </Button>
       </EntitySheetFooter>
     </EntitySheet>

@@ -24,9 +24,8 @@ export interface TrainingFilterState {
   scope: "club" | "team" | null;
   /** Biblioteca: solo con material o con imagen. */
   extra: "material" | "media" | null;
-  /** Sesiones: con o sin plan / ligadas al calendario. */
+  /** Sesiones: con o sin plan. */
   planned: "con" | "sin" | null;
-  linked: boolean;
 }
 
 export const EMPTY_TRAINING_FILTERS: TrainingFilterState = {
@@ -36,7 +35,6 @@ export const EMPTY_TRAINING_FILTERS: TrainingFilterState = {
   scope: null,
   extra: null,
   planned: null,
-  linked: false,
 };
 
 /** Buscador + panel "Filtrar", mismo patrón compacto que Salud y Usuarios. */
@@ -59,7 +57,7 @@ export function EntrenamientosFilters({
     (value.teamId ? 1 : 0) +
     (mode === "biblioteca"
       ? (value.category ? 1 : 0) + (value.scope ? 1 : 0) + (value.extra ? 1 : 0)
-      : (value.planned ? 1 : 0) + (value.linked ? 1 : 0));
+      : value.planned ? 1 : 0);
 
   return (
     <div className="space-y-2">
@@ -69,7 +67,7 @@ export function EntrenamientosFilters({
           <Input
             value={value.search}
             onChange={(e) => set({ search: e.target.value })}
-            placeholder={mode === "sesiones" ? "Buscar sesión" : "Buscar ejercicio"}
+            placeholder={mode === "sesiones" ? "Buscar entrenamiento" : "Buscar ejercicio"}
             className="pl-9"
           />
         </div>
@@ -183,21 +181,6 @@ export function EntrenamientosFilters({
                   </Select>
                 </div>
 
-                <div className="space-y-1.5">
-                  <Label>Calendario</Label>
-                  <Select
-                    value={value.linked ? "linked" : ALL}
-                    onValueChange={(v) => set({ linked: v === "linked" })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Todas" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={ALL}>Todas</SelectItem>
-                      <SelectItem value="linked">Solo ligadas a un evento</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
               </>
             )}
 

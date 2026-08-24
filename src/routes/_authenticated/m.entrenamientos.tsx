@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { CalendarDays, Dumbbell, Library, Plus } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
@@ -10,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useApp } from "@/components/squad/AppLayout";
 import { useTeamAccess } from "@/hooks/useTeamAccess";
 import { useEditableTeams } from "@/hooks/useEditableTeams";
+import { calendarEventsQueryOptions, type CalendarEventRow } from "@/hooks/useCalendarEvents";
 import {
   PHASE_LABEL,
   formatSessionDate,
@@ -23,7 +25,12 @@ import { ExerciseFormDialog } from "@/components/entrenamientos/ExerciseFormDial
 import { SessionFormDialog } from "@/components/entrenamientos/SessionFormDialog";
 import { SessionDetailSheet } from "@/components/entrenamientos/SessionDetailSheet";
 import { ExerciseDetailSheet } from "@/components/entrenamientos/ExerciseDetailSheet";
-import { ExerciseCard, PlanSummaryChips, TrainingChip } from "@/components/entrenamientos/TrainingPieces";
+import {
+  ExerciseCard,
+  PendingPlanCard,
+  PlanSummaryChips,
+  TrainingChip,
+} from "@/components/entrenamientos/TrainingPieces";
 import {
   EMPTY_TRAINING_FILTERS,
   EntrenamientosFilters,
@@ -65,6 +72,7 @@ function EntrenamientosPage() {
 
   const [sessionFormOpen, setSessionFormOpen] = React.useState(false);
   const [editingSession, setEditingSession] = React.useState<TrainingSessionRow | null>(null);
+  const [pendingEvent, setPendingEvent] = React.useState<CalendarEventRow | null>(null);
   const [detailSession, setDetailSession] = React.useState<TrainingSessionRow | null>(null);
   const [exerciseOpen, setExerciseOpen] = React.useState(false);
   const [editingExercise, setEditingExercise] = React.useState<ExerciseRow | null>(null);
@@ -87,12 +95,46 @@ function EntrenamientosPage() {
     if (filters.teamId && s.team_id !== filters.teamId) return false;
     if (q && !s.title.toLowerCase().includes(q) && !(s.objective ?? "").toLowerCase().includes(q))
       return false;
-    if (filters.linked && !s.event_id) return false;
     const count = summaries[s.id]?.count ?? 0;
     if (filters.planned === "con" && count === 0) return false;
     if (filters.planned === "sin" && count > 0) return false;
     return true;
   });
+
+  /**
+   * "Por planear": entrenamientos ya agendados (eventos futuros) que todavía no
+   * tienen ejercicios. Solo de las categorías donde el usuario puede editar.
+   */
+  const eventsQ = useQuery(calendarEventsQueryOptions({ mode: "club", clubId: canAccess ? clubId : null }));
+  const plannedEventIds = React.useMemo(() => {
+    const ids = new Set<string>();
+    for (const s of visibleSessions) {
+      if (s.event_id && (summaries[s.id]?.count ?? 0) > 0) ids.add(s.event_id);
+    }
+    return ids;
+  }, [visibleSessions, summaries]);
+
+  const pendingEvents = React.useMemo(() => {
+    const nowTs = Date.now();
+    return (eventsQ.data ?? [])
+      .filter(
+        (e) =>
+          e.event_type === "entrenamiento" &&
+          !!e.team_id &&
+          canEditTeam(e.team_id) &&
+          new Date(e.starts_at).getTime() >= nowTs &&
+          !plannedEventIds.has(e.id) &&
+          (!filters.teamId || e.team_id === filters.teamId),
+      )
+      .sort((a, b) => a.starts_at.localeCompare(b.starts_at));
+  }, [eventsQ.data, canEditTeam, plannedEventIds, filters.teamId]);
+
+  /** Si el evento ya tiene sesión creada (pero sin ejercicios), se edita esa. */
+  const sessionByEvent = React.useMemo(() => {
+    const m = new Map<string, TrainingSessionRow>();
+    for (const s of visibleSessions) if (s.event_id) m.set(s.event_id, s);
+    return m;
+  }, [visibleSessions]);
 
   const exercises = (exercisesQ.data ?? []).filter((e) => {
     if (e.team_id && !canReadTeam(e.team_id)) return false;
@@ -124,8 +166,10 @@ function EntrenamientosPage() {
   }
 
   const now = Date.now();
-  const upcoming = sessions.filter((s) => new Date(s.session_date).getTime() >= now).reverse();
-  const past = sessions.filter((s) => new Date(s.session_date).getTime() < now);
+  const pendingIds = new Set(pendingEvents.map((e) => e.id));
+  const listSessions = sessions.filter((s) => !(s.event_id && pendingIds.has(s.event_id)));
+  const upcoming = listSessions.filter((s) => new Date(s.session_date).getTime() >= now).reverse();
+  const past = listSessions.filter((s) => new Date(s.session_date).getTime() < now);
 
   function renderSessionCard(s: TrainingSessionRow) {
     const sum = summaries[s.id];
@@ -196,6 +240,7 @@ function EntrenamientosPage() {
             onClick={() => {
               if (view === "sesiones") {
                 setEditingSession(null);
+                setPendingEvent(null);
                 setSessionFormOpen(true);
               } else {
                 setEditingExercise(null);
@@ -204,7 +249,7 @@ function EntrenamientosPage() {
             }}
           >
             <Plus className="mr-2 h-4 w-4" />
-            {view === "sesiones" ? "Nueva sesión" : "Nuevo ejercicio"}
+            {view === "sesiones" ? "Nuevo entrenamiento" : "Nuevo ejercicio"}
           </Button>
         ) : null}
 
@@ -213,23 +258,47 @@ function EntrenamientosPage() {
           value={filters}
           onChange={setFilters}
           teams={teamOptions.flatMap((t) => (t.id ? [{ id: t.id, name: t.name }] : []))}
-          count={view === "sesiones" ? sessions.length : exercises.length}
+          count={view === "sesiones" ? listSessions.length : exercises.length}
         />
 
         <TabsContent value="sesiones" className="space-y-4">
+          {pendingEvents.length ? (
+            <div className="space-y-3">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">Por planear</p>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {pendingEvents.map((e) => (
+                  <PendingPlanCard
+                    key={e.id}
+                    title={e.title}
+                    startsAt={e.starts_at}
+                    teamLabel={teamName(e.team_id)}
+                    location={e.location}
+                    onClick={() => {
+                      setEditingSession(sessionByEvent.get(e.id) ?? null);
+                      setPendingEvent(e);
+                      setSessionFormOpen(true);
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : null}
+
           {sessionsQ.isLoading ? (
             <CardGridSkeleton count={3} />
-          ) : sessions.length === 0 ? (
-            <EmptyState
-              icon={Dumbbell}
-              title="Sin sesiones"
-              message="Aún no hay sesiones de entrenamiento que coincidan con los filtros."
-            />
+          ) : listSessions.length === 0 ? (
+            pendingEvents.length ? null : (
+              <EmptyState
+                icon={Dumbbell}
+                title="Sin entrenamientos"
+                message="Aún no hay entrenamientos que coincidan con los filtros."
+              />
+            )
           ) : (
             <>
               {upcoming.length ? (
                 <div className="space-y-3">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Próximas</p>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Próximos</p>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     {upcoming.map(renderSessionCard)}
                   </div>
@@ -237,7 +306,7 @@ function EntrenamientosPage() {
               ) : null}
               {past.length ? (
                 <div className="space-y-3">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Pasadas</p>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Pasados</p>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">{past.map(renderSessionCard)}</div>
                 </div>
               ) : null}
@@ -273,11 +342,15 @@ function EntrenamientosPage() {
         <>
           <SessionFormDialog
             open={sessionFormOpen}
-            onOpenChange={setSessionFormOpen}
+            onOpenChange={(v) => {
+              setSessionFormOpen(v);
+              if (!v) setPendingEvent(null);
+            }}
             clubId={clubId}
             userId={userId}
             teams={editableTeams}
             defaultTeamId={filters.teamId}
+            pendingEvent={pendingEvent}
             session={editingSession}
           />
           <ExerciseFormDialog
@@ -298,6 +371,7 @@ function EntrenamientosPage() {
         teamName={detailSession ? teamName(detailSession.team_id) : null}
         readOnly={!detailSession || !canEditTeam(detailSession.team_id)}
         onEdit={() => {
+          setPendingEvent(null);
           setEditingSession(detailSession);
           setDetailSession(null);
           setSessionFormOpen(true);
