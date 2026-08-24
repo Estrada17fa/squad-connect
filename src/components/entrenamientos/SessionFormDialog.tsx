@@ -79,7 +79,8 @@ export function SessionFormDialog({
   const [date, setDate] = React.useState(
     session?.session_date ? toLocalInputValue(session.session_date) : "",
   );
-  const [eventId] = React.useState<string | null>(initialEventId);
+  // Siempre el evento ya conocido (sesión existente > "Por planear"); nunca un valor viejo.
+  const eventId = initialEventId;
   const [location, setLocation] = React.useState("");
   const [locationId, setLocationId] = React.useState<string | null>(null);
   const [attendeeIds, setAttendeeIds] = React.useState<Set<string>>(new Set());
