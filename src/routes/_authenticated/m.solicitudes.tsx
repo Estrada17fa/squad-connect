@@ -216,10 +216,6 @@ function SolicitudesPage() {
       <ModuleTabs activeKey="solicitudes" />
       <PageHeader hideTitle title="Solicitudes" subtitle="Ámbito club · peticiones y aprobaciones" />
 
-      <Button onClick={openCreate} className="w-full glow-primary">
-        <Plus className="mr-2 h-4 w-4" /> Nueva solicitud
-      </Button>
-
       {allToApprove.length > 0 ? (
         <div className="glass flex items-center gap-3 border-primary/30 p-3">
           <BellRing className="h-4 w-4 shrink-0 text-primary" />
@@ -229,6 +225,10 @@ function SolicitudesPage() {
           </p>
         </div>
       ) : null}
+
+      <Button onClick={openCreate} className="w-full glow-primary">
+        <Plus className="mr-2 h-4 w-4" /> Nueva solicitud
+      </Button>
 
       <RequestFilters
         value={filters}
