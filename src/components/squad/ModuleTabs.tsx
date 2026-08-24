@@ -93,7 +93,7 @@ export function ModuleTabs({ activeKey, hubKey, extraActiveKey }: ModuleTabsProp
     }
 
     return out;
-  }, [hub?.page.key, isSuperAdmin, accessibleModules, extraActiveKey, permissions]);
+  }, [hub?.page.key, isSuperAdmin, accessibleModules, extraActiveKey, permissions, canViewModule]);
 
 
   const total = modules.length + extras.length;
