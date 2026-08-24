@@ -267,7 +267,7 @@ export function SessionFormDialog({
     if (!session) return;
     try {
       await del.mutateAsync(session.id);
-      toast.success("Sesión eliminada");
+      toast.success("Entrenamiento eliminado");
       onOpenChange(false);
     } catch (e: any) {
       toast.error(e.message ?? "No se pudo eliminar");
@@ -476,7 +476,7 @@ export function SessionFormDialog({
           Cancelar
         </Button>
         <Button type="button" onClick={handleSave} disabled={busy}>
-          {isEdit ? "Guardar cambios" : "Crear sesión"}
+          {isEdit ? "Guardar cambios" : "Guardar entrenamiento"}
         </Button>
       </EntitySheetFooter>
     </EntitySheet>
