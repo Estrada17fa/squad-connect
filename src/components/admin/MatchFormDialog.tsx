@@ -180,6 +180,11 @@ export function MatchFormDialog({
             value={kickoff}
             onChange={(e) => setKickoff(e.target.value)}
           />
+          {!kickoff ? (
+            <p className="text-xs text-muted-foreground">
+              Sin fecha y hora el partido no aparece en la Agenda.
+            </p>
+          ) : null}
         </div>
 
         <LocationPicker
