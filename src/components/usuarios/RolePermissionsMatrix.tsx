@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -52,6 +53,7 @@ export function RolePermissionsMatrix({
   canEdit: boolean;
   onSaved: () => void;
 }) {
+  const qc = useQueryClient();
   const initial = React.useMemo(() => {
     const map: Record<string, PermissionLevel> = {};
     for (const m of MODULES) map[m.key] = "sin_acceso";
