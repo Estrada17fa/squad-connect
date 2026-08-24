@@ -10,6 +10,8 @@ import {
   canEdit as levelCanEdit,
   canRead as levelCanRead,
   canSeeUsers,
+  canManageTripsModule,
+
   maxLevel,
   type PermissionLevel,
 } from "@/lib/permissions";
