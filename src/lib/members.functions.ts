@@ -219,5 +219,5 @@ export const hardDeleteClubMember = createServerFn({ method: "POST" })
     await supabaseAdmin.from("team_memberships").delete().eq("user_id", data.user_id);
     const { error } = await supabaseAdmin.auth.admin.deleteUser(data.user_id);
     if (error) throw new Error("No se pudo eliminar la cuenta");
-    return { ok: true };
+    return { ok: true as const };
   });
