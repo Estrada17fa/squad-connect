@@ -219,32 +219,26 @@ export function SessionFormDialog({
   async function handleSave() {
     if (!teamId) return toast.error("Selecciona un equipo");
     if (!title.trim()) return toast.error("El título es obligatorio");
-    if (eventMode !== "link" && !date) return toast.error("Indica la fecha y hora");
-    if (eventMode === "link" && !eventId) return toast.error("Selecciona el evento del calendario");
+    if (!date) return toast.error("Indica la fecha y hora");
 
     setBusy(true);
     try {
-      let finalEventId: string | null = null;
-      let sessionDate = date ? fromLocalInputValue(date) : new Date().toISOString();
+      const sessionDate = fromLocalInputValue(date);
 
-      if (eventMode === "link" && eventId) {
-        finalEventId = eventId;
-        const ev = trainingEvents.find((e) => e.id === eventId);
-        if (ev) sessionDate = ev.starts_at;
-      } else if (eventMode === "create") {
-        finalEventId = await saveCalendarEvent({
-          clubId,
-          teamId,
-          eventType: "entrenamiento",
-          title,
-          startsAt: sessionDate,
-          location,
-          locationId,
-          description: objective,
-          attendeeIds: [...attendeeIds],
-          userId,
-        });
-      }
+      // Crea el entrenamiento en la agenda, o actualiza el que ya estaba agendado.
+      const finalEventId = await saveCalendarEvent({
+        eventId,
+        clubId,
+        teamId,
+        eventType: "entrenamiento",
+        title,
+        startsAt: sessionDate,
+        location,
+        locationId,
+        description: objective,
+        attendeeIds: [...attendeeIds],
+        userId,
+      });
 
       await save.mutateAsync({
         id: session?.id,
@@ -260,7 +254,7 @@ export function SessionFormDialog({
         },
         plan,
       });
-      toast.success(isEdit ? "Sesión actualizada" : "Sesión creada");
+      toast.success(isEdit ? "Entrenamiento actualizado" : "Entrenamiento guardado");
       onOpenChange(false);
     } catch (e: any) {
       toast.error(e.message ?? "No se pudo guardar");
