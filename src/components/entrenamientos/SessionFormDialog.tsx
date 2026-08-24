@@ -277,14 +277,22 @@ export function SessionFormDialog({
   return (
     <EntitySheet open={open} onOpenChange={onOpenChange} size="xl">
       <EntitySheetHeader>
-        <EntitySheetTitle>{isEdit ? "Editar sesión" : "Nueva sesión"}</EntitySheetTitle>
+        <EntitySheetTitle>
+          {isEdit ? "Editar entrenamiento" : linkedEvent ? "Planear entrenamiento" : "Nuevo entrenamiento"}
+        </EntitySheetTitle>
         <EntitySheetDescription>
-          Arma el plan con ejercicios de la biblioteca, por fase y en orden.
+          Datos del entrenamiento y su plan de ejercicios. Puedes guardarlo sin plan y armarlo después.
         </EntitySheetDescription>
       </EntitySheetHeader>
 
       <EntitySheetBody>
-        <TeamSelectField id="sess-team" teams={teams} value={teamId} onChange={setTeamId} disabled={isEdit} />
+        <TeamSelectField
+          id="sess-team"
+          teams={teams}
+          value={teamId}
+          onChange={setTeamId}
+          disabled={isEdit || !!linkedEvent}
+        />
 
         <div className="space-y-1.5">
           <Label htmlFor="sess-title">Título</Label>
@@ -302,81 +310,37 @@ export function SessionFormDialog({
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="sess-evmode">Evento del calendario</Label>
-          <select
-            id="sess-evmode"
-            value={eventMode}
-            onChange={(e) => setEventMode(e.target.value as "none" | "link" | "create")}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          >
-            <option value="create">Crear evento nuevo</option>
-            <option value="link">Ligar a un entrenamiento existente</option>
-            <option value="none">Sin evento (solo plan)</option>
-          </select>
+          <Label htmlFor="sess-date">Fecha y hora</Label>
+          <Input
+            id="sess-date"
+            type="datetime-local"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+          />
         </div>
 
-        {eventMode === "link" ? (
-          <div className="space-y-1.5">
-            <Label htmlFor="sess-event">Entrenamiento</Label>
-            <select
-              id="sess-event"
-              value={eventId ?? ""}
-              onChange={(e) => setEventId(e.target.value || null)}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            >
-              <option value="">Selecciona un evento</option>
-              {trainingEvents.map((e) => (
-                <option key={e.id} value={e.id}>
-                  {new Date(e.starts_at).toLocaleString("es-MX", {
-                    day: "numeric",
-                    month: "short",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}{" "}
-                  · {e.title}
-                </option>
-              ))}
-            </select>
-          </div>
-        ) : (
-          <>
-            <div className="space-y-1.5">
-              <Label htmlFor="sess-date">Fecha y hora</Label>
-              <Input
-                id="sess-date"
-                type="datetime-local"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-              />
-            </div>
-            {eventMode === "create" ? (
-              <>
-                <LocationPicker
-                  id="sess-loc"
-                  clubId={clubId}
-                  userId={userId}
-                  value={location}
-                  onChange={setLocation}
-                  locationId={locationId}
-                  onLocationIdChange={setLocationId}
-                />
-                <AttendeePicker
-                  clubId={clubId}
-                  teamId={teamId}
-                  value={attendeeIds}
-                  onChange={setAttendeeIds}
-                  label="Convocados"
-                  mode={attendeeMode}
-                  onModeChange={setAttendeeMode}
+        <LocationPicker
+          id="sess-loc"
+          clubId={clubId}
+          userId={userId}
+          value={location}
+          onChange={setLocation}
+          locationId={locationId}
+          onLocationIdChange={setLocationId}
+        />
 
-                />
-              </>
-            ) : null}
-          </>
-        )}
+        <AttendeePicker
+          clubId={clubId}
+          teamId={teamId}
+          value={attendeeIds}
+          onChange={setAttendeeIds}
+          label="Convocados"
+          mode={attendeeMode}
+          onModeChange={setAttendeeMode}
+        />
 
         <div className="space-y-3 pt-2">
-          <Label>Plan de la sesión</Label>
+          <Label>Plan de ejercicios</Label>
           {PHASES.map((phase) => {
             const items = plan
               .map((p, i) => ({ ...p, index: i }))
