@@ -4,7 +4,7 @@ import { ChevronDown, Sliders } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { MODULES, MODULE_MAP, type ModuleKey } from "@/lib/modules";
-import { groupModulesByPage, type BaseRole } from "@/lib/rolePages";
+import { groupPermissionModulesByPage } from "@/lib/rolePages";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -188,13 +188,11 @@ function OverridesEditor({
     [overrideMap, roleMap],
   );
 
-  const pageGroups = React.useMemo(
-    () => groupModulesByPage(roleQ.data?.base_role as BaseRole | null, MODULES.map((m) => m.key)),
-    [roleQ.data?.base_role],
-  );
+  const pageGroups = React.useMemo(() => groupPermissionModulesByPage(), []);
 
   function invalidate() {
     qc.invalidateQueries({ queryKey: ["user-overrides", userId, teamKey] });
+    qc.invalidateQueries({ queryKey: ["squad-access", userId] });
   }
 
   async function setOverride(moduleKey: string, level: PermissionLevel) {

@@ -272,3 +272,27 @@ export function groupModulesByPage(
   }
   return out;
 }
+
+/**
+ * Fuente canónica para las matrices de permisos. A diferencia de la navegación,
+ * no depende del rol base ni de los permisos activos: todos los módulos reales
+ * deben seguir siendo configurables aunque una página esté desactivada.
+ */
+export function groupPermissionModulesByPage(): Array<{ page: PageDef; modules: ModuleKey[] }> {
+  const perPage: Record<PageKey, ModuleKey[]> = {
+    home: [], agenda: [], club: [], coordinacion: [], admin: [],
+  };
+
+  for (const module of MODULES) {
+    const page = DEFAULT_PAGE_FOR_MODULE[module.key];
+    if (!page || page === "home") continue;
+    perPage[page].push(module.key);
+  }
+
+  perPage.coordinacion = sortCoordinacion(perPage.coordinacion);
+
+  return PAGES.flatMap((page) => {
+    const modules = perPage[page.key];
+    return modules.length > 0 ? [{ page, modules }] : [];
+  });
+}

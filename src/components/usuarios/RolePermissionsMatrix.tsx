@@ -3,7 +3,7 @@ import { RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { MODULES, MODULE_MAP, type ModuleKey } from "@/lib/modules";
-import { groupModulesByPage, type BaseRole } from "@/lib/rolePages";
+import { groupPermissionModulesByPage } from "@/lib/rolePages";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -97,6 +97,10 @@ export function RolePermissionsMatrix({
         await saveApprovals.mutateAsync({ roleId: role.id, types: approvalDraft });
       }
       toast.success("Permisos actualizados");
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["squad-access"] }),
+        qc.invalidateQueries({ queryKey: ["role-perms", role.id] }),
+      ]);
       onSaved();
     } catch (e: any) {
       toast.error(e.message ?? "No se pudo guardar");
@@ -105,10 +109,7 @@ export function RolePermissionsMatrix({
     }
   }
 
-  const pageGroups = React.useMemo(
-    () => groupModulesByPage(role.base_role as BaseRole | null, MODULES.map((m) => m.key)),
-    [role.base_role],
-  );
+  const pageGroups = React.useMemo(() => groupPermissionModulesByPage(), []);
 
   function togglePage(modules: ModuleKey[], on: boolean) {
     setDraft((d) => {
