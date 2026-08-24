@@ -219,6 +219,7 @@ export function SessionFormDialog({
   }
 
   async function handleSave() {
+    if (busy) return;
     if (!teamId) return toast.error("Selecciona un equipo");
     if (!title.trim()) return toast.error("El título es obligatorio");
     if (!date) return toast.error("Indica la fecha y hora");
