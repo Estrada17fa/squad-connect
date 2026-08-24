@@ -34,7 +34,7 @@ interface ModuleTabsProps {
  * del módulo, preservando URL, back button y deep-linking.
  */
 export function ModuleTabs({ activeKey, hubKey, extraActiveKey }: ModuleTabsProps) {
-  const { visiblePages, isSuperAdmin, profile, accessibleModules, permissions } = useApp();
+  const { visiblePages, isSuperAdmin, profile, accessibleModules, permissions, canViewModule } = useApp();
   const qc = useQueryClient();
   const prefetchCtx = React.useMemo(
     () => ({ clubId: profile?.club_id ?? null, teamId: null }),
@@ -80,8 +80,9 @@ export function ModuleTabs({ activeKey, hubKey, extraActiveKey }: ModuleTabsProp
     }
 
 
-    // Consulta de viajes desde Agenda (solo lectura).
-    if (hub?.page.key === "agenda" && (isSuperAdmin || accessibleModules.includes("viajes"))) {
+    // Consulta de viajes desde Agenda (solo lectura): basta CUALQUIER nivel de
+    // lectura en `viajes` (incluida Vista Jugador). RLS decide qué viajes ve.
+    if (hub?.page.key === "agenda" && (isSuperAdmin || canViewModule("viajes"))) {
       out.push({
         key: "agenda-viajes",
         label: "Viajes",
@@ -90,8 +91,9 @@ export function ModuleTabs({ activeKey, hubKey, extraActiveKey }: ModuleTabsProp
         active: extraActiveKey === "agenda-viajes",
       });
     }
+
     return out;
-  }, [hub?.page.key, isSuperAdmin, accessibleModules, extraActiveKey, permissions]);
+  }, [hub?.page.key, isSuperAdmin, accessibleModules, extraActiveKey, permissions, canViewModule]);
 
 
   const total = modules.length + extras.length;

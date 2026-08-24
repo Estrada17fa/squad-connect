@@ -80,10 +80,11 @@ export function canRead(level: PermissionLevel | undefined | null): boolean {
 
 /**
  * Módulos de GESTIÓN pura: los niveles de jugador y de lector por categoría no
- * alcanzan para verlos. En Viajes la información personal del jugador (su
- * citación, su vuelo, su pase) se mostrará desde Agenda/Inicio, no aquí.
+ * alcanzan para verlos. Viajes ya NO está aquí: con cualquier nivel de lectura
+ * se ve la pestaña de consulta en Agenda (su citación, vuelo, hotel, pase);
+ * el módulo de gestión en Coordinación se filtra con `canManageTripsModule`.
  */
-export const MANAGEMENT_ONLY_MODULES: ModuleKey[] = ["viajes"];
+export const MANAGEMENT_ONLY_MODULES: ModuleKey[] = [];
 
 /** ¿El módulo aparece en la navegación y en sus rutas? */
 export function canSeeModule(key: ModuleKey, level: PermissionLevel | undefined | null): boolean {
@@ -91,6 +92,16 @@ export function canSeeModule(key: ModuleKey, level: PermissionLevel | undefined 
   if (MANAGEMENT_ONLY_MODULES.includes(key)) return LEVEL_RANK[l] >= LEVEL_RANK.lector_global;
   return canRead(l);
 }
+
+/**
+ * Acceso al MÓDULO de gestión de viajes (chip en Coordinación, `/m/viajes`):
+ * requiere nivel global de lectura o superior. La consulta personal del viaje
+ * vive en la pestaña Viajes de Agenda y solo pide lectura.
+ */
+export function canManageTripsModule(level: PermissionLevel | undefined | null): boolean {
+  return LEVEL_RANK[normalizeLevel(level)] >= LEVEL_RANK.lector_global;
+}
+
 
 /** ¿Puede crear o editar? */
 export function canEdit(level: PermissionLevel | undefined | null): boolean {
@@ -222,7 +233,7 @@ export const DEFAULT_ROLE_LEVELS: Record<string, Partial<Record<ModuleKey, Permi
   },
   jugador: {
     agenda: "vista_jugador", mes: "vista_jugador", plantel: "vista_jugador",
-    viajes: "sin_acceso", inventario: "sin_acceso", coordinacion_interna: "sin_acceso",
+    viajes: "vista_jugador", inventario: "sin_acceso", coordinacion_interna: "sin_acceso",
     partidos: "vista_jugador",
     solicitudes: "vista_jugador", compras_facturas: "sin_acceso", documentos: "sin_acceso",
     usuarios: "sin_acceso", comunicados: "vista_jugador", multimedia: "vista_jugador",

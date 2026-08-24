@@ -20,6 +20,8 @@ import { TripDetailSheet } from "@/components/viajes/TripDetailSheet";
 import { TeamFilter, TeamBadge } from "@/components/squad/TeamFilter";
 import { useEditableTeams } from "@/hooks/useEditableTeams";
 import { useTeamAccess } from "@/hooks/useTeamAccess";
+import { canManageTripsModule } from "@/lib/permissions";
+
 import {
   TripFilters,
   applyTripFilters,
@@ -46,7 +48,7 @@ export const Route = createFileRoute("/_authenticated/m/viajes")({
 });
 
 function ViajesPage() {
-  const { isSuperAdmin, accessibleModules, profile, user, teamOptions } = useApp();
+  const { isSuperAdmin, getModuleAccess, profile, user, teamOptions } = useApp();
   const clubId = profile?.club_id ?? null;
   const editableTeams = useEditableTeams("viajes");
   const [teamFilter, setTeamFilter] = React.useState<string | null>(null);
@@ -56,7 +58,9 @@ function ViajesPage() {
     for (const t of teamOptions) if (t.id) m[t.id] = t.name;
     return m;
   }, [teamOptions]);
-  const canAccess = isSuperAdmin || accessibleModules.includes("viajes");
+  // Gestión de viajes: nivel global o superior (la consulta personal vive en Agenda).
+  const canAccess = isSuperAdmin || canManageTripsModule(getModuleAccess("viajes"));
+
   const { canEditTeam } = useTeamAccess("viajes");
 
   const [formOpen, setFormOpen] = React.useState(false);

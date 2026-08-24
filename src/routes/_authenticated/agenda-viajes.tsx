@@ -32,10 +32,11 @@ export const Route = createFileRoute("/_authenticated/agenda-viajes")({
 
 /** Pestaña "Viajes" dentro de Agenda: solo consulta (readOnly). */
 function AgendaViajesPage() {
-  const { user, profile, isSuperAdmin, accessibleModules, teamOptions } = useApp();
+  const { user, profile, isSuperAdmin, canViewModule, teamOptions } = useApp();
   const { canEditTeam } = useTeamAccess("viajes");
   const clubId = profile?.club_id ?? null;
-  const canAccess = isSuperAdmin || accessibleModules.includes("viajes");
+  const canAccess = isSuperAdmin || canViewModule("viajes");
+
   const [teamFilter, setTeamFilter] = React.useState<string | null>(null);
   const [detailId, setDetailId] = React.useState<string | null>(null);
 
