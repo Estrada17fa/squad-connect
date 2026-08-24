@@ -55,8 +55,8 @@ const ROLE_PAGES: Record<BaseRole, Record<PageKey, ModuleKey[]>> = {
   jugador: {
     home: [],
     agenda: ["agenda", "mes"],
-    club: ["plantel", "desarrollo", "entrenamientos", "nutricion", "torneo", "comunicados", "multimedia"],
-    coordinacion: ["partidos", "solicitudes"],
+    club: ["plantel", "desarrollo", "entrenamientos", "nutricion", "torneo", "partidos", "comunicados", "multimedia"],
+    coordinacion: [],
     admin: [],
   },
 };
@@ -174,21 +174,14 @@ export function resolvePagesForUser(
     }
 
     if (p.key === "coordinacion" && role === "jugador") {
-      // Si lo único accesible es Solicitudes, el punto de entrada pasa al menú
-      // del avatar ("Mis Solicitudes") y no se ocupa un lugar en la navegación.
-      const onlySolicitudes =
-        perPage.coordinacion.length > 0 &&
-        perPage.coordinacion.every((mk) => mk === "solicitudes");
-      if (perPage.coordinacion.length > 0 && !onlySolicitudes) {
-        out.push({
-          page: p,
-          modules: perPage.coordinacion,
-          labelOverride: "Mis Solicitudes",
-          variant: "jugador-solicitudes",
-        });
-      }
+      // Para el jugador, Solicitudes vive SOLO en el menú del avatar
+      // ("Mis Solicitudes"); nunca ocupa un lugar en la navegación ni arrastra
+      // módulos hermanos (partidos, etc.) a esa vista.
+      const rest = perPage.coordinacion.filter((mk) => mk !== "solicitudes");
+      if (rest.length > 0) out.push({ page: p, modules: rest });
       continue;
     }
+
     if (perPage[p.key].length > 0) {
       out.push({ page: p, modules: perPage[p.key] });
     }
