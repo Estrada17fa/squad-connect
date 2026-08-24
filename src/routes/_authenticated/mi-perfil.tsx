@@ -110,14 +110,16 @@ function MiPerfilPage() {
   });
 
   const data = profileQ.data;
+  // Peso y talla: fuente única = último estudio antropométrico (Nutrición).
+  const { data: anthro } = usePlayerLatestAnthro(user.id);
+
   if (profileQ.isLoading || !data) return <LoadingState />;
 
   const name = data.full_name ?? data.email ?? "Mi perfil";
   const memberships = membershipsQ.data ?? [];
   const player = playerQ.data;
-  // Peso y talla: fuente única = último estudio antropométrico (Nutrición).
-  const { data: anthro } = usePlayerLatestAnthro(player?.user_id ?? null);
   const isBaja = (data.status ?? "activo") === "baja";
+
 
   return (
     <div className="space-y-6">
