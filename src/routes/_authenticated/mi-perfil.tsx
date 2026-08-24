@@ -502,32 +502,28 @@ function EditMyProfileSheet({
   );
 }
 
-/** El jugador ve SU información médica en modo consulta. */
+/**
+ * El jugador ve SU información médica en modo consulta.
+ * La página decide si esta sección se muestra (permiso de Salud + ficha propia).
+ */
 function MiSaludSection({
   userId,
   fullName,
   avatarUrl,
+  clubId,
+  teamId,
+  teamName,
+  availability,
 }: {
   userId: string;
   fullName: string | null;
   avatarUrl: string | null;
+  clubId: string;
+  teamId: string;
+  teamName: string | null;
+  availability: string;
 }) {
   const [open, setOpen] = React.useState(false);
-  const { data } = useQuery({
-    queryKey: ["mi-salud-team", userId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("player_profiles")
-        .select("team_id, availability_status, team:teams(club_id, name)")
-        .eq("user_id", userId)
-        .limit(1)
-        .maybeSingle();
-      if (error) throw error;
-      return data as any;
-    },
-  });
-
-  if (!data?.team_id || !data?.team?.club_id) return null;
 
   return (
     <section className="space-y-2">
@@ -546,20 +542,21 @@ function MiSaludSection({
       <PlayerHealthSheet
         open={open}
         onOpenChange={setOpen}
-        clubId={data.team.club_id}
+        clubId={clubId}
         player={{
           userId,
-          teamId: data.team_id,
+          teamId,
           fullName,
           avatarUrl,
-          teamName: data.team?.name ?? null,
-          availability: data.availability_status ?? "apto",
+          teamName,
+          availability: (availability ?? "apto") as any,
         }}
         canEdit={false}
       />
     </section>
   );
 }
+
 
 /** El jugador ve SU desarrollo (retro, objetivos, evaluaciones y rutinas). */
 function MiDesarrolloSection({
