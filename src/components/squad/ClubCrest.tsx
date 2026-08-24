@@ -26,12 +26,20 @@ export function ClubCrest({
 
   return (
     <div className={cn("flex min-w-0 items-center gap-2", className)}>
-      <Avatar className="h-8 w-8 border border-border/60 bg-white/5">
-        {logoUrl ? <AvatarImage src={logoUrl} alt={name ?? "Escudo del club"} className="object-contain" /> : null}
-        <AvatarFallback className="bg-white/5 text-[10px] font-semibold text-muted-foreground">
-          {initials(name || "?")}
-        </AvatarFallback>
-      </Avatar>
+      {logoUrl ? (
+        <img
+          src={logoUrl}
+          alt={name ?? "Escudo del club"}
+          className="h-9 w-auto max-w-[120px] shrink-0 object-contain"
+        />
+      ) : (
+        <Avatar className="h-8 w-8 shrink-0 border border-border/60 bg-white/5">
+          <AvatarFallback className="bg-white/5 text-[10px] font-semibold text-muted-foreground">
+            {initials(name || "?")}
+          </AvatarFallback>
+        </Avatar>
+      )}
+
       {name ? (
         <span className="hidden max-w-[200px] truncate font-display text-sm font-semibold text-foreground sm:inline">
           {name}
