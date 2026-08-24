@@ -4,13 +4,15 @@ import {
   createMemberSchema,
   updateMemberSchema,
   memberTargetSchema,
+  memberDeleteSchema,
 } from "@/lib/members.schemas";
 import {
   assertNotLastAdmin,
   authorizeMemberAdmin,
   fullNameOf,
   isPlayerRole,
-  linkedDataLabels,
+  linkedDataCounts,
+  purgePersonalData,
   loadClubRole,
   norm,
   syncMemberships,
