@@ -26,7 +26,7 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [info] = useState<string | null>(null);
+  
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
