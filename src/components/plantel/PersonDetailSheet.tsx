@@ -148,16 +148,12 @@ export function PersonDetailSheet({
             <DetailField label="Puesto" icon={Briefcase}>
               <DetailValue value={member.jobTitle ?? member.roleName} />
             </DetailField>
-            {isPlayer ? (
-              <>
-                <DetailField label="Nacionalidad" icon={Flag}>
-                  <DetailValue value={member.nationality} />
-                </DetailField>
-                <DetailField label="Lugar de nacimiento" icon={MapPin}>
-                  <DetailValue value={member.birthplace} />
-                </DetailField>
-              </>
-            ) : null}
+            <DetailField label="Nacionalidad" icon={Flag}>
+              <DetailValue value={member.nationality} />
+            </DetailField>
+            <DetailField label="Lugar de nacimiento" icon={MapPin}>
+              <DetailValue value={member.birthplace} />
+            </DetailField>
             {member.birthdate ? (
               <DetailField label="Nacimiento" icon={CalendarDays}>
                 {formatShortDate(member.birthdate)}
@@ -165,6 +161,27 @@ export function PersonDetailSheet({
             ) : null}
           </DetailGrid>
         </DetailSection>
+
+        {!isPlayer && member.memberships.length > 0 ? (
+          <DetailSection title="Equipos y cargos" icon={Layers}>
+            <div className="grid gap-2">
+              {member.memberships.map((m, i) => (
+                <div
+                  key={`${m.teamId ?? "club"}-${i}`}
+                  className="glass flex items-start justify-between gap-3 rounded-lg p-3"
+                >
+                  <p className="min-w-0 break-words text-sm font-medium [overflow-wrap:anywhere]">
+                    {m.teamName ?? "Todo el club"}
+                  </p>
+                  <p className="shrink-0 text-xs text-muted-foreground">
+                    {m.jobTitle ?? m.roleName ?? "—"}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </DetailSection>
+        ) : null}
+
 
         <DetailSection title="Contacto" icon={Mail}>
           <DetailGrid>
