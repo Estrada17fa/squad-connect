@@ -29,7 +29,7 @@ import type { RequestRow } from "@/hooks/useRequests";
 import { InventoryItemPicker } from "./InventoryItemPicker";
 import { useClubTeams, useRequestAttachmentUrl, type InventoryCatalogItem } from "@/hooks/useInventory";
 import { cn } from "@/lib/utils";
-import { useClubPrefs } from "@/hooks/useClubSettings";
+import { useClubPrefs } from "@/hooks/useClubPrefs";
 
 interface Props {
   open: boolean;

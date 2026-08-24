@@ -25,7 +25,7 @@ import {
   type PaymentStatus,
 } from "@/lib/expenses";
 import { cn } from "@/lib/utils";
-import { useClubPrefs } from "@/hooks/useClubSettings";
+import { useClubPrefs } from "@/hooks/useClubPrefs";
 
 /** Pre-llenado del formulario (registro directo o desde una solicitud). */
 export interface ExpenseInitialValues {

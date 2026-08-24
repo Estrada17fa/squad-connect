@@ -1,7 +1,6 @@
 import * as React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useApp } from "@/components/squad/AppLayout";
 import { setClubDatePrefs, setClubWeekStart } from "@/lib/calendar-utils";
 
 export interface ClubRow {
