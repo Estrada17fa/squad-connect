@@ -11,7 +11,7 @@ import { formatDateTime } from "@/lib/calendar-utils";
 import { useTrips, TRIP_STATUS_LABEL, TRIP_STATUS_VARIANT } from "@/hooks/useTrips";
 import { TripDetailSheet } from "@/components/viajes/TripDetailSheet";
 import { MyTripView } from "@/components/viajes/MyTripView";
-import { DetailSheet } from "@/components/squad/DetailSheet";
+import { DetailSheet, DetailBadge } from "@/components/squad/DetailSheet";
 import { useTeamAccess } from "@/hooks/useTeamAccess";
 import { TeamFilter, TeamBadge } from "@/components/squad/TeamFilter";
 
