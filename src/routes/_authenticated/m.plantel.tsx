@@ -147,7 +147,7 @@ function PlantelPage() {
                         </h3>
                         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                           {list.map((m, i) => (
-                            <PlayerCard key={m.userId} member={m} index={i} onClick={() => setSelected(m)} />
+                            <PlayerCard key={m.key} member={m} index={i} onClick={() => setSelected(m)} />
                           ))}
                         </div>
                       </div>
@@ -164,7 +164,7 @@ function PlantelPage() {
                   </h3>
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                     {g.staff.map((m, i) => (
-                      <StaffCard key={m.userId} member={m} index={i} onClick={() => setSelected(m)} />
+                      <StaffCard key={m.key} member={m} index={i} onClick={() => setSelected(m)} />
                     ))}
                   </div>
                 </div>
