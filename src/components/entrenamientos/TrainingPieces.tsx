@@ -17,6 +17,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ACCENT } from "@/lib/accents";
 import {
   CATEGORY_LABEL,
   useExerciseMediaUrl,
@@ -247,7 +248,7 @@ export function PendingPlanCard({
       <span
         aria-hidden
         className="absolute inset-y-0 left-0 w-1 rounded-l-[inherit]"
-        style={{ backgroundColor: "hsl(var(--warning, 45 100% 55%))" }}
+        style={{ backgroundColor: ACCENT.mid }}
       />
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
