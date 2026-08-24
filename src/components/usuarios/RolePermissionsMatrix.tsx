@@ -186,8 +186,10 @@ export function RolePermissionsMatrix({
                   onCheckedChange={(on) => togglePage(modules, on)}
                 />
               </div>
-              {isActive ? (
-                <div className="divide-y divide-border/50 border-t border-border/50 px-3">
+              {/* Las filas SIEMPRE se muestran: una página apagada también debe
+                  poder configurarse módulo por módulo. */}
+              <div className="divide-y divide-border/50 border-t border-border/50 px-3">
+
                   {modules.map((mk) => {
                     const m = MODULE_MAP[mk];
                     if (!m) return null;
