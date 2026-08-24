@@ -326,6 +326,8 @@ function MiPerfilPage() {
           avatar_url: data.avatar_url,
           email: data.email,
           phone: data.phone,
+          nationality: data.nationality,
+          birthplace: data.birthplace,
           emergency_contact_name: data.emergency_contact_name,
           emergency_contact_phone: data.emergency_contact_phone,
         }}
@@ -338,6 +340,8 @@ interface EditableProfile {
   avatar_url: string | null;
   email: string | null;
   phone: string | null;
+  nationality: string | null;
+  birthplace: string | null;
   emergency_contact_name: string | null;
   emergency_contact_phone: string | null;
 }
@@ -382,6 +386,8 @@ function EditMyProfileSheet({
         .update({
           avatar_url: form.avatar_url,
           phone: form.phone,
+          nationality: form.nationality,
+          birthplace: form.birthplace,
           emergency_contact_name: form.emergency_contact_name,
           emergency_contact_phone: form.emergency_contact_phone,
         })
@@ -459,6 +465,29 @@ function EditMyProfileSheet({
               onChange={(e) => set("phone", e.target.value || null)}
             />
           </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="mp-nat">Nacionalidad</Label>
+              <Input
+                id="mp-nat"
+                value={form.nationality ?? ""}
+                placeholder="ej. Mexicana"
+                onChange={(e) => set("nationality", e.target.value || null)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="mp-bp">Lugar de nacimiento</Label>
+              <Input
+                id="mp-bp"
+                value={form.birthplace ?? ""}
+                placeholder="ej. Guadalajara, Jalisco"
+                onChange={(e) => set("birthplace", e.target.value || null)}
+              />
+            </div>
+          </div>
+
+
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">

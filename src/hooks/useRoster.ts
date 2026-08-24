@@ -4,7 +4,16 @@ import type { BaseRole } from "@/lib/rolePages";
 import { inferBaseRole } from "@/lib/rolePages";
 import type { AvailabilityStatus } from "./usePlayers";
 
+export interface RosterMembership {
+  teamId: string | null;
+  teamName: string | null;
+  jobTitle: string | null;
+  roleName: string | null;
+}
+
 export interface RosterMember {
+  /** Clave única de la fila (persona + categoría en el caso del staff). */
+  key: string;
   userId: string;
   fullName: string | null;
   email: string | null;
@@ -14,6 +23,8 @@ export interface RosterMember {
   roleName: string | null;
   baseRole: BaseRole;
   jobTitle: string | null;
+  /** Todas sus membresías con el cargo de cada categoría. */
+  memberships: RosterMembership[];
   /** Categoría real de la persona: la del jugador viene de su ficha deportiva. */
   teamId: string | null;
   teamName: string | null;
@@ -52,7 +63,7 @@ async function fetchRoster(clubId: string, teamId: string | null): Promise<Roste
   const q = supabase
     .from("team_memberships")
     .select(
-      "user_id, team_id, job_title, team:teams(id, name), role:roles(name, base_role), profile:profiles!inner(id, full_name, email, phone, avatar_url, birthdate, club_id, status)",
+      "user_id, team_id, job_title, team:teams(id, name), role:roles(name, base_role), profile:profiles!inner(id, full_name, email, phone, avatar_url, birthdate, nationality, birthplace, club_id, status)",
     )
     .eq("profile.club_id", clubId)
     .eq("profile.status", "activo");
@@ -81,14 +92,34 @@ async function fetchRoster(clubId: string, teamId: string | null): Promise<Roste
   const byUser = new Map<string, PlayerLite>();
   for (const p of players) byUser.set(p.user_id, p);
 
-  const seen = new Map<string, RosterMember>();
-  for (const row of (data ?? []) as any[]) {
+  const rows = (data ?? []) as any[];
+  for (const row of rows) if (row.team?.id && row.team?.name) teamNameById.set(row.team.id, row.team.name);
+
+  // Cargos por equipo: una persona puede tener un puesto distinto en cada categoría.
+  const membershipsByUser = new Map<string, RosterMembership[]>();
+  for (const row of rows) {
     const uid = row.user_id as string;
-    if (row.team?.id && row.team?.name) teamNameById.set(row.team.id, row.team.name);
+    const tid = (row.team_id as string | null) ?? null;
+    const list = membershipsByUser.get(uid) ?? [];
+    list.push({
+      teamId: tid,
+      teamName: tid ? teamNameById.get(tid) ?? row.team?.name ?? null : null,
+      jobTitle: row.job_title ?? null,
+      roleName: row.role?.name ?? null,
+    });
+    membershipsByUser.set(uid, list);
+  }
+  const hasTeamRow = new Set<string>(
+    rows.filter((r) => !!r.team_id).map((r) => r.user_id as string),
+  );
+
+  const seen = new Map<string, RosterMember>();
+  for (const row of rows) {
+    const uid = row.user_id as string;
     const baseRole = (row.role?.base_role as BaseRole | null) ?? inferBaseRole(row.role?.name);
     const isTeamSpecific = !!row.team_id;
-    const existing = seen.get(uid);
-    if (existing && !isTeamSpecific) continue;
+    // Si ya tiene membresías por categoría, la fila global no se duplica.
+    if (!isTeamSpecific && hasTeamRow.has(uid)) continue;
     const player = baseRole === "jugador" ? byUser.get(uid) ?? null : null;
 
     // La categoría del jugador la manda su ficha deportiva: evita que salga
@@ -97,7 +128,13 @@ async function fetchRoster(clubId: string, teamId: string | null): Promise<Roste
     const resolvedTeamName =
       (resolvedTeamId ? teamNameById.get(resolvedTeamId) : null) ?? row.team?.name ?? null;
 
-    seen.set(uid, {
+    // Los jugadores se agrupan por persona; el staff aparece una vez por
+    // categoría, porque su cargo cambia en cada una.
+    const key = baseRole === "jugador" ? uid : `${uid}|${resolvedTeamId ?? "club"}`;
+    if (seen.has(key)) continue;
+
+    seen.set(key, {
+      key,
       userId: uid,
       fullName: row.profile?.full_name ?? null,
       email: row.profile?.email ?? null,
@@ -107,6 +144,7 @@ async function fetchRoster(clubId: string, teamId: string | null): Promise<Roste
       roleName: row.role?.name ?? null,
       baseRole,
       jobTitle: row.job_title ?? null,
+      memberships: membershipsByUser.get(uid) ?? [],
       teamId: resolvedTeamId,
       teamName: resolvedTeamName,
       playerId: player?.id ?? null,
@@ -114,8 +152,8 @@ async function fetchRoster(clubId: string, teamId: string | null): Promise<Roste
       position: player?.position ?? null,
       secondaryPosition: player?.secondary_position ?? null,
       preferredFoot: player?.preferred_foot ?? null,
-      nationality: player?.nationality ?? null,
-      birthplace: player?.birthplace ?? null,
+      nationality: row.profile?.nationality ?? player?.nationality ?? null,
+      birthplace: row.profile?.birthplace ?? player?.birthplace ?? null,
       heightCm: player?.height_cm ?? null,
       weightKg: player?.weight_kg ?? null,
       availability: (player?.availability_status as AvailabilityStatus | undefined) ?? null,

@@ -155,6 +155,8 @@ export function MemberForm({
   const [phone, setPhone] = React.useState("");
   const [avatarUrl, setAvatarUrl] = React.useState("");
   const [birthdate, setBirthdate] = React.useState("");
+  const [nationality, setNationality] = React.useState("");
+  const [birthplace, setBirthplace] = React.useState("");
   const [emgName, setEmgName] = React.useState("");
   const [emgPhone, setEmgPhone] = React.useState("");
   const [roleId, setRoleId] = React.useState("");
@@ -201,6 +203,8 @@ export function MemberForm({
     setPhone("");
     setAvatarUrl("");
     setBirthdate("");
+    setNationality("");
+    setBirthplace("");
     setEmgName("");
     setEmgPhone("");
     setRoleId("");
@@ -225,6 +229,8 @@ export function MemberForm({
       setPhone(profile.phone ?? "");
       setAvatarUrl(profile.avatar_url ?? "");
       setBirthdate(profile.birthdate ?? "");
+      setNationality(profile.nationality ?? "");
+      setBirthplace(profile.birthplace ?? "");
       setEmgName(profile.emergency_contact_name ?? "");
       setEmgPhone(profile.emergency_contact_phone ?? "");
     }
@@ -253,6 +259,9 @@ export function MemberForm({
         pants_size: p.pants_size ?? "",
         shoe_size: p.shoe_size ?? "",
       });
+      // Migración suave: si el perfil aún no tiene estos datos, hereda los del jugador.
+      setNationality((v) => v || (p.nationality ?? ""));
+      setBirthplace((v) => v || (p.birthplace ?? ""));
     }
   }, [open, isEdit, memberQ.data]);
 
@@ -284,8 +293,8 @@ export function MemberForm({
             position: player.position || null,
             secondary_position: player.secondary_position.trim() || null,
             preferred_foot: (player.preferred_foot || null) as PreferredFoot | null,
-            nationality: player.nationality.trim() || null,
-            birthplace: player.birthplace.trim() || null,
+            nationality: nationality.trim() || null,
+            birthplace: birthplace.trim() || null,
             affiliation_number: player.affiliation_number.trim() || null,
             id_document: player.id_document.trim() || null,
             joined_at: player.joined_at || null,
@@ -304,6 +313,8 @@ export function MemberForm({
         phone: phone.trim() || null,
         avatar_url: avatarUrl.trim() || null,
         birthdate: birthdate || null,
+        nationality: nationality.trim() || null,
+        birthplace: birthplace.trim() || null,
         emergency_contact_name: emgName.trim() || null,
         emergency_contact_phone: emgPhone.trim() || null,
         role_id: roleId,
@@ -396,6 +407,25 @@ export function MemberForm({
               <Field label="Fecha de nacimiento" htmlFor="mf-birth">
                 <Input id="mf-birth" type="date" value={birthdate} onChange={(e) => setBirthdate(e.target.value)} />
               </Field>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Nacionalidad" htmlFor="mf-nat">
+                <Input
+                  id="mf-nat"
+                  value={nationality}
+                  onChange={(e) => setNationality(e.target.value)}
+                  placeholder="ej. Mexicana"
+                />
+              </Field>
+              <Field label="Lugar de nacimiento" htmlFor="mf-bp">
+                <Input
+                  id="mf-bp"
+                  value={birthplace}
+                  onChange={(e) => setBirthplace(e.target.value)}
+                  placeholder="ej. Guadalajara, Jalisco"
+                />
+              </Field>
+
             </div>
             <AvatarUploadField
               label="Foto de perfil"
@@ -574,20 +604,6 @@ export function MemberForm({
 
               <Section title="Identidad y liga">
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <Field label="Nacionalidad" htmlFor="mf-nat">
-                    <Input
-                      id="mf-nat"
-                      value={player.nationality}
-                      onChange={(e) => setPlayer((p) => ({ ...p, nationality: e.target.value }))}
-                    />
-                  </Field>
-                  <Field label="Lugar de nacimiento" htmlFor="mf-bp">
-                    <Input
-                      id="mf-bp"
-                      value={player.birthplace}
-                      onChange={(e) => setPlayer((p) => ({ ...p, birthplace: e.target.value }))}
-                    />
-                  </Field>
                   <Field label="Número de afiliación" htmlFor="mf-aff">
                     <Input
                       id="mf-aff"
@@ -604,6 +620,7 @@ export function MemberForm({
                   </Field>
                 </div>
               </Section>
+
 
               <Section title="Administrativos">
                 <div className="grid gap-3 sm:grid-cols-3">
