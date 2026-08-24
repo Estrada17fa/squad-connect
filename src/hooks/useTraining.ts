@@ -284,6 +284,7 @@ export function useSaveSession() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["training-sessions"] });
+      qc.invalidateQueries({ queryKey: ["calendar-events"] });
       qc.invalidateQueries({ queryKey: ["session-plan"] });
       qc.invalidateQueries({ queryKey: ["session-by-event"] });
     },
@@ -299,6 +300,7 @@ export function useDeleteSession() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["training-sessions"] });
+      qc.invalidateQueries({ queryKey: ["calendar-events"] });
       qc.invalidateQueries({ queryKey: ["session-by-event"] });
     },
   });
