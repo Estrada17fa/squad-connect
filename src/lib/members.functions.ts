@@ -64,6 +64,7 @@ export const createClubMember = createServerFn({ method: "POST" })
         emergency_contact_name: norm(data.emergency_contact_name),
         emergency_contact_phone: norm(data.emergency_contact_phone),
         status: "activo",
+        must_change_password: true,
       })
       .eq("id", newUserId);
     if (profErr) console.error("[createClubMember] profile", profErr);
