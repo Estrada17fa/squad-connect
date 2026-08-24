@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { CalendarDays, Dumbbell, Library, Plus } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
@@ -15,12 +15,14 @@ import { calendarEventsQueryOptions, type CalendarEventRow } from "@/hooks/useCa
 import {
   PHASE_LABEL,
   formatSessionDate,
+  useDeleteSession,
   useExercises,
   useSessionSummaries,
   useTrainingSessions,
   type ExerciseRow,
   type TrainingSessionRow,
 } from "@/hooks/useTraining";
+import { supabase } from "@/integrations/supabase/client";
 import { ExerciseFormDialog } from "@/components/entrenamientos/ExerciseFormDialog";
 import { SessionFormDialog } from "@/components/entrenamientos/SessionFormDialog";
 import { SessionDetailSheet } from "@/components/entrenamientos/SessionDetailSheet";
@@ -77,6 +79,21 @@ function EntrenamientosPage() {
   const [exerciseOpen, setExerciseOpen] = React.useState(false);
   const [editingExercise, setEditingExercise] = React.useState<ExerciseRow | null>(null);
   const [detailExercise, setDetailExercise] = React.useState<ExerciseRow | null>(null);
+
+  const qc = useQueryClient();
+  const deleteSession = useDeleteSession();
+
+  /** Entrenamiento agendado sin plan: se borra su evento de la agenda. */
+  async function deletePending(eventId: string) {
+    const existing = sessionByEvent.get(eventId);
+    if (existing) {
+      await deleteSession.mutateAsync(existing.id);
+    } else {
+      const { error } = await (supabase as any).from("calendar_events").delete().eq("id", eventId);
+      if (error) throw error;
+    }
+    await qc.invalidateQueries({ queryKey: ["calendar-events"] });
+  }
 
   const sessionsQ = useTrainingSessions(canAccess ? clubId : null);
   const exercisesQ = useExercises(canAccess ? clubId : null);
@@ -278,6 +295,7 @@ function EntrenamientosPage() {
                       setPendingEvent(e);
                       setSessionFormOpen(true);
                     }}
+                    onDelete={canEditTeam(e.team_id) ? () => deletePending(e.id) : undefined}
                   />
                 ))}
               </div>
@@ -370,6 +388,11 @@ function EntrenamientosPage() {
         session={detailSession}
         teamName={detailSession ? teamName(detailSession.team_id) : null}
         readOnly={!detailSession || !canEditTeam(detailSession.team_id)}
+        onDelete={
+          detailSession && canEditTeam(detailSession.team_id)
+            ? () => deleteSession.mutateAsync(detailSession.id)
+            : undefined
+        }
         onEdit={() => {
           setPendingEvent(null);
           setEditingSession(detailSession);

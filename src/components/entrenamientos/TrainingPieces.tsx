@@ -16,6 +16,7 @@ import {
   Timer,
   type LucideIcon,
 } from "lucide-react";
+import { DeleteAction } from "@/components/squad/DeleteAction";
 import { cn } from "@/lib/utils";
 import { ACCENT } from "@/lib/accents";
 import {
@@ -225,12 +226,15 @@ export function PendingPlanCard({
   teamLabel,
   location,
   onClick,
+  onDelete,
 }: {
   title: string;
   startsAt: string;
   teamLabel?: string | null;
   location?: string | null;
   onClick?: () => void;
+  /** Solo cuando la persona puede editar esa categoría. */
+  onDelete?: () => Promise<unknown> | void;
 }) {
   const when = new Date(startsAt).toLocaleString("es-MX", {
     weekday: "short",
@@ -240,16 +244,17 @@ export function PendingPlanCard({
     minute: "2-digit",
   });
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="glass relative w-full overflow-hidden p-4 pl-5 text-left transition-all hover:border-white/15 hover:bg-white/[0.06] active:scale-[0.99]"
-    >
+    <div className="glass relative overflow-hidden transition-all hover:border-white/15 hover:bg-white/[0.06]">
       <span
         aria-hidden
         className="absolute inset-y-0 left-0 w-1 rounded-l-[inherit]"
         style={{ backgroundColor: ACCENT.mid }}
       />
+      <button
+        type="button"
+        onClick={onClick}
+        className="w-full p-4 pl-5 pr-12 text-left active:scale-[0.99]"
+      >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="text-xs font-medium uppercase tracking-wide text-primary">{when}</p>
@@ -259,10 +264,23 @@ export function PendingPlanCard({
         </div>
         <TrainingChip icon={AlertCircle}>Sin plan</TrainingChip>
       </div>
-      <div className="mt-2 flex flex-wrap gap-1.5">
+      <div className="mt-2 flex flex-wrap items-center gap-1.5">
         {teamLabel ? <TrainingChip icon={Shield}>{teamLabel}</TrainingChip> : null}
         {location ? <TrainingChip icon={MapPin}>{location}</TrainingChip> : null}
       </div>
-    </button>
+      </button>
+      {onDelete ? (
+        <div className="absolute bottom-2 right-2">
+          <DeleteAction
+            iconOnly
+            label="Eliminar entrenamiento"
+            title="¿Eliminar este entrenamiento?"
+            description="Se quitará de la agenda. Esta acción no se puede deshacer."
+            successMessage="Entrenamiento eliminado"
+            onDelete={onDelete}
+          />
+        </div>
+      ) : null}
+    </div>
   );
 }

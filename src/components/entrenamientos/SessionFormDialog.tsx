@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ChevronDown, ChevronUp, Plus, Trash2, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Plus, X } from "lucide-react";
 import {
   EntitySheet,
   EntitySheetBody,
@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { TeamSelectField } from "@/components/squad/TeamSelectField";
+import { DeleteAction } from "@/components/squad/DeleteAction";
 import type { TeamOption } from "@/hooks/useAccess";
 import { toLocalInputValue, fromLocalInputValue } from "@/lib/calendar-utils";
 import { saveCalendarEvent } from "@/lib/calendarEvents";
@@ -79,7 +80,8 @@ export function SessionFormDialog({
   const [date, setDate] = React.useState(
     session?.session_date ? toLocalInputValue(session.session_date) : "",
   );
-  const [eventId] = React.useState<string | null>(initialEventId);
+  // Siempre el evento ya conocido (sesión existente > "Por planear"); nunca un valor viejo.
+  const eventId = initialEventId;
   const [location, setLocation] = React.useState("");
   const [locationId, setLocationId] = React.useState<string | null>(null);
   const [attendeeIds, setAttendeeIds] = React.useState<Set<string>>(new Set());
@@ -218,6 +220,7 @@ export function SessionFormDialog({
   }
 
   async function handleSave() {
+    if (busy) return;
     if (!teamId) return toast.error("Selecciona un equipo");
     if (!title.trim()) return toast.error("El título es obligatorio");
     if (!date) return toast.error("Indica la fecha y hora");
@@ -266,13 +269,8 @@ export function SessionFormDialog({
 
   async function handleDelete() {
     if (!session) return;
-    try {
-      await del.mutateAsync(session.id);
-      toast.success("Entrenamiento eliminado");
-      onOpenChange(false);
-    } catch (e: any) {
-      toast.error(e.message ?? "No se pudo eliminar");
-    }
+    await del.mutateAsync(session.id);
+    onOpenChange(false);
   }
 
   return (
@@ -463,15 +461,16 @@ export function SessionFormDialog({
 
       <EntitySheetFooter>
         {isEdit ? (
-          <Button
-            type="button"
-            variant="ghost"
-            className="text-destructive hover:bg-destructive/10 hover:text-destructive sm:mr-auto"
-            onClick={handleDelete}
-            disabled={del.isPending}
-          >
-            <Trash2 className="mr-2 h-4 w-4" /> Eliminar
-          </Button>
+          <div className="sm:mr-auto">
+            <DeleteAction
+              label="Eliminar entrenamiento"
+              title="¿Eliminar este entrenamiento?"
+              description="Se borrará el plan y su evento en la agenda. Esta acción no se puede deshacer."
+              successMessage="Entrenamiento eliminado"
+              loading={del.isPending}
+              onDelete={handleDelete}
+            />
+          </div>
         ) : null}
         <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
           Cancelar
