@@ -326,6 +326,8 @@ function MiPerfilPage() {
           avatar_url: data.avatar_url,
           email: data.email,
           phone: data.phone,
+          nationality: data.nationality,
+          birthplace: data.birthplace,
           emergency_contact_name: data.emergency_contact_name,
           emergency_contact_phone: data.emergency_contact_phone,
         }}
@@ -338,6 +340,8 @@ interface EditableProfile {
   avatar_url: string | null;
   email: string | null;
   phone: string | null;
+  nationality: string | null;
+  birthplace: string | null;
   emergency_contact_name: string | null;
   emergency_contact_phone: string | null;
 }
