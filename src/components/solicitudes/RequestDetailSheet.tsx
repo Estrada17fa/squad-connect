@@ -11,6 +11,7 @@ import {
   History,
   AlertTriangle,
   Link as LinkIcon,
+  FileText,
   Receipt,
   Stethoscope,
   Send,
