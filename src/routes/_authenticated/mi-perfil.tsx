@@ -386,6 +386,8 @@ function EditMyProfileSheet({
         .update({
           avatar_url: form.avatar_url,
           phone: form.phone,
+          nationality: form.nationality,
+          birthplace: form.birthplace,
           emergency_contact_name: form.emergency_contact_name,
           emergency_contact_phone: form.emergency_contact_phone,
         })
