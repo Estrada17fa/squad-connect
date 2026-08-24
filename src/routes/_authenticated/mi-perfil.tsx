@@ -468,6 +468,29 @@ function EditMyProfileSheet({
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
+              <Label htmlFor="mp-nat">Nacionalidad</Label>
+              <Input
+                id="mp-nat"
+                value={form.nationality ?? ""}
+                placeholder="ej. Mexicana"
+                onChange={(e) => set("nationality", e.target.value || null)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="mp-bp">Lugar de nacimiento</Label>
+              <Input
+                id="mp-bp"
+                value={form.birthplace ?? ""}
+                placeholder="ej. Guadalajara, Jalisco"
+                onChange={(e) => set("birthplace", e.target.value || null)}
+              />
+            </div>
+          </div>
+
+
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
               <Label htmlFor="mp-emg">Contacto de emergencia</Label>
               <Input
                 id="mp-emg"
