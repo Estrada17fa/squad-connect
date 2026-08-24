@@ -10,11 +10,8 @@ import { EmptyState } from "@/components/squad/EmptyState";
 import { LoadingState } from "@/components/squad/LoadingState";
 import { Button } from "@/components/ui/button";
 import { MemberForm } from "./MemberForm";
-import {
-  deactivateClubMember,
-  hardDeleteClubMember,
-  reactivateClubMember,
-} from "@/lib/members.functions";
+import { deactivateClubMember, reactivateClubMember } from "@/lib/members.functions";
+import { DeleteMemberDialog } from "./DeleteMemberDialog";
 import { MemberCard } from "./MemberCard";
 import { MemberDetailSheet } from "./MemberDetailSheet";
 import { MembersFilters, EMPTY_FILTERS, type MembersFilterState } from "./MembersFilters";
