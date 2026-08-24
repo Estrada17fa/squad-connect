@@ -595,3 +595,53 @@ function MiDesarrolloSection({
     </section>
   );
 }
+
+/**
+ * El jugador ve SU plan alimenticio y su antropometría en modo consulta.
+ * Solo se muestra con permiso real en Nutrición (lo decide la página).
+ */
+function MiNutricionSection({
+  userId,
+  fullName,
+  avatarUrl,
+  clubId,
+  teamId,
+  teamName,
+  position,
+}: {
+  userId: string;
+  fullName: string | null;
+  avatarUrl: string | null;
+  clubId: string | null;
+  teamId: string;
+  teamName: string | null;
+  position: string | null;
+}) {
+  const [open, setOpen] = React.useState(false);
+
+  return (
+    <section className="space-y-2">
+      <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+        Mi nutrición
+      </h3>
+      <StandardCard
+        icon={Apple}
+        title="Mi plan alimenticio"
+        subtitle="Plan de la semana, equivalencias y antropometría"
+        interactive
+        onClick={() => setOpen(true)}
+      >
+        Lo define el área de nutrición del club; aquí solo lo consultas.
+      </StandardCard>
+      <PlayerNutritionSheet
+        open={open}
+        onOpenChange={setOpen}
+        clubId={clubId}
+        player={{ userId, teamId, fullName, avatarUrl, teamName, position }}
+        canEdit={false}
+        self
+      />
+    </section>
+  );
+}
+
