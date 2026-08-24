@@ -397,6 +397,25 @@ export function MemberForm({
                 <Input id="mf-birth" type="date" value={birthdate} onChange={(e) => setBirthdate(e.target.value)} />
               </Field>
             </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Nacionalidad" htmlFor="mf-nat">
+                <Input
+                  id="mf-nat"
+                  value={nationality}
+                  onChange={(e) => setNationality(e.target.value)}
+                  placeholder="ej. Mexicana"
+                />
+              </Field>
+              <Field label="Lugar de nacimiento" htmlFor="mf-bp">
+                <Input
+                  id="mf-bp"
+                  value={birthplace}
+                  onChange={(e) => setBirthplace(e.target.value)}
+                  placeholder="ej. Guadalajara, Jalisco"
+                />
+              </Field>
+
+            </div>
             <AvatarUploadField
               label="Foto de perfil"
               value={avatarUrl || null}
@@ -574,20 +593,6 @@ export function MemberForm({
 
               <Section title="Identidad y liga">
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <Field label="Nacionalidad" htmlFor="mf-nat">
-                    <Input
-                      id="mf-nat"
-                      value={player.nationality}
-                      onChange={(e) => setPlayer((p) => ({ ...p, nationality: e.target.value }))}
-                    />
-                  </Field>
-                  <Field label="Lugar de nacimiento" htmlFor="mf-bp">
-                    <Input
-                      id="mf-bp"
-                      value={player.birthplace}
-                      onChange={(e) => setPlayer((p) => ({ ...p, birthplace: e.target.value }))}
-                    />
-                  </Field>
                   <Field label="Número de afiliación" htmlFor="mf-aff">
                     <Input
                       id="mf-aff"
@@ -604,6 +609,7 @@ export function MemberForm({
                   </Field>
                 </div>
               </Section>
+
 
               <Section title="Administrativos">
                 <div className="grid gap-3 sm:grid-cols-3">
