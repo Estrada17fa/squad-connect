@@ -33,10 +33,10 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
   const [addOpen, setAddOpen] = React.useState(false);
   const [createOpen, setCreateOpen] = React.useState(false);
   const [editUserId, setEditUserId] = React.useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = React.useState<MemberProfile | null>(null);
 
   const deactivateFn = useServerFn(deactivateClubMember);
   const reactivateFn = useServerFn(reactivateClubMember);
-  const hardDeleteFn = useServerFn(hardDeleteClubMember);
 
   const membersQ = useQuery({
     queryKey: ["club-members", clubId],
