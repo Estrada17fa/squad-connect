@@ -2903,6 +2903,7 @@ export type Database = {
           id: string
           jersey_number: number | null
           maternal_last_name: string | null
+          must_change_password: boolean
           name_completed: boolean
           nationality: string | null
           pants_size: string | null
@@ -2929,6 +2930,7 @@ export type Database = {
           id: string
           jersey_number?: number | null
           maternal_last_name?: string | null
+          must_change_password?: boolean
           name_completed?: boolean
           nationality?: string | null
           pants_size?: string | null
@@ -2955,6 +2957,7 @@ export type Database = {
           id?: string
           jersey_number?: number | null
           maternal_last_name?: string | null
+          must_change_password?: boolean
           name_completed?: boolean
           nationality?: string | null
           pants_size?: string | null
