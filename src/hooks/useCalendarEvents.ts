@@ -53,13 +53,15 @@ export const calendarEventsQueryOptions = (scope: CalendarScope) =>
 
 export function useCalendarEvents(scope: CalendarScope) {
   const qc = useQueryClient();
+  // Sufijo único: dos componentes pueden observar el mismo club/equipo a la vez.
+  const uid = React.useId();
   const query = useQuery(calendarEventsQueryOptions(scope));
 
   React.useEffect(() => {
     if (scope.mode === "club") {
       if (!scope.clubId) return;
       const channel = supabase
-        .channel(`calendar-events-club-${scope.clubId}`)
+        .channel(`calendar-events-club-${scope.clubId}-${uid}`)
         .on(
           "postgres_changes",
           { event: "*", schema: "public", table: "calendar_events", filter: `club_id=eq.${scope.clubId}` },
@@ -72,7 +74,7 @@ export function useCalendarEvents(scope: CalendarScope) {
     }
     if (!scope.teamId) return;
     const channel = supabase
-      .channel(`calendar-events-team-${scope.teamId}`)
+      .channel(`calendar-events-team-${scope.teamId}-${uid}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "calendar_events", filter: `team_id=eq.${scope.teamId}` },
@@ -82,7 +84,7 @@ export function useCalendarEvents(scope: CalendarScope) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [scope.mode, scope.teamId, scope.clubId, qc]);
+  }, [scope.mode, scope.teamId, scope.clubId, qc, uid]);
 
   return query;
 }

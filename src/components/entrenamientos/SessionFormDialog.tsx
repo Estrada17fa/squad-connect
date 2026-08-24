@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ChevronDown, ChevronUp, Plus, Trash2, X } from "lucide-react";
 import {
@@ -90,7 +91,7 @@ export function SessionFormDialog({
 
   const exercisesQ = useExercises(clubId);
   const planQ = useSessionPlan(open && session ? session.id : null);
-  const { data: events } = useCalendarEvents({ mode: "club", clubId });
+  const { data: events } = useQuery(calendarEventsQueryOptions({ mode: "club", clubId }));
   const attendeesQ = useEventAttendees(open && initialEventId ? initialEventId : null);
 
   /** Entrenamiento ya agendado al que pertenece este plan (si lo hay). */
