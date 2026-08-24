@@ -44,8 +44,17 @@ export type FieldType =
   /** Link de referencia (validado como URL). */
   | "url"
   /** Imagen de referencia subida al bucket privado request-attachments. */
-  | "image";
+  | "image"
+  /** Documento (PDF o imagen) subido al bucket privado request-attachments. */
+  | "file"
+  /** Dos opciones excluyentes con etiquetas propias. */
+  | "toggle";
 
+/** Condición para mostrar un campo según el valor de otro. */
+export interface FieldCondition {
+  key: string;
+  equals: string;
+}
 
 export interface RequestFieldDef {
   key: string;
@@ -53,7 +62,22 @@ export interface RequestFieldDef {
   type: FieldType;
   required?: boolean;
   options?: string[];
+  /** Etiquetas visibles de un toggle: [valor, etiqueta]. */
+  toggleOptions?: Array<{ value: string; label: string }>;
+  /** Valor inicial (usado por toggle). */
+  defaultValue?: string;
   placeholder?: string;
+  /** Nota corta bajo el campo. */
+  hint?: string;
+  /** El campo solo se muestra (y solo es obligatorio) si se cumple la condición. */
+  showIf?: FieldCondition;
+}
+
+/** ¿Se muestra el campo con los valores actuales? */
+export function fieldVisible(f: RequestFieldDef, values: Record<string, any>): boolean {
+  if (!f.showIf) return true;
+  const current = values?.[f.showIf.key];
+  return String(current ?? "") === f.showIf.equals;
 }
 
 export interface RequestTypeDef {
