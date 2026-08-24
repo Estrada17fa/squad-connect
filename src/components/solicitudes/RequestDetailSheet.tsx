@@ -351,21 +351,26 @@ export function RequestDetailSheet({
 
 
         <div className="space-y-2">
-          {def.fields.map((f) => (
+          {shownFields.map((f) => (
             <div key={f.key} className="flex items-start justify-between gap-4 border-b border-border/40 pb-2">
               <span className="text-xs uppercase tracking-wide text-muted-foreground">{f.label}</span>
               <span className="text-right text-sm text-foreground">
                 {f.type === "item" ? (
-                  <ItemValue name={request.details?.articulo} itemId={request.details?.item_id} clubId={clubId} />
+                  <ItemValue name={details.articulo} itemId={details.item_id} clubId={clubId} />
                 ) : f.type === "team" ? (
-                  <>{teamsQ.data?.find((t) => t.id === request.details?.[f.key])?.name ?? "—"}</>
+                  <>{teamsQ.data?.find((t) => t.id === details[f.key])?.name ?? "—"}</>
                 ) : f.type === "url" ? (
-                  <LinkValue url={request.details?.[f.key]} />
+                  <LinkValue url={details[f.key]} />
                 ) : f.type === "image" ? (
-                  <PhotoValue path={request.details?.[f.key]} />
-
+                  <PhotoValue path={details[f.key]} />
+                ) : f.type === "file" ? (
+                  <DocumentValue path={details[f.key]} name={details[`${f.key}_name`]} />
+                ) : f.type === "toggle" ? (
+                  <>
+                    {f.toggleOptions?.find((o) => o.value === details[f.key])?.label ?? "—"}
+                  </>
                 ) : (
-                  fieldDisplay(request.details?.[f.key], f.type, request.currency)
+                  fieldDisplay(details[f.key], f.type, request.currency)
                 )}
               </span>
             </div>
