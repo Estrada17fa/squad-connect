@@ -268,13 +268,8 @@ export function SessionFormDialog({
 
   async function handleDelete() {
     if (!session) return;
-    try {
-      await del.mutateAsync(session.id);
-      toast.success("Entrenamiento eliminado");
-      onOpenChange(false);
-    } catch (e: any) {
-      toast.error(e.message ?? "No se pudo eliminar");
-    }
+    await del.mutateAsync(session.id);
+    onOpenChange(false);
   }
 
   return (
