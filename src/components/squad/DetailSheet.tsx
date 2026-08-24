@@ -32,7 +32,7 @@ interface DetailSheetProps {
   media?: React.ReactNode;
   /** Icono de tipo (se usa si no hay `media`). */
   icon?: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
-  /** Color de acento (var CSS o hsl) para el icono y la barra superior. */
+  /** Color de acento (var CSS o hsl) para el icono y la franja lateral de la cabecera. */
   accent?: string;
   /** Badges de estado/tipo bajo el título. */
   badges?: React.ReactNode;
@@ -88,10 +88,10 @@ export function DetailSheet({
             />
           ) : null}
           {media ? (
-            <div className="shrink-0">{media}</div>
+            <div className="shrink-0 self-start">{media}</div>
           ) : Icon ? (
             <div
-              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl"
+              className="flex h-12 w-12 shrink-0 self-start items-center justify-center rounded-xl"
               style={{
                 backgroundColor: accent ? `color-mix(in oklab, ${accent} 18%, transparent)` : undefined,
               }}
