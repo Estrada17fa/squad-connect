@@ -155,6 +155,8 @@ export function MemberForm({
   const [phone, setPhone] = React.useState("");
   const [avatarUrl, setAvatarUrl] = React.useState("");
   const [birthdate, setBirthdate] = React.useState("");
+  const [nationality, setNationality] = React.useState("");
+  const [birthplace, setBirthplace] = React.useState("");
   const [emgName, setEmgName] = React.useState("");
   const [emgPhone, setEmgPhone] = React.useState("");
   const [roleId, setRoleId] = React.useState("");
@@ -201,6 +203,8 @@ export function MemberForm({
     setPhone("");
     setAvatarUrl("");
     setBirthdate("");
+    setNationality("");
+    setBirthplace("");
     setEmgName("");
     setEmgPhone("");
     setRoleId("");
