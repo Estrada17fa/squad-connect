@@ -199,8 +199,12 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
         const lvl = getModuleAccess("multimedia_gestion");
         return levelCanRead(lvl) && lvl !== "vista_jugador";
       }
+      // El MÓDULO de viajes (gestión) exige nivel global; la consulta personal
+      // vive en la pestaña Viajes de Agenda.
+      if (key === "viajes") return canManageTripsModule(getModuleAccess("viajes"));
       return canViewModule(key);
     },
+
     [canViewModule, getModuleAccess],
   );
   // La sección Admin exige nivel global en `usuarios` (o super admin):
