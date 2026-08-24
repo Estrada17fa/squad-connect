@@ -175,6 +175,13 @@ export const REQUEST_TYPES: RequestTypeDef[] = [
       { key: "proveedor", label: "Proveedor", type: "text", required: true },
       { key: "concepto", label: "Concepto", type: "text", required: true },
       { key: "monto", label: "Monto", type: "money", required: true },
+      { key: "fecha_limite_pago", label: "Fecha límite de pago", type: "date" },
+      {
+        key: "factura_doc",
+        label: "Factura o documento",
+        type: "file",
+        hint: "PDF o imagen.",
+      },
     ],
   },
   {
