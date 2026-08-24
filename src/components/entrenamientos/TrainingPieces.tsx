@@ -1,6 +1,8 @@
 import * as React from "react";
 import {
   Activity,
+  AlertCircle,
+  MapPin,
   Dumbbell,
   Flame,
   Hand,
@@ -212,5 +214,54 @@ export function PlanSummaryChips({
         );
       })}
     </div>
+  );
+}
+
+/** Entrenamiento ya agendado que todavía no tiene plan de ejercicios. */
+export function PendingPlanCard({
+  title,
+  startsAt,
+  teamLabel,
+  location,
+  onClick,
+}: {
+  title: string;
+  startsAt: string;
+  teamLabel?: string | null;
+  location?: string | null;
+  onClick?: () => void;
+}) {
+  const when = new Date(startsAt).toLocaleString("es-MX", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="glass relative w-full overflow-hidden p-4 pl-5 text-left transition-all hover:border-white/15 hover:bg-white/[0.06] active:scale-[0.99]"
+    >
+      <span
+        aria-hidden
+        className="absolute inset-y-0 left-0 w-1 rounded-l-[inherit]"
+        style={{ backgroundColor: "hsl(var(--warning, 45 100% 55%))" }}
+      />
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-xs font-medium uppercase tracking-wide text-primary">{when}</p>
+          <p className="mt-1 break-words font-display font-semibold text-foreground [overflow-wrap:anywhere]">
+            {title}
+          </p>
+        </div>
+        <TrainingChip icon={AlertCircle}>Sin plan</TrainingChip>
+      </div>
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {teamLabel ? <TrainingChip icon={Shield}>{teamLabel}</TrainingChip> : null}
+        {location ? <TrainingChip icon={MapPin}>{location}</TrainingChip> : null}
+      </div>
+    </button>
   );
 }
