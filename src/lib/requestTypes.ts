@@ -196,6 +196,13 @@ export const REQUEST_TYPES: RequestTypeDef[] = [
       { key: "concepto", label: "Concepto", type: "text", required: true },
       { key: "monto", label: "Monto", type: "money", required: true },
       { key: "fecha_gasto", label: "Fecha del gasto", type: "date", required: true },
+      {
+        key: "comprobante_doc",
+        label: "Comprobante o ticket",
+        type: "file",
+        required: true,
+        hint: "Sin comprobante no se puede reembolsar. PDF o imagen.",
+      },
     ],
   },
   {
