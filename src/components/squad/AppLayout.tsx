@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useClubPrefs } from "@/hooks/useClubSettings";
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { prefetchModule } from "@/lib/prefetch";
 import { ChevronDown, ClipboardList, LogOut, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
