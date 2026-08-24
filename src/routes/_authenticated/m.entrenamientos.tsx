@@ -87,12 +87,46 @@ function EntrenamientosPage() {
     if (filters.teamId && s.team_id !== filters.teamId) return false;
     if (q && !s.title.toLowerCase().includes(q) && !(s.objective ?? "").toLowerCase().includes(q))
       return false;
-    if (filters.linked && !s.event_id) return false;
     const count = summaries[s.id]?.count ?? 0;
     if (filters.planned === "con" && count === 0) return false;
     if (filters.planned === "sin" && count > 0) return false;
     return true;
   });
+
+  /**
+   * "Por planear": entrenamientos ya agendados (eventos futuros) que todavía no
+   * tienen ejercicios. Solo de las categorías donde el usuario puede editar.
+   */
+  const eventsQ = useCalendarEvents({ mode: "club", clubId: canAccess ? clubId : null });
+  const plannedEventIds = React.useMemo(() => {
+    const ids = new Set<string>();
+    for (const s of visibleSessions) {
+      if (s.event_id && (summaries[s.id]?.count ?? 0) > 0) ids.add(s.event_id);
+    }
+    return ids;
+  }, [visibleSessions, summaries]);
+
+  const pendingEvents = React.useMemo(() => {
+    const nowTs = Date.now();
+    return (eventsQ.data ?? [])
+      .filter(
+        (e) =>
+          e.event_type === "entrenamiento" &&
+          !!e.team_id &&
+          canEditTeam(e.team_id) &&
+          new Date(e.starts_at).getTime() >= nowTs &&
+          !plannedEventIds.has(e.id) &&
+          (!filters.teamId || e.team_id === filters.teamId),
+      )
+      .sort((a, b) => a.starts_at.localeCompare(b.starts_at));
+  }, [eventsQ.data, canEditTeam, plannedEventIds, filters.teamId]);
+
+  /** Si el evento ya tiene sesión creada (pero sin ejercicios), se edita esa. */
+  const sessionByEvent = React.useMemo(() => {
+    const m = new Map<string, TrainingSessionRow>();
+    for (const s of visibleSessions) if (s.event_id) m.set(s.event_id, s);
+    return m;
+  }, [visibleSessions]);
 
   const exercises = (exercisesQ.data ?? []).filter((e) => {
     if (e.team_id && !canReadTeam(e.team_id)) return false;
