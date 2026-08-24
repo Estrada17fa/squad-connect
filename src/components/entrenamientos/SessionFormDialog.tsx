@@ -45,8 +45,10 @@ interface Props {
   userId: string;
   teams: TeamOption[];
   defaultTeamId?: string | null;
-  /** Evento del calendario al que queda ligada la sesión (desde el detalle del evento). */
+  /** Entrenamiento ya agendado al que se le va a armar el plan. */
   defaultEventId?: string | null;
+  /** Igual que arriba, pero con los datos ya cargados (desde "Por planear"). */
+  pendingEvent?: CalendarEventRow | null;
   session?: TrainingSessionRow | null;
 }
 
