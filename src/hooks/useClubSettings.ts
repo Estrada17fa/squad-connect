@@ -126,10 +126,13 @@ export function useClubLogoUrl(logoPath: string | null | undefined) {
   });
 }
 
-/** Preferencias del club listas para usar en la interfaz (con valores por defecto). */
-export function useClubPrefs() {
-  const { profile } = useApp();
-  const clubQ = useClub(profile?.club_id ?? null);
+/**
+ * Preferencias del club listas para usar (con valores por defecto), a partir de
+ * un `clubId` explícito. No depende de `useApp`, así que este módulo no crea un
+ * ciclo de importación con `AppLayout`.
+ */
+export function useClubPrefsFor(clubId: string | null) {
+  const clubQ = useClub(clubId);
   const currency = clubQ.data?.currency || DEFAULT_CURRENCY;
   const timezone = clubQ.data?.timezone || DEFAULT_TIMEZONE;
   const dateFormat = clubQ.data?.date_format || DEFAULT_DATE_FORMAT;
@@ -149,3 +152,4 @@ export function useClubPrefs() {
     isLoading: clubQ.isLoading,
   };
 }
+
