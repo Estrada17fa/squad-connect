@@ -1,8 +1,11 @@
 import * as React from "react";
 import { AlertTriangle, FileText, Info, Megaphone } from "lucide-react";
 import { StatusBadge, type StatusVariant } from "@/components/squad/StatusBadge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { initials } from "@/components/usuarios/memberUtils";
 import { cn } from "@/lib/utils";
 import { PRIORITY_LABEL, useAttachmentUrl, type AnnouncementPriority } from "@/hooks/useAnnouncements";
+
 
 const PRIORITY_VARIANT: Record<AnnouncementPriority, StatusVariant> = {
   urgente: "rejected",
