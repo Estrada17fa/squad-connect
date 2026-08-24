@@ -278,6 +278,7 @@ function EntrenamientosPage() {
                       setPendingEvent(e);
                       setSessionFormOpen(true);
                     }}
+                    onDelete={canEditTeam(e.team_id) ? () => deletePending(e.id) : undefined}
                   />
                 ))}
               </div>
@@ -370,6 +371,11 @@ function EntrenamientosPage() {
         session={detailSession}
         teamName={detailSession ? teamName(detailSession.team_id) : null}
         readOnly={!detailSession || !canEditTeam(detailSession.team_id)}
+        onDelete={
+          detailSession && canEditTeam(detailSession.team_id)
+            ? () => deleteSession.mutateAsync(detailSession.id)
+            : undefined
+        }
         onEdit={() => {
           setPendingEvent(null);
           setEditingSession(detailSession);

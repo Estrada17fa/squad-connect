@@ -253,7 +253,7 @@ export function PendingPlanCard({
       <button
         type="button"
         onClick={onClick}
-        className="w-full p-4 pl-5 text-left active:scale-[0.99]"
+        className="w-full p-4 pl-5 pr-12 text-left active:scale-[0.99]"
       >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
