@@ -229,6 +229,8 @@ export function MemberForm({
       setPhone(profile.phone ?? "");
       setAvatarUrl(profile.avatar_url ?? "");
       setBirthdate(profile.birthdate ?? "");
+      setNationality(profile.nationality ?? "");
+      setBirthplace(profile.birthplace ?? "");
       setEmgName(profile.emergency_contact_name ?? "");
       setEmgPhone(profile.emergency_contact_phone ?? "");
     }
