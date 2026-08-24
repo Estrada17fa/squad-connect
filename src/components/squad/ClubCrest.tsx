@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useClub, useClubLogoUrl } from "@/hooks/useClubSettings";
 import { initials } from "@/components/usuarios/memberUtils";
 import { cn } from "@/lib/utils";
