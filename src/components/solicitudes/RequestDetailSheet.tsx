@@ -11,6 +11,7 @@ import {
   History,
   AlertTriangle,
   Link as LinkIcon,
+  FileText,
   Receipt,
   Stethoscope,
   Send,
@@ -49,6 +50,8 @@ import {
   STATUS_VARIANT,
   STATUS_EXTRA_CLASS,
   formatMoney,
+  fieldVisible,
+  normalizeDetails,
   type RequestStatus,
   requestSummary,
 } from "@/lib/requestTypes";
@@ -203,6 +206,8 @@ export function RequestDetailSheet({
   if (!request) return null;
 
   const def = REQUEST_TYPE_MAP[request.type];
+  const details = normalizeDetails(request.type, request.details);
+  const shownFields = def.fields.filter((f) => fieldVisible(f, details));
   const Icon = def.icon;
   const isOwner = request.requester_id === userId;
   const isPending = request.status === "pendiente";
@@ -347,21 +352,26 @@ export function RequestDetailSheet({
 
 
         <div className="space-y-2">
-          {def.fields.map((f) => (
+          {shownFields.map((f) => (
             <div key={f.key} className="flex items-start justify-between gap-4 border-b border-border/40 pb-2">
               <span className="text-xs uppercase tracking-wide text-muted-foreground">{f.label}</span>
               <span className="text-right text-sm text-foreground">
                 {f.type === "item" ? (
-                  <ItemValue name={request.details?.articulo} itemId={request.details?.item_id} clubId={clubId} />
+                  <ItemValue name={details.articulo} itemId={details.item_id} clubId={clubId} />
                 ) : f.type === "team" ? (
-                  <>{teamsQ.data?.find((t) => t.id === request.details?.[f.key])?.name ?? "—"}</>
+                  <>{teamsQ.data?.find((t) => t.id === details[f.key])?.name ?? "—"}</>
                 ) : f.type === "url" ? (
-                  <LinkValue url={request.details?.[f.key]} />
+                  <LinkValue url={details[f.key]} />
                 ) : f.type === "image" ? (
-                  <PhotoValue path={request.details?.[f.key]} />
-
+                  <PhotoValue path={details[f.key]} />
+                ) : f.type === "file" ? (
+                  <DocumentValue path={details[f.key]} name={details[`${f.key}_name`]} />
+                ) : f.type === "toggle" ? (
+                  <>
+                    {f.toggleOptions?.find((o) => o.value === details[f.key])?.label ?? "—"}
+                  </>
                 ) : (
-                  fieldDisplay(request.details?.[f.key], f.type, request.currency)
+                  fieldDisplay(details[f.key], f.type, request.currency)
                 )}
               </span>
             </div>
@@ -634,3 +644,20 @@ function PhotoValue({ path }: { path?: string }) {
   );
 }
 
+
+function DocumentValue({ path, name }: { path?: string; name?: string }) {
+  const urlQ = useRequestAttachmentUrl(path ?? null);
+  if (!path) return <>—</>;
+  if (!urlQ.data) return <span className="text-muted-foreground">Cargando…</span>;
+  return (
+    <a
+      href={urlQ.data}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex max-w-[220px] items-center gap-1 text-primary underline underline-offset-2"
+    >
+      <FileText className="h-3.5 w-3.5 shrink-0" />
+      <span className="truncate">{name || "Ver documento"}</span>
+    </a>
+  );
+}
