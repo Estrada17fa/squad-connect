@@ -643,3 +643,20 @@ function PhotoValue({ path }: { path?: string }) {
   );
 }
 
+
+function DocumentValue({ path, name }: { path?: string; name?: string }) {
+  const urlQ = useRequestAttachmentUrl(path ?? null);
+  if (!path) return <>—</>;
+  if (!urlQ.data) return <span className="text-muted-foreground">Cargando…</span>;
+  return (
+    <a
+      href={urlQ.data}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex max-w-[220px] items-center gap-1 text-primary underline underline-offset-2"
+    >
+      <FileText className="h-3.5 w-3.5 shrink-0" />
+      <span className="truncate">{name || "Ver documento"}</span>
+    </a>
+  );
+}
