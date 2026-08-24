@@ -99,7 +99,7 @@ function MiPerfilPage() {
       const { data, error } = await supabase
         .from("player_profiles")
         .select(
-          "jersey_number, position, secondary_position, preferred_foot, height_cm, weight_kg, player_status, shirt_size, pants_size, shoe_size",
+          "team_id, availability_status, jersey_number, position, secondary_position, preferred_foot, height_cm, weight_kg, player_status, shirt_size, pants_size, shoe_size, team:teams(club_id, name)",
         )
         .eq("user_id", user.id)
         .is("archived_at", null)
@@ -119,6 +119,17 @@ function MiPerfilPage() {
   const memberships = membershipsQ.data ?? [];
   const player = playerQ.data;
   const isBaja = (data.status ?? "activo") === "baja";
+
+  // Bloques personales: solo aparecen si la persona TIENE ficha de jugador y
+  // además su permiso real en ese módulo se lo permite (misma fuente de verdad
+  // que usan los módulos: `getModuleAccess`).
+  const isPlayer = !!player;
+  const playerTeamId: string | null = player?.team_id ?? null;
+  const playerClubId: string | null = player?.team?.club_id ?? null;
+  const showSalud = isPlayer && !!playerTeamId && !!playerClubId && canRead(getModuleAccess("salud"));
+  const showDesarrollo = isPlayer && canRead(getModuleAccess("desarrollo"));
+  const showNutricion = isPlayer && !!playerTeamId && canRead(getModuleAccess("nutricion"));
+
 
 
   return (
