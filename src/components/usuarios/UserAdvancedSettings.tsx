@@ -355,8 +355,8 @@ function OverridesEditor({
                     </div>
                   );
                 })}
-              </div>
-            ) : null}
+            </div>
+
           </div>
         );
       })}
