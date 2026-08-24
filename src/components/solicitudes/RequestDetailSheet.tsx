@@ -205,6 +205,8 @@ export function RequestDetailSheet({
   if (!request) return null;
 
   const def = REQUEST_TYPE_MAP[request.type];
+  const details = normalizeDetails(request.type, request.details);
+  const shownFields = def.fields.filter((f) => fieldVisible(f, details));
   const Icon = def.icon;
   const isOwner = request.requester_id === userId;
   const isPending = request.status === "pendiente";
