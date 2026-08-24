@@ -232,6 +232,7 @@ function EntrenamientosPage() {
             onClick={() => {
               if (view === "sesiones") {
                 setEditingSession(null);
+                setPendingEvent(null);
                 setSessionFormOpen(true);
               } else {
                 setEditingExercise(null);
@@ -240,7 +241,7 @@ function EntrenamientosPage() {
             }}
           >
             <Plus className="mr-2 h-4 w-4" />
-            {view === "sesiones" ? "Nueva sesión" : "Nuevo ejercicio"}
+            {view === "sesiones" ? "Nuevo entrenamiento" : "Nuevo ejercicio"}
           </Button>
         ) : null}
 
@@ -249,23 +250,47 @@ function EntrenamientosPage() {
           value={filters}
           onChange={setFilters}
           teams={teamOptions.flatMap((t) => (t.id ? [{ id: t.id, name: t.name }] : []))}
-          count={view === "sesiones" ? sessions.length : exercises.length}
+          count={view === "sesiones" ? listSessions.length : exercises.length}
         />
 
         <TabsContent value="sesiones" className="space-y-4">
+          {pendingEvents.length ? (
+            <div className="space-y-3">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">Por planear</p>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {pendingEvents.map((e) => (
+                  <PendingPlanCard
+                    key={e.id}
+                    title={e.title}
+                    startsAt={e.starts_at}
+                    teamLabel={teamName(e.team_id)}
+                    location={e.location}
+                    onClick={() => {
+                      setEditingSession(sessionByEvent.get(e.id) ?? null);
+                      setPendingEvent(e);
+                      setSessionFormOpen(true);
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : null}
+
           {sessionsQ.isLoading ? (
             <CardGridSkeleton count={3} />
-          ) : sessions.length === 0 ? (
-            <EmptyState
-              icon={Dumbbell}
-              title="Sin sesiones"
-              message="Aún no hay sesiones de entrenamiento que coincidan con los filtros."
-            />
+          ) : listSessions.length === 0 ? (
+            pendingEvents.length ? null : (
+              <EmptyState
+                icon={Dumbbell}
+                title="Sin entrenamientos"
+                message="Aún no hay entrenamientos que coincidan con los filtros."
+              />
+            )
           ) : (
             <>
               {upcoming.length ? (
                 <div className="space-y-3">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Próximas</p>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Próximos</p>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     {upcoming.map(renderSessionCard)}
                   </div>
@@ -273,7 +298,7 @@ function EntrenamientosPage() {
               ) : null}
               {past.length ? (
                 <div className="space-y-3">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Pasadas</p>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Pasados</p>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">{past.map(renderSessionCard)}</div>
                 </div>
               ) : null}
