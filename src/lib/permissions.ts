@@ -233,7 +233,7 @@ export const DEFAULT_ROLE_LEVELS: Record<string, Partial<Record<ModuleKey, Permi
   },
   jugador: {
     agenda: "vista_jugador", mes: "vista_jugador", plantel: "vista_jugador",
-    viajes: "sin_acceso", inventario: "sin_acceso", coordinacion_interna: "sin_acceso",
+    viajes: "vista_jugador", inventario: "sin_acceso", coordinacion_interna: "sin_acceso",
     partidos: "vista_jugador",
     solicitudes: "vista_jugador", compras_facturas: "sin_acceso", documentos: "sin_acceso",
     usuarios: "sin_acceso", comunicados: "vista_jugador", multimedia: "vista_jugador",
