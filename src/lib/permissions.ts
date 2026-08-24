@@ -80,10 +80,11 @@ export function canRead(level: PermissionLevel | undefined | null): boolean {
 
 /**
  * Módulos de GESTIÓN pura: los niveles de jugador y de lector por categoría no
- * alcanzan para verlos. En Viajes la información personal del jugador (su
- * citación, su vuelo, su pase) se mostrará desde Agenda/Inicio, no aquí.
+ * alcanzan para verlos. Viajes ya NO está aquí: con cualquier nivel de lectura
+ * se ve la pestaña de consulta en Agenda (su citación, vuelo, hotel, pase);
+ * el módulo de gestión en Coordinación se filtra con `canManageTripsModule`.
  */
-export const MANAGEMENT_ONLY_MODULES: ModuleKey[] = ["viajes"];
+export const MANAGEMENT_ONLY_MODULES: ModuleKey[] = [];
 
 /** ¿El módulo aparece en la navegación y en sus rutas? */
 export function canSeeModule(key: ModuleKey, level: PermissionLevel | undefined | null): boolean {
@@ -91,6 +92,16 @@ export function canSeeModule(key: ModuleKey, level: PermissionLevel | undefined 
   if (MANAGEMENT_ONLY_MODULES.includes(key)) return LEVEL_RANK[l] >= LEVEL_RANK.lector_global;
   return canRead(l);
 }
+
+/**
+ * Acceso al MÓDULO de gestión de viajes (chip en Coordinación, `/m/viajes`):
+ * requiere nivel global de lectura o superior. La consulta personal del viaje
+ * vive en la pestaña Viajes de Agenda y solo pide lectura.
+ */
+export function canManageTripsModule(level: PermissionLevel | undefined | null): boolean {
+  return LEVEL_RANK[normalizeLevel(level)] >= LEVEL_RANK.lector_global;
+}
+
 
 /** ¿Puede crear o editar? */
 export function canEdit(level: PermissionLevel | undefined | null): boolean {
