@@ -48,7 +48,7 @@ Todas pasan por la categoría, así que Categoría A no ve Categoría B salvo pe
 3. Sin cambios en los disparadores: ya están consistentes.
 
 ### B. Comportamiento
-4. Viaje: además del evento de salida, generar el hito de **regreso** cuando el viaje tiene fecha de retorno, para que aparezca su propio día en la Agenda (pendiente de tu confirmación, ver pregunta abajo).
+4. Viaje: se mantiene **un solo evento** (día de salida) con el rango completo dentro del detalle; el regreso no genera hito propio.
 5. Partido sin hora: avisar en la captura del partido que sin hora no aparece en la Agenda.
 
 ### C. Pulido visual (sin tocar lógica ni permisos)
