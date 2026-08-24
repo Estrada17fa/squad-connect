@@ -213,7 +213,7 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
   );
 
 
-  if (isLoading || !data) {
+  if (isLoading || !data || mustChange.isLoading) {
     return (
       <div className="min-h-screen bg-background">
         <LoadingState />
