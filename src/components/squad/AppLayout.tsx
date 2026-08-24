@@ -225,6 +225,7 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
       <div className="min-h-screen bg-background pb-24 sm:pb-8">
 
         <Header
+          clubId={data.profile?.club_id ?? null}
           clubName={data.clubName}
           userName={data.profile?.full_name ?? user.email ?? ""}
           avatarUrl={data.profile?.avatar_url ?? null}
@@ -239,7 +240,7 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
           <Outlet />
         </main>
         <BottomNav pages={visiblePages} />
-        <FAB />
+
       </div>
     </AppContext.Provider>
   );
