@@ -60,25 +60,25 @@ export function SessionFormDialog({
   teams,
   defaultTeamId,
   defaultEventId,
+  pendingEvent,
   session,
 }: Props) {
   const isEdit = !!session;
   const save = useSaveSession();
   const del = useDeleteSession();
 
+  const initialEventId = session?.event_id ?? pendingEvent?.id ?? defaultEventId ?? null;
+
   const [teamId, setTeamId] = React.useState<string | null>(
-    session?.team_id ?? defaultTeamId ?? teams[0]?.id ?? null,
+    session?.team_id ?? pendingEvent?.team_id ?? defaultTeamId ?? teams[0]?.id ?? null,
   );
-  const [title, setTitle] = React.useState(session?.title ?? "");
+  const [title, setTitle] = React.useState(session?.title ?? pendingEvent?.title ?? "");
   const [objective, setObjective] = React.useState(session?.objective ?? "");
   const [notes, setNotes] = React.useState(session?.notes ?? "");
   const [date, setDate] = React.useState(
     session?.session_date ? toLocalInputValue(session.session_date) : "",
   );
-  const [eventMode, setEventMode] = React.useState<"none" | "link" | "create">(
-    session?.event_id || defaultEventId ? "link" : "create",
-  );
-  const [eventId, setEventId] = React.useState<string | null>(session?.event_id ?? defaultEventId ?? null);
+  const [eventId] = React.useState<string | null>(initialEventId);
   const [location, setLocation] = React.useState("");
   const [locationId, setLocationId] = React.useState<string | null>(null);
   const [attendeeIds, setAttendeeIds] = React.useState<Set<string>>(new Set());
@@ -91,6 +91,13 @@ export function SessionFormDialog({
   const exercisesQ = useExercises(clubId);
   const planQ = useSessionPlan(open && session ? session.id : null);
   const { data: events } = useCalendarEvents({ mode: "club", clubId });
+  const attendeesQ = useEventAttendees(open && initialEventId ? initialEventId : null);
+
+  /** Entrenamiento ya agendado al que pertenece este plan (si lo hay). */
+  const linkedEvent: CalendarEventRow | null = React.useMemo(() => {
+    if (!initialEventId) return null;
+    return (events ?? []).find((e) => e.id === initialEventId) ?? pendingEvent ?? null;
+  }, [events, initialEventId, pendingEvent]);
 
   const exercisesById = React.useMemo(() => {
     const m = new Map<string, ExerciseRow>();
@@ -103,23 +110,13 @@ export function SessionFormDialog({
     [exercisesQ.data, teamId],
   );
 
-  const trainingEvents = React.useMemo(
-    () =>
-      (events ?? []).filter(
-        (e) => e.event_type === "entrenamiento" && (!teamId || e.team_id === teamId),
-      ),
-    [events, teamId],
-  );
-
   React.useEffect(() => {
     if (!open) return;
-    setTeamId(session?.team_id ?? defaultTeamId ?? teams[0]?.id ?? null);
-    setTitle(session?.title ?? "");
+    setTeamId(session?.team_id ?? pendingEvent?.team_id ?? defaultTeamId ?? teams[0]?.id ?? null);
+    setTitle(session?.title ?? pendingEvent?.title ?? "");
     setObjective(session?.objective ?? "");
     setNotes(session?.notes ?? "");
     setDate(session?.session_date ? toLocalInputValue(session.session_date) : "");
-    setEventMode(session?.event_id || defaultEventId ? "link" : "create");
-    setEventId(session?.event_id ?? defaultEventId ?? null);
     setLocation("");
     setLocationId(null);
     setAttendeeIds(new Set());
@@ -127,7 +124,7 @@ export function SessionFormDialog({
 
     setPickerPhase(null);
     if (!session) setPlan([]);
-  }, [open, session, defaultTeamId, defaultEventId, teams]);
+  }, [open, session, defaultTeamId, pendingEvent, teams]);
 
   // Al cambiar de equipo, la convocatoria se recalcula al equipo completo.
   const prevTeamRef = React.useRef<string | null>(teamId);
@@ -140,7 +137,36 @@ export function SessionFormDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamId]);
 
+  // Cuando ya existe el entrenamiento en la agenda, sus datos mandan (una sola vez).
+  const hydratedRef = React.useRef<string | null>(null);
+  React.useEffect(() => {
+    if (!open) {
+      hydratedRef.current = null;
+      return;
+    }
+    if (!linkedEvent || hydratedRef.current === linkedEvent.id) return;
+    hydratedRef.current = linkedEvent.id;
+    setTeamId(linkedEvent.team_id ?? null);
+    setDate(toLocalInputValue(linkedEvent.starts_at));
+    setLocation(linkedEvent.location ?? "");
+    setLocationId(linkedEvent.location_id ?? null);
+    prevTeamRef.current = linkedEvent.team_id ?? null;
+  }, [open, linkedEvent]);
 
+  const attendeesHydratedRef = React.useRef(false);
+  React.useEffect(() => {
+    if (!open) {
+      attendeesHydratedRef.current = false;
+      return;
+    }
+    if (attendeesHydratedRef.current || !attendeesQ.data) return;
+    attendeesHydratedRef.current = true;
+    const ids = (attendeesQ.data as any[]).map((a) => a.user_id as string);
+    if (ids.length) {
+      setAttendeeIds(new Set(ids));
+      setAttendeeMode("custom");
+    }
+  }, [open, attendeesQ.data]);
 
   React.useEffect(() => {
     if (!open || !session || !planQ.data) return;
