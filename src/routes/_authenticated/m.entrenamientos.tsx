@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useApp } from "@/components/squad/AppLayout";
 import { useTeamAccess } from "@/hooks/useTeamAccess";
 import { useEditableTeams } from "@/hooks/useEditableTeams";
+import { useCalendarEvents, type CalendarEventRow } from "@/hooks/useCalendarEvents";
 import {
   PHASE_LABEL,
   formatSessionDate,
@@ -23,7 +24,12 @@ import { ExerciseFormDialog } from "@/components/entrenamientos/ExerciseFormDial
 import { SessionFormDialog } from "@/components/entrenamientos/SessionFormDialog";
 import { SessionDetailSheet } from "@/components/entrenamientos/SessionDetailSheet";
 import { ExerciseDetailSheet } from "@/components/entrenamientos/ExerciseDetailSheet";
-import { ExerciseCard, PlanSummaryChips, TrainingChip } from "@/components/entrenamientos/TrainingPieces";
+import {
+  ExerciseCard,
+  PendingPlanCard,
+  PlanSummaryChips,
+  TrainingChip,
+} from "@/components/entrenamientos/TrainingPieces";
 import {
   EMPTY_TRAINING_FILTERS,
   EntrenamientosFilters,
@@ -65,6 +71,7 @@ function EntrenamientosPage() {
 
   const [sessionFormOpen, setSessionFormOpen] = React.useState(false);
   const [editingSession, setEditingSession] = React.useState<TrainingSessionRow | null>(null);
+  const [pendingEvent, setPendingEvent] = React.useState<CalendarEventRow | null>(null);
   const [detailSession, setDetailSession] = React.useState<TrainingSessionRow | null>(null);
   const [exerciseOpen, setExerciseOpen] = React.useState(false);
   const [editingExercise, setEditingExercise] = React.useState<ExerciseRow | null>(null);
@@ -334,11 +341,15 @@ function EntrenamientosPage() {
         <>
           <SessionFormDialog
             open={sessionFormOpen}
-            onOpenChange={setSessionFormOpen}
+            onOpenChange={(v) => {
+              setSessionFormOpen(v);
+              if (!v) setPendingEvent(null);
+            }}
             clubId={clubId}
             userId={userId}
             teams={editableTeams}
             defaultTeamId={filters.teamId}
+            pendingEvent={pendingEvent}
             session={editingSession}
           />
           <ExerciseFormDialog
@@ -359,6 +370,7 @@ function EntrenamientosPage() {
         teamName={detailSession ? teamName(detailSession.team_id) : null}
         readOnly={!detailSession || !canEditTeam(detailSession.team_id)}
         onEdit={() => {
+          setPendingEvent(null);
           setEditingSession(detailSession);
           setDetailSession(null);
           setSessionFormOpen(true);
