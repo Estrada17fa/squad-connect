@@ -274,6 +274,18 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
           }}
         />
       ) : null}
+
+      <DeleteMemberDialog
+        member={deleteTarget}
+        open={!!deleteTarget}
+        onOpenChange={(o) => !o && setDeleteTarget(null)}
+        onDeleted={() => {
+          setDeleteTarget(null);
+          setSelectedUserId(null);
+          refreshMembers();
+          qc.invalidateQueries({ queryKey: ["roster"] });
+        }}
+      />
     </div>
   );
 }
