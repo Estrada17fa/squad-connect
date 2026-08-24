@@ -21,7 +21,7 @@ import { saveCalendarEvent } from "@/lib/calendarEvents";
 import { AttendeePicker, type AttendeeMode } from "@/components/calendar/AttendeePicker";
 import { LocationPicker } from "@/components/calendar/LocationPicker";
 import {
-  useCalendarEvents,
+  calendarEventsQueryOptions,
   useEventAttendees,
   type CalendarEventRow,
 } from "@/hooks/useCalendarEvents";
