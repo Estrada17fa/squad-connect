@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useClubPrefs } from "@/hooks/useClubSettings";
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { prefetchModule } from "@/lib/prefetch";
 import { ChevronDown, ClipboardList, LogOut, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -94,6 +94,30 @@ const LEGACY_ACTIVE_TEAM_KEY = "squad.activeTeamId";
 export function AppLayout({ user }: { user: { id: string; email?: string | null } }) {
   const navigate = useNavigate();
   const { data, isLoading } = useAccess(user.id);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  // Cambio de contraseña obligatorio en el primer acceso (cuenta creada por un admin).
+  const mustChange = useQuery({
+    queryKey: ["must-change-password", user.id],
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data: row } = await (supabase as any)
+        .from("profiles")
+        .select("must_change_password")
+        .eq("id", user.id)
+        .maybeSingle();
+      return !!row?.must_change_password;
+    },
+  });
+
+  const forcePassword = mustChange.data === true;
+  const onPasswordRoute = pathname.startsWith("/cambiar-contrasena");
+
+  React.useEffect(() => {
+    if (forcePassword && !onPasswordRoute) {
+      navigate({ to: "/cambiar-contrasena", replace: true });
+    }
+  }, [forcePassword, onPasswordRoute, navigate]);
 
   // Ya no existe el concepto de "equipo activo global".
   React.useEffect(() => {
@@ -189,7 +213,7 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
   );
 
 
-  if (isLoading || !data) {
+  if (isLoading || !data || mustChange.isLoading) {
     return (
       <div className="min-h-screen bg-background">
         <LoadingState />
@@ -218,6 +242,18 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
     activeBaseRole: effectiveBaseRole,
     visiblePages,
   };
+
+  // Bloqueo total mientras la contraseña siga siendo la asignada por el admin:
+  // sin cabecera ni navegación, solo el formulario.
+  if (forcePassword) {
+    return (
+      <AppContext.Provider value={ctx}>
+        <div className="min-h-screen bg-background px-4 py-10">
+          {onPasswordRoute ? <Outlet /> : <LoadingState />}
+        </div>
+      </AppContext.Provider>
+    );
+  }
 
   return (
     <AppContext.Provider value={ctx}>

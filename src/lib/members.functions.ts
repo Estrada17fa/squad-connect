@@ -64,6 +64,7 @@ export const createClubMember = createServerFn({ method: "POST" })
         emergency_contact_name: norm(data.emergency_contact_name),
         emergency_contact_phone: norm(data.emergency_contact_phone),
         status: "activo",
+        must_change_password: true,
       })
       .eq("id", newUserId);
     if (profErr) console.error("[createClubMember] profile", profErr);
@@ -117,6 +118,11 @@ export const updateClubMember = createServerFn({ method: "POST" })
         password: data.password,
       });
       if (error) throw new Error("No se pudo actualizar la contraseña");
+      // Contraseña asignada por un admin: el miembro deberá cambiarla al entrar.
+      await (supabaseAdmin as any)
+        .from("profiles")
+        .update({ must_change_password: true })
+        .eq("id", data.user_id);
     }
 
     await syncMemberships(supabaseAdmin, data.user_id, role, data.assignments, data.player, data.club_job_title);

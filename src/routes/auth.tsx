@@ -53,13 +53,13 @@ function AuthPage() {
           },
         });
         if (error) throw error;
-        // If session exists (email confirmations off), go home; else prompt to confirm.
+        // Confirmación automática activada: si no hay sesión, se entra con la contraseña.
         const { data } = await supabase.auth.getSession();
-        if (data.session) {
-          navigate({ to: "/" });
-        } else {
-          setInfo("Cuenta creada. Revisa tu correo para confirmar tu registro.");
+        if (!data.session) {
+          const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password });
+          if (signInErr) throw signInErr;
         }
+        navigate({ to: "/" });
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;

@@ -397,6 +397,10 @@ function EditMyProfileSheet({
       if (password) {
         const { error: e } = await supabase.auth.updateUser({ password });
         if (e) throw e;
+        await (supabase as any)
+          .from("profiles")
+          .update({ must_change_password: false })
+          .eq("id", userId);
       }
     },
     onSuccess: () => {
