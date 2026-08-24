@@ -465,15 +465,16 @@ export function SessionFormDialog({
 
       <EntitySheetFooter>
         {isEdit ? (
-          <Button
-            type="button"
-            variant="ghost"
-            className="text-destructive hover:bg-destructive/10 hover:text-destructive sm:mr-auto"
-            onClick={handleDelete}
-            disabled={del.isPending}
-          >
-            <Trash2 className="mr-2 h-4 w-4" /> Eliminar
-          </Button>
+          <div className="sm:mr-auto">
+            <DeleteAction
+              label="Eliminar entrenamiento"
+              title="¿Eliminar este entrenamiento?"
+              description="Se borrará el plan y su evento en la agenda. Esta acción no se puede deshacer."
+              successMessage="Entrenamiento eliminado"
+              loading={del.isPending}
+              onDelete={handleDelete}
+            />
+          </div>
         ) : null}
         <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
           Cancelar
