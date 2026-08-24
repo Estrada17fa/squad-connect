@@ -158,8 +158,10 @@ function EntrenamientosPage() {
   }
 
   const now = Date.now();
-  const upcoming = sessions.filter((s) => new Date(s.session_date).getTime() >= now).reverse();
-  const past = sessions.filter((s) => new Date(s.session_date).getTime() < now);
+  const pendingIds = new Set(pendingEvents.map((e) => e.id));
+  const listSessions = sessions.filter((s) => !(s.event_id && pendingIds.has(s.event_id)));
+  const upcoming = listSessions.filter((s) => new Date(s.session_date).getTime() >= now).reverse();
+  const past = listSessions.filter((s) => new Date(s.session_date).getTime() < now);
 
   function renderSessionCard(s: TrainingSessionRow) {
     const sum = summaries[s.id];
