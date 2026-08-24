@@ -63,7 +63,7 @@ export const Route = createFileRoute("/_authenticated/mi-perfil")({
 });
 
 function MiPerfilPage() {
-  const { user, profile } = useApp();
+  const { user, profile, getModuleAccess } = useApp();
   const [editOpen, setEditOpen] = React.useState(false);
 
   const profileQ = useQuery({
