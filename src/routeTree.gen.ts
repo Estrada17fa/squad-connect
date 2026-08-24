@@ -16,6 +16,7 @@ import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as AuthenticatedMiPerfilRouteImport } from './routes/_authenticated/mi-perfil'
 import { Route as AuthenticatedMiClubRouteImport } from './routes/_authenticated/mi-club'
 import { Route as AuthenticatedCoordinacionRouteImport } from './routes/_authenticated/coordinacion'
+import { Route as AuthenticatedCambiarContrasenaRouteImport } from './routes/_authenticated/cambiar-contrasena'
 import { Route as AuthenticatedAgendaViajesRouteImport } from './routes/_authenticated/agenda-viajes'
 import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
@@ -78,6 +79,12 @@ const AuthenticatedCoordinacionRoute =
   AuthenticatedCoordinacionRouteImport.update({
     id: '/coordinacion',
     path: '/coordinacion',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedCambiarContrasenaRoute =
+  AuthenticatedCambiarContrasenaRouteImport.update({
+    id: '/cambiar-contrasena',
+    path: '/cambiar-contrasena',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedAgendaViajesRoute =
@@ -241,6 +248,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/agenda': typeof AuthenticatedAgendaRoute
   '/agenda-viajes': typeof AuthenticatedAgendaViajesRoute
+  '/cambiar-contrasena': typeof AuthenticatedCambiarContrasenaRoute
   '/coordinacion': typeof AuthenticatedCoordinacionRoute
   '/mi-club': typeof AuthenticatedMiClubRoute
   '/mi-perfil': typeof AuthenticatedMiPerfilRoute
@@ -275,6 +283,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/agenda': typeof AuthenticatedAgendaRoute
   '/agenda-viajes': typeof AuthenticatedAgendaViajesRoute
+  '/cambiar-contrasena': typeof AuthenticatedCambiarContrasenaRoute
   '/coordinacion': typeof AuthenticatedCoordinacionRoute
   '/mi-club': typeof AuthenticatedMiClubRoute
   '/mi-perfil': typeof AuthenticatedMiPerfilRoute
@@ -313,6 +322,7 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/agenda': typeof AuthenticatedAgendaRoute
   '/_authenticated/agenda-viajes': typeof AuthenticatedAgendaViajesRoute
+  '/_authenticated/cambiar-contrasena': typeof AuthenticatedCambiarContrasenaRoute
   '/_authenticated/coordinacion': typeof AuthenticatedCoordinacionRoute
   '/_authenticated/mi-club': typeof AuthenticatedMiClubRoute
   '/_authenticated/mi-perfil': typeof AuthenticatedMiPerfilRoute
@@ -352,6 +362,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/agenda'
     | '/agenda-viajes'
+    | '/cambiar-contrasena'
     | '/coordinacion'
     | '/mi-club'
     | '/mi-perfil'
@@ -386,6 +397,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/agenda'
     | '/agenda-viajes'
+    | '/cambiar-contrasena'
     | '/coordinacion'
     | '/mi-club'
     | '/mi-perfil'
@@ -423,6 +435,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/agenda'
     | '/_authenticated/agenda-viajes'
+    | '/_authenticated/cambiar-contrasena'
     | '/_authenticated/coordinacion'
     | '/_authenticated/mi-club'
     | '/_authenticated/mi-perfil'
@@ -510,6 +523,13 @@ declare module '@tanstack/react-router' {
       path: '/coordinacion'
       fullPath: '/coordinacion'
       preLoaderRoute: typeof AuthenticatedCoordinacionRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/cambiar-contrasena': {
+      id: '/_authenticated/cambiar-contrasena'
+      path: '/cambiar-contrasena'
+      fullPath: '/cambiar-contrasena'
+      preLoaderRoute: typeof AuthenticatedCambiarContrasenaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/agenda-viajes': {
@@ -745,6 +765,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedAgendaRoute: typeof AuthenticatedAgendaRoute
   AuthenticatedAgendaViajesRoute: typeof AuthenticatedAgendaViajesRoute
+  AuthenticatedCambiarContrasenaRoute: typeof AuthenticatedCambiarContrasenaRoute
   AuthenticatedCoordinacionRoute: typeof AuthenticatedCoordinacionRoute
   AuthenticatedMiClubRoute: typeof AuthenticatedMiClubRoute
   AuthenticatedMiPerfilRoute: typeof AuthenticatedMiPerfilRoute
@@ -775,6 +796,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedAgendaRoute: AuthenticatedAgendaRoute,
   AuthenticatedAgendaViajesRoute: AuthenticatedAgendaViajesRoute,
+  AuthenticatedCambiarContrasenaRoute: AuthenticatedCambiarContrasenaRoute,
   AuthenticatedCoordinacionRoute: AuthenticatedCoordinacionRoute,
   AuthenticatedMiClubRoute: AuthenticatedMiClubRoute,
   AuthenticatedMiPerfilRoute: AuthenticatedMiPerfilRoute,

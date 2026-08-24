@@ -94,6 +94,30 @@ const LEGACY_ACTIVE_TEAM_KEY = "squad.activeTeamId";
 export function AppLayout({ user }: { user: { id: string; email?: string | null } }) {
   const navigate = useNavigate();
   const { data, isLoading } = useAccess(user.id);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  // Cambio de contraseña obligatorio en el primer acceso (cuenta creada por un admin).
+  const mustChange = useQuery({
+    queryKey: ["must-change-password", user.id],
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data: row } = await (supabase as any)
+        .from("profiles")
+        .select("must_change_password")
+        .eq("id", user.id)
+        .maybeSingle();
+      return !!row?.must_change_password;
+    },
+  });
+
+  const forcePassword = mustChange.data === true;
+  const onPasswordRoute = pathname.startsWith("/cambiar-contrasena");
+
+  React.useEffect(() => {
+    if (forcePassword && !onPasswordRoute) {
+      navigate({ to: "/cambiar-contrasena", replace: true });
+    }
+  }, [forcePassword, onPasswordRoute, navigate]);
 
   // Ya no existe el concepto de "equipo activo global".
   React.useEffect(() => {
