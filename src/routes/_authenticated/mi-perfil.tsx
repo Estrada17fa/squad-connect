@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
+  Apple,
   CalendarDays,
   Flag,
   HeartPulse,
@@ -15,6 +16,9 @@ import {
 } from "lucide-react";
 import { PlayerHealthSheet } from "@/components/salud/PlayerHealthSheet";
 import { PlayerDevelopmentSheet } from "@/components/desarrollo/PlayerDevelopmentSheet";
+import { PlayerNutritionSheet } from "@/components/nutricion/PlayerNutritionSheet";
+import { canRead } from "@/lib/permissions";
+
 import { PageHeader } from "@/components/squad/PageHeader";
 import { StandardCard } from "@/components/squad/StandardCard";
 import { EmptyState } from "@/components/squad/EmptyState";
