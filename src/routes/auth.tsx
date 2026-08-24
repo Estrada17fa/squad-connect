@@ -20,51 +20,22 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
-type Mode = "signin" | "signup";
-
 function AuthPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
-
-  useEffect(() => {
-    setError(null);
-    setInfo(null);
-  }, [mode]);
+  const [info] = useState<string | null>(null);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    setInfo(null);
     setLoading(true);
     try {
-      if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: window.location.origin,
-            data: { full_name: fullName },
-          },
-        });
-        if (error) throw error;
-        // Confirmación automática activada: si no hay sesión, se entra con la contraseña.
-        const { data } = await supabase.auth.getSession();
-        if (!data.session) {
-          const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password });
-          if (signInErr) throw signInErr;
-        }
-        navigate({ to: "/" });
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        navigate({ to: "/" });
-      }
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      navigate({ to: "/" });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ocurrió un error");
     } finally {
@@ -80,47 +51,15 @@ function AuthPage() {
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-6 shadow-[0_0_60px_-30px_hsl(150_100%_50%/0.4)]">
-          <div className="mb-6 flex rounded-lg bg-secondary p-1">
-            <button
-              type="button"
-              onClick={() => setMode("signin")}
-              className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                mode === "signin"
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Iniciar sesión
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode("signup")}
-              className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                mode === "signup"
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Crear cuenta
-            </button>
+          <div className="mb-6">
+            <h1 className="text-lg font-semibold text-foreground">Iniciar sesión</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Las cuentas las crea el administrador de tu club.
+            </p>
           </div>
 
           <form onSubmit={onSubmit} className="space-y-4">
-            {mode === "signup" && (
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-foreground">
-                  Nombre completo
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="w-full rounded-md border border-border bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                  placeholder="Tu nombre"
-                />
-              </div>
-            )}
+
             <div>
               <label className="mb-1.5 block text-sm font-medium text-foreground">
                 Correo
