@@ -241,8 +241,9 @@ COMMIT;
 --   Config de prueba: locations, club_invitations
 --   Usuarios: profiles, player_profiles, team_memberships,
 --     user_permission_overrides, request_type_user_overrides,
---     role_request_approvals, push_subscriptions, membership_audit_log,
---     super_admins, auth.users  (todos EXCEPTO la cuenta admin conservada)
+--     push_subscriptions, super_admins, auth.users
+--     (todos EXCEPTO la cuenta admin conservada) + membership_audit_log completo
+--   NO se toca: role_request_approvals (aprobadores por rol = configuración)
 --
 -- NOTA STORAGE: los archivos ya subidos (avatares, PDFs, fotos, facturas)
 -- no se borran con SQL. Si quieres vaciarlos, hay que limpiar los buckets
