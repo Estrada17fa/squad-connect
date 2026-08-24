@@ -233,9 +233,9 @@ export function RolePermissionsMatrix({
                       </div>
                     );
                   })}
-                </div>
-              ) : null}
+              </div>
             </div>
+
           );
         })}
         {pageGroups.length === 0 ? (
