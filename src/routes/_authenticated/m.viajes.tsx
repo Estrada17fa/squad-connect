@@ -20,6 +20,8 @@ import { TripDetailSheet } from "@/components/viajes/TripDetailSheet";
 import { TeamFilter, TeamBadge } from "@/components/squad/TeamFilter";
 import { useEditableTeams } from "@/hooks/useEditableTeams";
 import { useTeamAccess } from "@/hooks/useTeamAccess";
+import { canManageTripsModule } from "@/lib/permissions";
+
 import {
   TripFilters,
   applyTripFilters,
