@@ -111,6 +111,17 @@ export const REQUEST_TYPES: RequestTypeDef[] = [
     playerAllowed: false,
     completable: true,
     fields: [
+      {
+        key: "se_devuelve",
+        label: "¿Se devuelve?",
+        type: "toggle",
+        required: true,
+        defaultValue: "prestamo",
+        toggleOptions: [
+          { value: "prestamo", label: "Préstamo (se devuelve)" },
+          { value: "consumible", label: "Consumible (se lo queda)" },
+        ],
+      },
       { key: "articulo", label: "Artículo", type: "item", required: true },
       { key: "cantidad", label: "Cantidad", type: "number", required: true },
       {
@@ -118,10 +129,11 @@ export const REQUEST_TYPES: RequestTypeDef[] = [
         label: "¿Cuándo lo devolverá?",
         type: "date",
         required: true,
+        showIf: { key: "se_devuelve", equals: "prestamo" },
       },
       {
         key: "motivo",
-        label: "Motivo del préstamo",
+        label: "Motivo",
         type: "textarea",
         placeholder: "p.ej. Gira a Hermosillo",
       },
