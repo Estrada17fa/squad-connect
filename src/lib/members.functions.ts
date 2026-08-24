@@ -211,19 +211,19 @@ export const hardDeleteClubMember = createServerFn({ method: "POST" })
     await assertNotLastAdmin(ctx.supabase, clubId, data.user_id);
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const labels = await linkedDataLabels(supabaseAdmin, data.user_id);
-    if (labels.length) {
+    const items = await linkedDataCounts(supabaseAdmin, data.user_id);
+    if (items.length && !data.force) {
       return {
         ok: false as const,
         reason:
-          "Este miembro tiene historial en el club. Usa 'Dar de baja' para conservar sus registros.",
-        labels,
+          "Este miembro tiene historial en el club. Confirma para eliminarlo junto con sus registros personales.",
+        items,
+        labels: items.map((i) => i.label),
       };
     }
 
-    await supabaseAdmin.from("player_profiles").delete().eq("user_id", data.user_id);
-    await supabaseAdmin.from("team_memberships").delete().eq("user_id", data.user_id);
+    await purgePersonalData(supabaseAdmin, data.user_id);
     const { error } = await supabaseAdmin.auth.admin.deleteUser(data.user_id);
     if (error) throw new Error("No se pudo eliminar la cuenta");
-    return { ok: true as const };
+    return { ok: true as const, items: [] as { label: string; count: number }[] };
   });
