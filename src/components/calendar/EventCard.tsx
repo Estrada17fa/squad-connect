@@ -5,6 +5,7 @@ import { formatTime } from "@/lib/calendar-utils";
 import type { CalendarEventRow } from "@/hooks/useCalendarEvents";
 import { cn } from "@/lib/utils";
 import { AccentBar } from "@/components/squad/StandardCard";
+import { buildEventContext } from "@/lib/eventContext";
 
 /**
  * Tarjeta visual de un evento de la Agenda.
@@ -30,6 +31,8 @@ export function EventCard({
   const def = EVENT_TYPE_MAP[event.event_type];
   const Icon = def.icon;
   const color = def.cssVar;
+  // Contexto por tipo (sede, destino, objetivo…) cuando no se pasa uno explícito.
+  const line = context ?? buildEventContext(event);
 
   return (
     <button
@@ -71,11 +74,10 @@ export function EventCard({
             >
               {def.label}
             </span>
-            {context ? <span className="min-w-0 truncate">{context}</span> : null}
-            {!context && event.location ? (
+            {line ? (
               <span className="inline-flex min-w-0 items-center gap-1">
                 <MapPin className="h-3 w-3 shrink-0" />
-                <span className="truncate">{event.location}</span>
+                <span className="truncate">{line}</span>
               </span>
             ) : null}
             {teamLabel ? <span className="truncate opacity-80">{teamLabel}</span> : null}
