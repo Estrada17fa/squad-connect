@@ -190,13 +190,13 @@ export const checkMemberReferences = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await authorizeMemberAdmin(context as unknown as MemberCtx);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const labels = await linkedDataLabels(supabaseAdmin, data.user_id);
-    return { hasData: labels.length > 0, labels };
+    const items = await linkedDataCounts(supabaseAdmin, data.user_id);
+    return { hasData: items.length > 0, items, labels: items.map((i) => i.label) };
   });
 
 export const hardDeleteClubMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => memberTargetSchema.parse(data))
+  .inputValidator((data: unknown) => memberDeleteSchema.parse(data))
   .handler(async ({ data, context }) => {
     const ctx = context as unknown as MemberCtx;
     const clubId = await authorizeMemberAdmin(ctx);
