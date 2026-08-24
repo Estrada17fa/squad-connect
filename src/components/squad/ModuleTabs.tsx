@@ -34,7 +34,7 @@ interface ModuleTabsProps {
  * del módulo, preservando URL, back button y deep-linking.
  */
 export function ModuleTabs({ activeKey, hubKey, extraActiveKey }: ModuleTabsProps) {
-  const { visiblePages, isSuperAdmin, profile, accessibleModules, permissions } = useApp();
+  const { visiblePages, isSuperAdmin, profile, accessibleModules, permissions, canViewModule } = useApp();
   const qc = useQueryClient();
   const prefetchCtx = React.useMemo(
     () => ({ clubId: profile?.club_id ?? null, teamId: null }),
