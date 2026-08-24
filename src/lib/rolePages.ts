@@ -191,14 +191,14 @@ export function resolvePagesForUser(
 }
 
 /**
- * ¿Necesita el atajo "Mis Solicitudes" en el menú del avatar? Solo cuando
- * puede ver Solicitudes pero no tiene la página Coordinación en su navegación.
+ * ¿Necesita el atajo "Mis Solicitudes" en el menú del avatar? Cuando puede ver
+ * Solicitudes pero ese módulo no aparece en ninguna página de su navegación.
  */
 export function needsSolicitudesShortcut(
   pages: ResolvedPage[],
   canViewSolicitudes: boolean,
 ): boolean {
-  return canViewSolicitudes && !pages.some((p) => p.page.key === "coordinacion");
+  return canViewSolicitudes && !pages.some((p) => p.modules.includes("solicitudes"));
 }
 
 export function inferBaseRole(roleName: string | null | undefined): BaseRole {
