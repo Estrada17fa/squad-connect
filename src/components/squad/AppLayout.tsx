@@ -243,6 +243,18 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
     visiblePages,
   };
 
+  // Bloqueo total mientras la contraseña siga siendo la asignada por el admin:
+  // sin cabecera ni navegación, solo el formulario.
+  if (forcePassword) {
+    return (
+      <AppContext.Provider value={ctx}>
+        <div className="min-h-screen bg-background px-4 py-10">
+          {onPasswordRoute ? <Outlet /> : <LoadingState />}
+        </div>
+      </AppContext.Provider>
+    );
+  }
+
   return (
     <AppContext.Provider value={ctx}>
       <ClubPrefsSync />
