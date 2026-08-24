@@ -164,7 +164,7 @@ export function SessionFormDialog({
     const ids = (attendeesQ.data as any[]).map((a) => a.user_id as string);
     if (ids.length) {
       setAttendeeIds(new Set(ids));
-      setAttendeeMode("custom");
+      setAttendeeMode("detect");
     }
   }, [open, attendeesQ.data]);
 
@@ -236,7 +236,7 @@ export function SessionFormDialog({
         location,
         locationId,
         description: objective,
-        attendeeIds: [...attendeeIds],
+        attendeeIds: attendeeIds.size ? [...attendeeIds] : undefined,
         userId,
       });
 
