@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useClubPrefs } from "@/hooks/useClubSettings";
+import { useClubPrefsFor } from "@/hooks/useClubSettings";
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { prefetchModule } from "@/lib/prefetch";
@@ -263,7 +263,7 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
 
   return (
     <AppContext.Provider value={ctx}>
-      <ClubPrefsSync />
+      <ClubPrefsSync clubId={data.profile?.club_id ?? null} />
       <div className="min-h-screen bg-background pb-24 sm:pb-8">
 
         <Header
@@ -289,8 +289,8 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
 }
 
 /** Aplica las preferencias del club (zona horaria y formato de fecha) a los formateadores. */
-function ClubPrefsSync() {
-  useClubPrefs();
+function ClubPrefsSync({ clubId }: { clubId: string | null }) {
+  useClubPrefsFor(clubId);
   return null;
 }
 

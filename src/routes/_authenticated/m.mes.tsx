@@ -8,7 +8,7 @@ import { useApp } from "@/components/squad/AppLayout";
 import { useCalendarEvents, type CalendarEventRow } from "@/hooks/useCalendarEvents";
 import { EVENT_TYPES, EVENT_TYPE_MAP, type EventType } from "@/lib/eventTypes";
 import { addMonths, formatRelativeDayLabel, formatDayLabel, isSameDay, monthGrid, monthLabel, startOfDay, weekdayLabels } from "@/lib/calendar-utils";
-import { useClubPrefs } from "@/hooks/useClubSettings";
+import { useClubPrefs } from "@/hooks/useClubPrefs";
 import { EventFormDialog } from "@/components/calendar/EventFormDialog";
 import { EventCard } from "@/components/calendar/EventCard";
 import { EventDetailSheet } from "@/components/calendar/EventDetailSheet";
