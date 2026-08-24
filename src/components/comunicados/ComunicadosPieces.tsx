@@ -28,27 +28,44 @@ export function PriorityBadge({ priority }: { priority: AnnouncementPriority }) 
 
 export function AnnouncementChip({
   icon: Icon,
+  avatarUrl,
+  avatarName,
   children,
   tone = "default",
 }: {
   icon?: React.ComponentType<{ className?: string }>;
+  /** Foto de perfil (autor). Si no hay, se muestran las iniciales de `avatarName`. */
+  avatarUrl?: string | null;
+  avatarName?: string | null;
   children: React.ReactNode;
   tone?: "default" | "primary";
 }) {
+  const showAvatar = avatarUrl !== undefined || avatarName !== undefined;
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs ring-1 ring-inset ring-white/5",
+        "inline-flex items-center gap-1 rounded-full py-0.5 text-xs ring-1 ring-inset ring-white/5",
+        showAvatar ? "pl-0.5 pr-2.5" : "px-2.5",
         tone === "primary"
           ? "bg-primary/10 text-primary"
           : "bg-white/[0.06] text-muted-foreground",
       )}
     >
-      {Icon ? <Icon className="h-3 w-3" /> : null}
+      {showAvatar ? (
+        <Avatar className="h-5 w-5">
+          {avatarUrl ? <AvatarImage src={avatarUrl} alt="" /> : null}
+          <AvatarFallback className="bg-white/10 text-[9px] font-medium">
+            {initials(avatarName || "?")}
+          </AvatarFallback>
+        </Avatar>
+      ) : Icon ? (
+        <Icon className="h-3 w-3" />
+      ) : null}
       {children}
     </span>
   );
 }
+
 
 /** Vista previa del adjunto privado: imagen inline o enlace al PDF. */
 export function AttachmentPreview({
