@@ -46,6 +46,9 @@ export const baseMemberSchema = z.object({
   phone: z.string().trim().max(40).optional().nullable(),
   avatar_url: z.string().trim().max(500).optional().nullable(),
   birthdate: z.string().optional().nullable(),
+  /** Datos de persona: válidos para cualquier rol, no solo jugadores. */
+  nationality: z.string().trim().max(80).optional().nullable(),
+  birthplace: z.string().trim().max(120).optional().nullable(),
   emergency_contact_name: z.string().trim().max(120).optional().nullable(),
   emergency_contact_phone: z.string().trim().max(40).optional().nullable(),
   role_id: z.string().uuid(),
