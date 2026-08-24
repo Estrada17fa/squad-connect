@@ -1,6 +1,6 @@
 import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Megaphone, Paperclip, Plus, User, Users } from "lucide-react";
+import { Megaphone, Paperclip, Plus, Users } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { ModuleTabs } from "@/components/squad/ModuleTabs";
 import { EmptyState } from "@/components/squad/EmptyState";
@@ -154,8 +154,11 @@ function ComunicadosPage() {
             {audienceLabel(a)}
           </AnnouncementChip>
           {a.author?.full_name ? (
-            <AnnouncementChip icon={User}>{a.author.full_name}</AnnouncementChip>
+            <AnnouncementChip avatarUrl={a.author.avatar_url} avatarName={a.author.full_name}>
+              {a.author.full_name}
+            </AnnouncementChip>
           ) : null}
+
           {a.attachment_path ? (
             <AnnouncementChip icon={Paperclip}>Adjunto</AnnouncementChip>
           ) : null}

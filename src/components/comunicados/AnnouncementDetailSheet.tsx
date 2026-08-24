@@ -93,8 +93,14 @@ export function AnnouncementDetailSheet({
           {audienceLabel(announcement)}
         </AnnouncementChip>
         {announcement.author?.full_name ? (
-          <AnnouncementChip icon={User}>{announcement.author.full_name}</AnnouncementChip>
+          <AnnouncementChip
+            avatarUrl={announcement.author.avatar_url}
+            avatarName={announcement.author.full_name}
+          >
+            {announcement.author.full_name}
+          </AnnouncementChip>
         ) : null}
+
         <AnnouncementChip icon={CalendarClock}>
           {formatAnnouncementDate(announcement.published_at)}
         </AnnouncementChip>

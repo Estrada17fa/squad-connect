@@ -24,7 +24,8 @@ import {
   type ResolvedPage,
 } from "@/lib/rolePages";
 import { LoadingState } from "./LoadingState";
-import { FAB } from "./FAB";
+import { ClubCrest } from "./ClubCrest";
+
 import { NotificationBell } from "@/components/notificaciones/NotificationBell";
 import { cn } from "@/lib/utils";
 import squadLogo from "@/assets/squad-logo.png.asset.json";
@@ -224,6 +225,7 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
       <div className="min-h-screen bg-background pb-24 sm:pb-8">
 
         <Header
+          clubId={data.profile?.club_id ?? null}
           clubName={data.clubName}
           userName={data.profile?.full_name ?? user.email ?? ""}
           avatarUrl={data.profile?.avatar_url ?? null}
@@ -238,7 +240,7 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
           <Outlet />
         </main>
         <BottomNav pages={visiblePages} />
-        <FAB />
+
       </div>
     </AppContext.Provider>
   );
@@ -252,6 +254,7 @@ function ClubPrefsSync() {
 
 
 function Header({
+  clubId,
   clubName,
   userName,
   avatarUrl,
@@ -261,6 +264,7 @@ function Header({
   showSolicitudes,
   onSignOut,
 }: {
+  clubId: string | null;
   clubName: string | null;
   userName: string;
   avatarUrl: string | null;
@@ -274,19 +278,17 @@ function Header({
   const fallback = initials(userName || "?");
   return (
     <header className="sticky top-0 z-30 border-b border-border/60 bg-background/70 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
-        <Link to="/" className="flex items-center gap-2">
+      {/* Tres zonas: Squad · escudo del club (centrado) · campana + avatar. */}
+      <div className="mx-auto grid max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-2 px-4 py-3 sm:px-6">
+        <Link to="/" className="flex items-center justify-self-start">
           <img src={squadLogo.url} alt="Squad" className="h-8 w-auto" />
         </Link>
-        <div className="flex items-center gap-2">
-          {clubName ? (
-            <span className="hidden max-w-[180px] truncate text-sm text-muted-foreground sm:inline">
-              {clubName}
-            </span>
-          ) : null}
 
+        <ClubCrest clubId={clubId} clubName={clubName} className="justify-self-center" />
 
+        <div className="flex items-center gap-2 justify-self-end">
           <NotificationBell userId={userId} canOpenModule={canOpenModule} />
+
           <DropdownMenu>
             <DropdownMenuTrigger className="rounded-full outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring">
               <Avatar className="h-9 w-9 border border-border/60">
