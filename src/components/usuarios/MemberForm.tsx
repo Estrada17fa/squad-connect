@@ -259,6 +259,9 @@ export function MemberForm({
         pants_size: p.pants_size ?? "",
         shoe_size: p.shoe_size ?? "",
       });
+      // Migración suave: si el perfil aún no tiene estos datos, hereda los del jugador.
+      setNationality((v) => v || (p.nationality ?? ""));
+      setBirthplace((v) => v || (p.birthplace ?? ""));
     }
   }, [open, isEdit, memberQ.data]);
 
