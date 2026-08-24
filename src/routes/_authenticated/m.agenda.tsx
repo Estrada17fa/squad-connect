@@ -171,6 +171,7 @@ function AgendaModulePage() {
                       {formatDayLabel(day)}
                     </span>
                   ) : null}
+
                   <span className="h-px flex-1 bg-white/5" />
                   <span className="shrink-0 rounded-full bg-white/[0.06] px-2 py-0.5 text-[11px] text-muted-foreground">
                     {dayEvents.length}
