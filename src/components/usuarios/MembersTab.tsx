@@ -183,7 +183,11 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
     );
     if (typed?.trim() !== name) return;
     try {
-      await hardDeleteFn({ data: { user_id: m.id } });
+      const res = await hardDeleteFn({ data: { user_id: m.id } });
+      if (!res.ok) {
+        toast.error(res.reason);
+        return;
+      }
       toast.success("Miembro eliminado");
       setSelectedUserId(null);
       refreshMembers();
