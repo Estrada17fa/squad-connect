@@ -49,6 +49,8 @@ import {
   STATUS_VARIANT,
   STATUS_EXTRA_CLASS,
   formatMoney,
+  fieldVisible,
+  normalizeDetails,
   type RequestStatus,
   requestSummary,
 } from "@/lib/requestTypes";
