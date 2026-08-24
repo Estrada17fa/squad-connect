@@ -19,7 +19,11 @@ import { toLocalInputValue, fromLocalInputValue } from "@/lib/calendar-utils";
 import { saveCalendarEvent } from "@/lib/calendarEvents";
 import { AttendeePicker, type AttendeeMode } from "@/components/calendar/AttendeePicker";
 import { LocationPicker } from "@/components/calendar/LocationPicker";
-import { useCalendarEvents } from "@/hooks/useCalendarEvents";
+import {
+  useCalendarEvents,
+  useEventAttendees,
+  type CalendarEventRow,
+} from "@/hooks/useCalendarEvents";
 import {
   CATEGORY_LABEL,
   PHASES,
