@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
+  Apple,
   CalendarDays,
   Flag,
   HeartPulse,
@@ -15,6 +16,9 @@ import {
 } from "lucide-react";
 import { PlayerHealthSheet } from "@/components/salud/PlayerHealthSheet";
 import { PlayerDevelopmentSheet } from "@/components/desarrollo/PlayerDevelopmentSheet";
+import { PlayerNutritionSheet } from "@/components/nutricion/PlayerNutritionSheet";
+import { canRead } from "@/lib/permissions";
+
 import { PageHeader } from "@/components/squad/PageHeader";
 import { StandardCard } from "@/components/squad/StandardCard";
 import { EmptyState } from "@/components/squad/EmptyState";
@@ -63,7 +67,7 @@ export const Route = createFileRoute("/_authenticated/mi-perfil")({
 });
 
 function MiPerfilPage() {
-  const { user, profile } = useApp();
+  const { user, profile, getModuleAccess } = useApp();
   const [editOpen, setEditOpen] = React.useState(false);
 
   const profileQ = useQuery({
@@ -99,7 +103,7 @@ function MiPerfilPage() {
       const { data, error } = await supabase
         .from("player_profiles")
         .select(
-          "jersey_number, position, secondary_position, preferred_foot, height_cm, weight_kg, player_status, shirt_size, pants_size, shoe_size",
+          "team_id, availability_status, jersey_number, position, secondary_position, preferred_foot, height_cm, weight_kg, player_status, shirt_size, pants_size, shoe_size, team:teams(club_id, name)",
         )
         .eq("user_id", user.id)
         .is("archived_at", null)
@@ -119,6 +123,17 @@ function MiPerfilPage() {
   const memberships = membershipsQ.data ?? [];
   const player = playerQ.data;
   const isBaja = (data.status ?? "activo") === "baja";
+
+  // Bloques personales: solo aparecen si la persona TIENE ficha de jugador y
+  // además su permiso real en ese módulo se lo permite (misma fuente de verdad
+  // que usan los módulos: `getModuleAccess`).
+  const isPlayer = !!player;
+  const playerTeamId: string | null = player?.team_id ?? null;
+  const playerClubId: string | null = player?.team?.club_id ?? null;
+  const showSalud = isPlayer && !!playerTeamId && !!playerClubId && canRead(getModuleAccess("salud"));
+  const showDesarrollo = isPlayer && canRead(getModuleAccess("desarrollo"));
+  const showNutricion = isPlayer && !!playerTeamId && canRead(getModuleAccess("nutricion"));
+
 
 
   return (
@@ -271,9 +286,34 @@ function MiPerfilPage() {
         </p>
       </div>
 
-      <MiSaludSection userId={user.id} fullName={data.full_name} avatarUrl={data.avatar_url} />
+      {showSalud ? (
+        <MiSaludSection
+          userId={user.id}
+          fullName={data.full_name}
+          avatarUrl={data.avatar_url}
+          clubId={playerClubId!}
+          teamId={playerTeamId!}
+          teamName={player?.team?.name ?? null}
+          availability={player?.availability_status ?? "apto"}
+        />
+      ) : null}
 
-      <MiDesarrolloSection userId={user.id} fullName={data.full_name} avatarUrl={data.avatar_url} />
+      {showDesarrollo ? (
+        <MiDesarrolloSection userId={user.id} fullName={data.full_name} avatarUrl={data.avatar_url} />
+      ) : null}
+
+      {showNutricion ? (
+        <MiNutricionSection
+          userId={user.id}
+          fullName={data.full_name}
+          avatarUrl={data.avatar_url}
+          clubId={profile?.club_id ?? null}
+          teamId={playerTeamId!}
+          teamName={player?.team?.name ?? null}
+          position={player?.position ?? null}
+        />
+      ) : null}
+
 
       <PersonDocumentsSection clubId={profile?.club_id ?? null} userId={user.id} />
 
@@ -466,32 +506,28 @@ function EditMyProfileSheet({
   );
 }
 
-/** El jugador ve SU información médica en modo consulta. */
+/**
+ * El jugador ve SU información médica en modo consulta.
+ * La página decide si esta sección se muestra (permiso de Salud + ficha propia).
+ */
 function MiSaludSection({
   userId,
   fullName,
   avatarUrl,
+  clubId,
+  teamId,
+  teamName,
+  availability,
 }: {
   userId: string;
   fullName: string | null;
   avatarUrl: string | null;
+  clubId: string;
+  teamId: string;
+  teamName: string | null;
+  availability: string;
 }) {
   const [open, setOpen] = React.useState(false);
-  const { data } = useQuery({
-    queryKey: ["mi-salud-team", userId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("player_profiles")
-        .select("team_id, availability_status, team:teams(club_id, name)")
-        .eq("user_id", userId)
-        .limit(1)
-        .maybeSingle();
-      if (error) throw error;
-      return data as any;
-    },
-  });
-
-  if (!data?.team_id || !data?.team?.club_id) return null;
 
   return (
     <section className="space-y-2">
@@ -510,20 +546,21 @@ function MiSaludSection({
       <PlayerHealthSheet
         open={open}
         onOpenChange={setOpen}
-        clubId={data.team.club_id}
+        clubId={clubId}
         player={{
           userId,
-          teamId: data.team_id,
+          teamId,
           fullName,
           avatarUrl,
-          teamName: data.team?.name ?? null,
-          availability: data.availability_status ?? "apto",
+          teamName,
+          availability: (availability ?? "apto") as any,
         }}
         canEdit={false}
       />
     </section>
   );
 }
+
 
 /** El jugador ve SU desarrollo (retro, objetivos, evaluaciones y rutinas). */
 function MiDesarrolloSection({
@@ -562,3 +599,53 @@ function MiDesarrolloSection({
     </section>
   );
 }
+
+/**
+ * El jugador ve SU plan alimenticio y su antropometría en modo consulta.
+ * Solo se muestra con permiso real en Nutrición (lo decide la página).
+ */
+function MiNutricionSection({
+  userId,
+  fullName,
+  avatarUrl,
+  clubId,
+  teamId,
+  teamName,
+  position,
+}: {
+  userId: string;
+  fullName: string | null;
+  avatarUrl: string | null;
+  clubId: string | null;
+  teamId: string;
+  teamName: string | null;
+  position: string | null;
+}) {
+  const [open, setOpen] = React.useState(false);
+
+  return (
+    <section className="space-y-2">
+      <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+        Mi nutrición
+      </h3>
+      <StandardCard
+        icon={Apple}
+        title="Mi plan alimenticio"
+        subtitle="Plan de la semana, equivalencias y antropometría"
+        interactive
+        onClick={() => setOpen(true)}
+      >
+        Lo define el área de nutrición del club; aquí solo lo consultas.
+      </StandardCard>
+      <PlayerNutritionSheet
+        open={open}
+        onOpenChange={setOpen}
+        clubId={clubId}
+        player={{ userId, teamId, fullName, avatarUrl, teamName, position }}
+        canEdit={false}
+        self
+      />
+    </section>
+  );
+}
+
