@@ -35,9 +35,11 @@ interface Props {
   userId: string;
   defaultDate?: Date;
   event?: CalendarEventRow | null;
+  /** Fuerza el tipo de evento y omite el paso de selección. */
+  fixedType?: EventType;
 }
 
-export function EventFormDialog({ open, onOpenChange, clubId, teams, defaultTeamId, userId, defaultDate, event }: Props) {
+export function EventFormDialog({ open, onOpenChange, clubId, teams, defaultTeamId, userId, defaultDate, event, fixedType }: Props) {
   const isEdit = !!event;
   const firstTeamId = teams[0]?.id ?? null;
   const [teamId, setTeamId] = React.useState<string | null>(
@@ -48,8 +50,8 @@ export function EventFormDialog({ open, onOpenChange, clubId, teams, defaultTeam
     setTeamId(event?.team_id ?? defaultTeamId ?? firstTeamId);
   }, [open, event?.team_id, defaultTeamId, firstTeamId]);
   const qc = useQueryClient();
-  const [step, setStep] = React.useState<"type" | "form">(isEdit ? "form" : "type");
-  const [eventType, setEventType] = React.useState<EventType>(event?.event_type ?? "entrenamiento");
+  const [step, setStep] = React.useState<"type" | "form">(isEdit || fixedType ? "form" : "type");
+  const [eventType, setEventType] = React.useState<EventType>(event?.event_type ?? fixedType ?? "entrenamiento");
   const [title, setTitle] = React.useState(event?.title ?? "");
   const [startsAt, setStartsAt] = React.useState<string>(
     event?.starts_at
@@ -80,8 +82,8 @@ export function EventFormDialog({ open, onOpenChange, clubId, teams, defaultTeam
   React.useEffect(() => {
     if (!open) return;
     if (!isEdit) {
-      setStep("type");
-      setEventType("entrenamiento");
+      setStep(fixedType ? "form" : "type");
+      setEventType(fixedType ?? "entrenamiento");
       setTitle("");
       setStartsAt(defaultDate ? toLocalInputValue(new Date(defaultDate.setHours(18, 0, 0, 0)).toISOString()) : "");
       setEndsAt("");
@@ -201,7 +203,7 @@ export function EventFormDialog({ open, onOpenChange, clubId, teams, defaultTeam
               >
                 {EVENT_TYPES.find((t) => t.key === eventType)?.label}
               </span>
-              {!isEdit ? (
+              {!isEdit && !fixedType ? (
                 <button
                   type="button"
                   onClick={() => setStep("type")}

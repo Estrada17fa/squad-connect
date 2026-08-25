@@ -5461,6 +5461,7 @@ export type Database = {
         Args: { _module_key: string; _team_id: string; _user_id: string }
         Returns: Database["public"]["Enums"]["permission_level"]
       }
+      event_is_medical: { Args: { _event_id: string }; Returns: boolean }
       expense_report: {
         Args: { _club_id: string; _from: string; _to: string }
         Returns: {
@@ -5547,6 +5548,10 @@ export type Database = {
           total_quantity: number
           unit: string
         }[]
+      }
+      is_event_attendee: {
+        Args: { _event_id: string; _user_id: string }
+        Returns: boolean
       }
       is_meeting_attendee: {
         Args: { _meeting_id: string; _user_id: string }

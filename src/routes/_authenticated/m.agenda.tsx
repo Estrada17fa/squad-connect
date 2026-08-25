@@ -1,18 +1,16 @@
 import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { EmptyState } from "@/components/squad/EmptyState";
 import { AgendaSkeleton } from "@/components/squad/LoadingState";
 import { ModuleTabs } from "@/components/squad/ModuleTabs";
-import { Button } from "@/components/ui/button";
 import { useApp } from "@/components/squad/AppLayout";
 import { useCalendarEvents, type CalendarEventRow } from "@/hooks/useCalendarEvents";
 import { EVENT_TYPES, EVENT_TYPE_MAP, type EventType } from "@/lib/eventTypes";
 import { formatDayLabel, formatRelativeDayLabel, startOfDay } from "@/lib/calendar-utils";
 import { useEditableTeams } from "@/hooks/useEditableTeams";
 import { useTeamAccess } from "@/hooks/useTeamAccess";
-import { EventFormDialog } from "@/components/calendar/EventFormDialog";
+import { NewEventLauncher } from "@/components/calendar/NewEventLauncher";
 import { EventDetailSheet } from "@/components/calendar/EventDetailSheet";
 import { TeamFilter } from "@/components/squad/TeamFilter";
 import { EventCard } from "@/components/calendar/EventCard";
@@ -37,10 +35,7 @@ function AgendaModulePage() {
   const { user, profile, teamOptions } = useApp();
   const editableTeams = useEditableTeams("agenda");
   const { canEditTeam } = useTeamAccess("agenda");
-  const canEdit = editableTeams.length > 0;
 
-  const [dialogOpen, setDialogOpen] = React.useState(false);
-  const [editing, setEditing] = React.useState<CalendarEventRow | null>(null);
   const [detailEvent, setDetailEvent] = React.useState<CalendarEventRow | null>(null);
   const [teamFilter, setTeamFilter] = React.useState<string | null>(null);
   const [typeFilter, setTypeFilter] = React.useState<EventType | null>(null);
@@ -126,17 +121,13 @@ function AgendaModulePage() {
         </div>
       ) : null}
 
-      {canEdit ? (
-        <Button
-          onClick={() => {
-            setEditing(null);
-            setDialogOpen(true);
-          }}
-          className="w-full glow-primary"
-        >
-          <Plus className="mr-2 h-4 w-4" /> Nuevo evento
-        </Button>
-      ) : null}
+      <NewEventLauncher
+        clubId={clubId}
+        userId={user.id}
+        genericTeams={editableTeams}
+        defaultTeamId={teamFilter}
+      />
+
 
       <div className="space-y-6">
         {isLoading && !events ? (
@@ -190,18 +181,6 @@ function AgendaModulePage() {
           })
         )}
       </div>
-
-      {clubId ? (
-        <EventFormDialog
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-          clubId={clubId}
-          teams={editableTeams}
-          defaultTeamId={editing?.team_id ?? teamFilter ?? null}
-          userId={user.id}
-          event={editing}
-        />
-      ) : null}
 
       <EventDetailSheet
         open={!!detailEvent}

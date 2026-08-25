@@ -1,6 +1,6 @@
 import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { EmptyState } from "@/components/squad/EmptyState";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { useCalendarEvents, type CalendarEventRow } from "@/hooks/useCalendarEve
 import { EVENT_TYPES, EVENT_TYPE_MAP, type EventType } from "@/lib/eventTypes";
 import { addMonths, formatRelativeDayLabel, formatDayLabel, isSameDay, monthGrid, monthLabel, startOfDay, weekdayLabels } from "@/lib/calendar-utils";
 import { useClubPrefs } from "@/hooks/useClubPrefs";
-import { EventFormDialog } from "@/components/calendar/EventFormDialog";
+import { NewEventLauncher } from "@/components/calendar/NewEventLauncher";
 import { EventCard } from "@/components/calendar/EventCard";
 import { EventDetailSheet } from "@/components/calendar/EventDetailSheet";
 import { ModuleTabs } from "@/components/squad/ModuleTabs";
@@ -33,12 +33,8 @@ function MesModulePage() {
   const { weekStart } = useClubPrefs();
   const editableTeams = useEditableTeams("mes");
   const { canEditTeam } = useTeamAccess("mes");
-  const canEdit = editableTeams.length > 0;
-
   const [anchor, setAnchor] = React.useState(() => startOfDay(new Date()));
   const [selectedDay, setSelectedDay] = React.useState<Date | null>(null);
-  const [dialogOpen, setDialogOpen] = React.useState(false);
-  const [editing, setEditing] = React.useState<CalendarEventRow | null>(null);
   const [detailEvent, setDetailEvent] = React.useState<CalendarEventRow | null>(null);
   const [teamFilter, setTeamFilter] = React.useState<string | null>(null);
   const [typeFilter, setTypeFilter] = React.useState<EventType | null>(null);
@@ -71,29 +67,19 @@ function MesModulePage() {
     ? eventsByDay.get(startOfDay(selectedDay).toISOString()) ?? []
     : [];
 
-  function openCreate(date?: Date) {
-    setEditing(null);
-    if (date) setSelectedDay(date);
-    setDialogOpen(true);
-  }
-
-  function openEdit(ev: CalendarEventRow) {
-    setEditing(ev);
-    setSelectedDay(null);
-    setDialogOpen(true);
-  }
-
   return (
     <div className="space-y-6">
       <PageHeader hideTitle title="Mes" subtitle="Todos tus equipos" />
       <ModuleTabs activeKey="mes" />
       <TeamFilter teams={teamOptions} value={teamFilter} onChange={setTeamFilter} />
 
-      {canEdit ? (
-        <Button onClick={() => openCreate()} className="w-full glow-primary">
-          <Plus className="mr-2 h-4 w-4" /> Nuevo evento
-        </Button>
-      ) : null}
+      <NewEventLauncher
+        clubId={clubId}
+        userId={user.id}
+        genericTeams={editableTeams}
+        defaultTeamId={teamFilter}
+        defaultDate={selectedDay ?? undefined}
+      />
 
       <div className="glass p-4">
         <div className="mb-3 flex items-center justify-between">
@@ -203,19 +189,6 @@ function MesModulePage() {
             ))
           )}
         </section>
-      ) : null}
-
-      {clubId ? (
-        <EventFormDialog
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-          clubId={clubId}
-          teams={editableTeams}
-          defaultTeamId={editing?.team_id ?? teamFilter ?? null}
-          userId={user.id}
-          defaultDate={selectedDay ?? undefined}
-          event={editing}
-        />
       ) : null}
 
       <EventDetailSheet
