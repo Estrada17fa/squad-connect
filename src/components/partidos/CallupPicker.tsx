@@ -1,35 +1,25 @@
 import * as React from "react";
-import { RotateCcw, SlidersHorizontal, UserMinus, Users } from "lucide-react";
+import { UserMinus, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { PlayerRow } from "@/hooks/usePlayers";
 import { cn } from "@/lib/utils";
 
-export type CallupMode = "auto" | "custom";
-
 interface Props {
   players: PlayerRow[];
   loading?: boolean;
   value: Set<string>;
   onChange: (next: Set<string>) => void;
-  mode: CallupMode;
-  onModeChange: (m: CallupMode) => void;
 }
 
 /**
- * Convocatoria del partido: por defecto todo el plantel de la categoría,
- * personalizar es la excepción (mismo patrón que eventos y entrenamientos).
+ * Convocatoria del partido: arranca vacía y quien convoca elige a los jugadores,
+ * con atajos "Todos" y "Quitar" (mismo criterio que eventos y entrenamientos).
  */
-export function CallupPicker({ players, loading, value, onChange, mode, onModeChange }: Props) {
+export function CallupPicker({ players, loading, value, onChange }: Props) {
   const [search, setSearch] = React.useState("");
   const allIds = React.useMemo(() => players.map((p) => p.user_id), [players]);
-  const isWholeTeam = allIds.length > 0 && allIds.every((id) => value.has(id)) && value.size === allIds.length;
-
-  React.useEffect(() => {
-    if (mode === "auto" && allIds.length && !isWholeTeam) onChange(new Set(allIds));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, allIds, isWholeTeam]);
 
   const filtered = players.filter((p) =>
     (p.profile?.full_name ?? "").toLowerCase().includes(search.toLowerCase()),
@@ -40,36 +30,6 @@ export function CallupPicker({ players, loading, value, onChange, mode, onModeCh
     if (next.has(id)) next.delete(id);
     else next.add(id);
     onChange(next);
-  }
-
-  if (mode === "auto") {
-    return (
-      <div className="space-y-1.5">
-        <Label>Convocatoria</Label>
-        <div className="glass flex items-center justify-between gap-3 p-3">
-          <div className="flex min-w-0 items-center gap-2">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
-              <Users className="h-4 w-4" />
-            </span>
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-foreground">
-                {loading ? "Cargando plantel…" : `Todo el plantel (${allIds.length})`}
-              </p>
-              <p className="text-xs text-muted-foreground">Convocatoria automática</p>
-            </div>
-          </div>
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            onClick={() => onModeChange("custom")}
-            disabled={!allIds.length}
-          >
-            <SlidersHorizontal className="mr-1 h-3.5 w-3.5" /> Personalizar
-          </Button>
-        </div>
-      </div>
-    );
   }
 
   return (
@@ -86,13 +46,14 @@ export function CallupPicker({ players, loading, value, onChange, mode, onModeCh
             onClick={() => onChange(new Set([...value, ...filtered.map((p) => p.user_id)]))}
             disabled={!filtered.length}
           >
-            <Users className="mr-1 h-3.5 w-3.5" /> Todos
+            <Users className="mr-1 h-3.5 w-3.5" /> {search ? "Seleccionar resultados" : "Todos"}
           </Button>
           <Button
             type="button"
             size="sm"
             variant="ghost"
             onClick={() => {
+              if (!search) return onChange(new Set());
               const next = new Set(value);
               for (const p of filtered) next.delete(p.user_id);
               onChange(next);
@@ -142,17 +103,6 @@ export function CallupPicker({ players, loading, value, onChange, mode, onModeCh
           })
         )}
       </div>
-
-      <button
-        type="button"
-        onClick={() => {
-          onChange(new Set(allIds));
-          onModeChange("auto");
-        }}
-        className="flex items-center gap-1 text-xs text-muted-foreground underline underline-offset-2"
-      >
-        <RotateCcw className="h-3 w-3" /> Volver a todo el plantel
-      </button>
     </div>
   );
 }
