@@ -19,7 +19,7 @@ import { LocationDisplay } from "@/components/calendar/LocationDisplay";
 import { LocationPicker } from "@/components/calendar/LocationPicker";
 import { TeamCrest } from "@/components/torneo/TeamCrest";
 import { CallupList } from "./CallupList";
-import { CallupPicker, type CallupMode } from "./CallupPicker";
+import { CallupPicker } from "./CallupPicker";
 import { formatMatchWhen } from "./MatchOpsCard";
 import { usePlayers } from "@/hooks/usePlayers";
 import {
@@ -198,7 +198,6 @@ function MatchOpsForm({
   const playersQ = usePlayers(match.tournament_team_id);
   const players = playersQ.data ?? [];
 
-  const [mode, setMode] = React.useState<CallupMode>(callups.length ? "custom" : "auto");
   const [selected, setSelected] = React.useState<Set<string>>(
     () => new Set(callups.map((c) => c.user_id)),
   );
@@ -253,8 +252,6 @@ function MatchOpsForm({
             loading={playersQ.isLoading}
             value={selected}
             onChange={setSelected}
-            mode={mode}
-            onModeChange={setMode}
           />
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
