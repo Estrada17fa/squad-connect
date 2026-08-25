@@ -42,7 +42,7 @@ import { cn } from "@/lib/utils";
 import { TeamSelectField } from "@/components/squad/TeamSelectField";
 import type { TeamOption } from "@/hooks/useAccess";
 import { LocationPicker } from "@/components/calendar/LocationPicker";
-import { AttendeePicker, type AttendeeMode } from "@/components/calendar/AttendeePicker";
+import { AttendeePicker } from "@/components/calendar/AttendeePicker";
 import { useOurMatches, useMatchCallups, type OurMatch } from "@/hooks/useMatchOps";
 import { TeamCrest } from "@/components/torneo/TeamCrest";
 import { TravelerPicker, useTeamMembers, initialsOf, type TeamMemberOption } from "@/components/viajes/TravelerPicker";
@@ -254,7 +254,6 @@ export function TripFormDialog({
   const [status, setStatus] = React.useState<TripStatus>("planeacion");
   const [notes, setNotes] = React.useState("");
   const [travelerIds, setTravelerIds] = React.useState<Set<string>>(new Set());
-  const [attendeeMode, setAttendeeMode] = React.useState<AttendeeMode>("auto");
 
   /** Convocatoria cuando el viaje viene de un partido. */
   const [playerIds, setPlayerIds] = React.useState<Set<string>>(new Set());
@@ -288,7 +287,6 @@ export function TripFormDialog({
     setStatus(trip?.status ?? "planeacion");
     setNotes(trip?.notes ?? "");
     setTravelerIds(new Set((trip?.travelers ?? []).map((t) => t.user_id)));
-    setAttendeeMode(trip ? "detect" : "auto");
     setPlayerIds(new Set());
     setStaffIds(new Set());
     setStaffOpen(false);
@@ -667,8 +665,6 @@ export function TripFormDialog({
                   value={travelerIds}
                   onChange={setTravelerIds}
                   label="Convocatoria"
-                  mode={attendeeMode}
-                  onModeChange={setAttendeeMode}
                 />
               </FormSection>
             )}

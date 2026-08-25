@@ -2,16 +2,9 @@ import * as React from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Users, UserMinus, SlidersHorizontal, RotateCcw } from "lucide-react";
+import { Users, UserMinus } from "lucide-react";
 import { useTeamMembers, type TeamMember } from "@/hooks/useTeamMembers";
 import { cn } from "@/lib/utils";
-
-/**
- * "auto"  = convocatoria completa del equipo (por defecto).
- * "custom"= selección manual.
- * "detect"= al editar: se decide solo comparando lo guardado con el equipo.
- */
-export type AttendeeMode = "auto" | "custom" | "detect";
 
 interface Props {
   clubId: string;
@@ -19,43 +12,17 @@ interface Props {
   value: Set<string>;
   onChange: (next: Set<string>) => void;
   label?: string;
-  mode?: AttendeeMode;
-  onModeChange?: (m: AttendeeMode) => void;
 }
 
 /**
- * Selector de convocados. Por defecto convoca automáticamente a todo el equipo;
- * personalizar es la excepción. Compartido por eventos y sesiones de entrenamiento.
+ * Selector de convocados. Arranca VACÍO: quien convoca elige a quién agregar,
+ * con atajos "Todos" y "Quitar". Compartido por eventos, entrenamientos y viajes.
  */
-export function AttendeePicker({
-  clubId,
-  teamId,
-  value,
-  onChange,
-  label = "Asistentes",
-  mode = "auto",
-  onModeChange,
-}: Props) {
+export function AttendeePicker({ clubId, teamId, value, onChange, label = "Asistentes" }: Props) {
   const [search, setSearch] = React.useState("");
   const membersQ = useTeamMembers(teamId, clubId);
   const members = React.useMemo(() => membersQ.data ?? [], [membersQ.data]);
-
   const allIds = React.useMemo(() => members.map((m) => m.id), [members]);
-  const isWholeTeam =
-    allIds.length > 0 && value.size === allIds.length && allIds.every((id) => value.has(id));
-
-  // Sincroniza la convocatoria automática y resuelve el modo al editar.
-  React.useEffect(() => {
-    if (!allIds.length) return;
-    if (mode === "detect") {
-      onModeChange?.(isWholeTeam ? "auto" : "custom");
-      return;
-    }
-    if (mode === "auto" && !isWholeTeam) {
-      onChange(new Set(allIds));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allIds, mode, isWholeTeam]);
 
   const filtered = members.filter((m: TeamMember) =>
     (m.full_name ?? m.email ?? "").toLowerCase().includes(search.toLowerCase()),
@@ -79,37 +46,6 @@ export function AttendeePicker({
     const next = new Set(value);
     for (const m of filtered) next.delete(m.id);
     onChange(next);
-  }
-
-  if (mode !== "custom") {
-    return (
-      <div className="space-y-1.5">
-        <Label>{label}</Label>
-        <div className="glass flex items-center justify-between gap-3 p-3">
-          <div className="flex min-w-0 items-center gap-2">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
-              <Users className="h-4 w-4" />
-            </span>
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-foreground">
-                {membersQ.isLoading ? "Cargando equipo…" : `Todo el equipo (${allIds.length})`}
-              </p>
-              <p className="text-xs text-muted-foreground">Convocatoria automática</p>
-            </div>
-          </div>
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            onClick={() => onModeChange?.("custom")}
-            disabled={!allIds.length}
-          >
-            <SlidersHorizontal className="mr-1 h-3.5 w-3.5" />
-            Personalizar
-          </Button>
-        </div>
-      </div>
-    );
   }
 
   return (
@@ -165,18 +101,6 @@ export function AttendeePicker({
           })
         )}
       </div>
-
-      <button
-        type="button"
-        onClick={() => {
-          onChange(new Set(allIds));
-          onModeChange?.("auto");
-        }}
-        className="flex items-center gap-1 text-xs text-muted-foreground underline underline-offset-2"
-      >
-        <RotateCcw className="h-3 w-3" />
-        Volver a todo el equipo
-      </button>
     </div>
   );
 }

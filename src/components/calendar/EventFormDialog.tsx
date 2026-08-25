@@ -18,7 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { CREATABLE_EVENT_TYPES, EVENT_TYPES, type EventType } from "@/lib/eventTypes";
 import { toLocalInputValue, fromLocalInputValue } from "@/lib/calendar-utils";
 import { saveCalendarEvent } from "@/lib/calendarEvents";
-import { AttendeePicker, type AttendeeMode } from "@/components/calendar/AttendeePicker";
+import { AttendeePicker } from "@/components/calendar/AttendeePicker";
 import { LocationPicker } from "@/components/calendar/LocationPicker";
 import type { CalendarEventRow } from "@/hooks/useCalendarEvents";
 import { TeamSelectField } from "@/components/squad/TeamSelectField";
@@ -65,15 +65,13 @@ export function EventFormDialog({ open, onOpenChange, clubId, teams, defaultTeam
   const [locationId, setLocationId] = React.useState<string | null>((event as any)?.location_id ?? null);
   const [description, setDescription] = React.useState(event?.description ?? "");
   const [attendeeIds, setAttendeeIds] = React.useState<Set<string>>(new Set());
-  const [attendeeMode, setAttendeeMode] = React.useState<AttendeeMode>("auto");
 
-  // Al cambiar de equipo, la convocatoria se recalcula al equipo completo.
+  // Al cambiar de equipo, la convocatoria se vacía.
   const prevTeamRef = React.useRef<string | null>(teamId);
   React.useEffect(() => {
     if (prevTeamRef.current === teamId) return;
     prevTeamRef.current = teamId;
-    if (attendeeMode === "custom") toast.info("Se recalculó la convocatoria al equipo completo");
-    setAttendeeMode("auto");
+    if (attendeeIds.size) toast.info("Se limpió la convocatoria al cambiar de categoría");
     setAttendeeIds(new Set());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamId]);
@@ -91,7 +89,6 @@ export function EventFormDialog({ open, onOpenChange, clubId, teams, defaultTeam
       setLocationId(null);
       setDescription("");
       setAttendeeIds(new Set());
-      setAttendeeMode("auto");
     } else if (event) {
       setStep("form");
       setEventType(event.event_type);
@@ -112,7 +109,6 @@ export function EventFormDialog({ open, onOpenChange, clubId, teams, defaultTeam
       .eq("event_id", event.id)
       .then(({ data }) => {
         setAttendeeIds(new Set((data ?? []).map((r) => r.user_id)));
-        setAttendeeMode("detect");
       });
   }, [isEdit, event]);
 
@@ -257,8 +253,6 @@ export function EventFormDialog({ open, onOpenChange, clubId, teams, defaultTeam
               teamId={teamId}
               value={attendeeIds}
               onChange={setAttendeeIds}
-              mode={attendeeMode}
-              onModeChange={setAttendeeMode}
             />
 
           </>

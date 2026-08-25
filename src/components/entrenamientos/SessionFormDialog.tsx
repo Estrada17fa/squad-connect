@@ -19,7 +19,7 @@ import { DeleteAction } from "@/components/squad/DeleteAction";
 import type { TeamOption } from "@/hooks/useAccess";
 import { toLocalInputValue, fromLocalInputValue } from "@/lib/calendar-utils";
 import { saveCalendarEvent } from "@/lib/calendarEvents";
-import { AttendeePicker, type AttendeeMode } from "@/components/calendar/AttendeePicker";
+import { AttendeePicker } from "@/components/calendar/AttendeePicker";
 import { LocationPicker } from "@/components/calendar/LocationPicker";
 import {
   calendarEventsQueryOptions,
@@ -85,7 +85,6 @@ export function SessionFormDialog({
   const [location, setLocation] = React.useState("");
   const [locationId, setLocationId] = React.useState<string | null>(null);
   const [attendeeIds, setAttendeeIds] = React.useState<Set<string>>(new Set());
-  const [attendeeMode, setAttendeeMode] = React.useState<AttendeeMode>("auto");
 
   const [plan, setPlan] = React.useState<PlanDraftItem[]>([]);
   const [pickerPhase, setPickerPhase] = React.useState<SessionPhase | null>(null);
@@ -123,19 +122,17 @@ export function SessionFormDialog({
     setLocation("");
     setLocationId(null);
     setAttendeeIds(new Set());
-    setAttendeeMode("auto");
 
     setPickerPhase(null);
     if (!session) setPlan([]);
   }, [open, session, defaultTeamId, pendingEvent, teams]);
 
-  // Al cambiar de equipo, la convocatoria se recalcula al equipo completo.
+  // Al cambiar de equipo, la convocatoria se vacía.
   const prevTeamRef = React.useRef<string | null>(teamId);
   React.useEffect(() => {
     if (prevTeamRef.current === teamId) return;
     prevTeamRef.current = teamId;
-    if (attendeeMode === "custom") toast.info("Se recalculó la convocatoria al equipo completo");
-    setAttendeeMode("auto");
+    if (attendeeIds.size) toast.info("Se limpió la convocatoria al cambiar de categoría");
     setAttendeeIds(new Set());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamId]);
@@ -167,7 +164,6 @@ export function SessionFormDialog({
     const ids = (attendeesQ.data as any[]).map((a) => a.user_id as string);
     if (ids.length) {
       setAttendeeIds(new Set(ids));
-      setAttendeeMode("detect");
     }
   }, [open, attendeesQ.data]);
 
@@ -334,8 +330,6 @@ export function SessionFormDialog({
           value={attendeeIds}
           onChange={setAttendeeIds}
           label="Convocados"
-          mode={attendeeMode}
-          onModeChange={setAttendeeMode}
         />
 
         <div className="space-y-3 pt-2">

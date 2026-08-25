@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.sync_match_to_calendar() FROM PUBLIC, anon, authenticated;

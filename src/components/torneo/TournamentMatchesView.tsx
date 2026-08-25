@@ -37,13 +37,24 @@ export function TournamentMatchesView({ matches, teams, loading, currentUserId }
   // La fase final tiene su propia vista de bracket.
   const regular = React.useMemo(() => matches.filter((m) => !m.tie_id), [matches]);
 
+  // Las jornadas disponibles dependen del equipo filtrado.
   const matchdays = React.useMemo(
     () =>
-      [...new Set(regular.map((m) => m.matchday).filter((d): d is number => d != null))].sort(
-        (a, b) => a - b,
-      ),
-    [regular],
+      [
+        ...new Set(
+          regular
+            .filter((m) => matchesTeamFilter(teamFilter, m.home_team_id, m.away_team_id, ourTeamIds))
+            .map((m) => m.matchday)
+            .filter((d): d is number => d != null),
+        ),
+      ].sort((a, b) => a - b),
+    [regular, teamFilter, ourTeamIds],
   );
+
+  // Si la jornada elegida ya no existe para el equipo filtrado, se vuelve a "todas".
+  React.useEffect(() => {
+    if (matchday !== ALL && !matchdays.includes(Number(matchday))) setMatchday(ALL);
+  }, [matchdays, matchday]);
 
   const filtered = React.useMemo(
     () =>
@@ -56,26 +67,35 @@ export function TournamentMatchesView({ matches, teams, loading, currentUserId }
   );
 
 
+  // "Próximos" solo tiene sentido en la vista completa: al filtrar por jornada
+  // duplicaría los mismos partidos que ya se listan abajo.
   const upcoming = React.useMemo(() => {
+    if (matchday !== ALL) return [];
     const now = Date.now();
     return filtered
       .filter((m) => m.status === "programado" && m.kickoff_at && new Date(m.kickoff_at).getTime() >= now)
       .sort((a, b) => (a.kickoff_at ?? "").localeCompare(b.kickoff_at ?? ""))
       .slice(0, 3);
-  }, [filtered]);
+  }, [filtered, matchday]);
+
 
   const groups = React.useMemo(() => {
+    // Sin repetir los que ya se muestran arriba como "Próximos partidos".
+    const shown = new Set(upcoming.map((m) => m.id));
     const map = new Map<string, MatchRow[]>();
-    const sorted = [...filtered].sort(
-      (a, b) => (a.matchday ?? 9999) - (b.matchday ?? 9999) ||
-        (a.kickoff_at ?? "").localeCompare(b.kickoff_at ?? ""),
-    );
+    const sorted = [...filtered]
+      .filter((m) => !shown.has(m.id))
+      .sort(
+        (a, b) => (a.matchday ?? 9999) - (b.matchday ?? 9999) ||
+          (a.kickoff_at ?? "").localeCompare(b.kickoff_at ?? ""),
+      );
     for (const m of sorted) {
       const key = m.matchday != null ? `Jornada ${m.matchday}` : "Sin jornada";
       map.set(key, [...(map.get(key) ?? []), m]);
     }
     return [...map.entries()];
-  }, [filtered]);
+  }, [filtered, upcoming]);
+
 
   if (loading) return <p className="text-sm text-muted-foreground">Cargando partidos…</p>;
 
