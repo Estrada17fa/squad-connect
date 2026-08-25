@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LocationPicker } from "@/components/calendar/LocationPicker";
-import { AttendeePicker, type AttendeeMode } from "@/components/calendar/AttendeePicker";
+import { AttendeePicker } from "@/components/calendar/AttendeePicker";
 import { syncEventAttendees } from "@/lib/calendarEvents";
 import { supabase } from "@/integrations/supabase/client";
 import { fromLocalInputValue, toLocalInputValue } from "@/lib/calendar-utils";
@@ -62,7 +62,6 @@ export function MatchFormDialog({
   const [status, setStatus] = React.useState<MatchStatus>("programado");
   const [notes, setNotes] = React.useState("");
   const [attendees, setAttendees] = React.useState<Set<string>>(new Set());
-  const [attendeeMode, setAttendeeMode] = React.useState<AttendeeMode>("auto");
 
   React.useEffect(() => {
     if (!open) return;
@@ -75,7 +74,6 @@ export function MatchFormDialog({
     setStatus((match?.status as MatchStatus) ?? "programado");
     setNotes(match?.notes ?? "");
     setAttendees(new Set());
-    setAttendeeMode(match ? "detect" : "auto");
     const eventId = match?.calendar_event_id;
     if (eventId) {
       void (async () => {
@@ -204,8 +202,6 @@ export function MatchFormDialog({
             teamId={teamId}
             value={attendees}
             onChange={setAttendees}
-            mode={attendeeMode}
-            onModeChange={setAttendeeMode}
             label="Convocatoria"
           />
         ) : null}
