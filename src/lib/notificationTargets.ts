@@ -29,7 +29,7 @@ export function notificationTarget(n: NotificationRow): NotificationTarget | nul
       return {
         module: "coordinacion_interna",
         to: "/m/coordinacion_interna",
-        search: { open: n.related_id, kind: n.type === "junta_invitacion" ? "junta" : "tarea" },
+        search: { open: n.related_id, kind: n.type.startsWith("junta") ? "junta" : "tarea" },
       };
     case "compras_facturas":
       return {
@@ -43,6 +43,10 @@ export function notificationTarget(n: NotificationRow): NotificationTarget | nul
       return { module: "multimedia", to: "/m/multimedia", search: { open: n.related_id } };
     case "viajes":
       return { module: "viajes", to: "/m/viajes", search: { open: n.related_id } };
+    case "salud":
+      return { module: "salud", to: "/m/salud", search: { open: n.related_id } };
+    case "documentos":
+      return { module: "documentos", to: "/m/documentos", search: { open: n.related_id } };
     case "inventario":
       return { module: "inventario", to: "/m/inventario", search: { open: n.related_id } };
     default:
