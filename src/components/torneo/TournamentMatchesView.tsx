@@ -80,17 +80,22 @@ export function TournamentMatchesView({ matches, teams, loading, currentUserId }
 
 
   const groups = React.useMemo(() => {
+    // Sin repetir los que ya se muestran arriba como "Próximos partidos".
+    const shown = new Set(upcoming.map((m) => m.id));
     const map = new Map<string, MatchRow[]>();
-    const sorted = [...filtered].sort(
-      (a, b) => (a.matchday ?? 9999) - (b.matchday ?? 9999) ||
-        (a.kickoff_at ?? "").localeCompare(b.kickoff_at ?? ""),
-    );
+    const sorted = [...filtered]
+      .filter((m) => !shown.has(m.id))
+      .sort(
+        (a, b) => (a.matchday ?? 9999) - (b.matchday ?? 9999) ||
+          (a.kickoff_at ?? "").localeCompare(b.kickoff_at ?? ""),
+      );
     for (const m of sorted) {
       const key = m.matchday != null ? `Jornada ${m.matchday}` : "Sin jornada";
       map.set(key, [...(map.get(key) ?? []), m]);
     }
     return [...map.entries()];
-  }, [filtered]);
+  }, [filtered, upcoming]);
+
 
   if (loading) return <p className="text-sm text-muted-foreground">Cargando partidos…</p>;
 
