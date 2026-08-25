@@ -203,7 +203,7 @@ export function EventFormDialog({ open, onOpenChange, clubId, teams, defaultTeam
               >
                 {EVENT_TYPES.find((t) => t.key === eventType)?.label}
               </span>
-              {!isEdit ? (
+              {!isEdit && !fixedType ? (
                 <button
                   type="button"
                   onClick={() => setStep("type")}
