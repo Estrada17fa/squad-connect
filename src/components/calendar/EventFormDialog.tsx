@@ -35,9 +35,11 @@ interface Props {
   userId: string;
   defaultDate?: Date;
   event?: CalendarEventRow | null;
+  /** Fuerza el tipo de evento y omite el paso de selección. */
+  fixedType?: EventType;
 }
 
-export function EventFormDialog({ open, onOpenChange, clubId, teams, defaultTeamId, userId, defaultDate, event }: Props) {
+export function EventFormDialog({ open, onOpenChange, clubId, teams, defaultTeamId, userId, defaultDate, event, fixedType }: Props) {
   const isEdit = !!event;
   const firstTeamId = teams[0]?.id ?? null;
   const [teamId, setTeamId] = React.useState<string | null>(
@@ -48,8 +50,8 @@ export function EventFormDialog({ open, onOpenChange, clubId, teams, defaultTeam
     setTeamId(event?.team_id ?? defaultTeamId ?? firstTeamId);
   }, [open, event?.team_id, defaultTeamId, firstTeamId]);
   const qc = useQueryClient();
-  const [step, setStep] = React.useState<"type" | "form">(isEdit ? "form" : "type");
-  const [eventType, setEventType] = React.useState<EventType>(event?.event_type ?? "entrenamiento");
+  const [step, setStep] = React.useState<"type" | "form">(isEdit || fixedType ? "form" : "type");
+  const [eventType, setEventType] = React.useState<EventType>(event?.event_type ?? fixedType ?? "entrenamiento");
   const [title, setTitle] = React.useState(event?.title ?? "");
   const [startsAt, setStartsAt] = React.useState<string>(
     event?.starts_at
