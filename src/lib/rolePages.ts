@@ -1,4 +1,4 @@
-import { Home, Calendar, Users, MessagesSquare, Shield, type LucideIcon } from "lucide-react";
+import { Home, Calendar, Building2, MessagesSquare, Shield, type LucideIcon } from "lucide-react";
 import { MODULES, MODULE_MAP, type ModuleKey } from "./modules";
 
 export type PageKey = "home" | "agenda" | "club" | "coordinacion" | "admin";
@@ -14,9 +14,9 @@ export interface PageDef {
 export const PAGES: PageDef[] = [
   { key: "home", label: "Inicio", icon: Home, to: "/" },
   { key: "agenda", label: "Agenda", icon: Calendar, to: "/agenda" },
-  { key: "club", label: "Mi Club", icon: Users, to: "/mi-club" },
+  { key: "club", label: "Mi Club", icon: Shield, to: "/mi-club" },
   { key: "coordinacion", label: "Coordinación", icon: MessagesSquare, to: "/coordinacion" },
-  { key: "admin", label: "Admin", icon: Shield, to: "/admin" },
+  { key: "admin", label: "Admin", icon: Building2, to: "/admin" },
 ];
 
 export const PAGE_MAP: Record<PageKey, PageDef> = Object.fromEntries(
@@ -99,6 +99,30 @@ const COORDINACION_ORDER: ModuleKey[] = [
   "multimedia",
 ];
 
+/**
+ * Orden fijo de los módulos dentro de la página Mi Club. Si falta acceso a
+ * alguno, los demás se recorren solos.
+ */
+const CLUB_ORDER: ModuleKey[] = [
+  "entrenamientos",
+  "torneo",
+  "comunicados",
+  "salud",
+  "desarrollo",
+  "nutricion",
+  "tacticas",
+  "plantel",
+  "multimedia",
+];
+
+function sortByOrder(keys: ModuleKey[], order: ModuleKey[]): ModuleKey[] {
+  const idx = (k: ModuleKey) => {
+    const i = order.indexOf(k);
+    return i === -1 ? order.length : i;
+  };
+  return [...keys].sort((a, b) => idx(a) - idx(b));
+}
+
 function sortCoordinacion(keys: ModuleKey[]): ModuleKey[] {
   const idx = (k: ModuleKey) => {
     const i = COORDINACION_ORDER.indexOf(k);
@@ -161,6 +185,7 @@ export function resolvePagesForUser(
   }
 
   perPage.coordinacion = sortCoordinacion(perPage.coordinacion);
+  perPage.club = sortByOrder(perPage.club, CLUB_ORDER);
 
   // 3) Construye la lista final SOLO con páginas que tienen módulos visibles.
   //    Home siempre presente. Cero display:none: si no está en el array, no se renderiza.
@@ -258,6 +283,7 @@ export function groupModulesByPage(
   }
 
   perPage.coordinacion = sortCoordinacion(perPage.coordinacion);
+  perPage.club = sortByOrder(perPage.club, CLUB_ORDER);
 
   const out: Array<{ page: PageDef; modules: ModuleKey[] }> = [];
   for (const p of PAGES) {
@@ -283,6 +309,7 @@ export function groupPermissionModulesByPage(): Array<{ page: PageDef; modules: 
   }
 
   perPage.coordinacion = sortCoordinacion(perPage.coordinacion);
+  perPage.club = sortByOrder(perPage.club, CLUB_ORDER);
 
   return PAGES.flatMap((page) => {
     const modules = perPage[page.key];

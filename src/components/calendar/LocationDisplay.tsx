@@ -54,15 +54,36 @@ export function LocationDisplay({ clubId, locationId, text, showMap = true, defa
 
   return (
     <div className="space-y-2">
-      <div className="flex items-start gap-2">
-        <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-        <div className="min-w-0">
-          <p className="font-medium text-foreground [overflow-wrap:anywhere]">{loc.name}</p>
-          {loc.address ? (
-            <p className="text-xs text-muted-foreground [overflow-wrap:anywhere]">{loc.address}</p>
-          ) : null}
+      {hasCoords ? (
+        <a
+          href={googleMapsUrl(loc.latitude!, loc.longitude!)}
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-start gap-2 rounded-lg transition-colors hover:bg-muted/50"
+        >
+          <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+          <div className="min-w-0">
+            <p className="font-medium text-primary underline underline-offset-2 [overflow-wrap:anywhere]">
+              {loc.name}
+            </p>
+            {loc.address ? (
+              <p className="text-xs text-muted-foreground [overflow-wrap:anywhere]">{loc.address}</p>
+            ) : null}
+          </div>
+          <Navigation className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+        </a>
+      ) : (
+        <div className="flex items-start gap-2">
+          <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+          <div className="min-w-0">
+            <p className="font-medium text-foreground [overflow-wrap:anywhere]">{loc.name}</p>
+            {loc.address ? (
+              <p className="text-xs text-muted-foreground [overflow-wrap:anywhere]">{loc.address}</p>
+            ) : null}
+          </div>
         </div>
-      </div>
+      )}
+
 
       {!hasCoords ? (
         <p className="text-xs text-muted-foreground">

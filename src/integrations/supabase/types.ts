@@ -5584,7 +5584,6 @@ export type Database = {
         Args: { _notification_id: string }
         Returns: undefined
       }
-      notify_due_loans: { Args: never; Returns: undefined }
       notify_group: {
         Args: {
           _body: string

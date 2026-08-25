@@ -16,8 +16,15 @@ export interface NotificationTarget {
 export function notificationTarget(n: NotificationRow): NotificationTarget | null {
   if (!n.related_id || !n.related_module) return null;
   switch (n.related_module) {
+    case "agenda":
+      return { module: "agenda", to: "/m/agenda", search: { open: n.related_id } };
+    case "entrenamientos":
+      return { module: "entrenamientos", to: "/m/entrenamientos", search: { open: n.related_id } };
+    case "comunicados":
+      return { module: "comunicados", to: "/m/comunicados", search: { open: n.related_id } };
     case "solicitudes":
       return { module: "solicitudes", to: "/m/solicitudes", search: { open: n.related_id } };
+
     case "coordinacion_interna":
       return {
         module: "coordinacion_interna",
