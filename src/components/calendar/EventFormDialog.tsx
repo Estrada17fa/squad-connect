@@ -82,8 +82,8 @@ export function EventFormDialog({ open, onOpenChange, clubId, teams, defaultTeam
   React.useEffect(() => {
     if (!open) return;
     if (!isEdit) {
-      setStep("type");
-      setEventType("entrenamiento");
+      setStep(fixedType ? "form" : "type");
+      setEventType(fixedType ?? "entrenamiento");
       setTitle("");
       setStartsAt(defaultDate ? toLocalInputValue(new Date(defaultDate.setHours(18, 0, 0, 0)).toISOString()) : "");
       setEndsAt("");
