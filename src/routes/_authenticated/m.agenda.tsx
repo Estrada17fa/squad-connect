@@ -126,17 +126,13 @@ function AgendaModulePage() {
         </div>
       ) : null}
 
-      {canEdit ? (
-        <Button
-          onClick={() => {
-            setEditing(null);
-            setDialogOpen(true);
-          }}
-          className="w-full glow-primary"
-        >
-          <Plus className="mr-2 h-4 w-4" /> Nuevo evento
-        </Button>
-      ) : null}
+      <NewEventLauncher
+        clubId={clubId}
+        userId={user.id}
+        genericTeams={editableTeams}
+        defaultTeamId={teamFilter}
+      />
+
 
       <div className="space-y-6">
         {isLoading && !events ? (
