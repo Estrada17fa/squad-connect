@@ -4,10 +4,12 @@ import { useApp } from "@/components/squad/AppLayout";
 import { useUpcomingEvents, type CalendarEventRow } from "@/hooks/useCalendarEvents";
 import { EventDetailSheet } from "@/components/calendar/EventDetailSheet";
 import { EmptyState } from "@/components/squad/EmptyState";
-import { NextEventHero } from "@/components/home/NextEventHero";
+import { GreetingBlock } from "@/components/home/GreetingBlock";
+import { NextMatchHero } from "@/components/home/NextMatchHero";
 import { UpcomingList } from "@/components/home/UpcomingList";
-import { TodoBlock } from "@/components/home/TodoBlock";
+import { TournamentStandingBlock } from "@/components/home/TournamentStandingBlock";
 import { AnnouncementsBlock } from "@/components/home/AnnouncementsBlock";
+import { useClubTournamentSummary } from "@/hooks/useClubNextMatch";
 
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
@@ -15,25 +17,27 @@ export const Route = createFileRoute("/_authenticated/")({
       { title: "Squad — Inicio" },
       {
         name: "description",
-        content: "Tu resumen del día: próximo evento, pendientes por atender y comunicados del club.",
+        content:
+          "Resumen del club: próximo partido, tus eventos, posición en el torneo y comunicados recientes.",
       },
       { property: "og:title", content: "Squad — Inicio" },
       {
         property: "og:description",
-        content: "Qué tienes hoy y qué debes atender, en una sola pantalla.",
+        content: "El próximo partido del club, tus eventos y los comunicados, en una pantalla.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Home,
 });
 
 /**
- * Inicio: un solo esqueleto de bloques, rellenado con lo que cada persona
- * puede ver. Solo lectura: para actuar, cada bloque lleva a su módulo.
- *
- * Ningún bloque implementa permisos propios — todos leen de los hooks que ya
- * filtran (RLS de `calendar_events`, aprobadores efectivos, asignaciones,
- * RLS de comunicados). Para crecer, basta añadir otro bloque a la lista.
+ * Inicio: resumen general del club (partido, torneo, comunicados) más los
+ * eventos propios de la persona. Solo lectura y sin lógica de permisos nueva:
+ * cada bloque lee de hooks que ya filtran (RLS de `calendar_events`, resumen
+ * de torneo con `canReadTeam`, RLS de comunicados). Los bloques de partido,
+ * torneo y comunicados se ocultan cuando no hay contenido.
  */
 function Home() {
   const navigate = useNavigate();
@@ -47,8 +51,9 @@ function Home() {
 
   const { data: events } = useUpcomingEvents(clubId, 4);
   const list = events ?? [];
-  const next = list[0] ?? null;
-  const rest = list.slice(1);
+
+  const { tournament, teams, ourTeam, nextMatch, standing, groupLabel } =
+    useClubTournamentSummary();
 
   const teamName = React.useCallback(
     (id: string | null) => teamOptions.find((t) => t.id === id)?.name ?? null,
@@ -59,12 +64,7 @@ function Home() {
 
   return (
     <div className="space-y-7">
-      <header className="space-y-1">
-        <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">
-          {firstName ? `Hola, ${firstName}` : "Hola"}
-        </h1>
-        <p className="text-sm text-muted-foreground">Esto es lo que sigue</p>
-      </header>
+      <GreetingBlock name={firstName} />
 
       {accessibleModules.length === 0 ? (
         <EmptyState
@@ -73,14 +73,12 @@ function Home() {
         />
       ) : (
         <>
-          <NextEventHero
-            event={next}
-            teamLabel={next ? teamName(next.team_id) : null}
-            onOpen={setDetailEvent}
-          />
+          {nextMatch && ourTeam ? (
+            <NextMatchHero match={nextMatch} teams={teams} ourTeam={ourTeam} />
+          ) : null}
 
           <UpcomingList
-            events={rest}
+            events={list}
             teamName={teamName}
             onOpen={setDetailEvent}
             onSeeAgenda={
@@ -90,7 +88,13 @@ function Home() {
             }
           />
 
-          <TodoBlock />
+          {tournament && standing ? (
+            <TournamentStandingBlock
+              tournament={tournament}
+              standing={standing}
+              groupLabel={groupLabel}
+            />
+          ) : null}
 
           <AnnouncementsBlock />
         </>
