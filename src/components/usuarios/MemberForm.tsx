@@ -409,6 +409,17 @@ export function MemberForm({
                     {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
+                <div className="mt-2 space-y-1">
+                  {isEdit ? (
+                    <p className="text-[11px] text-muted-foreground">
+                      Déjala vacía para no cambiarla. Si la cambias, el miembro deberá definir una nueva al entrar.
+                    </p>
+                  ) : null}
+                  <PasswordRequirements value={password} />
+                  {password.length > 0 && passCheck.missing.length > 0 ? (
+                    <p className="text-[11px] text-destructive">{passCheck.missing.join(" · ")}</p>
+                  ) : null}
+                </div>
               </Field>
               <Field label="Fecha de nacimiento" htmlFor="mf-birth">
                 <Input id="mf-birth" type="date" value={birthdate} onChange={(e) => setBirthdate(e.target.value)} />
