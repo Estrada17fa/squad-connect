@@ -33,6 +33,10 @@ export function EventCard({
   const color = def.cssVar;
   // Contexto por tipo (sede, destino, objetivo…) cuando no se pasa uno explícito.
   const line = context ?? buildEventContext(event);
+  // El viaje solo captura fechas: mostrar hora sería un placeholder falso.
+  const isTrip = event.event_type === "viaje" || !!event.trip_id;
+  const tripReturn =
+    isTrip && event.ends_at && !isSameClubDay(event.starts_at, event.ends_at) ? event.ends_at : null;
 
   return (
     <button
@@ -49,14 +53,21 @@ export function EventCard({
       <div className="flex items-stretch gap-3 py-3 pl-4 pr-3">
         <div className="flex shrink-0 flex-col items-start justify-center">
           <span className="whitespace-nowrap font-display text-sm font-bold leading-none text-foreground">
-            {formatTime(event.starts_at)}
+            {isTrip ? formatDayChip(event.starts_at) : formatTime(event.starts_at)}
           </span>
-          {event.ends_at ? (
+          {isTrip ? (
+            tripReturn ? (
+              <span className="mt-1 whitespace-nowrap text-[11px] leading-none text-muted-foreground">
+                → {formatDayChip(tripReturn)}
+              </span>
+            ) : null
+          ) : event.ends_at ? (
             <span className="mt-1 whitespace-nowrap text-[11px] leading-none text-muted-foreground">
               {formatTime(event.ends_at)}
             </span>
           ) : null}
         </div>
+
 
         <div
           className="flex h-9 w-9 shrink-0 items-center justify-center self-center rounded-xl"
