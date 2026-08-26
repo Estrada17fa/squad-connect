@@ -134,39 +134,10 @@ export function MyTripView({ trip, userId, detail = "player" }: Props) {
 
       <section className="space-y-2">
         <h3 className="font-display text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Resto del viaje
+          Información del viaje
         </h3>
-        <TripFoldedSections
-          trip={trip}
-          flights={flights}
-          transports={transports}
-          hotels={hotels}
-          detail={detail}
-        />
+        <TripTabs trip={trip} canEdit={false} />
       </section>
-
-      {documents.length > 0 ? (
-        <section className="space-y-2">
-          <h3 className="flex items-center gap-2 font-display text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            <FileText className="h-4 w-4" /> Documentos del viaje
-          </h3>
-          {documents.map((d) => (
-            <button
-              key={d.id}
-              type="button"
-              className="glass block w-full p-3 text-left"
-              onClick={() =>
-                openTripDocument(d.file_path).catch((e: any) =>
-                  toast.error(e.message ?? "No se pudo abrir el documento"),
-                )
-              }
-            >
-              <p className="truncate text-sm text-foreground">{d.title}</p>
-              {d.description ? <p className="text-xs text-muted-foreground">{d.description}</p> : null}
-            </button>
-          ))}
-        </section>
-      ) : null}
     </div>
   );
 }
