@@ -141,11 +141,11 @@ function AgendaModulePage() {
           <AgendaSkeleton count={4} />
         ) : days.length === 0 ? (
           <EmptyState
-            title="Sin próximos eventos"
+            title="Sin eventos esta semana"
             message={
               typeFilter || teamFilter
-                ? "No hay eventos con estos filtros."
-                : "Los eventos aparecen aquí cuando los crean Entrenamientos, Partidos, Viajes, Juntas o Salud."
+                ? "No hay eventos en los próximos 7 días con estos filtros."
+                : "No hay nada agendado en los próximos 7 días. Revisa el Mes para ver más adelante."
             }
           />
         ) : (
