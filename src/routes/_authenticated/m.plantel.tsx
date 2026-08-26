@@ -129,9 +129,9 @@ function PlantelPage() {
           }
         />
       ) : (
-        <div className="space-y-8">
+        <div className="min-w-0 space-y-8">
           {groups.map((g) => (
-            <section key={g.key} className="space-y-4">
+            <section key={g.key} className="min-w-0 space-y-4">
               <h2 className="font-display text-lg font-semibold text-foreground">{g.name}</h2>
 
               {g.players.length > 0 ? (
@@ -145,7 +145,7 @@ function PlantelPage() {
                           {POSITION_GROUP_LABEL[pos]}
                           <span className="ml-2 text-muted-foreground/70">{list.length}</span>
                         </h3>
-                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2 sm:grid-cols-2 lg:grid-cols-3">
                           {list.map((m, i) => (
                             <PlayerCard key={m.key} member={m} index={i} onClick={() => setSelected(m)} />
                           ))}
@@ -162,7 +162,7 @@ function PlantelPage() {
                     Cuerpo técnico y staff
                     <span className="ml-2 text-muted-foreground/70">{g.staff.length}</span>
                   </h3>
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2 sm:grid-cols-2 lg:grid-cols-3">
                     {g.staff.map((m, i) => (
                       <StaffCard key={m.key} member={m} index={i} onClick={() => setSelected(m)} />
                     ))}

@@ -222,7 +222,7 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
   return (
     <AppContext.Provider value={ctx}>
       <ClubPrefsSync clubId={data.profile?.club_id ?? null} />
-      <div className="min-h-screen bg-background pb-24 sm:pb-8">
+      <div className="min-h-screen min-w-0 overflow-x-clip bg-background pb-[calc(6rem+env(safe-area-inset-bottom))] sm:pb-8">
 
         <Header
           clubId={data.profile?.club_id ?? null}
@@ -236,7 +236,7 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
           onSignOut={signOut}
         />
         <DesktopNav pages={visiblePages} />
-        <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6">
+        <main className="mx-auto min-w-0 w-full max-w-6xl overflow-x-clip px-4 py-6 sm:px-6">
           <Outlet />
         </main>
         <BottomNav pages={visiblePages} />
@@ -373,8 +373,8 @@ function BottomNav({ pages }: { pages: ResolvedPage[] }) {
   const prefetchHub = useHubPrefetch();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border/60 bg-background/85 backdrop-blur-xl sm:hidden">
-      <div className="mx-auto flex max-w-6xl items-stretch justify-around px-2 py-1.5">
+    <nav className="fixed inset-x-0 bottom-0 z-30 w-full border-t border-border/60 bg-background/85 backdrop-blur-xl sm:hidden">
+      <div className="mx-auto flex max-w-6xl items-stretch justify-around px-2 pt-1.5 pb-[calc(0.375rem+env(safe-area-inset-bottom))]">
         {pages.map((rp) => {
           const active = rp.page.key === activeKey;
           const Icon = rp.page.icon;
