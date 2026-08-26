@@ -386,7 +386,10 @@ export function MemberForm({
               </Field>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
-              <Field label={isEdit ? "Nueva contraseña (opcional)" : "Contraseña (mín. 8)"} htmlFor="mf-pass">
+              <Field
+                label={isEdit ? "Nueva contraseña (opcional)" : "Contraseña"}
+                htmlFor="mf-pass"
+              >
                 <div className="relative">
                   <Input
                     id="mf-pass"
