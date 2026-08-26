@@ -1,7 +1,7 @@
 import * as React from "react";
 import { MapPin } from "lucide-react";
 import { EVENT_TYPE_MAP } from "@/lib/eventTypes";
-import { formatTime } from "@/lib/calendar-utils";
+import { formatDayChip, formatTime, isSameClubDay } from "@/lib/calendar-utils";
 import type { CalendarEventRow } from "@/hooks/useCalendarEvents";
 import { cn } from "@/lib/utils";
 import { AccentBar } from "@/components/squad/StandardCard";
