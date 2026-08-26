@@ -9,10 +9,8 @@ import { StandardCard } from "@/components/squad/StandardCard";
 import { useApp } from "@/components/squad/AppLayout";
 import { formatDateOnly } from "@/lib/calendar-utils";
 import { useTrips, TRIP_STATUS_LABEL, TRIP_STATUS_VARIANT } from "@/hooks/useTrips";
-import { TripDetailSheet } from "@/components/viajes/TripDetailSheet";
 import { MyTripView } from "@/components/viajes/MyTripView";
 import { DetailSheet, DetailBadge } from "@/components/squad/DetailSheet";
-import { useTeamAccess } from "@/hooks/useTeamAccess";
 
 import { TeamFilter, TeamBadge } from "@/components/squad/TeamFilter";
 
@@ -34,7 +32,6 @@ export const Route = createFileRoute("/_authenticated/agenda-viajes")({
 /** Pestaña "Viajes" dentro de Agenda: solo consulta (readOnly). */
 function AgendaViajesPage() {
   const { user, profile, isSuperAdmin, canViewModule, teamOptions } = useApp();
-  const { canEditTeam } = useTeamAccess("viajes");
   const clubId = profile?.club_id ?? null;
   const canAccess = isSuperAdmin || canViewModule("viajes");
 
