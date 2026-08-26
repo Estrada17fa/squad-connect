@@ -138,9 +138,15 @@ export function EventDetailSheet({ open, onOpenChange, event, canEdit, clubId, u
       >
         <DetailSection title="Detalle" icon={Info}>
           <DetailGrid>
-            <DetailField label="Fecha y hora" icon={CalendarDays}>
-              {formatDayLabel(new Date(event.starts_at))} · {formatTime(event.starts_at)}
-              {event.ends_at ? ` – ${formatTime(event.ends_at)}` : ""}
+            <DetailField label={isTrip ? "Fecha" : "Fecha y hora"} icon={CalendarDays}>
+              {isTrip ? (
+                formatTripRange(event.starts_at, event.ends_at)
+              ) : (
+                <>
+                  {formatDayLabel(new Date(event.starts_at))} · {formatTime(event.starts_at)}
+                  {event.ends_at ? ` – ${formatTime(event.ends_at)}` : ""}
+                </>
+              )}
             </DetailField>
             <DetailField label="Equipo" icon={Users}>
               <TeamBadge name={team} />
