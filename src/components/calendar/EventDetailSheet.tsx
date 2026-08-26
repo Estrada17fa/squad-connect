@@ -28,7 +28,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { TeamBadge } from "@/components/squad/TeamFilter";
 import { EVENT_TYPE_MAP } from "@/lib/eventTypes";
-import { formatDayLabel, formatTime } from "@/lib/calendar-utils";
+import { formatDayLabel, formatTime, formatTripRange } from "@/lib/calendar-utils";
 import type { CalendarEventRow } from "@/hooks/useCalendarEvents";
 import type { TeamOption } from "@/hooks/useAccess";
 import { useSessionByEvent } from "@/hooks/useTraining";
@@ -102,7 +102,11 @@ export function EventDetailSheet({ open, onOpenChange, event, canEdit, clubId, u
         title={event.title}
         icon={def.icon}
         accent={def.cssVar}
-        description={`${formatDayLabel(new Date(event.starts_at))} · ${formatTime(event.starts_at)}`}
+        description={
+          isTrip
+            ? formatTripRange(event.starts_at, event.ends_at)
+            : `${formatDayLabel(new Date(event.starts_at))} · ${formatTime(event.starts_at)}`
+        }
         canEdit={editable && !!clubId}
         badges={
           <>
@@ -134,9 +138,15 @@ export function EventDetailSheet({ open, onOpenChange, event, canEdit, clubId, u
       >
         <DetailSection title="Detalle" icon={Info}>
           <DetailGrid>
-            <DetailField label="Fecha y hora" icon={CalendarDays}>
-              {formatDayLabel(new Date(event.starts_at))} · {formatTime(event.starts_at)}
-              {event.ends_at ? ` – ${formatTime(event.ends_at)}` : ""}
+            <DetailField label={isTrip ? "Fecha" : "Fecha y hora"} icon={CalendarDays}>
+              {isTrip ? (
+                formatTripRange(event.starts_at, event.ends_at)
+              ) : (
+                <>
+                  {formatDayLabel(new Date(event.starts_at))} · {formatTime(event.starts_at)}
+                  {event.ends_at ? ` – ${formatTime(event.ends_at)}` : ""}
+                </>
+              )}
             </DetailField>
             <DetailField label="Equipo" icon={Users}>
               <TeamBadge name={team} />
