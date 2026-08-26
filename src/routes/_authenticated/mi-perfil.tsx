@@ -379,7 +379,8 @@ function EditMyProfileSheet({
 
   const emailChanged = (form.email ?? "").trim().toLowerCase() !== (initial.email ?? "").toLowerCase();
   const emailOk = !emailChanged || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((form.email ?? "").trim());
-  const passOk = password === "" || password.length >= 8;
+  const passCheck = checkPassword(password);
+  const passOk = password === "" || passCheck.isValid;
 
   const save = useMutation({
     mutationFn: async () => {
@@ -422,7 +423,7 @@ function EditMyProfileSheet({
       qc.invalidateQueries({ queryKey: ["club-members"] });
       onOpenChange(false);
     },
-    onError: (e: any) => toast.error(e?.message ?? "No se pudo guardar"),
+    onError: (e: any) => toast.error(friendlyPasswordError(e?.message ?? "No se pudo guardar")),
   });
 
   return (
@@ -520,7 +521,10 @@ function EditMyProfileSheet({
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-            <p className="text-[11px] text-muted-foreground">Mínimo 8 caracteres.</p>
+            <PasswordRequirements value={password} />
+            {password.length > 0 && passCheck.missing.length > 0 ? (
+              <p className="text-[11px] text-destructive">{passCheck.missing.join(" · ")}</p>
+            ) : null}
           </div>
         </div>
       </EntitySheetBody>
