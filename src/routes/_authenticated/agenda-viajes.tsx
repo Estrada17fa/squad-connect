@@ -105,36 +105,32 @@ function AgendaViajesPage() {
         </div>
       )}
 
-      {/* Staff de viajes ve el viaje completo; el resto ve solo SU itinerario y SU pase. */}
-      {detail && canEditTeam(detail.team_id) ? (
-        <TripDetailSheet open onOpenChange={(v) => !v && setDetailId(null)} trip={detail} readOnly />
-      ) : (
-        <DetailSheet
-          open={!!detail}
-          onOpenChange={(v) => !v && setDetailId(null)}
-          title={detail?.title ?? ""}
-          icon={Plane}
-          accent="var(--event-viaje)"
-          description={
-            detail
-              ? `${formatDateOnly(detail.departure_at)}${detail.return_at ? ` → ${formatDateOnly(detail.return_at)}` : ""}`
-              : undefined
-          }
-          badges={
-            detail ? (
-              <>
-                <DetailBadge color="var(--event-viaje)" icon={Plane}>
-                  {TRIP_STATUS_LABEL[detail.status]}
-                </DetailBadge>
-                {teamNames[detail.team_id] ? <DetailBadge>{teamNames[detail.team_id]}</DetailBadge> : null}
-                {detail.destination ? <DetailBadge>{detail.destination}</DetailBadge> : null}
-              </>
-            ) : null
-          }
-        >
-          {detail ? <MyTripView trip={detail} userId={user.id} /> : null}
-        </DetailSheet>
-      )}
+      {/* En Agenda todos son pasajeros: misma vista (mi info + viaje completo). La gestión vive en Coordinación → Viajes. */}
+      <DetailSheet
+        open={!!detail}
+        onOpenChange={(v) => !v && setDetailId(null)}
+        title={detail?.title ?? ""}
+        icon={Plane}
+        accent="var(--event-viaje)"
+        description={
+          detail
+            ? `${formatDateOnly(detail.departure_at)}${detail.return_at ? ` → ${formatDateOnly(detail.return_at)}` : ""}`
+            : undefined
+        }
+        badges={
+          detail ? (
+            <>
+              <DetailBadge color="var(--event-viaje)" icon={Plane}>
+                {TRIP_STATUS_LABEL[detail.status]}
+              </DetailBadge>
+              {teamNames[detail.team_id] ? <DetailBadge>{teamNames[detail.team_id]}</DetailBadge> : null}
+              {detail.destination ? <DetailBadge>{detail.destination}</DetailBadge> : null}
+            </>
+          ) : null
+        }
+      >
+        {detail ? <MyTripView trip={detail} userId={user.id} /> : null}
+      </DetailSheet>
 
 
     </div>
