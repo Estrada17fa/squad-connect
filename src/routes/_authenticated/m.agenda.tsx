@@ -57,10 +57,17 @@ function AgendaModulePage() {
     return EVENT_TYPES.filter((t) => set.has(t.key));
   }, [events]);
 
+  // La lista solo muestra la semana en curso: de hoy a 7 días adelante.
+  // La vista de Mes sigue completa.
   const upcoming = React.useMemo(() => {
     const from = startOfDay(new Date());
+    const to = new Date(from);
+    to.setDate(to.getDate() + 8); // fin del día +7
     return (events ?? [])
-      .filter((e) => new Date(e.starts_at) >= from)
+      .filter((e) => {
+        const at = new Date(e.starts_at);
+        return at >= from && at < to;
+      })
       .filter((e) => !teamFilter || e.team_id === teamFilter)
       .filter((e) => !typeFilter || e.event_type === typeFilter);
   }, [events, teamFilter, typeFilter]);
@@ -134,11 +141,11 @@ function AgendaModulePage() {
           <AgendaSkeleton count={4} />
         ) : days.length === 0 ? (
           <EmptyState
-            title="Sin próximos eventos"
+            title="Sin eventos esta semana"
             message={
               typeFilter || teamFilter
-                ? "No hay eventos con estos filtros."
-                : "Los eventos aparecen aquí cuando los crean Entrenamientos, Partidos, Viajes, Juntas o Salud."
+                ? "No hay eventos en los próximos 7 días con estos filtros."
+                : "No hay nada agendado en los próximos 7 días. Revisa el Mes para ver más adelante."
             }
           />
         ) : (

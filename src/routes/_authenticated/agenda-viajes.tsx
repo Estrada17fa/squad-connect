@@ -7,7 +7,7 @@ import { EmptyState } from "@/components/squad/EmptyState";
 import { CardGridSkeleton } from "@/components/squad/LoadingState";
 import { StandardCard } from "@/components/squad/StandardCard";
 import { useApp } from "@/components/squad/AppLayout";
-import { formatDateTime } from "@/lib/calendar-utils";
+import { formatDateOnly } from "@/lib/calendar-utils";
 import { useTrips, TRIP_STATUS_LABEL, TRIP_STATUS_VARIANT } from "@/hooks/useTrips";
 import { TripDetailSheet } from "@/components/viajes/TripDetailSheet";
 import { MyTripView } from "@/components/viajes/MyTripView";
@@ -85,7 +85,7 @@ function AgendaViajesPage() {
               onClick={() => setDetailId(t.id)}
               icon={Plane}
               title={t.title}
-              subtitle={`${formatDateTime(t.departure_at)}${t.return_at ? ` → ${formatDateTime(t.return_at)}` : ""}`}
+              subtitle={`${formatDateOnly(t.departure_at)}${t.return_at ? ` → ${formatDateOnly(t.return_at)}` : ""}`}
               status={{ label: TRIP_STATUS_LABEL[t.status], variant: TRIP_STATUS_VARIANT[t.status] }}
             >
               <span className="flex flex-wrap items-center gap-x-4 gap-y-1">
@@ -117,7 +117,7 @@ function AgendaViajesPage() {
           accent="var(--event-viaje)"
           description={
             detail
-              ? `${formatDateTime(detail.departure_at)}${detail.return_at ? ` → ${formatDateTime(detail.return_at)}` : ""}`
+              ? `${formatDateOnly(detail.departure_at)}${detail.return_at ? ` → ${formatDateOnly(detail.return_at)}` : ""}`
               : undefined
           }
           badges={

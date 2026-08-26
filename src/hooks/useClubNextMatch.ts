@@ -1,4 +1,6 @@
 import * as React from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { useApp } from "@/components/squad/app-context";
 import { useTeamAccess } from "@/hooks/useTeamAccess";
 import {
@@ -31,19 +33,49 @@ export interface ClubTournamentSummary {
 }
 
 export function useClubTournamentSummary(): ClubTournamentSummary {
-  const { profile, accessibleModules } = useApp();
+  const { profile, accessibleModules, teamOptions } = useApp();
   const clubId = profile?.club_id ?? null;
   const enabled = accessibleModules.includes("torneo");
   const { canReadTeam } = useTeamAccess("torneo");
 
   const { data: tournaments } = useTournaments(enabled ? clubId : null);
 
+  const candidates = React.useMemo(
+    () => (tournaments ?? []).filter((t) => t.status === "en_curso" && canReadTeam(t.team_id)),
+    [tournaments, canReadTeam],
+  );
+
+  // Qué torneos en curso tienen marcado un equipo "nuestro": sin eso no hay
+  // posición que mostrar y el bloque de Inicio quedaría vacío.
+  const candidateIds = candidates.map((t) => t.id);
+  const { data: withOurTeam } = useQuery({
+    queryKey: ["tournaments", "with-our-team", candidateIds.join(",")] as const,
+    enabled: candidateIds.length > 0,
+    staleTime: 60_000,
+    queryFn: async (): Promise<string[]> => {
+      const { data, error } = await supabase
+        .from("tournament_teams")
+        .select("tournament_id")
+        .in("tournament_id", candidateIds)
+        .eq("is_our_team", true);
+      if (error) throw error;
+      return (data ?? []).map((r) => r.tournament_id as string);
+    },
+  });
+
   const tournament = React.useMemo(() => {
-    const list = (tournaments ?? []).filter(
-      (t) => t.status === "en_curso" && canReadTeam(t.team_id),
+    if (!candidates.length) return null;
+    const ok = new Set(withOurTeam ?? []);
+    const myTeams = new Set(teamOptions.map((t) => t.id).filter(Boolean) as string[]);
+    // 1) torneo de mi equipo que tenga equipo nuestro, 2) cualquiera con equipo
+    // nuestro, 3) el primero como último recurso.
+    return (
+      candidates.find((t) => ok.has(t.id) && t.team_id && myTeams.has(t.team_id)) ??
+      candidates.find((t) => ok.has(t.id)) ??
+      candidates[0] ??
+      null
     );
-    return list[0] ?? null;
-  }, [tournaments, canReadTeam]);
+  }, [candidates, withOurTeam, teamOptions]);
 
   const { data: teamsData } = useTournamentTeams(tournament?.id ?? null);
   const { data: matchesData } = useTournamentMatches(tournament?.id ?? null);

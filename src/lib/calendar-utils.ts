@@ -146,3 +146,17 @@ export function toLocalInputValue(iso: string | null | undefined) {
 export function fromLocalInputValue(v: string): string {
   return new Date(v).toISOString();
 }
+
+/**
+ * Fecha sin hora para el rango general de un viaje ("vie 28 de ago").
+ * El viaje solo captura fechas: mostrar una hora ahí sería un placeholder falso.
+ */
+export function formatDateOnly(iso: string) {
+  const label = new Date(iso).toLocaleDateString("es-MX", {
+    timeZone: clubTimeZone,
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
+  return label.replace(/\./g, "");
+}
