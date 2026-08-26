@@ -28,7 +28,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { TeamBadge } from "@/components/squad/TeamFilter";
 import { EVENT_TYPE_MAP } from "@/lib/eventTypes";
-import { formatDayLabel, formatTime } from "@/lib/calendar-utils";
+import { formatDayLabel, formatTime, formatTripRange } from "@/lib/calendar-utils";
 import type { CalendarEventRow } from "@/hooks/useCalendarEvents";
 import type { TeamOption } from "@/hooks/useAccess";
 import { useSessionByEvent } from "@/hooks/useTraining";
