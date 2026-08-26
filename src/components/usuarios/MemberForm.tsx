@@ -269,7 +269,8 @@ export function MemberForm({
 
   const selectedTeams = Object.keys(assignments);
   const emailOk = isEdit || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-  const passOk = isEdit ? password === "" || password.length >= 8 : password.length >= 8;
+  const passCheck = checkPassword(password);
+  const passOk = isEdit ? password === "" || passCheck.isValid : passCheck.isValid;
   const namesOk = !!firstName.trim() && !!paternal.trim();
   const teamsOk = isAdmin || !isPlayer || selectedTeams.length > 0;
   const canSubmit = emailOk && passOk && namesOk && !!roleId && teamsOk && !saving;
@@ -339,7 +340,7 @@ export function MemberForm({
       onSaved?.(res.userId, res.roleName ?? null);
       onOpenChange(false);
     } catch (e: any) {
-      toast.error(e?.message ?? "No se pudo guardar el miembro");
+      toast.error(friendlyPasswordError(e?.message ?? "No se pudo guardar el miembro"));
     } finally {
       setSaving(false);
     }
