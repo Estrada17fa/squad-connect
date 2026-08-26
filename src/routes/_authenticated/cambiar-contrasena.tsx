@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useApp } from "@/components/squad/AppLayout";
+import { PasswordRequirements } from "@/components/squad/PasswordRequirements";
+import { checkPassword, friendlyPasswordError } from "@/lib/password";
 
 export const Route = createFileRoute("/_authenticated/cambiar-contrasena")({
   head: () => ({
@@ -35,7 +37,8 @@ function ChangePasswordPage() {
   const [password, setPassword] = React.useState("");
   const [confirm, setConfirm] = React.useState("");
 
-  const valid = password.length >= 8 && password === confirm;
+  const check = checkPassword(password);
+  const valid = check.isValid && password === confirm;
 
   const save = useMutation({
     mutationFn: async () => {
@@ -52,7 +55,7 @@ function ChangePasswordPage() {
       await qc.invalidateQueries({ queryKey: ["must-change-password", user.id] });
       navigate({ to: "/", replace: true });
     },
-    onError: (e: any) => toast.error(e?.message ?? "No se pudo actualizar la contraseña"),
+    onError: (e: any) => toast.error(friendlyPasswordError(e?.message)),
   });
 
   return (
@@ -88,8 +91,9 @@ function ChangePasswordPage() {
               autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Mínimo 8 caracteres"
+              placeholder="Tu nueva contraseña"
             />
+            <PasswordRequirements value={password} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="confirm-password">Confirmar contraseña</Label>
@@ -102,8 +106,8 @@ function ChangePasswordPage() {
               placeholder="Repite la contraseña"
             />
           </div>
-          {password.length > 0 && password.length < 8 ? (
-            <p className="text-sm text-destructive">La contraseña debe tener al menos 8 caracteres.</p>
+          {password.length > 0 && check.missing.length > 0 ? (
+            <p className="text-sm text-destructive">{check.missing.join(" · ")}</p>
           ) : null}
           {confirm.length > 0 && password !== confirm ? (
             <p className="text-sm text-destructive">Las contraseñas no coinciden.</p>

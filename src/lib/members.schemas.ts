@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PASSWORD_MAX_LENGTH, checkPassword } from "@/lib/password";
 
 export const PLAYER_POSITIONS = ["Portero", "Defensa", "Mediocampista", "Delantero"] as const;
 export type PlayerPosition = (typeof PLAYER_POSITIONS)[number];
@@ -58,14 +59,24 @@ export const baseMemberSchema = z.object({
   player: playerSchema.optional().nullable(),
 });
 
+/** Misma regla que el cliente: 8+, número, minúscula y mayúscula; símbolos permitidos. */
+const passwordField = z
+  .string()
+  .max(PASSWORD_MAX_LENGTH)
+  .superRefine((value, ctx) => {
+    for (const msg of checkPassword(value).missing) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: msg });
+    }
+  });
+
 export const createMemberSchema = baseMemberSchema.extend({
   email: z.string().trim().toLowerCase().email().max(255),
-  password: z.string().min(8).max(128),
+  password: passwordField,
 });
 
 export const updateMemberSchema = baseMemberSchema.extend({
   user_id: z.string().uuid(),
-  password: z.string().min(8).max(128).optional().nullable(),
+  password: passwordField.optional().nullable(),
 });
 
 export const memberTargetSchema = z.object({ user_id: z.string().uuid() });

@@ -34,6 +34,8 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { AvatarUploadField } from "@/components/perfil/AvatarUploadField";
+import { PasswordRequirements } from "@/components/squad/PasswordRequirements";
+import { checkPassword, friendlyPasswordError } from "@/lib/password";
 
 export interface RoleOpt {
   id: string;
@@ -267,7 +269,8 @@ export function MemberForm({
 
   const selectedTeams = Object.keys(assignments);
   const emailOk = isEdit || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-  const passOk = isEdit ? password === "" || password.length >= 8 : password.length >= 8;
+  const passCheck = checkPassword(password);
+  const passOk = isEdit ? password === "" || passCheck.isValid : passCheck.isValid;
   const namesOk = !!firstName.trim() && !!paternal.trim();
   const teamsOk = isAdmin || !isPlayer || selectedTeams.length > 0;
   const canSubmit = emailOk && passOk && namesOk && !!roleId && teamsOk && !saving;
@@ -337,7 +340,7 @@ export function MemberForm({
       onSaved?.(res.userId, res.roleName ?? null);
       onOpenChange(false);
     } catch (e: any) {
-      toast.error(e?.message ?? "No se pudo guardar el miembro");
+      toast.error(friendlyPasswordError(e?.message ?? "No se pudo guardar el miembro"));
     } finally {
       setSaving(false);
     }
@@ -383,7 +386,10 @@ export function MemberForm({
               </Field>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
-              <Field label={isEdit ? "Nueva contraseña (opcional)" : "Contraseña (mín. 8)"} htmlFor="mf-pass">
+              <Field
+                label={isEdit ? "Nueva contraseña (opcional)" : "Contraseña"}
+                htmlFor="mf-pass"
+              >
                 <div className="relative">
                   <Input
                     id="mf-pass"
@@ -402,6 +408,17 @@ export function MemberForm({
                   >
                     {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
+                </div>
+                <div className="mt-2 space-y-1">
+                  {isEdit ? (
+                    <p className="text-[11px] text-muted-foreground">
+                      Déjala vacía para no cambiarla. Si la cambias, el miembro deberá definir una nueva al entrar.
+                    </p>
+                  ) : null}
+                  <PasswordRequirements value={password} />
+                  {password.length > 0 && passCheck.missing.length > 0 ? (
+                    <p className="text-[11px] text-destructive">{passCheck.missing.join(" · ")}</p>
+                  ) : null}
                 </div>
               </Field>
               <Field label="Fecha de nacimiento" htmlFor="mf-birth">
