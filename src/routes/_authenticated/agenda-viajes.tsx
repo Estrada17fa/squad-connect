@@ -13,6 +13,7 @@ import { TripDetailSheet } from "@/components/viajes/TripDetailSheet";
 import { MyTripView } from "@/components/viajes/MyTripView";
 import { DetailSheet, DetailBadge } from "@/components/squad/DetailSheet";
 import { useTeamAccess } from "@/hooks/useTeamAccess";
+import { isPlayerView } from "@/lib/permissions";
 import { TeamFilter, TeamBadge } from "@/components/squad/TeamFilter";
 
 export const Route = createFileRoute("/_authenticated/agenda-viajes")({
@@ -37,7 +38,7 @@ function AgendaViajesPage() {
   const clubId = profile?.club_id ?? null;
   const canAccess = isSuperAdmin || canViewModule("viajes");
   /** Vista jugador solo ve lo suyo + convocados; el staff ve el manifiesto. */
-  const detail: "player" | "full" =
+  const detailLevel: "player" | "full" =
     isSuperAdmin || !isPlayerView(getModuleAccess("viajes")) ? "full" : "player";
 
   const [teamFilter, setTeamFilter] = React.useState<string | null>(null);
@@ -134,7 +135,7 @@ function AgendaViajesPage() {
             ) : null
           }
         >
-          {detail ? <MyTripView trip={detail} userId={user.id} /> : null}
+          {detail ? <MyTripView trip={detail} userId={user.id} detail={detailLevel} /> : null}
         </DetailSheet>
       )}
 
