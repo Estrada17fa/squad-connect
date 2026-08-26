@@ -32,10 +32,13 @@ export const Route = createFileRoute("/_authenticated/agenda-viajes")({
 
 /** Pestaña "Viajes" dentro de Agenda: solo consulta (readOnly). */
 function AgendaViajesPage() {
-  const { user, profile, isSuperAdmin, canViewModule, teamOptions } = useApp();
+  const { user, profile, isSuperAdmin, canViewModule, getModuleAccess, teamOptions } = useApp();
   const { canEditTeam } = useTeamAccess("viajes");
   const clubId = profile?.club_id ?? null;
   const canAccess = isSuperAdmin || canViewModule("viajes");
+  /** Vista jugador solo ve lo suyo + convocados; el staff ve el manifiesto. */
+  const detail: "player" | "full" =
+    isSuperAdmin || !isPlayerView(getModuleAccess("viajes")) ? "full" : "player";
 
   const [teamFilter, setTeamFilter] = React.useState<string | null>(null);
   const [detailId, setDetailId] = React.useState<string | null>(null);
