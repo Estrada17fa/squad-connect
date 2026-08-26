@@ -26,7 +26,7 @@ function Frame({
       type="button"
       onClick={onClick}
       style={{ animationDelay: `${delay}ms` }}
-      className="animate-card-in glass relative flex w-full items-center gap-3 overflow-hidden p-3 pl-5 text-left transition-all hover:border-white/15 hover:bg-white/[0.06] active:scale-[0.99]"
+      className="animate-card-in glass relative flex box-border min-w-0 max-w-full w-full items-center gap-3 overflow-hidden p-3 pl-5 text-left transition-all hover:border-white/15 hover:bg-white/[0.06] active:scale-[0.99]"
     >
       <AccentBar color={accent} label={accentLabel} />
       {children}

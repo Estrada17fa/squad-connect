@@ -180,9 +180,9 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
   if (membersQ.isLoading) return <LoadingState />;
 
   return (
-    <div className="space-y-4">
+    <div className="min-w-0 max-w-full space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
-        <div className="flex-1">
+        <div className="min-w-0 flex-1">
           <MembersFilters
             value={filters}
             onChange={setFilters}
@@ -206,7 +206,7 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
           message="Ninguna persona coincide con los filtros aplicados."
         />
       ) : (
-        <div className="grid gap-2 lg:grid-cols-2">
+        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2 lg:grid-cols-2">
           {filtered.map((m) => (
             <MemberCard
               key={m.id}

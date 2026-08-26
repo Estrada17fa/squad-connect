@@ -100,11 +100,11 @@ export function ModuleTabs({ activeKey, hubKey, extraActiveKey }: ModuleTabsProp
   if (total <= 1) return null;
 
   return (
-    <div className="sticky top-14 z-20 -mx-4 border-b border-border/60 bg-background/85 px-4 backdrop-blur-xl sm:-mx-6 sm:px-6">
+    <div className="sticky top-14 z-20 -mx-4 max-w-[calc(100%+2rem)] overflow-hidden border-b border-border/60 bg-background/85 px-4 backdrop-blur-xl sm:-mx-6 sm:max-w-[calc(100%+3rem)] sm:px-6">
       <div
         role="tablist"
         aria-label="Módulos del hub"
-        className="flex gap-1 overflow-x-auto overflow-y-hidden touch-pan-x overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex w-full min-w-0 max-w-full gap-1 overflow-x-auto overflow-y-hidden touch-pan-x overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {modules.map((key: ModuleKey) => {
           const m = MODULE_MAP[key];

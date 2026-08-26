@@ -39,23 +39,23 @@ export function MemberCard({
       type="button"
       onClick={onClick}
       className={cn(
-        "glass w-full rounded-xl p-3 text-left transition-colors hover:bg-white/[0.06]",
+        "glass box-border min-w-0 max-w-full w-full rounded-xl p-3 text-left transition-colors hover:bg-white/[0.06]",
         selected && "border-primary/60 bg-white/[0.06]",
         isBaja && "opacity-70",
       )}
     >
-      <div className="flex items-start gap-3">
+      <div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-start gap-3">
         <Avatar className="h-11 w-11 shrink-0">
           {member.avatar_url ? <AvatarImage src={member.avatar_url} alt={name} /> : null}
           <AvatarFallback className="text-xs font-semibold">{initials(name)}</AvatarFallback>
         </Avatar>
 
         <div className="min-w-0 flex-1 space-y-1.5">
-          <div className="flex items-start justify-between gap-2">
-            <p className="min-w-0 truncate font-display text-sm font-semibold leading-tight">
+          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
+            <p className="truncate font-display text-sm font-semibold leading-tight">
               {name}
             </p>
-            <StatusBadge variant={isBaja ? "rejected" : "approved"}>
+            <StatusBadge className="shrink-0" variant={isBaja ? "rejected" : "approved"}>
               {isBaja ? "Baja" : "Activo"}
             </StatusBadge>
           </div>
