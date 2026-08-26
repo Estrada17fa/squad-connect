@@ -102,7 +102,11 @@ export function EventDetailSheet({ open, onOpenChange, event, canEdit, clubId, u
         title={event.title}
         icon={def.icon}
         accent={def.cssVar}
-        description={`${formatDayLabel(new Date(event.starts_at))} · ${formatTime(event.starts_at)}`}
+        description={
+          isTrip
+            ? formatTripRange(event.starts_at, event.ends_at)
+            : `${formatDayLabel(new Date(event.starts_at))} · ${formatTime(event.starts_at)}`
+        }
         canEdit={editable && !!clubId}
         badges={
           <>
