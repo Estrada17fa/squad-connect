@@ -160,3 +160,34 @@ export function formatDateOnly(iso: string) {
   });
   return label.replace(/\./g, "");
 }
+
+/** Día del club en formato "YYYY-MM-DD", para comparar fechas con la zona del club. */
+function clubDayKey(iso: string) {
+  return new Date(iso).toLocaleDateString("en-CA", { timeZone: clubTimeZone });
+}
+
+/** true cuando ambas marcas caen el mismo día en la zona del club. */
+export function isSameClubDay(a: string, b: string) {
+  return clubDayKey(a) === clubDayKey(b);
+}
+
+/**
+ * Rango de un viaje sin horas: "vie 28 ago" o "vie 28 ago → dom 30 ago".
+ * Los viajes solo capturan fechas, nunca hora.
+ */
+export function formatTripRange(startIso: string, endIso?: string | null) {
+  const from = formatDateOnly(startIso);
+  if (!endIso || isSameClubDay(startIso, endIso)) return from;
+  return `${from} → ${formatDateOnly(endIso)}`;
+}
+
+/** Día compacto para la columna izquierda de la tarjeta: "VIE 28". */
+export function formatDayChip(iso: string) {
+  const label = new Date(iso).toLocaleDateString("es-MX", {
+    timeZone: clubTimeZone,
+    weekday: "short",
+    day: "numeric",
+  });
+  return label.replace(/\./g, "").toUpperCase();
+}
+
