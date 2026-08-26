@@ -1,5 +1,5 @@
 import * as React from "react";
-import { FileText, Luggage, Plane, Utensils } from "lucide-react";
+import { Luggage, Plane, Utensils } from "lucide-react";
 import { toast } from "sonner";
 import { formatDateTime } from "@/lib/calendar-utils";
 import { MEAL_TYPE_LABEL, TRIP_DOCS_BUCKET } from "@/lib/tripLogistics";
@@ -10,32 +10,29 @@ import { useTripTransports } from "@/hooks/useTripTransports";
 import { useTripHotels } from "@/hooks/useTripHotels";
 import { useTripMeals } from "@/hooks/useTripMeals";
 import { useTripMaterial, materialOutstanding } from "@/hooks/useTripMaterial";
-import { openTripDocument, useTripDocuments } from "@/hooks/useTripDocuments";
 import { MyCallCard } from "./mi/MyCallCard";
 import { MyFlightCard } from "./mi/MyFlightCard";
 import { MyStayCard } from "./mi/MyStayCard";
 import { MyTransportCard } from "./mi/MyTransportCard";
 import { TripCardShell } from "./mi/TripCardShell";
-import { TripFoldedSections } from "./mi/TripFoldedSections";
+import { TripTabs } from "./TripTabs";
 
 interface Props {
   trip: TripRow;
   userId: string;
-  /** Cuánto detalle ajeno se ofrece plegado: jugador vs staff. */
-  detail?: "player" | "full";
 }
 
 /**
  * "Mi viaje": primero LO DEL USUARIO (citación, vuelos con su pase, transporte,
- * hospedaje, comidas y material), y el resto del viaje plegado debajo.
+ * hospedaje, comidas y material) y debajo toda la info general del viaje,
+ * visible en las pestañas Ida / Regreso / General.
  */
-export function MyTripView({ trip, userId, detail = "player" }: Props) {
+export function MyTripView({ trip, userId }: Props) {
   const flights = useTripFlights(trip.id).data ?? [];
   const transports = useTripTransports(trip.id).data ?? [];
   const hotels = useTripHotels(trip.id).data ?? [];
   const meals = useTripMeals(trip.id).data ?? [];
   const material = useTripMaterial(trip.id).data ?? [];
-  const documents = useTripDocuments(trip.id).data ?? [];
 
   const openPass = async (path: string, download: boolean) => {
     try {
