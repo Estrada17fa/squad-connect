@@ -37,9 +37,6 @@ function AgendaViajesPage() {
   const { canEditTeam } = useTeamAccess("viajes");
   const clubId = profile?.club_id ?? null;
   const canAccess = isSuperAdmin || canViewModule("viajes");
-  /** Vista jugador solo ve lo suyo + convocados; el staff ve el manifiesto. */
-  const detailLevel: "player" | "full" =
-    isSuperAdmin || !isPlayerView(getModuleAccess("viajes")) ? "full" : "player";
 
   const [teamFilter, setTeamFilter] = React.useState<string | null>(null);
   const [detailId, setDetailId] = React.useState<string | null>(null);
