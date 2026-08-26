@@ -1,5 +1,5 @@
 import * as React from "react";
-import { FileText, Luggage, Plane, Utensils } from "lucide-react";
+import { Luggage, Plane, Utensils } from "lucide-react";
 import { toast } from "sonner";
 import { formatDateTime } from "@/lib/calendar-utils";
 import { MEAL_TYPE_LABEL, TRIP_DOCS_BUCKET } from "@/lib/tripLogistics";
@@ -10,32 +10,29 @@ import { useTripTransports } from "@/hooks/useTripTransports";
 import { useTripHotels } from "@/hooks/useTripHotels";
 import { useTripMeals } from "@/hooks/useTripMeals";
 import { useTripMaterial, materialOutstanding } from "@/hooks/useTripMaterial";
-import { openTripDocument, useTripDocuments } from "@/hooks/useTripDocuments";
 import { MyCallCard } from "./mi/MyCallCard";
 import { MyFlightCard } from "./mi/MyFlightCard";
 import { MyStayCard } from "./mi/MyStayCard";
 import { MyTransportCard } from "./mi/MyTransportCard";
 import { TripCardShell } from "./mi/TripCardShell";
-import { TripFoldedSections } from "./mi/TripFoldedSections";
+import { TripTabs } from "./TripTabs";
 
 interface Props {
   trip: TripRow;
   userId: string;
-  /** Cuánto detalle ajeno se ofrece plegado: jugador vs staff. */
-  detail?: "player" | "full";
 }
 
 /**
  * "Mi viaje": primero LO DEL USUARIO (citación, vuelos con su pase, transporte,
- * hospedaje, comidas y material), y el resto del viaje plegado debajo.
+ * hospedaje, comidas y material) y debajo toda la info general del viaje,
+ * visible en las pestañas Ida / Regreso / General.
  */
-export function MyTripView({ trip, userId, detail = "player" }: Props) {
+export function MyTripView({ trip, userId }: Props) {
   const flights = useTripFlights(trip.id).data ?? [];
   const transports = useTripTransports(trip.id).data ?? [];
   const hotels = useTripHotels(trip.id).data ?? [];
   const meals = useTripMeals(trip.id).data ?? [];
   const material = useTripMaterial(trip.id).data ?? [];
-  const documents = useTripDocuments(trip.id).data ?? [];
 
   const openPass = async (path: string, download: boolean) => {
     try {
@@ -134,39 +131,10 @@ export function MyTripView({ trip, userId, detail = "player" }: Props) {
 
       <section className="space-y-2">
         <h3 className="font-display text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Resto del viaje
+          Información del viaje
         </h3>
-        <TripFoldedSections
-          trip={trip}
-          flights={flights}
-          transports={transports}
-          hotels={hotels}
-          detail={detail}
-        />
+        <TripTabs trip={trip} canEdit={false} />
       </section>
-
-      {documents.length > 0 ? (
-        <section className="space-y-2">
-          <h3 className="flex items-center gap-2 font-display text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            <FileText className="h-4 w-4" /> Documentos del viaje
-          </h3>
-          {documents.map((d) => (
-            <button
-              key={d.id}
-              type="button"
-              className="glass block w-full p-3 text-left"
-              onClick={() =>
-                openTripDocument(d.file_path).catch((e: any) =>
-                  toast.error(e.message ?? "No se pudo abrir el documento"),
-                )
-              }
-            >
-              <p className="truncate text-sm text-foreground">{d.title}</p>
-              {d.description ? <p className="text-xs text-muted-foreground">{d.description}</p> : null}
-            </button>
-          ))}
-        </section>
-      ) : null}
     </div>
   );
 }
