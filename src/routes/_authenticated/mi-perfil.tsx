@@ -48,6 +48,8 @@ import { useApp } from "@/components/squad/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { PersonDocumentsSection } from "@/components/documentos/PersonDocumentsSection";
 import { formatShortDate } from "@/lib/calendar-utils";
+import { PasswordRequirements } from "@/components/squad/PasswordRequirements";
+import { checkPassword, friendlyPasswordError } from "@/lib/password";
 import { PLAYER_STATUS_LABEL, type PlayerStatus } from "@/lib/members.schemas";
 import { initials, roleVariant } from "@/components/usuarios/memberUtils";
 import { usePlayerLatestAnthro } from "@/hooks/useNutrition";

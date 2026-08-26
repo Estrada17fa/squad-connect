@@ -34,6 +34,8 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { AvatarUploadField } from "@/components/perfil/AvatarUploadField";
+import { PasswordRequirements } from "@/components/squad/PasswordRequirements";
+import { checkPassword, friendlyPasswordError } from "@/lib/password";
 
 export interface RoleOpt {
   id: string;
