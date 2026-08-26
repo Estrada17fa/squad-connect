@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PASSWORD_MAX_LENGTH, checkPassword } from "@/lib/password";
 
 export const PLAYER_POSITIONS = ["Portero", "Defensa", "Mediocampista", "Delantero"] as const;
 export type PlayerPosition = (typeof PLAYER_POSITIONS)[number];
