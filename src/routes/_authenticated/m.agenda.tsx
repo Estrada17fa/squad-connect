@@ -57,10 +57,17 @@ function AgendaModulePage() {
     return EVENT_TYPES.filter((t) => set.has(t.key));
   }, [events]);
 
+  // La lista solo muestra la semana en curso: de hoy a 7 días adelante.
+  // La vista de Mes sigue completa.
   const upcoming = React.useMemo(() => {
     const from = startOfDay(new Date());
+    const to = new Date(from);
+    to.setDate(to.getDate() + 8); // fin del día +7
     return (events ?? [])
-      .filter((e) => new Date(e.starts_at) >= from)
+      .filter((e) => {
+        const at = new Date(e.starts_at);
+        return at >= from && at < to;
+      })
       .filter((e) => !teamFilter || e.team_id === teamFilter)
       .filter((e) => !typeFilter || e.event_type === typeFilter);
   }, [events, teamFilter, typeFilter]);
