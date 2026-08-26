@@ -9,10 +9,8 @@ import { StandardCard } from "@/components/squad/StandardCard";
 import { useApp } from "@/components/squad/AppLayout";
 import { formatDateOnly } from "@/lib/calendar-utils";
 import { useTrips, TRIP_STATUS_LABEL, TRIP_STATUS_VARIANT } from "@/hooks/useTrips";
-import { TripDetailSheet } from "@/components/viajes/TripDetailSheet";
 import { MyTripView } from "@/components/viajes/MyTripView";
 import { DetailSheet, DetailBadge } from "@/components/squad/DetailSheet";
-import { useTeamAccess } from "@/hooks/useTeamAccess";
 
 import { TeamFilter, TeamBadge } from "@/components/squad/TeamFilter";
 
@@ -34,7 +32,6 @@ export const Route = createFileRoute("/_authenticated/agenda-viajes")({
 /** Pestaña "Viajes" dentro de Agenda: solo consulta (readOnly). */
 function AgendaViajesPage() {
   const { user, profile, isSuperAdmin, canViewModule, teamOptions } = useApp();
-  const { canEditTeam } = useTeamAccess("viajes");
   const clubId = profile?.club_id ?? null;
   const canAccess = isSuperAdmin || canViewModule("viajes");
 
@@ -105,36 +102,32 @@ function AgendaViajesPage() {
         </div>
       )}
 
-      {/* Staff de viajes ve el viaje completo; el resto ve solo SU itinerario y SU pase. */}
-      {detail && canEditTeam(detail.team_id) ? (
-        <TripDetailSheet open onOpenChange={(v) => !v && setDetailId(null)} trip={detail} readOnly />
-      ) : (
-        <DetailSheet
-          open={!!detail}
-          onOpenChange={(v) => !v && setDetailId(null)}
-          title={detail?.title ?? ""}
-          icon={Plane}
-          accent="var(--event-viaje)"
-          description={
-            detail
-              ? `${formatDateOnly(detail.departure_at)}${detail.return_at ? ` → ${formatDateOnly(detail.return_at)}` : ""}`
-              : undefined
-          }
-          badges={
-            detail ? (
-              <>
-                <DetailBadge color="var(--event-viaje)" icon={Plane}>
-                  {TRIP_STATUS_LABEL[detail.status]}
-                </DetailBadge>
-                {teamNames[detail.team_id] ? <DetailBadge>{teamNames[detail.team_id]}</DetailBadge> : null}
-                {detail.destination ? <DetailBadge>{detail.destination}</DetailBadge> : null}
-              </>
-            ) : null
-          }
-        >
-          {detail ? <MyTripView trip={detail} userId={user.id} /> : null}
-        </DetailSheet>
-      )}
+      {/* En Agenda todos son pasajeros: misma vista (mi info + viaje completo). La gestión vive en Coordinación → Viajes. */}
+      <DetailSheet
+        open={!!detail}
+        onOpenChange={(v) => !v && setDetailId(null)}
+        title={detail?.title ?? ""}
+        icon={Plane}
+        accent="var(--event-viaje)"
+        description={
+          detail
+            ? `${formatDateOnly(detail.departure_at)}${detail.return_at ? ` → ${formatDateOnly(detail.return_at)}` : ""}`
+            : undefined
+        }
+        badges={
+          detail ? (
+            <>
+              <DetailBadge color="var(--event-viaje)" icon={Plane}>
+                {TRIP_STATUS_LABEL[detail.status]}
+              </DetailBadge>
+              {teamNames[detail.team_id] ? <DetailBadge>{teamNames[detail.team_id]}</DetailBadge> : null}
+              {detail.destination ? <DetailBadge>{detail.destination}</DetailBadge> : null}
+            </>
+          ) : null
+        }
+      >
+        {detail ? <MyTripView trip={detail} userId={user.id} /> : null}
+      </DetailSheet>
 
 
     </div>
