@@ -15,11 +15,15 @@ export function useTripChannel(
   const qc = useQueryClient();
   const tablesKey = tables.join(",");
   const key = JSON.stringify(queryKey);
+  // Id único por instancia: evita reutilizar un canal ya suscrito cuando el
+  // mismo hook se monta en varios componentes a la vez.
+  const uidRef = React.useRef<string>("");
+  if (!uidRef.current) uidRef.current = Math.random().toString(36).slice(2);
 
   React.useEffect(() => {
     if (!tripId) return;
     const invalidate = () => qc.invalidateQueries({ queryKey: JSON.parse(key) as unknown[] });
-    let channel = supabase.channel(`${name}-${tripId}`);
+    let channel = supabase.channel(`${name}-${tripId}-${uidRef.current}`);
     for (const table of tablesKey.split(",")) {
       channel = channel.on("postgres_changes", { event: "*", schema: "public", table }, invalidate);
     }
@@ -28,6 +32,7 @@ export function useTripChannel(
       supabase.removeChannel(channel);
     };
   }, [name, tripId, tablesKey, key, qc]);
+
 }
 
 /** Sincroniza una tabla de asignación (pasajeros/ocupantes) con la selección dada. */
