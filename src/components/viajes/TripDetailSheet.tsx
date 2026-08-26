@@ -15,7 +15,7 @@ import {
 import { StatusBadge } from "@/components/squad/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { formatDateTime } from "@/lib/calendar-utils";
+import { formatDateOnly, formatDateTime } from "@/lib/calendar-utils";
 import {
   addTraveler,
   deleteTrip,
@@ -275,8 +275,8 @@ export function TripDetailSheet({
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
               <StatusBadge variant={TRIP_STATUS_VARIANT[trip.status]}>{TRIP_STATUS_LABEL[trip.status]}</StatusBadge>
               <span className="text-xs text-muted-foreground">
-                Salida {formatDateTime(trip.departure_at)}
-                {trip.return_at ? ` · Regreso ${formatDateTime(trip.return_at)}` : ""}
+                Salida {formatDateOnly(trip.departure_at)}
+                {trip.return_at ? ` · Regreso ${formatDateOnly(trip.return_at)}` : ""}
               </span>
               <span className="text-xs text-muted-foreground">
                 {trip.travelers.length} convocado{trip.travelers.length === 1 ? "" : "s"}
