@@ -1,6 +1,23 @@
 import * as React from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Filter, Layers, Plus, Search, Trash2, Users } from "lucide-react";
+import { ArrowUpDown, Filter, GripVertical, Layers, Plus, Search, Star, Trash2, Users } from "lucide-react";
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { EmptyState } from "@/components/squad/EmptyState";
@@ -24,6 +41,8 @@ interface TeamRow {
   id: string;
   name: string;
   category: string | null;
+  display_order: number;
+  is_primary: boolean;
 }
 
 const ALL = "__all__";
@@ -75,8 +94,10 @@ export function CategoriesTab({ clubId, canEdit }: { clubId: string; canEdit: bo
     queryFn: async (): Promise<TeamRow[]> => {
       const { data, error } = await supabase
         .from("teams")
-        .select("id, name, category")
+        .select("id, name, category, display_order, is_primary")
         .eq("club_id", clubId)
+        .order("is_primary", { ascending: false })
+        .order("display_order")
         .order("name");
       if (error) throw error;
       return data ?? [];
@@ -365,7 +386,7 @@ function CategoryForm({
           .from("teams")
           .update({ name: name.trim(), category: (cat || null) as any })
           .eq("id", row.id)
-          .select("id, name, category")
+          .select("id, name, category, display_order, is_primary")
           .maybeSingle();
         if (error) throw error;
         toast.success("Categoría actualizada");
@@ -376,7 +397,7 @@ function CategoryForm({
         const { data, error } = await supabase
           .from("teams")
           .insert(payload)
-          .select("id, name, category")
+          .select("id, name, category, display_order, is_primary")
           .maybeSingle();
         if (error) throw error;
         toast.success("Categoría creada");
