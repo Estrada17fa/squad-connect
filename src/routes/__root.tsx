@@ -11,6 +11,8 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { startSessionKeepAlive } from "@/lib/session";
+import { supabase } from "@/integrations/supabase/client";
 
 import { Toaster } from "@/components/ui/sonner";
 
@@ -125,6 +127,22 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
+
+  // Única suscripción de sesión de la app + renovación al volver a primer plano
+  // (en la PWA instalada los temporizadores se congelan en segundo plano).
+  useEffect(() => {
+    const stopKeepAlive = startSessionKeepAlive();
+    const { data } = supabase.auth.onAuthStateChange((event) => {
+      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
+      router.invalidate();
+      if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
+    });
+    return () => {
+      stopKeepAlive();
+      data.subscription.unsubscribe();
+    };
+  }, [router, queryClient]);
 
   return (
     <QueryClientProvider client={queryClient}>

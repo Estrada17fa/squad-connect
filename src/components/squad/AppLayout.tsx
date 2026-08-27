@@ -53,6 +53,7 @@ const LEGACY_ACTIVE_TEAM_KEY = "squad.activeTeamId";
 
 export function AppLayout({ user }: { user: { id: string; email?: string | null } }) {
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const { data, isLoading } = useAccess(user.id);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
@@ -93,8 +94,12 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
   }, [data]);
 
   async function signOut() {
+    // Único camino de salida: cancelar consultas, limpiar caché y reemplazar
+    // el historial para que "atrás" no restaure pantallas protegidas.
+    await qc.cancelQueries();
+    qc.clear();
     await supabase.auth.signOut();
-    navigate({ to: "/auth" });
+    navigate({ to: "/auth", replace: true });
   }
 
   const clubPerms = data?.permissionsByTeam?.["club"] ?? {};
