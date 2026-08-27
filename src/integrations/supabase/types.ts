@@ -3783,21 +3783,27 @@ export type Database = {
           category: string
           club_id: string
           created_at: string
+          display_order: number
           id: string
+          is_primary: boolean
           name: string
         }
         Insert: {
           category: string
           club_id: string
           created_at?: string
+          display_order?: number
           id?: string
+          is_primary?: boolean
           name: string
         }
         Update: {
           category?: string
           club_id?: string
           created_at?: string
+          display_order?: number
           id?: string
+          is_primary?: boolean
           name?: string
         }
         Relationships: [
