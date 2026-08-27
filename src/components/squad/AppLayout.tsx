@@ -53,6 +53,7 @@ const LEGACY_ACTIVE_TEAM_KEY = "squad.activeTeamId";
 
 export function AppLayout({ user }: { user: { id: string; email?: string | null } }) {
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const { data, isLoading } = useAccess(user.id);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
