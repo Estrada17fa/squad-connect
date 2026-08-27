@@ -344,6 +344,8 @@ function InviteDialog({
         .from("teams")
         .select("id, name")
         .eq("club_id", club!.id)
+        .order("is_primary", { ascending: false })
+        .order("display_order")
         .order("name");
       return data ?? [];
     },

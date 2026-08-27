@@ -70,6 +70,8 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
         .from("teams")
         .select("id, name, category")
         .eq("club_id", clubId)
+        .order("is_primary", { ascending: false })
+        .order("display_order")
         .order("name");
       if (error) throw error;
       return data ?? [];
