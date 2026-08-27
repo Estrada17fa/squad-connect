@@ -8,6 +8,7 @@ import { CardGridSkeleton } from "@/components/squad/LoadingState";
 import { StandardCard } from "@/components/squad/StandardCard";
 import { Button } from "@/components/ui/button";
 import { useApp } from "@/components/squad/AppLayout";
+import { useTeamFilter } from "@/hooks/useTeamFilter";
 import { formatDateOnly } from "@/lib/calendar-utils";
 import {
   useTrips,
@@ -51,7 +52,7 @@ function ViajesPage() {
   const { isSuperAdmin, getModuleAccess, profile, user, teamOptions } = useApp();
   const clubId = profile?.club_id ?? null;
   const editableTeams = useEditableTeams("viajes");
-  const [teamFilter, setTeamFilter] = React.useState<string | null>(null);
+  const [teamFilter, setTeamFilter] = useTeamFilter();
   const [filters, setFilters] = React.useState<TripFilterState>(EMPTY_TRIP_FILTERS);
   const teamNameById = React.useMemo(() => {
     const m: Record<string, string> = {};
