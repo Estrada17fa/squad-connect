@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Label } from "@/components/ui/label";
+import { useApp } from "@/components/squad/AppLayout";
 import type { TeamOption } from "@/hooks/useAccess";
 
 interface Props {
