@@ -10,6 +10,7 @@ import {
   normalizeLevel,
   type PermissionLevel,
 } from "@/lib/permissions";
+import { sortTeams } from "@/lib/teamOrder";
 
 /**
  * Escala vieja (`access_level`). Se conserva SOLO para la interfaz de
@@ -25,6 +26,8 @@ export interface TeamOption {
   roleId: string;
   roleName: string;
   baseRole: string | null;
+  displayOrder: number;
+  isPrimary: boolean;
 }
 
 export interface AccessData {
@@ -38,6 +41,8 @@ export interface AccessData {
   teams: TeamOption[];
   /** Equipos reales seleccionables en el header (club-wide => todos los del club). */
   teamOptions: TeamOption[];
+  /** Categoría principal del club (default de selectores/pestañas). */
+  primaryTeamId: string | null;
   /** Unión (mejor nivel) entre TODAS las membresías + overrides — equivalente a max_permission_any_team. */
   permissions: Record<string, PermissionLevel>;
   /** Permisos efectivos por equipo: la clave 'club' representa el ámbito club (o cuando no hay equipo activo). */
@@ -98,7 +103,7 @@ export function useAccess(userId: string) {
         supabase
           .from("team_memberships")
           .select(
-            "team_id, role_id, team:teams(name, category), role:roles(name, base_role, role_permissions(module_key, access_level, level))",
+            "team_id, role_id, team:teams(name, category, display_order, is_primary), role:roles(name, base_role, role_permissions(module_key, access_level, level))",
           )
           .eq("user_id", userId),
         supabase.from("super_admins").select("id").eq("user_id", userId).maybeSingle(),
@@ -119,6 +124,8 @@ export function useAccess(userId: string) {
         roleId: m.role_id,
         roleName: m.role?.name ?? "",
         baseRole: m.role?.base_role ?? null,
+        displayOrder: m.team?.display_order ?? 0,
+        isPrimary: !!m.team?.is_primary,
       }));
 
       // Opciones reales de equipo para el selector del header.
@@ -128,8 +135,10 @@ export function useAccess(userId: string) {
       if (clubId && (clubWide || superRes.data)) {
         const { data: clubTeams } = await supabase
           .from("teams")
-          .select("id, name, category")
+          .select("id, name, category, display_order, is_primary")
           .eq("club_id", clubId)
+          .order("is_primary", { ascending: false })
+          .order("display_order")
           .order("name");
         const extras: TeamOption[] = (clubTeams ?? []).map((t: any) => ({
           id: t.id,
@@ -138,11 +147,13 @@ export function useAccess(userId: string) {
           roleId: clubWide?.role_id ?? "",
           roleName: clubWide?.role?.name ?? "",
           baseRole: clubWide?.role?.base_role ?? null,
+          displayOrder: t.display_order ?? 0,
+          isPrimary: !!t.is_primary,
         }));
         const seen = new Set(teamOptions.map((t) => t.id));
         teamOptions = [...teamOptions, ...extras.filter((t) => !seen.has(t.id))];
       }
-      teamOptions.sort((a, b) => a.name.localeCompare(b.name));
+      teamOptions = sortTeams(teamOptions);
 
 
       // Permisos por membresía (por team_id o 'club' si team_id NULL)
@@ -206,6 +217,7 @@ export function useAccess(userId: string) {
         clubName: (profileRes.data as any)?.club?.name ?? null,
         teams,
         teamOptions,
+        primaryTeamId: teamOptions.find((t) => t.isPrimary)?.id ?? teamOptions[0]?.id ?? null,
 
         permissions,
         permissionsByTeam,
