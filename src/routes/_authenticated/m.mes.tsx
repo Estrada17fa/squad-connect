@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/squad/PageHeader";
 import { EmptyState } from "@/components/squad/EmptyState";
 import { Button } from "@/components/ui/button";
 import { useApp } from "@/components/squad/AppLayout";
+import { useTeamFilter } from "@/hooks/useTeamFilter";
 import { useCalendarEvents, type CalendarEventRow } from "@/hooks/useCalendarEvents";
 import { EVENT_TYPES, EVENT_TYPE_MAP, type EventType } from "@/lib/eventTypes";
 import { addMonths, formatRelativeDayLabel, formatDayLabel, isSameDay, monthGrid, monthLabel, startOfDay, weekdayLabels } from "@/lib/calendar-utils";
@@ -36,7 +37,7 @@ function MesModulePage() {
   const [anchor, setAnchor] = React.useState(() => startOfDay(new Date()));
   const [selectedDay, setSelectedDay] = React.useState<Date | null>(null);
   const [detailEvent, setDetailEvent] = React.useState<CalendarEventRow | null>(null);
-  const [teamFilter, setTeamFilter] = React.useState<string | null>(null);
+  const [teamFilter, setTeamFilter] = useTeamFilter();
   const [typeFilter, setTypeFilter] = React.useState<EventType | null>(null);
   const clubId = profile?.club_id ?? null;
 

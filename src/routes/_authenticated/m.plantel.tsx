@@ -69,6 +69,16 @@ function PlantelPage() {
     });
   }, [visible, filters]);
 
+  // Orden explícito del club (principal primero) tomado de teamOptions.
+  const teamRank = React.useMemo(() => {
+    const m = new Map<string, number>();
+    teamOptions.forEach((t, i) => {
+      if (t.id) m.set(t.id, i);
+    });
+    return m;
+  }, [teamOptions]);
+  const rankOf = React.useCallback((id: string) => teamRank.get(id) ?? 999, [teamRank]);
+
   const teamFilterOptions = React.useMemo(() => {
     const map = new Map<string, string>();
     for (const m of visible) {
@@ -78,8 +88,8 @@ function PlantelPage() {
     for (const t of teamOptions) if (t.id && map.has(t.id)) map.set(t.id, t.name);
     return [...map.entries()]
       .map(([id, name]) => ({ id, name }))
-      .sort((a, b) => (a.id === CLUB_WIDE ? 1 : b.id === CLUB_WIDE ? -1 : a.name.localeCompare(b.name)));
-  }, [visible, teamOptions]);
+      .sort((a, b) => (a.id === CLUB_WIDE ? 1 : b.id === CLUB_WIDE ? -1 : rankOf(a.id) - rankOf(b.id)));
+  }, [visible, teamOptions, rankOf]);
 
   // Agrupación: una sección por categoría (+ "Todo el club" al final).
   const groups = React.useMemo(() => {
@@ -100,9 +110,9 @@ function PlantelPage() {
       g.staff.sort((a, b) => (a.fullName ?? "").localeCompare(b.fullName ?? ""));
     }
     return [...map.values()].sort((a, b) =>
-      a.key === CLUB_WIDE ? 1 : b.key === CLUB_WIDE ? -1 : a.name.localeCompare(b.name),
+      a.key === CLUB_WIDE ? 1 : b.key === CLUB_WIDE ? -1 : rankOf(a.key) - rankOf(b.key),
     );
-  }, [filtered]);
+  }, [filtered, rankOf]);
 
   return (
     <div className="space-y-6">

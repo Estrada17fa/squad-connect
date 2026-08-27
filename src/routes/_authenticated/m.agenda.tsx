@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/squad/EmptyState";
 import { AgendaSkeleton } from "@/components/squad/LoadingState";
 import { ModuleTabs } from "@/components/squad/ModuleTabs";
 import { useApp } from "@/components/squad/AppLayout";
+import { useTeamFilter } from "@/hooks/useTeamFilter";
 import { useCalendarEvents, type CalendarEventRow } from "@/hooks/useCalendarEvents";
 import { EVENT_TYPES, EVENT_TYPE_MAP, type EventType } from "@/lib/eventTypes";
 import { formatDayLabel, formatRelativeDayLabel, startOfDay } from "@/lib/calendar-utils";
@@ -37,7 +38,7 @@ function AgendaModulePage() {
   const { canEditTeam } = useTeamAccess("agenda");
 
   const [detailEvent, setDetailEvent] = React.useState<CalendarEventRow | null>(null);
-  const [teamFilter, setTeamFilter] = React.useState<string | null>(null);
+  const [teamFilter, setTeamFilter] = useTeamFilter();
   const [typeFilter, setTypeFilter] = React.useState<EventType | null>(null);
   const clubId = profile?.club_id ?? null;
 

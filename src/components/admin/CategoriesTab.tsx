@@ -1,6 +1,23 @@
 import * as React from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Filter, Layers, Plus, Search, Trash2, Users } from "lucide-react";
+import { ArrowUpDown, Filter, GripVertical, Layers, Plus, Search, Star, Trash2, Users } from "lucide-react";
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { EmptyState } from "@/components/squad/EmptyState";
@@ -24,6 +41,8 @@ interface TeamRow {
   id: string;
   name: string;
   category: string | null;
+  display_order: number;
+  is_primary: boolean;
 }
 
 const ALL = "__all__";
@@ -69,14 +88,19 @@ export function CategoriesTab({ clubId, canEdit }: { clubId: string; canEdit: bo
   const [detail, setDetail] = React.useState<TeamRow | null>(null);
   const [toDelete, setToDelete] = React.useState<TeamRow | null>(null);
   const [deleting, setDeleting] = React.useState(false);
+  const [ordering, setOrdering] = React.useState(false);
+  const [draft, setDraft] = React.useState<TeamRow[] | null>(null);
+  const [savingOrder, setSavingOrder] = React.useState(false);
 
   const teamsQ = useQuery({
     queryKey: ["club-teams-full", clubId],
     queryFn: async (): Promise<TeamRow[]> => {
       const { data, error } = await supabase
         .from("teams")
-        .select("id, name, category")
+        .select("id, name, category, display_order, is_primary")
         .eq("club_id", clubId)
+        .order("is_primary", { ascending: false })
+        .order("display_order")
         .order("name");
       if (error) throw error;
       return data ?? [];
@@ -95,6 +119,11 @@ export function CategoriesTab({ clubId, canEdit }: { clubId: string; canEdit: bo
       return map;
     },
   });
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ["club-teams-full", clubId] });
@@ -117,6 +146,46 @@ export function CategoriesTab({ clubId, canEdit }: { clubId: string; canEdit: bo
   }, [teamsQ.data, search, branch]);
 
   const activeFilters = branch === ALL ? 0 : 1;
+
+  async function saveOrder(rows: TeamRow[]) {
+    setSavingOrder(true);
+    try {
+      await Promise.all(
+        rows.map((r, i) =>
+          supabase
+            .from("teams")
+            .update({ display_order: i + 1 } as any)
+            .eq("id", r.id),
+        ),
+      );
+      toast.success("Orden guardado");
+      setDraft(null);
+      setOrdering(false);
+      invalidate();
+    } catch (e: any) {
+      toast.error(e.message ?? "No se pudo guardar el orden");
+    } finally {
+      setSavingOrder(false);
+    }
+  }
+
+  async function makePrimary(row: TeamRow) {
+    try {
+      const { error: clearErr } = await db
+        .from("teams")
+        .update({ is_primary: false })
+        .eq("club_id", clubId)
+        .eq("is_primary", true);
+      if (clearErr) throw clearErr;
+      const { error } = await db.from("teams").update({ is_primary: true }).eq("id", row.id);
+      if (error) throw error;
+      toast.success(`"${row.name}" es ahora la categoría principal`);
+      setDetail((d) => (d && d.id === row.id ? { ...d, is_primary: true } : d));
+      invalidate();
+    } catch (e: any) {
+      toast.error(e.message ?? "No se pudo marcar como principal");
+    }
+  }
 
   async function confirmDelete() {
     if (!toDelete) return;
@@ -145,12 +214,71 @@ export function CategoriesTab({ clubId, canEdit }: { clubId: string; canEdit: bo
 
   if (teamsQ.isLoading) return <LoadingState />;
 
+  if (ordering) {
+    const rows = draft ?? (teamsQ.data ?? []);
+    const onDragEnd = (e: DragEndEvent) => {
+      const { active, over } = e;
+      if (!over || active.id === over.id) return;
+      const from = rows.findIndex((r) => r.id === active.id);
+      const to = rows.findIndex((r) => r.id === over.id);
+      if (from < 0 || to < 0) return;
+      setDraft(arrayMove(rows, from, to));
+    };
+    return (
+      <div className="space-y-4">
+        <p className="text-xs text-muted-foreground">
+          Arrastra para definir el orden de las categorías. Este orden se respeta en toda la app; la
+          categoría principal siempre aparece primero.
+        </p>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+          <SortableContext items={rows.map((r) => r.id)} strategy={verticalListSortingStrategy}>
+            <div className="grid gap-2">
+              {rows.map((t) => (
+                <SortableCategoryRow key={t.id} row={t} />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
+        <div className="flex flex-col-reverse gap-2 border-t border-white/10 pt-4 sm:flex-row sm:justify-end">
+          <Button
+            variant="ghost"
+            disabled={savingOrder}
+            onClick={() => {
+              setDraft(null);
+              setOrdering(false);
+            }}
+          >
+            Cancelar
+          </Button>
+          <Button className="glow-primary" disabled={savingOrder} onClick={() => saveOrder(rows)}>
+            {savingOrder ? "Guardando…" : "Guardar orden"}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       {canEdit ? (
-        <Button onClick={() => setCreateOpen(true)} className="w-full glow-primary">
-          <Plus className="mr-2 h-4 w-4" /> Nueva categoría
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => setCreateOpen(true)} className="flex-1 glow-primary">
+            <Plus className="mr-2 h-4 w-4" /> Nueva categoría
+          </Button>
+          {(teamsQ.data ?? []).length > 1 ? (
+            <Button
+              variant="secondary"
+              className="shrink-0"
+              onClick={() => {
+                setDraft(teamsQ.data ?? []);
+                setOrdering(true);
+              }}
+            >
+              <ArrowUpDown className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Ordenar</span>
+            </Button>
+          ) : null}
+        </div>
       ) : null}
 
       <div className="space-y-2">
@@ -244,6 +372,7 @@ export function CategoriesTab({ clubId, canEdit }: { clubId: string; canEdit: bo
                       {t.name}
                     </p>
                     <div className="flex flex-wrap gap-1.5">
+                      {t.is_primary ? <StatusBadge variant="approved">Principal</StatusBadge> : null}
                       <StatusBadge variant="info">{t.category || "Sin rama"}</StatusBadge>
                       <StatusBadge variant={count > 0 ? "approved" : "pending"}>
                         {count} {count === 1 ? "miembro" : "miembros"}
@@ -265,9 +394,16 @@ export function CategoriesTab({ clubId, canEdit }: { clubId: string; canEdit: bo
         canEdit={canEdit}
         headerActions={
           canEdit && detail ? (
+            <>
+            {!detail.is_primary ? (
+              <Button size="sm" variant="ghost" onClick={() => makePrimary(detail)}>
+                <Star className="mr-2 h-3.5 w-3.5" /> Marcar principal
+              </Button>
+            ) : null}
             <Button size="sm" variant="ghost" onClick={() => setToDelete(detail)}>
               <Trash2 className="mr-2 h-3.5 w-3.5 text-destructive" /> Eliminar
             </Button>
+            </>
           ) : null
         }
         renderEdit={
@@ -297,6 +433,9 @@ export function CategoriesTab({ clubId, canEdit }: { clubId: string; canEdit: bo
               </DetailField>
               <DetailField label="Rama">
                 <DetailValue value={detail.category ?? ""} />
+              </DetailField>
+              <DetailField label="Principal" icon={Star}>
+                <DetailValue value={detail.is_primary ? "Sí" : "No"} />
               </DetailField>
               <DetailField label="Miembros asignados" icon={Users}>
                 <DetailValue value={membersQ.data?.[detail.id] ?? 0} />
@@ -365,7 +504,7 @@ function CategoryForm({
           .from("teams")
           .update({ name: name.trim(), category: (cat || null) as any })
           .eq("id", row.id)
-          .select("id, name, category")
+          .select("id, name, category, display_order, is_primary")
           .maybeSingle();
         if (error) throw error;
         toast.success("Categoría actualizada");
@@ -376,7 +515,7 @@ function CategoryForm({
         const { data, error } = await supabase
           .from("teams")
           .insert(payload)
-          .select("id, name, category")
+          .select("id, name, category, display_order, is_primary")
           .maybeSingle();
         if (error) throw error;
         toast.success("Categoría creada");
@@ -417,6 +556,34 @@ function CategoryForm({
           {saving ? "Guardando…" : row ? "Guardar cambios" : "Crear categoría"}
         </Button>
       </div>
+    </div>
+  );
+}
+
+function SortableCategoryRow({ row }: { row: TeamRow }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: row.id,
+  });
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      className={`glass flex items-center gap-3 rounded-xl p-3 ${isDragging ? "opacity-70" : ""}`}
+    >
+      <button
+        type="button"
+        className="shrink-0 cursor-grab touch-none text-muted-foreground active:cursor-grabbing"
+        aria-label={`Mover ${row.name}`}
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="h-5 w-5" />
+      </button>
+      <div className="min-w-0 flex-1">
+        <p className="truncate font-display text-sm font-semibold leading-tight">{row.name}</p>
+        <p className="truncate text-xs text-muted-foreground">{row.category || "Sin rama"}</p>
+      </div>
+      {row.is_primary ? <StatusBadge variant="approved">Principal</StatusBadge> : null}
     </div>
   );
 }

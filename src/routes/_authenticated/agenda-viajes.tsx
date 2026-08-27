@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/squad/EmptyState";
 import { CardGridSkeleton } from "@/components/squad/LoadingState";
 import { StandardCard } from "@/components/squad/StandardCard";
 import { useApp } from "@/components/squad/AppLayout";
+import { useTeamFilter } from "@/hooks/useTeamFilter";
 import { formatDateOnly } from "@/lib/calendar-utils";
 import { useTrips, TRIP_STATUS_LABEL, TRIP_STATUS_VARIANT } from "@/hooks/useTrips";
 import { MyTripView } from "@/components/viajes/MyTripView";
@@ -35,7 +36,7 @@ function AgendaViajesPage() {
   const clubId = profile?.club_id ?? null;
   const canAccess = isSuperAdmin || canViewModule("viajes");
 
-  const [teamFilter, setTeamFilter] = React.useState<string | null>(null);
+  const [teamFilter, setTeamFilter] = useTeamFilter();
   const [detailId, setDetailId] = React.useState<string | null>(null);
 
   const teamNames = React.useMemo(() => {

@@ -85,6 +85,7 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
   }, []);
 
   const teamOptions = React.useMemo<TeamOption[]>(() => data?.teamOptions ?? [], [data?.teamOptions]);
+  const primaryTeamId = data?.primaryTeamId ?? null;
 
   const accessibleModules = React.useMemo<ModuleKey[]>(() => {
     if (!data) return [];
@@ -195,6 +196,7 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
     canViewModule,
     canEditModule,
     teamOptions,
+    primaryTeamId,
     permissionsByTeam: data.permissionsByTeam,
     globalPermissions: data.globalPermissions,
 

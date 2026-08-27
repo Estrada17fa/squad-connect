@@ -8,6 +8,7 @@ import { CardGridSkeleton } from "@/components/squad/LoadingState";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TeamFilter } from "@/components/squad/TeamFilter";
 import { useApp } from "@/components/squad/AppLayout";
+import { useTeamFilter } from "@/hooks/useTeamFilter";
 import { useTeamAccess } from "@/hooks/useTeamAccess";
 import {
   useMatchCallups,
@@ -51,7 +52,7 @@ function PartidosPage() {
   const { canEditTeam, canReadTeam, isPlayerScoped } = useTeamAccess("partidos");
 
   const [view, setView] = React.useState<"proximos" | "jugados">("proximos");
-  const [teamId, setTeamId] = React.useState<string | null>(null);
+  const [teamId, setTeamId] = useTeamFilter();
   const [openId, setOpenId] = React.useState<string | null>(null);
 
   React.useEffect(() => {

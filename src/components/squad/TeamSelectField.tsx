@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Label } from "@/components/ui/label";
+import { useApp } from "@/components/squad/AppLayout";
 import type { TeamOption } from "@/hooks/useAccess";
 
 interface Props {
@@ -17,12 +18,20 @@ interface Props {
  * muestra fijo (sin dropdown) para no obligar a elegir lo único posible.
  */
 export function TeamSelectField({ id = "team-select", label = "Equipo", teams, value, onChange, disabled }: Props) {
+  const { primaryTeamId } = useApp();
   const single = teams.length === 1;
   const current = teams.find((t) => t.id === value) ?? null;
 
   React.useEffect(() => {
     if (single && teams[0].id && value !== teams[0].id) onChange(teams[0].id);
   }, [single, teams, value, onChange]);
+
+  // Sin selección previa: arranca en la categoría principal del club.
+  React.useEffect(() => {
+    if (single || value) return;
+    const primary = teams.find((t) => t.id && t.id === primaryTeamId);
+    if (primary?.id) onChange(primary.id);
+  }, [single, value, teams, primaryTeamId, onChange]);
 
   if (teams.length === 0) return null;
 
