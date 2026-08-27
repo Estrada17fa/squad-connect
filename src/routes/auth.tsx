@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { resolveSession } from "@/lib/session";
 import squadLogo from "@/assets/squad-logo.png.asset.json";
 
 export const Route = createFileRoute("/auth")({
@@ -14,8 +15,8 @@ export const Route = createFileRoute("/auth")({
     ],
   }),
   beforeLoad: async () => {
-    const { data } = await supabase.auth.getUser();
-    if (data.user) throw redirect({ to: "/" });
+    const session = await resolveSession();
+    if (session?.user) throw redirect({ to: "/" });
   },
   component: AuthPage,
 });
