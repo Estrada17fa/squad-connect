@@ -25,6 +25,8 @@ export interface AppCtx {
   canEditModule: (key: ModuleKey) => boolean;
   /** Equipos a los que el usuario tiene acceso (para filtros y selectores). */
   teamOptions: TeamOption[];
+  /** Categoría principal del club: valor por defecto de filtros y selectores. */
+  primaryTeamId: string | null;
   /** Permisos efectivos por equipo (clave 'club' = ámbito club). */
   permissionsByTeam: Record<string, Record<string, PermissionLevel>>;
   /** Niveles globales (aplican a cualquier equipo del club). */
