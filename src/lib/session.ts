@@ -92,12 +92,8 @@ export async function resolveSession(): Promise<Session | null> {
     }
   }
 
-  if (!session && lastKnownSession && isNetworkError(null) === false) {
-    // Sin sesión y con red: es un cierre real.
-    lastKnownSession = null;
-  }
-
   if (session) lastKnownSession = session;
+  else lastKnownSession = null;
   return session;
 }
 
