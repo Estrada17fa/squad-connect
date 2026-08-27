@@ -88,6 +88,9 @@ export function CategoriesTab({ clubId, canEdit }: { clubId: string; canEdit: bo
   const [detail, setDetail] = React.useState<TeamRow | null>(null);
   const [toDelete, setToDelete] = React.useState<TeamRow | null>(null);
   const [deleting, setDeleting] = React.useState(false);
+  const [ordering, setOrdering] = React.useState(false);
+  const [draft, setDraft] = React.useState<TeamRow[] | null>(null);
+  const [savingOrder, setSavingOrder] = React.useState(false);
 
   const teamsQ = useQuery({
     queryKey: ["club-teams-full", clubId],
@@ -117,6 +120,11 @@ export function CategoriesTab({ clubId, canEdit }: { clubId: string; canEdit: bo
     },
   });
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ["club-teams-full", clubId] });
     qc.invalidateQueries({ queryKey: ["club-teams-min", clubId] });
@@ -138,6 +146,46 @@ export function CategoriesTab({ clubId, canEdit }: { clubId: string; canEdit: bo
   }, [teamsQ.data, search, branch]);
 
   const activeFilters = branch === ALL ? 0 : 1;
+
+  async function saveOrder(rows: TeamRow[]) {
+    setSavingOrder(true);
+    try {
+      await Promise.all(
+        rows.map((r, i) =>
+          supabase
+            .from("teams")
+            .update({ display_order: i + 1 } as any)
+            .eq("id", r.id),
+        ),
+      );
+      toast.success("Orden guardado");
+      setDraft(null);
+      setOrdering(false);
+      invalidate();
+    } catch (e: any) {
+      toast.error(e.message ?? "No se pudo guardar el orden");
+    } finally {
+      setSavingOrder(false);
+    }
+  }
+
+  async function makePrimary(row: TeamRow) {
+    try {
+      const { error: clearErr } = await db
+        .from("teams")
+        .update({ is_primary: false })
+        .eq("club_id", clubId)
+        .eq("is_primary", true);
+      if (clearErr) throw clearErr;
+      const { error } = await db.from("teams").update({ is_primary: true }).eq("id", row.id);
+      if (error) throw error;
+      toast.success(`"${row.name}" es ahora la categoría principal`);
+      setDetail((d) => (d && d.id === row.id ? { ...d, is_primary: true } : d));
+      invalidate();
+    } catch (e: any) {
+      toast.error(e.message ?? "No se pudo marcar como principal");
+    }
+  }
 
   async function confirmDelete() {
     if (!toDelete) return;
