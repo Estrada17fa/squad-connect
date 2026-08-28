@@ -203,22 +203,18 @@ export function TripDetailSheet({
                       type="button"
                       aria-label="Quitar del viaje"
                       className="rounded-full p-1.5 text-muted-foreground hover:bg-white/10 hover:text-foreground"
-                      onClick={() => {
-                        setBusyId(t.user_id);
-                        removeTraveler(t.id)
-                          .then(() => {
-                            invalidate();
-                            setBusyId(null);
-                          })
-                          .catch((e) => {
-                            setBusyId(null);
-                            toast.error(e.message ?? "No se pudo quitar");
-                          });
-                      }}
+                      onClick={() =>
+                        setConfirmRemove({
+                          id: t.id,
+                          userId: t.user_id,
+                          name: t.profile?.full_name ?? t.profile?.email ?? "Miembro",
+                        })
+                      }
                     >
                       <X className="h-4 w-4" />
                     </button>
                   ) : null}
+
                 </li>
               ))}
           </ul>
