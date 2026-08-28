@@ -68,8 +68,11 @@ export function TripDetailSheet({
   const qc = useQueryClient();
   const [picker, setPicker] = React.useState(false);
   const [busyId, setBusyId] = React.useState<string | null>(null);
+  const [confirmRemove, setConfirmRemove] = React.useState<{ id: string; userId: string; name: string } | null>(null);
+  const [removing, setRemoving] = React.useState(false);
   const refresh = useTripRefresh(trip?.id ?? null);
   const editable = canEdit && !readOnly;
+
 
   React.useEffect(() => {
     if (openPickerSignal > 0 && editable) setPicker(true);
