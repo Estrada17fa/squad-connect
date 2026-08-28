@@ -1,6 +1,8 @@
 import * as React from "react";
 import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { TRIP_DOCS_BUCKET } from "@/lib/tripLogistics";
+
 import type { StatusVariant } from "@/components/squad/StatusBadge";
 
 export type TripStatus = "planeacion" | "confirmado" | "en_curso" | "completado";
