@@ -28,7 +28,9 @@ import {
 import { TravelerPicker, initialsOf, type TeamMemberOption } from "./TravelerPicker";
 import { TripTabs } from "./TripTabs";
 import { DeleteAction } from "./logistica/DeleteAction";
+import { ConfirmDialog } from "@/components/squad/ConfirmDialog";
 import { useTripRefresh } from "@/hooks/useTripChannel";
+
 
 interface Props {
   open: boolean;
@@ -68,8 +70,11 @@ export function TripDetailSheet({
   const qc = useQueryClient();
   const [picker, setPicker] = React.useState(false);
   const [busyId, setBusyId] = React.useState<string | null>(null);
+  const [confirmRemove, setConfirmRemove] = React.useState<{ id: string; userId: string; name: string } | null>(null);
+  const [removing, setRemoving] = React.useState(false);
   const refresh = useTripRefresh(trip?.id ?? null);
   const editable = canEdit && !readOnly;
+
 
   React.useEffect(() => {
     if (openPickerSignal > 0 && editable) setPicker(true);
@@ -89,8 +94,9 @@ export function TripDetailSheet({
       if (!trip) return;
       setBusyId(member.id);
       const existing = trip.travelers.find((t) => t.user_id === member.id);
-      if (existing) await removeTraveler(existing.id);
+      if (existing) await removeTraveler(existing.id, trip.id, member.id);
       else await addTraveler(trip.id, member.id, member.job_title ?? member.role_name ?? null);
+
     },
     onSuccess: () => {
       invalidate();
@@ -203,22 +209,18 @@ export function TripDetailSheet({
                       type="button"
                       aria-label="Quitar del viaje"
                       className="rounded-full p-1.5 text-muted-foreground hover:bg-white/10 hover:text-foreground"
-                      onClick={() => {
-                        setBusyId(t.user_id);
-                        removeTraveler(t.id)
-                          .then(() => {
-                            invalidate();
-                            setBusyId(null);
-                          })
-                          .catch((e) => {
-                            setBusyId(null);
-                            toast.error(e.message ?? "No se pudo quitar");
-                          });
-                      }}
+                      onClick={() =>
+                        setConfirmRemove({
+                          id: t.id,
+                          userId: t.user_id,
+                          name: t.profile?.full_name ?? t.profile?.email ?? "Miembro",
+                        })
+                      }
                     >
                       <X className="h-4 w-4" />
                     </button>
                   ) : null}
+
                 </li>
               ))}
           </ul>
@@ -293,6 +295,32 @@ export function TripDetailSheet({
           Cerrar
         </Button>
       </EntitySheetFooter>
+
+      <ConfirmDialog
+        open={!!confirmRemove}
+        onOpenChange={(v) => !v && setConfirmRemove(null)}
+        title={`¿Quitar a ${confirmRemove?.name ?? ""} del viaje?`}
+        description="También se eliminarán sus asignaciones de este viaje: vuelo, transporte, habitación, equipaje y pase de abordar. No podrá ver el viaje."
+        confirmLabel="Quitar"
+        loading={removing}
+        onConfirm={async () => {
+          if (!confirmRemove || !trip) return;
+          setRemoving(true);
+          setBusyId(confirmRemove.userId);
+          try {
+            await removeTraveler(confirmRemove.id, trip.id, confirmRemove.userId);
+            invalidate();
+            setConfirmRemove(null);
+            toast.success("Quitado de la convocatoria");
+          } catch (e: any) {
+            toast.error(e?.message ?? "No se pudo quitar");
+          } finally {
+            setRemoving(false);
+            setBusyId(null);
+          }
+        }}
+      />
     </EntitySheet>
+
   );
 }

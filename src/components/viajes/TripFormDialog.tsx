@@ -364,7 +364,7 @@ export function TripFormDialog({
         // Sincroniza la convocatoria: altas y bajas.
         const current = new Map(trip.travelers.map((t) => [t.user_id, t.id] as const));
         for (const uid of travelerIds) if (!current.has(uid)) await addTraveler(trip.id, uid, null);
-        for (const [uid, rowId] of current) if (!travelerIds.has(uid)) await removeTraveler(rowId);
+        for (const [uid, rowId] of current) if (!travelerIds.has(uid)) await removeTraveler(rowId, trip.id, uid);
         return trip.id;
       }
 

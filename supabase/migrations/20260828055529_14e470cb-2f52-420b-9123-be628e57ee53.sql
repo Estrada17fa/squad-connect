@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.trip_traveler_cleanup() FROM PUBLIC, anon, authenticated;
