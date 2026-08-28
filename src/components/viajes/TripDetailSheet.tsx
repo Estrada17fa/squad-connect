@@ -28,7 +28,9 @@ import {
 import { TravelerPicker, initialsOf, type TeamMemberOption } from "./TravelerPicker";
 import { TripTabs } from "./TripTabs";
 import { DeleteAction } from "./logistica/DeleteAction";
+import { ConfirmDialog } from "@/components/squad/ConfirmDialog";
 import { useTripRefresh } from "@/hooks/useTripChannel";
+
 
 interface Props {
   open: boolean;
@@ -293,6 +295,32 @@ export function TripDetailSheet({
           Cerrar
         </Button>
       </EntitySheetFooter>
+
+      <ConfirmDialog
+        open={!!confirmRemove}
+        onOpenChange={(v) => !v && setConfirmRemove(null)}
+        title={`¿Quitar a ${confirmRemove?.name ?? ""} del viaje?`}
+        description="También se eliminarán sus asignaciones de este viaje: vuelo, transporte, habitación, equipaje y pase de abordar. No podrá ver el viaje."
+        confirmLabel="Quitar"
+        loading={removing}
+        onConfirm={async () => {
+          if (!confirmRemove || !trip) return;
+          setRemoving(true);
+          setBusyId(confirmRemove.userId);
+          try {
+            await removeTraveler(confirmRemove.id, trip.id, confirmRemove.userId);
+            invalidate();
+            setConfirmRemove(null);
+            toast.success("Quitado de la convocatoria");
+          } catch (e: any) {
+            toast.error(e?.message ?? "No se pudo quitar");
+          } finally {
+            setRemoving(false);
+            setBusyId(null);
+          }
+        }}
+      />
     </EntitySheet>
+
   );
 }
