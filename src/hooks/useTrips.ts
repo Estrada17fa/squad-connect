@@ -150,10 +150,42 @@ export async function addTraveler(tripId: string, userId: string, roleNote: stri
   if (error) throw error;
 }
 
-export async function removeTraveler(travelerId: string): Promise<void> {
+/**
+ * Quita a una persona de la convocatoria. La convocatoria es la lista maestra:
+ * un trigger en la base borra sus asignaciones logísticas de ESE viaje
+ * (vuelos, equipaje, pase de abordar, transportes, habitaciones y material).
+ * Aquí solo se elimina antes el archivo del pase de abordar en Storage,
+ * que la base no puede borrar.
+ */
+export async function removeTraveler(
+  travelerId: string,
+  tripId?: string,
+  userId?: string,
+): Promise<void> {
+  if (tripId && userId) {
+    try {
+      const { data: flights } = await supabase.from("trip_flights").select("id").eq("trip_id", tripId);
+      const flightIds = (flights ?? []).map((f: { id: string }) => f.id);
+      if (flightIds.length > 0) {
+        const { data: passes } = await supabase
+          .from("trip_boarding_passes")
+          .select("file_path")
+          .eq("user_id", userId)
+          .in("flight_id", flightIds);
+        const paths = (passes ?? [])
+          .map((p: { file_path: string | null }) => p.file_path)
+          .filter((p): p is string => !!p);
+        if (paths.length > 0) await supabase.storage.from(TRIP_DOCS_BUCKET).remove(paths);
+      }
+    } catch {
+      // Si falla el borrado del archivo seguimos: la fila se elimina igual y
+      // el archivo queda huérfano en un bucket privado sin referencias.
+    }
+  }
   const { error } = await supabase.from("trip_travelers").delete().eq("id", travelerId);
   if (error) throw error;
 }
+
 
 /** Próximo viaje del equipo activo donde el usuario está convocado (tarjeta de Home). */
 export function useMyNextTrip(
