@@ -92,8 +92,9 @@ export function TripDetailSheet({
       if (!trip) return;
       setBusyId(member.id);
       const existing = trip.travelers.find((t) => t.user_id === member.id);
-      if (existing) await removeTraveler(existing.id);
+      if (existing) await removeTraveler(existing.id, trip.id, member.id);
       else await addTraveler(trip.id, member.id, member.job_title ?? member.role_name ?? null);
+
     },
     onSuccess: () => {
       invalidate();
