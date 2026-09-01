@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { TRIP_DOCS_BUCKET } from "@/lib/tripLogistics";
 import { tripFlightsKey } from "./useTripFlights";
