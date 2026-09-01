@@ -34,17 +34,7 @@ export function MyTripView({ trip, userId }: Props) {
   const meals = useTripMeals(trip.id).data ?? [];
   const material = useTripMaterial(trip.id).data ?? [];
 
-  const openPass = async (path: string, download: boolean) => {
-    try {
-      const { data, error } = await supabase.storage
-        .from(TRIP_DOCS_BUCKET)
-        .createSignedUrl(path, 300, download ? { download: true } : undefined);
-      if (error) throw error;
-      window.open(data.signedUrl, "_blank", "noopener");
-    } catch (e: any) {
-      toast.error(e.message ?? "No se pudo abrir el pase de abordar");
-    }
-  };
+  const [passPath, setPassPath] = React.useState<string | null>(null);
 
   const myFlights = React.useMemo(
     () =>
