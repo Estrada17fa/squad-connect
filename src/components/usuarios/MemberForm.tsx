@@ -1,7 +1,6 @@
 import * as React from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { createClubMember, updateClubMember } from "@/lib/members.functions";
@@ -34,7 +33,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { AvatarUploadField } from "@/components/perfil/AvatarUploadField";
-import { PasswordRequirements } from "@/components/squad/PasswordRequirements";
+import { PasswordField } from "@/components/squad/PasswordField";
 import { checkPassword, friendlyPasswordError } from "@/lib/password";
 
 export interface RoleOpt {
@@ -150,7 +149,6 @@ export function MemberForm({
 
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
-  const [showPass, setShowPass] = React.useState(false);
   const [firstName, setFirstName] = React.useState("");
   const [paternal, setPaternal] = React.useState("");
   const [maternal, setMaternal] = React.useState("");
@@ -198,7 +196,6 @@ export function MemberForm({
   const reset = React.useCallback(() => {
     setEmail("");
     setPassword("");
-    setShowPass(false);
     setFirstName("");
     setPaternal("");
     setMaternal("");
@@ -390,36 +387,18 @@ export function MemberForm({
                 label={isEdit ? "Nueva contraseña (opcional)" : "Contraseña"}
                 htmlFor="mf-pass"
               >
-                <div className="relative">
-                  <Input
-                    id="mf-pass"
-                    type={showPass ? "text" : "password"}
-                    value={password}
-                    autoComplete="new-password"
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pr-10"
-                  />
-                  <button
-                    type="button"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground"
-                    onClick={() => setShowPass((v) => !v)}
-                    tabIndex={-1}
-                    aria-label={showPass ? "Ocultar contraseña" : "Mostrar contraseña"}
-                  >
-                    {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-                <div className="mt-2 space-y-1">
-                  {isEdit ? (
-                    <p className="text-[11px] text-muted-foreground">
-                      Déjala vacía para no cambiarla. Si la cambias, el miembro deberá definir una nueva al entrar.
-                    </p>
-                  ) : null}
-                  <PasswordRequirements value={password} />
-                  {password.length > 0 && passCheck.missing.length > 0 ? (
-                    <p className="text-[11px] text-destructive">{passCheck.missing.join(" · ")}</p>
-                  ) : null}
-                </div>
+                <PasswordField
+                  id="mf-pass"
+                  value={password}
+                  onChange={setPassword}
+                  hint={
+                    isEdit ? (
+                      <p className="text-[11px] text-muted-foreground">
+                        Déjala vacía para no cambiarla. Si la cambias, el miembro deberá definir una nueva al entrar.
+                      </p>
+                    ) : undefined
+                  }
+                />
               </Field>
               <Field label="Fecha de nacimiento" htmlFor="mf-birth">
                 <Input id="mf-birth" type="date" value={birthdate} onChange={(e) => setBirthdate(e.target.value)} />

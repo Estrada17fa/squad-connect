@@ -48,7 +48,7 @@ import { useApp } from "@/components/squad/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { PersonDocumentsSection } from "@/components/documentos/PersonDocumentsSection";
 import { formatShortDate } from "@/lib/calendar-utils";
-import { PasswordRequirements } from "@/components/squad/PasswordRequirements";
+import { PasswordField } from "@/components/squad/PasswordField";
 import { checkPassword, friendlyPasswordError } from "@/lib/password";
 import { PLAYER_STATUS_LABEL, type PlayerStatus } from "@/lib/members.schemas";
 import { initials, roleVariant } from "@/components/usuarios/memberUtils";
@@ -514,17 +514,7 @@ function EditMyProfileSheet({
 
           <div className="space-y-1.5">
             <Label htmlFor="mp-pass">Nueva contraseña (opcional)</Label>
-            <Input
-              id="mp-pass"
-              type="password"
-              autoComplete="new-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <PasswordRequirements value={password} />
-            {password.length > 0 && passCheck.missing.length > 0 ? (
-              <p className="text-[11px] text-destructive">{passCheck.missing.join(" · ")}</p>
-            ) : null}
+            <PasswordField id="mp-pass" value={password} onChange={setPassword} />
           </div>
         </div>
       </EntitySheetBody>

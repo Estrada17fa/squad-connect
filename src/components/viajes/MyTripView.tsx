@@ -1,9 +1,7 @@
 import * as React from "react";
 import { Luggage, Plane, Utensils } from "lucide-react";
-import { toast } from "sonner";
 import { formatDateTime } from "@/lib/calendar-utils";
-import { MEAL_TYPE_LABEL, TRIP_DOCS_BUCKET } from "@/lib/tripLogistics";
-import { supabase } from "@/integrations/supabase/client";
+import { MEAL_TYPE_LABEL } from "@/lib/tripLogistics";
 import type { TripRow } from "@/hooks/useTrips";
 import { useTripFlights } from "@/hooks/useTripFlights";
 import { useTripTransports } from "@/hooks/useTripTransports";
@@ -16,6 +14,7 @@ import { MyStayCard } from "./mi/MyStayCard";
 import { MyTransportCard } from "./mi/MyTransportCard";
 import { TripCardShell } from "./mi/TripCardShell";
 import { TripTabs } from "./TripTabs";
+import { BoardingPassViewer } from "./BoardingPassViewer";
 
 interface Props {
   trip: TripRow;
@@ -34,17 +33,7 @@ export function MyTripView({ trip, userId }: Props) {
   const meals = useTripMeals(trip.id).data ?? [];
   const material = useTripMaterial(trip.id).data ?? [];
 
-  const openPass = async (path: string, download: boolean) => {
-    try {
-      const { data, error } = await supabase.storage
-        .from(TRIP_DOCS_BUCKET)
-        .createSignedUrl(path, 300, download ? { download: true } : undefined);
-      if (error) throw error;
-      window.open(data.signedUrl, "_blank", "noopener");
-    } catch (e: any) {
-      toast.error(e.message ?? "No se pudo abrir el pase de abordar");
-    }
-  };
+  const [passPath, setPassPath] = React.useState<string | null>(null);
 
   const myFlights = React.useMemo(
     () =>
@@ -86,7 +75,7 @@ export function MyTripView({ trip, userId }: Props) {
               <MyCallCard meetingAt={trip.meeting_at} meetingPoint={trip.meeting_point} />
             ) : null}
             {myFlights.map((f) => (
-              <MyFlightCard key={f.id} flight={f} userId={userId} onOpenPass={openPass} />
+              <MyFlightCard key={f.id} flight={f} userId={userId} onOpenPass={setPassPath} />
             ))}
             {myTransports.map((t) => (
               <MyTransportCard key={t.id} transport={t} />
@@ -135,6 +124,13 @@ export function MyTripView({ trip, userId }: Props) {
         </h3>
         <TripTabs trip={trip} canEdit={false} />
       </section>
+
+      <BoardingPassViewer
+        open={!!passPath}
+        onOpenChange={(v) => !v && setPassPath(null)}
+        filePath={passPath}
+        title="Mi pase de abordar"
+      />
     </div>
   );
 }

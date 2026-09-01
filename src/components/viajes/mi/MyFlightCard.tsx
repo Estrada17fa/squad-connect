@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Download, FileText, Plane } from "lucide-react";
+import { FileText, Plane } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatDateTime } from "@/lib/calendar-utils";
 import { LEG_LABEL } from "@/lib/tripLogistics";
@@ -14,7 +14,7 @@ export function MyFlightCard({
 }: {
   flight: TripFlight;
   userId: string;
-  onOpenPass: (path: string, download: boolean) => void;
+  onOpenPass: (path: string) => void;
 }) {
   const pass = flight.boarding_passes.find((b) => b.user_id === userId) ?? null;
   const handler = flight.baggage_handlers.find((h) => h.user_id === userId) ?? null;
@@ -68,24 +68,13 @@ export function MyFlightCard({
       ) : null}
 
       {pass ? (
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            className="glow-primary flex-1"
-            onClick={() => onOpenPass(pass.file_path, false)}
-          >
-            <FileText className="mr-1.5 h-4 w-4" /> Ver mi pase de abordar
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            aria-label="Descargar mi pase de abordar"
-            onClick={() => onOpenPass(pass.file_path, true)}
-          >
-            <Download className="h-4 w-4" />
-          </Button>
-        </div>
+        <Button
+          type="button"
+          className="glow-primary w-full"
+          onClick={() => onOpenPass(pass.file_path)}
+        >
+          <FileText className="mr-1.5 h-4 w-4" /> Ver mi pase de abordar
+        </Button>
       ) : (
         <p className="rounded-lg border border-border/60 bg-white/5 px-3 py-2 text-xs text-muted-foreground">
           Tu pase aún no está disponible.

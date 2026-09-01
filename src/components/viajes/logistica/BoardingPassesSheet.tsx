@@ -1,6 +1,6 @@
 import * as React from "react";
 import { toast } from "sonner";
-import { Download, Eye, FileText, Sparkles, Trash2, Upload } from "lucide-react";
+import { Eye, FileText, Sparkles, Trash2, Upload } from "lucide-react";
 import {
   EntitySheet,
   EntitySheetBody,
@@ -16,7 +16,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ConfirmDialog } from "@/components/squad/ConfirmDialog";
 import { personInitials, personLabel, type MiniProfile } from "@/lib/tripLogistics";
 import type { TripBoardingPass, TripFlight } from "@/hooks/useTripFlights";
-import { openBoardingPass, useBoardingPassMutations } from "@/hooks/useTripBoardingPasses";
+import { useBoardingPassMutations } from "@/hooks/useTripBoardingPasses";
+import { BoardingPassViewer } from "../BoardingPassViewer";
 import { BoardingPassUploadDialog } from "./BoardingPassUploadDialog";
 import { BoardingPassAutoMatchSheet } from "./BoardingPassAutoMatchSheet";
 
@@ -30,15 +31,21 @@ interface Props {
   canEdit: boolean;
 }
 
-function PassActions({ pass, canEdit, onDelete }: { pass: TripBoardingPass; canEdit: boolean; onDelete: () => void }) {
-  const openFile = () => openBoardingPass(pass.file_path).catch(() => toast.error("No se pudo abrir el pase"));
+function PassActions({
+  pass,
+  canEdit,
+  onDelete,
+  onView,
+}: {
+  pass: TripBoardingPass;
+  canEdit: boolean;
+  onDelete: () => void;
+  onView: (pass: TripBoardingPass) => void;
+}) {
   return (
     <div className="flex shrink-0 items-center gap-1">
-      <Button type="button" size="icon" variant="ghost" onClick={openFile} aria-label="Ver pase">
+      <Button type="button" size="icon" variant="ghost" onClick={() => onView(pass)} aria-label="Ver pase">
         <Eye className="h-4 w-4" />
-      </Button>
-      <Button type="button" size="icon" variant="ghost" onClick={openFile} aria-label="Descargar pase">
-        <Download className="h-4 w-4" />
       </Button>
       {canEdit ? (
         <Button
@@ -61,6 +68,7 @@ export function BoardingPassesSheet({ open, onOpenChange, tripId, flight, canEdi
   const { update, remove } = useBoardingPassMutations(tripId);
   const [uploadFor, setUploadFor] = React.useState<string | null | undefined>(undefined);
   const [autoOpen, setAutoOpen] = React.useState(false);
+  const [toView, setToView] = React.useState<TripBoardingPass | null>(null);
   const [toDelete, setToDelete] = React.useState<TripBoardingPass | null>(null);
 
   const passByUser = new Map<string, TripBoardingPass>();
@@ -127,7 +135,7 @@ export function BoardingPassesSheet({ open, onOpenChange, tripId, flight, canEdi
                       {pass ? (
                         <>
                           <Badge variant="default">Con pase</Badge>
-                          <PassActions pass={pass} canEdit={canEdit} onDelete={() => setToDelete(pass)} />
+                          <PassActions pass={pass} canEdit={canEdit} onDelete={() => setToDelete(pass)} onView={setToView} />
                         </>
                       ) : (
                         <>
@@ -188,7 +196,7 @@ export function BoardingPassesSheet({ open, onOpenChange, tripId, flight, canEdi
                         </SelectContent>
                       </Select>
                     ) : null}
-                    <PassActions pass={bp} canEdit={canEdit} onDelete={() => setToDelete(bp)} />
+                    <PassActions pass={bp} canEdit={canEdit} onDelete={() => setToDelete(bp)} onView={setToView} />
                   </li>
                 ))}
               </ul>
@@ -236,6 +244,13 @@ export function BoardingPassesSheet({ open, onOpenChange, tripId, flight, canEdi
             },
           );
         }}
+      />
+
+      <BoardingPassViewer
+        open={!!toView}
+        onOpenChange={(v) => !v && setToView(null)}
+        filePath={toView?.file_path ?? null}
+        subtitle={toView?.profile ? personLabel(toView.profile) : undefined}
       />
     </>
   );

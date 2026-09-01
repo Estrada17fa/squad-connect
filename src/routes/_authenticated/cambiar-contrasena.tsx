@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useApp } from "@/components/squad/AppLayout";
-import { PasswordRequirements } from "@/components/squad/PasswordRequirements";
+import { PasswordField } from "@/components/squad/PasswordField";
 import { checkPassword, friendlyPasswordError } from "@/lib/password";
 
 export const Route = createFileRoute("/_authenticated/cambiar-contrasena")({
@@ -36,12 +36,14 @@ function ChangePasswordPage() {
   const qc = useQueryClient();
   const [password, setPassword] = React.useState("");
   const [confirm, setConfirm] = React.useState("");
+  const [serverError, setServerError] = React.useState<string | null>(null);
 
   const check = checkPassword(password);
   const valid = check.isValid && password === confirm;
 
   const save = useMutation({
     mutationFn: async () => {
+      setServerError(null);
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
       const { error: e2 } = await (supabase as any)
@@ -55,7 +57,11 @@ function ChangePasswordPage() {
       await qc.invalidateQueries({ queryKey: ["must-change-password", user.id] });
       navigate({ to: "/", replace: true });
     },
-    onError: (e: any) => toast.error(friendlyPasswordError(e?.message)),
+    onError: (e: any) => {
+      const msg = friendlyPasswordError(e?.message);
+      setServerError(msg);
+      toast.error(msg);
+    },
   });
 
   return (
@@ -85,15 +91,17 @@ function ChangePasswordPage() {
         >
           <div className="space-y-2">
             <Label htmlFor="new-password">Nueva contraseña</Label>
-            <Input
+            <PasswordField
               id="new-password"
-              type="password"
-              autoComplete="new-password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Tu nueva contraseña"
+              onChange={setPassword}
+              onSuggested={(p) => setConfirm(p)}
+              hint={
+                <p className="text-[11px] text-muted-foreground">
+                  ¿No se te ocurre una? Toca "Sugerir" y anótala: siempre es válida y segura.
+                </p>
+              }
             />
-            <PasswordRequirements value={password} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="confirm-password">Confirmar contraseña</Label>
@@ -106,8 +114,10 @@ function ChangePasswordPage() {
               placeholder="Repite la contraseña"
             />
           </div>
-          {password.length > 0 && check.missing.length > 0 ? (
-            <p className="text-sm text-destructive">{check.missing.join(" · ")}</p>
+          {serverError ? (
+            <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {serverError} Toca “Sugerir” para obtener una contraseña válida al instante.
+            </div>
           ) : null}
           {confirm.length > 0 && password !== confirm ? (
             <p className="text-sm text-destructive">Las contraseñas no coinciden.</p>
