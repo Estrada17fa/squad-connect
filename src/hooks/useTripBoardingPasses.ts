@@ -67,14 +67,35 @@ export function useBoardingPassMutations(tripId: string | null | undefined) {
 }
 
 /** URL temporal para ver/descargar un pase de abordar. */
-export async function boardingPassUrl(filePath: string) {
-  const { data, error } = await supabase.storage.from(TRIP_DOCS_BUCKET).createSignedUrl(filePath, 60 * 10);
+export async function boardingPassUrl(filePath: string, download = false) {
+  const { data, error } = await supabase.storage
+    .from(TRIP_DOCS_BUCKET)
+    .createSignedUrl(filePath, 60 * 10, download ? { download: true } : undefined);
   if (error) throw error;
   return data.signedUrl;
 }
 
-/** Abre el pase en una pestaña nueva. */
-export async function openBoardingPass(filePath: string) {
-  const url = await boardingPassUrl(filePath);
-  window.open(url, "_blank", "noopener");
+/**
+ * URLs firmadas (ver y descargar) resueltas por adelantado.
+ * Así el visor abre al instante y no dependemos de abrir pestañas por código,
+ * que los navegadores móviles bloquean.
+ */
+export function useBoardingPassUrls(filePath: string | null | undefined) {
+  const q = useQuery({
+    queryKey: ["boarding-pass-url", filePath],
+    enabled: !!filePath,
+    staleTime: 1000 * 60 * 5,
+    queryFn: async () => {
+      const path = filePath as string;
+      const [view, download] = await Promise.all([boardingPassUrl(path), boardingPassUrl(path, true)]);
+      return { view, download };
+    },
+  });
+  return {
+    view: q.data?.view ?? null,
+    download: q.data?.download ?? null,
+    isLoading: q.isLoading,
+    isError: q.isError,
+    refetch: q.refetch,
+  };
 }
