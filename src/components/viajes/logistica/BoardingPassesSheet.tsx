@@ -245,6 +245,13 @@ export function BoardingPassesSheet({ open, onOpenChange, tripId, flight, canEdi
           );
         }}
       />
+
+      <BoardingPassViewer
+        open={!!toView}
+        onOpenChange={(v) => !v && setToView(null)}
+        filePath={toView?.file_path ?? null}
+        subtitle={toView?.profile ? personLabel(toView.profile) : undefined}
+      />
     </>
   );
 }
