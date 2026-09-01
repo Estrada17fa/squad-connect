@@ -124,6 +124,13 @@ export function MyTripView({ trip, userId }: Props) {
         </h3>
         <TripTabs trip={trip} canEdit={false} />
       </section>
+
+      <BoardingPassViewer
+        open={!!passPath}
+        onOpenChange={(v) => !v && setPassPath(null)}
+        filePath={passPath}
+        title="Mi pase de abordar"
+      />
     </div>
   );
 }
