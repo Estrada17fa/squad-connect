@@ -1,7 +1,6 @@
 import * as React from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { createClubMember, updateClubMember } from "@/lib/members.functions";
@@ -150,7 +149,6 @@ export function MemberForm({
 
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
-  const [showPass, setShowPass] = React.useState(false);
   const [firstName, setFirstName] = React.useState("");
   const [paternal, setPaternal] = React.useState("");
   const [maternal, setMaternal] = React.useState("");
