@@ -51,6 +51,32 @@ export function passwordError(value: string): string | null {
   return missing.length ? missing.join(" · ") : null;
 }
 
+const WORDS = [
+  "Tigre","Playa","Cabo","Barco","Nube","Roble","Faro","Duna","Cielo","Lobo",
+  "Verde","Rayo","Pino","Marea","Cactus","Zorro","Piedra","Fuego","Luna","Ronda",
+  "Delta","Sierra","Vela","Coral","Halcon","Bruma","Cedro","Nieve","Puente","Vaso",
+];
+
+function pick<T>(arr: T[]): T {
+  const n = new Uint32Array(1);
+  crypto.getRandomValues(n);
+  return arr[n[0] % arr.length]!;
+}
+
+/**
+ * Sugerencia fácil de leer y escribir que siempre cumple la regla
+ * (mayúscula, minúscula, número, 8+) y no es una contraseña común filtrada.
+ */
+export function suggestPassword(): string {
+  let a = pick(WORDS);
+  let b = pick(WORDS);
+  while (b === a) b = pick(WORDS);
+  const n = new Uint32Array(1);
+  crypto.getRandomValues(n);
+  const num = 10 + (n[0] % 90);
+  return `${a}-${b.toLowerCase()}-${num}`;
+}
+
 /** Traduce errores del backend de autenticación a español claro. */
 export function friendlyPasswordError(message?: string | null): string {
   const m = (message ?? "").toLowerCase();
