@@ -1,6 +1,6 @@
 import * as React from "react";
 import { toast } from "sonner";
-import { Download, Eye, FileText, Sparkles, Trash2, Upload } from "lucide-react";
+import { Eye, FileText, Sparkles, Trash2, Upload } from "lucide-react";
 import {
   EntitySheet,
   EntitySheetBody,
@@ -68,6 +68,7 @@ export function BoardingPassesSheet({ open, onOpenChange, tripId, flight, canEdi
   const { update, remove } = useBoardingPassMutations(tripId);
   const [uploadFor, setUploadFor] = React.useState<string | null | undefined>(undefined);
   const [autoOpen, setAutoOpen] = React.useState(false);
+  const [toView, setToView] = React.useState<TripBoardingPass | null>(null);
   const [toDelete, setToDelete] = React.useState<TripBoardingPass | null>(null);
 
   const passByUser = new Map<string, TripBoardingPass>();
@@ -134,7 +135,7 @@ export function BoardingPassesSheet({ open, onOpenChange, tripId, flight, canEdi
                       {pass ? (
                         <>
                           <Badge variant="default">Con pase</Badge>
-                          <PassActions pass={pass} canEdit={canEdit} onDelete={() => setToDelete(pass)} />
+                          <PassActions pass={pass} canEdit={canEdit} onDelete={() => setToDelete(pass)} onView={setToView} />
                         </>
                       ) : (
                         <>
@@ -195,7 +196,7 @@ export function BoardingPassesSheet({ open, onOpenChange, tripId, flight, canEdi
                         </SelectContent>
                       </Select>
                     ) : null}
-                    <PassActions pass={bp} canEdit={canEdit} onDelete={() => setToDelete(bp)} />
+                    <PassActions pass={bp} canEdit={canEdit} onDelete={() => setToDelete(bp)} onView={setToView} />
                   </li>
                 ))}
               </ul>
