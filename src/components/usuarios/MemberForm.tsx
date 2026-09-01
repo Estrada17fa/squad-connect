@@ -196,7 +196,6 @@ export function MemberForm({
   const reset = React.useCallback(() => {
     setEmail("");
     setPassword("");
-    setShowPass(false);
     setFirstName("");
     setPaternal("");
     setMaternal("");
