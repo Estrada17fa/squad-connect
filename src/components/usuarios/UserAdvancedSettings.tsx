@@ -19,6 +19,7 @@ import { LoadingState } from "@/components/squad/LoadingState";
 import { cn } from "@/lib/utils";
 import {
   coerceLevelFor,
+  defaultOnLevelFor,
   levelOptionsFor,
   levelToLegacy,
   LEVEL_LABEL,
@@ -246,7 +247,7 @@ function OverridesEditor({
     for (const mk of modules) {
       const eff = effectiveLevel(mk);
       if (on && eff === "sin_acceso") {
-        const err = await setOverride(mk, coerceLevelFor(mk, "lector_categoria"));
+        const err = await setOverride(mk, defaultOnLevelFor(mk));
         if (err) errors.push(err.message);
       } else if (!on && eff !== "sin_acceso") {
         const err = await setOverride(mk, "sin_acceso");

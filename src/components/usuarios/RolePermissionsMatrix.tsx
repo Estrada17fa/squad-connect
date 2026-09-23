@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import {
   coerceLevelFor,
   defaultLevelsFor,
+  defaultOnLevelFor,
   levelOptionsFor,
   levelToLegacy,
   normalizeLevel,
@@ -121,7 +122,7 @@ export function RolePermissionsMatrix({
           if (!next[mk] || next[mk] === "sin_acceso") {
             next[mk] = defaults?.[mk] && defaults[mk] !== "sin_acceso"
               ? defaults[mk]
-              : coerceLevelFor(mk, "lector_categoria");
+              : defaultOnLevelFor(mk);
           }
         } else {
           next[mk] = "sin_acceso";

@@ -201,6 +201,11 @@ export function playerViewHint(key: ModuleKey): string {
     : "Ve el contenido de su categoría en modo lectura. Nunca edita.";
 }
 
+/** Nivel de "encendido" por defecto al activar un módulo desde un interruptor. */
+export function defaultOnLevelFor(key: ModuleKey): PermissionLevel {
+  return key === "usuarios" ? "lector_global" : "lector_categoria";
+}
+
 /** Ajusta un nivel guardado a una opción válida del módulo (para el <Select>). */
 export function coerceLevelFor(key: ModuleKey, level: PermissionLevel): PermissionLevel {
   const options = levelOptionsFor(key);
