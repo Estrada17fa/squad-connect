@@ -219,7 +219,8 @@ export const DEFAULT_ROLE_LEVELS: Record<string, Partial<Record<ModuleKey, Permi
     partidos: "editor_global",
     solicitudes: "editor_global", compras_facturas: "editor_global", documentos: "editor_global",
     usuarios: "editor_global", comunicados: "editor_global", multimedia: "editor_global",
-    torneo: "editor_global", tacticas: "editor_global", salud: "editor_global",
+    // Tácticas todavía no tiene contenido: se mantiene apagada en todos los roles.
+    torneo: "editor_global", tacticas: "sin_acceso", salud: "editor_global",
     desarrollo: "editor_global", entrenamientos: "editor_global", nutricion: "editor_global",
   },
   tecnico: {
@@ -228,7 +229,7 @@ export const DEFAULT_ROLE_LEVELS: Record<string, Partial<Record<ModuleKey, Permi
     partidos: "editor_categoria",
     solicitudes: "editor_categoria", compras_facturas: "sin_acceso", documentos: "lector_categoria",
     usuarios: "sin_acceso", comunicados: "editor_categoria", multimedia: "lector_categoria",
-    torneo: "lector_categoria", tacticas: "editor_categoria", salud: "sin_acceso",
+    torneo: "lector_categoria", tacticas: "sin_acceso", salud: "sin_acceso",
     desarrollo: "editor_categoria", entrenamientos: "editor_categoria", nutricion: "lector_categoria",
   },
   medico: {
@@ -237,8 +238,8 @@ export const DEFAULT_ROLE_LEVELS: Record<string, Partial<Record<ModuleKey, Permi
     partidos: "lector_categoria",
     solicitudes: "editor_categoria", compras_facturas: "sin_acceso", documentos: "lector_categoria",
     usuarios: "sin_acceso", comunicados: "lector_categoria", multimedia: "lector_categoria",
-    torneo: "lector_categoria", tacticas: "lector_categoria", salud: "editor_categoria",
-    desarrollo: "sin_acceso", entrenamientos: "lector_categoria", nutricion: "editor_categoria",
+    torneo: "lector_categoria", tacticas: "sin_acceso", salud: "editor_categoria",
+    desarrollo: "lector_global", entrenamientos: "lector_categoria", nutricion: "editor_categoria",
   },
   staff: {
     agenda: "lector_categoria", mes: "lector_categoria", plantel: "lector_categoria",
@@ -246,7 +247,7 @@ export const DEFAULT_ROLE_LEVELS: Record<string, Partial<Record<ModuleKey, Permi
     partidos: "lector_categoria",
     solicitudes: "editor_categoria", compras_facturas: "editor_categoria", documentos: "lector_categoria",
     usuarios: "sin_acceso", comunicados: "lector_categoria", multimedia: "editor_categoria",
-    torneo: "lector_categoria", tacticas: "lector_categoria", salud: "sin_acceso",
+    torneo: "lector_categoria", tacticas: "sin_acceso", salud: "sin_acceso",
     desarrollo: "sin_acceso", entrenamientos: "lector_categoria", nutricion: "lector_categoria",
   },
   jugador: {
@@ -255,7 +256,7 @@ export const DEFAULT_ROLE_LEVELS: Record<string, Partial<Record<ModuleKey, Permi
     partidos: "vista_jugador",
     solicitudes: "vista_jugador", compras_facturas: "sin_acceso", documentos: "sin_acceso",
     usuarios: "sin_acceso", comunicados: "vista_jugador", multimedia: "vista_jugador",
-    torneo: "vista_jugador", tacticas: "vista_jugador", salud: "vista_jugador",
+    torneo: "vista_jugador", tacticas: "sin_acceso", salud: "vista_jugador",
     desarrollo: "vista_jugador", entrenamientos: "vista_jugador", nutricion: "vista_jugador",
   },
 };
