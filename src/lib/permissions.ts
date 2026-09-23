@@ -170,11 +170,28 @@ const HINTS: Record<PermissionLevel, string> = {
  * "Todo el club").
  */
 export function levelOptionsFor(key: ModuleKey): LevelOption[] {
-  return PERMISSION_LEVELS.map((value) => ({
+  // `usuarios` solo existe a partir de nivel global (ver `canSeeUsers`): los
+  // niveles de categoría no tendrían ningún efecto, así que no se ofrecen.
+  const values =
+    key === "usuarios"
+      ? (["sin_acceso", "lector_global", "editor_global"] as PermissionLevel[])
+      : PERMISSION_LEVELS;
+  return values.map((value) => ({
     value,
     label: LEVEL_LABEL[value],
-    hint: value === "vista_jugador" ? playerViewHint(key) : HINTS[value],
+    hint: hintFor(key, value),
   }));
+}
+
+/** Matices por módulo: hay módulos donde la gestión exige nivel global. */
+function hintFor(key: ModuleKey, value: PermissionLevel): string {
+  if (value === "vista_jugador") return playerViewHint(key);
+  if (key === "viajes" && (value === "lector_categoria" || value === "editor_categoria")) {
+    return value === "lector_categoria"
+      ? "Consulta su viaje en Agenda. No entra a la gestión de viajes."
+      : "Edita el viaje de sus categorías. La gestión completa pide nivel global.";
+  }
+  return HINTS[value];
 }
 
 /** Texto de ayuda de 'vista_jugador' según lo que muestra el módulo. */
@@ -185,8 +202,9 @@ export function playerViewHint(key: ModuleKey): string {
 }
 
 /** Ajusta un nivel guardado a una opción válida del módulo (para el <Select>). */
-export function coerceLevelFor(_key: ModuleKey, level: PermissionLevel): PermissionLevel {
-  return level;
+export function coerceLevelFor(key: ModuleKey, level: PermissionLevel): PermissionLevel {
+  const options = levelOptionsFor(key);
+  return options.some((o) => o.value === level) ? level : "sin_acceso";
 }
 
 
