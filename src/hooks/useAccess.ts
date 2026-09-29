@@ -197,21 +197,12 @@ export function useAccess(userId: string) {
 
       // Unión (para bottom nav): mejor nivel entre todos los contextos
       const permissions: Record<string, PermissionLevel> = {};
-      for (const map of Object.values(permissionsByTeam)) {
-        for (const [k, v] of Object.entries(map)) bumpLevel(permissions, k, v);
-      }
-
-      // Niveles GLOBALES: solo cuentan los que vienen del rol o de una excepción
-      // club-wide. Un nivel global guardado en la excepción de UNA categoría
-      // aplica únicamente a esa categoría (igual que en la base).
       const globalPermissions: Record<string, PermissionLevel> = {};
-      for (const map of Object.values(byMembership)) {
+      for (const map of Object.values(permissionsByTeam)) {
         for (const [k, v] of Object.entries(map)) {
+          bumpLevel(permissions, k, v);
           if (isGlobalLevel(v)) bumpLevel(globalPermissions, k, v);
         }
-      }
-      for (const [k, v] of Object.entries(clubOverride)) {
-        if (isGlobalLevel(v)) bumpLevel(globalPermissions, k, v);
       }
 
       return {
