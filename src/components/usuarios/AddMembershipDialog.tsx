@@ -1,6 +1,7 @@
 import * as React from "react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { addMembership } from "@/lib/members.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,6 +52,7 @@ export function AddMembershipDialog({
   const [teamId, setTeamId] = React.useState<string>("");
   const [jobTitle, setJobTitle] = React.useState<string>("");
   const [saving, setSaving] = React.useState(false);
+  const addFn = useServerFn(addMembership);
 
   const selectedRole = roles.find((r) => r.id === roleId) ?? null;
   const clubWideAllowed = !!selectedRole?.allows_club_wide;
@@ -71,13 +73,14 @@ export function AddMembershipDialog({
     if (!roleId || !teamId) return;
     setSaving(true);
     try {
-      const { error } = await supabase.from("team_memberships").insert({
-        user_id: userId,
-        team_id: teamId === "__club__" ? null : teamId,
-        role_id: roleId,
-        job_title: jobTitle.trim() || null,
+      await addFn({
+        data: {
+          user_id: userId,
+          team_id: teamId === "__club__" ? null : teamId,
+          role_id: roleId,
+          job_title: jobTitle.trim() || null,
+        },
       });
-      if (error) throw error;
       toast.success("Membresía añadida");
       onAdded();
       onOpenChange(false);
