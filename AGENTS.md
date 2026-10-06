@@ -8,3 +8,4 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+- Team memberships are created/edited/removed one row at a time (by id) via server functions in members.functions.ts; profile edits never touch team_memberships — avoids wiping categories on profile save.
