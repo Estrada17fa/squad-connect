@@ -5451,6 +5451,7 @@ export type Database = {
         Args: { _trip_id: string; _user_id: string }
         Returns: boolean
       }
+      can_view_users: { Args: { _user_id: string }; Returns: boolean }
       coord_scope_ok: {
         Args: { _min_edit: boolean; _team_id: string; _user_id: string }
         Returns: boolean
@@ -5569,6 +5570,7 @@ export type Database = {
         Args: { _task_id: string; _user_id: string }
         Returns: boolean
       }
+      is_user_admin: { Args: { _user_id: string }; Returns: boolean }
       match_calendar_title: {
         Args: {
           _ag: number
