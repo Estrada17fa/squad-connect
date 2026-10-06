@@ -74,10 +74,36 @@ export const createMemberSchema = baseMemberSchema.extend({
   password: passwordField,
 });
 
-export const updateMemberSchema = baseMemberSchema.extend({
+/** Editar perfil: solo datos personales. Rol, categorías, dorsal y posición se editan por membresía. */
+export const updateMemberSchema = baseMemberSchema
+  .omit({ role_id: true, assignments: true, club_job_title: true })
+  .extend({
+    user_id: z.string().uuid(),
+    password: passwordField.optional().nullable(),
+  });
+
+const playerTeamFields = {
+  jersey_number: z.number().int().min(0).max(999).optional().nullable(),
+  position: z.string().trim().max(40).optional().nullable(),
+  secondary_position: z.string().trim().max(40).optional().nullable(),
+};
+
+export const addMembershipSchema = z.object({
   user_id: z.string().uuid(),
-  password: passwordField.optional().nullable(),
+  team_id: z.string().uuid().nullable(),
+  role_id: z.string().uuid(),
+  job_title: z.string().trim().max(60).optional().nullable(),
+  ...playerTeamFields,
 });
+
+export const updateMembershipSchema = z.object({
+  membership_id: z.string().uuid(),
+  role_id: z.string().uuid(),
+  job_title: z.string().trim().max(60).optional().nullable(),
+  ...playerTeamFields,
+});
+
+export const removeMembershipSchema = z.object({ membership_id: z.string().uuid() });
 
 export const memberTargetSchema = z.object({ user_id: z.string().uuid() });
 
