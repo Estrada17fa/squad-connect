@@ -234,6 +234,12 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
           onDeactivate={() => handleDeactivate(selected)}
           onReactivate={() => handleReactivate(selected)}
           onDelete={() => handleHardDelete(selected)}
+          roles={rolesQ.data ?? []}
+          onMembershipsChanged={() => {
+            refreshMembers();
+            qc.invalidateQueries({ queryKey: ["roster"] });
+            qc.invalidateQueries({ queryKey: ["players"] });
+          }}
         />
       ) : null}
 

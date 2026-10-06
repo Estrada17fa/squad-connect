@@ -10,7 +10,20 @@ import {
   Pencil,
   Plus,
   CalendarDays,
+  MoreVertical,
 } from "lucide-react";
+import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
+import { removeMembership } from "@/lib/members.functions";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ConfirmDialog } from "@/components/squad/ConfirmDialog";
+import { EditMembershipDialog } from "./EditMembershipDialog";
+import type { RoleRow } from "./AddMembershipDialog";
 import { supabase } from "@/integrations/supabase/client";
 import {
   DetailSheet,
@@ -55,7 +68,11 @@ export function MemberDetailSheet({
   onDeactivate,
   onReactivate,
   onDelete,
+  roles = [],
+  onMembershipsChanged,
 }: {
+  roles?: RoleRow[];
+  onMembershipsChanged?: () => void;
   open: boolean;
   onOpenChange: (v: boolean) => void;
   clubId: string;
@@ -70,6 +87,27 @@ export function MemberDetailSheet({
 }) {
   const name = displayName(member);
   const isBaja = (member.status ?? "activo") === "baja";
+  const removeFn = useServerFn(removeMembership);
+  const [editing, setEditing] = React.useState<MembershipLite | null>(null);
+  const [removing, setRemoving] = React.useState<MembershipLite | null>(null);
+  const [removeBusy, setRemoveBusy] = React.useState(false);
+  const isLast = memberships.length <= 1;
+
+  async function confirmRemove() {
+    if (!removing) return;
+    setRemoveBusy(true);
+    try {
+      await removeFn({ data: { membership_id: removing.id } });
+      toast.success("Membresía quitada");
+      setRemoving(null);
+      onMembershipsChanged?.();
+    } catch (e: any) {
+      toast.error(e?.message ?? "No se pudo quitar");
+    } finally {
+      setRemoveBusy(false);
+    }
+  }
+
   const isPlayer = memberships.some((m) => (m.roleName ?? "").toLowerCase().includes("jugador"));
 
   const playerQ = useQuery({
@@ -191,6 +229,23 @@ export function MemberDetailSheet({
                   <div className="shrink-0">
                     <StatusBadge variant={roleVariant(m.roleName)}>{m.roleName ?? "—"}</StatusBadge>
                   </div>
+                  {canManage ? (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" aria-label="Acciones de membresía">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onSelect={() => setEditing(m)}>
+                          <Pencil className="mr-2 h-3.5 w-3.5" /> Editar cargo/rol
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive" onSelect={() => setRemoving(m)}>
+                          <Trash2 className="mr-2 h-3.5 w-3.5" /> Quitar membresía
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  ) : null}
                 </div>
               ))}
             </div>
@@ -256,6 +311,30 @@ export function MemberDetailSheet({
           />
         ) : null}
       </div>
+      {canManage ? (
+        <>
+          <EditMembershipDialog
+            open={!!editing}
+            onOpenChange={(o) => !o && setEditing(null)}
+            membership={editing}
+            roles={roles}
+            onSaved={() => onMembershipsChanged?.()}
+          />
+          <ConfirmDialog
+            open={!!removing}
+            onOpenChange={(o) => !o && setRemoving(null)}
+            title="Quitar membresía"
+            confirmLabel="Quitar"
+            loading={removeBusy}
+            description={
+              isLast
+                ? `Es la última membresía de ${name}. Si la quitas, se quedará sin acceso a ninguna categoría del club.`
+                : `Se quitará la membresía de ${removing?.teamName ?? "Todo el club"} (${removing?.roleName ?? ""}). Las demás no cambian.`
+            }
+            onConfirm={confirmRemove}
+          />
+        </>
+      ) : null}
     </DetailSheet>
   );
 }
