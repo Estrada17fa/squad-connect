@@ -93,17 +93,17 @@ export function fullNameOf(first: string, paternal: string, maternal?: string | 
     .join(" ");
 }
 
-/** Sincroniza membresías + filas de jugador (archivando lo que deja de aplicar). */
-export async function syncMemberships(
+/**
+ * Membresías iniciales de un miembro NUEVO: solo INSERT, nunca DELETE.
+ * Editar membresías existentes se hace fila por fila (por id).
+ */
+export async function insertInitialMemberships(
   admin: any,
   userId: string,
   role: RoleLite,
   assignments: { team_id: string; job_title?: string | null }[],
-  player: PlayerInput | null | undefined,
   clubJobTitle?: string | null,
 ) {
-  await admin.from("team_memberships").delete().eq("user_id", userId);
-
   const rows = assignments.length
     ? assignments.map((a) => ({
         user_id: userId,
@@ -112,37 +112,120 @@ export async function syncMemberships(
         job_title: a.job_title ? a.job_title : null,
       }))
     : [{ user_id: userId, role_id: role.id, team_id: null, job_title: clubJobTitle || null }];
+  const { error } = await admin.from("team_memberships").insert(rows);
+  if (error) throw new Error("No se pudieron asignar las categorías");
+}
 
-  const { error: memErr } = await admin.from("team_memberships").insert(rows);
-  if (memErr) throw new Error("No se pudieron asignar las categorías");
-
-  const teamIds = assignments.map((a) => a.team_id);
+/** Crea (o desarchiva) la fila de jugador de UNA categoría. */
+export async function ensurePlayerRow(
+  admin: any,
+  userId: string,
+  teamId: string,
+  player: PlayerInput | null | undefined,
+) {
   const { data: existing } = await admin
     .from("player_profiles")
-    .select("id, team_id")
-    .eq("user_id", userId);
+    .select("id")
+    .eq("user_id", userId)
+    .eq("team_id", teamId)
+    .maybeSingle();
+  const row = playerRowFor(userId, teamId, player);
+  if (existing?.id) {
+    const { error } = await admin.from("player_profiles").update(row).eq("id", existing.id);
+    if (error) throw new Error("No se pudo actualizar la ficha de jugador");
+  } else {
+    const { error } = await admin.from("player_profiles").insert(row);
+    if (error) throw new Error("No se pudo crear la ficha de jugador");
+  }
+}
 
-  if (!isPlayerRole(role)) {
-    if ((existing ?? []).length) {
-      await admin
-        .from("player_profiles")
-        .update({ archived_at: new Date().toISOString() })
-        .eq("user_id", userId)
-        .is("archived_at", null);
+/** Archiva la fila de jugador de UNA categoría. */
+export async function archivePlayerRow(admin: any, userId: string, teamId: string) {
+  const { error } = await admin
+    .from("player_profiles")
+    .update({ archived_at: new Date().toISOString() })
+    .eq("user_id", userId)
+    .eq("team_id", teamId)
+    .is("archived_at", null);
+  if (error) throw new Error("No se pudo archivar la ficha de jugador");
+}
+
+/** Datos de jugador que son de la PERSONA (no por categoría): pie, tallas, identidad. */
+export async function updatePersonPlayerData(
+  admin: any,
+  userId: string,
+  p: PlayerInput | null | undefined,
+) {
+  if (!p) return;
+  const patch = {
+    preferred_foot: norm(p.preferred_foot),
+    affiliation_number: norm(p.affiliation_number),
+    id_document: norm(p.id_document),
+    joined_at: norm(p.joined_at),
+    previous_club: norm(p.previous_club),
+    player_status: p.player_status ?? "activo",
+    shirt_size: norm(p.shirt_size),
+    pants_size: norm(p.pants_size),
+    shoe_size: norm(p.shoe_size),
+  };
+  await admin.from("player_profiles").update(patch).eq("user_id", userId).is("archived_at", null);
+}
+
+const LEVEL_RANK: Record<string, number> = {
+  sin_acceso: 0,
+  vista_jugador: 1,
+  lector_categoria: 2,
+  lector_global: 3,
+  editor_categoria: 4,
+  editor_global: 5,
+};
+
+export async function isSuperAdmin(supabase: any, userId: string) {
+  const { data } = await supabase.from("super_admins").select("user_id").eq("user_id", userId).maybeSingle();
+  return !!data;
+}
+
+/**
+ * Impide escalar privilegios: el rol asignado no puede tener en ningún módulo
+ * más nivel que el nivel efectivo del actor en esa categoría (o club-wide).
+ */
+export async function assertNoEscalation(
+  supabase: any,
+  actorId: string,
+  roleId: string,
+  teamId: string | null,
+) {
+  if (await isSuperAdmin(supabase, actorId)) return;
+  const { data: perms } = await supabase
+    .from("role_permissions")
+    .select("module_key, level")
+    .eq("role_id", roleId);
+  for (const p of (perms ?? []) as { module_key: string; level: string }[]) {
+    const target = LEVEL_RANK[p.level] ?? 0;
+    if (target === 0) continue;
+    const { data: mine } = await supabase.rpc("effective_permission", {
+      _user_id: actorId,
+      _module_key: p.module_key,
+      _team_id: teamId,
+    });
+    if ((LEVEL_RANK[mine as string] ?? 0) < target) {
+      throw new Error("No puedes asignar un rol con más permisos que los tuyos");
     }
-    return;
   }
+}
 
-  const byTeam = new Map<string, string>((existing ?? []).map((r: any) => [r.team_id, r.id]));
-  for (const tid of teamIds) {
-    const row = playerRowFor(userId, tid, player);
-    const id = byTeam.get(tid);
-    if (id) await admin.from("player_profiles").update(row).eq("id", id);
-    else await admin.from("player_profiles").insert(row);
-  }
-  const stale = (existing ?? []).filter((r: any) => !teamIds.includes(r.team_id));
-  for (const r of stale) {
-    await admin.from("player_profiles").update({ archived_at: new Date().toISOString() }).eq("id", r.id);
+/** Duplicado = mismo user_id + mismo team_id exacto (null con null). */
+export async function assertNoDuplicateMembership(
+  admin: any,
+  userId: string,
+  teamId: string | null,
+  exceptId?: string,
+) {
+  let q = admin.from("team_memberships").select("id").eq("user_id", userId);
+  q = teamId ? q.eq("team_id", teamId) : q.is("team_id", null);
+  const { data } = await q;
+  if ((data ?? []).some((r: any) => r.id !== exceptId)) {
+    throw new Error("Esta persona ya tiene una membresía en esa categoría");
   }
 }
 
