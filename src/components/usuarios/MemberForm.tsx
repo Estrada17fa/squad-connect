@@ -270,7 +270,7 @@ export function MemberForm({
   const passOk = isEdit ? password === "" || passCheck.isValid : passCheck.isValid;
   const namesOk = !!firstName.trim() && !!paternal.trim();
   const teamsOk = isAdmin || !isPlayer || selectedTeams.length > 0;
-  const canSubmit = emailOk && passOk && namesOk && !!roleId && teamsOk && !saving;
+  const canSubmit = emailOk && passOk && namesOk && (isEdit || (!!roleId && teamsOk)) && !saving;
 
   function toggleTeam(id: string, on: boolean) {
     setAssignments((prev) => {
@@ -440,6 +440,14 @@ export function MemberForm({
             </div>
           </Section>
 
+          {isEdit ? (
+            <p className="rounded-lg border border-border/60 p-3 text-xs text-muted-foreground">
+              El rol, las categorías, el cargo, el dorsal y la posición se gestionan desde cada
+              membresía en la ficha del miembro.
+            </p>
+          ) : null}
+
+          {!isEdit ? (<>
           <Section title="Rol" hint="Una sola función por persona dentro del club.">
             <Select value={roleId} onValueChange={setRoleId}>
               <SelectTrigger>
@@ -512,11 +520,13 @@ export function MemberForm({
               </Field>
             </Section>
           )}
+          </>) : null}
 
           {isPlayer ? (
             <>
               <Section title="Datos deportivos">
                 <div className="grid gap-3 sm:grid-cols-2">
+                  {!isEdit ? (<>
                   <Field label="Dorsal" htmlFor="mf-jersey">
                     <Input
                       id="mf-jersey"
@@ -549,6 +559,7 @@ export function MemberForm({
                       onChange={(e) => setPlayer((p) => ({ ...p, secondary_position: e.target.value }))}
                     />
                   </Field>
+                  </>) : null}
                   <Field label="Pie hábil">
                     <Select
                       value={player.preferred_foot}
