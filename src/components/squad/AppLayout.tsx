@@ -226,6 +226,24 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
     );
   }
 
+  if (data.noMemberships && !data.isSuperAdmin) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-6">
+        <div className="glass max-w-sm space-y-4 rounded-2xl p-6 text-center">
+          <p className="font-display text-lg font-semibold">No tienes categorías asignadas</p>
+          <p className="text-sm text-muted-foreground">Contacta al administrador de tu club para que te asigne una.</p>
+          <button
+            type="button"
+            onClick={signOut}
+            className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+          >
+            Cerrar sesión
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <AppContext.Provider value={ctx}>
       <ClubPrefsSync clubId={data.profile?.club_id ?? null} />

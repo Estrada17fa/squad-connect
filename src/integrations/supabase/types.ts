@@ -5503,6 +5503,7 @@ export type Database = {
           team_name: string
         }[]
       }
+      get_my_access: { Args: { p_club_id: string }; Returns: Json }
       get_user_club_id: { Args: { _user_id: string }; Returns: string }
       has_club_access: {
         Args: { _club_id: string; _user_id: string }

@@ -146,6 +146,8 @@ export function MembersTab({ clubId, canEdit }: { clubId: string; canEdit: boole
   function refreshMembers() {
     qc.invalidateQueries({ queryKey: ["club-members", clubId] });
     qc.invalidateQueries({ queryKey: ["club-memberships-all", clubId] });
+    // Cambios de membresía alteran los permisos efectivos.
+    qc.invalidateQueries({ queryKey: ["squad-access"] });
   }
 
   async function handleDeactivate(m: MemberProfile) {

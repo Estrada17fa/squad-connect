@@ -6,32 +6,24 @@ import {
   canRead as levelCanRead,
   isPersonalModule,
   isPlayerView,
-  maxLevel,
+  normalizeLevel,
   type PermissionLevel,
 } from "@/lib/permissions";
 
 /**
- * Nivel efectivo de un módulo POR EQUIPO, en la escala de 6 niveles.
- *
- * Resolución: nivel global (lector_global / editor_global, que aplica a
- * cualquier equipo del club) > override/rol del equipo > permiso club-wide.
- * Super admin siempre 'editor_global'.
- *
- * Ya no existe 'approver': aprobar solicitudes = ser editor del módulo
- * correspondiente.
+ * Nivel efectivo de un módulo POR EQUIPO, tal como lo calcula la base de datos
+ * (get_my_access -> effective_permission). Sin lógica de respaldo: un equipo
+ * que no viene en la respuesta queda en 'sin_acceso'. Sin equipo => contexto club.
  */
 export function useTeamAccess(moduleKey: ModuleKey) {
-  const { permissionsByTeam, globalPermissions, isSuperAdmin } = useApp();
+  const { permissionsByTeam, isSuperAdmin } = useApp();
 
   const levelForTeam = React.useCallback(
     (teamId: string | null | undefined): PermissionLevel => {
-      if (isSuperAdmin) return "editor_global";
-      const globalLevel = globalPermissions?.[moduleKey];
-      const clubLevel = permissionsByTeam?.["club"]?.[moduleKey];
-      const teamLevel = teamId ? permissionsByTeam?.[teamId]?.[moduleKey] : undefined;
-      return maxLevel(globalLevel, teamLevel ?? clubLevel);
+      const key = teamId ?? "club";
+      return normalizeLevel(permissionsByTeam?.[key]?.[moduleKey]);
     },
-    [permissionsByTeam, globalPermissions, isSuperAdmin, moduleKey],
+    [permissionsByTeam, moduleKey],
   );
 
   const canEditTeam = React.useCallback(
