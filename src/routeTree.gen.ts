@@ -9,50 +9,50 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
-import { Route as InviteTokenRouteImport } from './routes/invite.$token'
-import { Route as AuthenticatedMiPerfilRouteImport } from './routes/_authenticated/mi-perfil'
-import { Route as AuthenticatedMiClubRouteImport } from './routes/_authenticated/mi-club'
-import { Route as AuthenticatedCoordinacionRouteImport } from './routes/_authenticated/coordinacion'
-import { Route as AuthenticatedCambiarContrasenaRouteImport } from './routes/_authenticated/cambiar-contrasena'
-import { Route as AuthenticatedAgendaViajesRouteImport } from './routes/_authenticated/agenda-viajes'
-import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
+import { Route as AuthenticatedAgendaViajesRouteImport } from './routes/_authenticated/agenda-viajes'
+import { Route as AuthenticatedCambiarContrasenaRouteImport } from './routes/_authenticated/cambiar-contrasena'
+import { Route as AuthenticatedCoordinacionRouteImport } from './routes/_authenticated/coordinacion'
+import { Route as AuthenticatedMiClubRouteImport } from './routes/_authenticated/mi-club'
+import { Route as AuthenticatedMiPerfilRouteImport } from './routes/_authenticated/mi-perfil'
+import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
-import { Route as AuthenticatedMViajesRouteImport } from './routes/_authenticated/m.viajes'
-import { Route as AuthenticatedMUsuariosRouteImport } from './routes/_authenticated/m.usuarios'
-import { Route as AuthenticatedMTorneoRouteImport } from './routes/_authenticated/m.torneo'
-import { Route as AuthenticatedMSolicitudesRouteImport } from './routes/_authenticated/m.solicitudes'
-import { Route as AuthenticatedMSaludRouteImport } from './routes/_authenticated/m.salud'
-import { Route as AuthenticatedMPlantelRouteImport } from './routes/_authenticated/m.plantel'
-import { Route as AuthenticatedMPartidosRouteImport } from './routes/_authenticated/m.partidos'
-import { Route as AuthenticatedMNutricionRouteImport } from './routes/_authenticated/m.nutricion'
-import { Route as AuthenticatedMMultimedia_gestionRouteImport } from './routes/_authenticated/m.multimedia_gestion'
-import { Route as AuthenticatedMMultimediaRouteImport } from './routes/_authenticated/m.multimedia'
-import { Route as AuthenticatedMMesRouteImport } from './routes/_authenticated/m.mes'
-import { Route as AuthenticatedMInventarioRouteImport } from './routes/_authenticated/m.inventario'
-import { Route as AuthenticatedMEntrenamientosRouteImport } from './routes/_authenticated/m.entrenamientos'
-import { Route as AuthenticatedMDocumentosRouteImport } from './routes/_authenticated/m.documentos'
-import { Route as AuthenticatedMDesarrolloRouteImport } from './routes/_authenticated/m.desarrollo'
-import { Route as AuthenticatedMCoordinacion_internaRouteImport } from './routes/_authenticated/m.coordinacion_interna'
-import { Route as AuthenticatedMComunicadosRouteImport } from './routes/_authenticated/m.comunicados'
-import { Route as AuthenticatedMCompras_facturasRouteImport } from './routes/_authenticated/m.compras_facturas'
-import { Route as AuthenticatedMAgendaRouteImport } from './routes/_authenticated/m.agenda'
-import { Route as AuthenticatedMModuleRouteImport } from './routes/_authenticated/m.$module'
-import { Route as AuthenticatedAdminTorneoRouteImport } from './routes/_authenticated/admin.torneo'
-import { Route as AuthenticatedAdminConfiguracionRouteImport } from './routes/_authenticated/admin.configuracion'
 import { Route as AuthenticatedAdminClubsRouteImport } from './routes/_authenticated/admin.clubs'
+import { Route as AuthenticatedAdminConfiguracionRouteImport } from './routes/_authenticated/admin.configuracion'
+import { Route as AuthenticatedAdminTorneoRouteImport } from './routes/_authenticated/admin.torneo'
+import { Route as AuthenticatedMModuleRouteImport } from './routes/_authenticated/m.$module'
+import { Route as AuthenticatedMAgendaRouteImport } from './routes/_authenticated/m.agenda'
+import { Route as AuthenticatedMCompras_facturasRouteImport } from './routes/_authenticated/m.compras_facturas'
+import { Route as AuthenticatedMComunicadosRouteImport } from './routes/_authenticated/m.comunicados'
+import { Route as AuthenticatedMCoordinacion_internaRouteImport } from './routes/_authenticated/m.coordinacion_interna'
+import { Route as AuthenticatedMDesarrolloRouteImport } from './routes/_authenticated/m.desarrollo'
+import { Route as AuthenticatedMDocumentosRouteImport } from './routes/_authenticated/m.documentos'
+import { Route as AuthenticatedMEntrenamientosRouteImport } from './routes/_authenticated/m.entrenamientos'
+import { Route as AuthenticatedMInventarioRouteImport } from './routes/_authenticated/m.inventario'
+import { Route as AuthenticatedMMesRouteImport } from './routes/_authenticated/m.mes'
+import { Route as AuthenticatedMMultimediaRouteImport } from './routes/_authenticated/m.multimedia'
+import { Route as AuthenticatedMMultimedia_gestionRouteImport } from './routes/_authenticated/m.multimedia_gestion'
+import { Route as AuthenticatedMNutricionRouteImport } from './routes/_authenticated/m.nutricion'
+import { Route as AuthenticatedMPartidosRouteImport } from './routes/_authenticated/m.partidos'
+import { Route as AuthenticatedMPlantelRouteImport } from './routes/_authenticated/m.plantel'
+import { Route as AuthenticatedMSaludRouteImport } from './routes/_authenticated/m.salud'
+import { Route as AuthenticatedMSolicitudesRouteImport } from './routes/_authenticated/m.solicitudes'
+import { Route as AuthenticatedMTorneoRouteImport } from './routes/_authenticated/m.torneo'
+import { Route as AuthenticatedMUsuariosRouteImport } from './routes/_authenticated/m.usuarios'
+import { Route as AuthenticatedMViajesRouteImport } from './routes/_authenticated/m.viajes'
 import { Route as AuthenticatedMPlantelPlayerIdRouteImport } from './routes/_authenticated/m.plantel.$playerId'
 
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
@@ -60,25 +60,20 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const InviteTokenRoute = InviteTokenRouteImport.update({
-  id: '/invite/$token',
-  path: '/invite/$token',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedMiPerfilRoute = AuthenticatedMiPerfilRouteImport.update({
-  id: '/mi-perfil',
-  path: '/mi-perfil',
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedMiClubRoute = AuthenticatedMiClubRouteImport.update({
-  id: '/mi-club',
-  path: '/mi-club',
+const AuthenticatedAgendaRoute = AuthenticatedAgendaRouteImport.update({
+  id: '/agenda',
+  path: '/agenda',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedCoordinacionRoute =
-  AuthenticatedCoordinacionRouteImport.update({
-    id: '/coordinacion',
-    path: '/coordinacion',
+const AuthenticatedAgendaViajesRoute =
+  AuthenticatedAgendaViajesRouteImport.update({
+    id: '/agenda-viajes',
+    path: '/agenda-viajes',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedCambiarContrasenaRoute =
@@ -87,113 +82,63 @@ const AuthenticatedCambiarContrasenaRoute =
     path: '/cambiar-contrasena',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedAgendaViajesRoute =
-  AuthenticatedAgendaViajesRouteImport.update({
-    id: '/agenda-viajes',
-    path: '/agenda-viajes',
+const AuthenticatedCoordinacionRoute =
+  AuthenticatedCoordinacionRouteImport.update({
+    id: '/coordinacion',
+    path: '/coordinacion',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedAgendaRoute = AuthenticatedAgendaRouteImport.update({
-  id: '/agenda',
-  path: '/agenda',
+const AuthenticatedMiClubRoute = AuthenticatedMiClubRouteImport.update({
+  id: '/mi-club',
+  path: '/mi-club',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
+const AuthenticatedMiPerfilRoute = AuthenticatedMiPerfilRouteImport.update({
+  id: '/mi-perfil',
+  path: '/mi-perfil',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const InviteTokenRoute = InviteTokenRouteImport.update({
+  id: '/invite/$token',
+  path: '/invite/$token',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
-const AuthenticatedMViajesRoute = AuthenticatedMViajesRouteImport.update({
-  id: '/m/viajes',
-  path: '/m/viajes',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const AuthenticatedAdminClubsRoute = AuthenticatedAdminClubsRouteImport.update({
+  id: '/clubs',
+  path: '/clubs',
+  getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
-const AuthenticatedMUsuariosRoute = AuthenticatedMUsuariosRouteImport.update({
-  id: '/m/usuarios',
-  path: '/m/usuarios',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedMTorneoRoute = AuthenticatedMTorneoRouteImport.update({
-  id: '/m/torneo',
-  path: '/m/torneo',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedMSolicitudesRoute =
-  AuthenticatedMSolicitudesRouteImport.update({
-    id: '/m/solicitudes',
-    path: '/m/solicitudes',
-    getParentRoute: () => AuthenticatedRouteRoute,
+const AuthenticatedAdminConfiguracionRoute =
+  AuthenticatedAdminConfiguracionRouteImport.update({
+    id: '/configuracion',
+    path: '/configuracion',
+    getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
-const AuthenticatedMSaludRoute = AuthenticatedMSaludRouteImport.update({
-  id: '/m/salud',
-  path: '/m/salud',
+const AuthenticatedAdminTorneoRoute =
+  AuthenticatedAdminTorneoRouteImport.update({
+    id: '/torneo',
+    path: '/torneo',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedMModuleRoute = AuthenticatedMModuleRouteImport.update({
+  id: '/m/$module',
+  path: '/m/$module',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedMPlantelRoute = AuthenticatedMPlantelRouteImport.update({
-  id: '/m/plantel',
-  path: '/m/plantel',
+const AuthenticatedMAgendaRoute = AuthenticatedMAgendaRouteImport.update({
+  id: '/m/agenda',
+  path: '/m/agenda',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedMPartidosRoute = AuthenticatedMPartidosRouteImport.update({
-  id: '/m/partidos',
-  path: '/m/partidos',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedMNutricionRoute = AuthenticatedMNutricionRouteImport.update({
-  id: '/m/nutricion',
-  path: '/m/nutricion',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedMMultimedia_gestionRoute =
-  AuthenticatedMMultimedia_gestionRouteImport.update({
-    id: '/m/multimedia_gestion',
-    path: '/m/multimedia_gestion',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedMMultimediaRoute =
-  AuthenticatedMMultimediaRouteImport.update({
-    id: '/m/multimedia',
-    path: '/m/multimedia',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedMMesRoute = AuthenticatedMMesRouteImport.update({
-  id: '/m/mes',
-  path: '/m/mes',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedMInventarioRoute =
-  AuthenticatedMInventarioRouteImport.update({
-    id: '/m/inventario',
-    path: '/m/inventario',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedMEntrenamientosRoute =
-  AuthenticatedMEntrenamientosRouteImport.update({
-    id: '/m/entrenamientos',
-    path: '/m/entrenamientos',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedMDocumentosRoute =
-  AuthenticatedMDocumentosRouteImport.update({
-    id: '/m/documentos',
-    path: '/m/documentos',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedMDesarrolloRoute =
-  AuthenticatedMDesarrolloRouteImport.update({
-    id: '/m/desarrollo',
-    path: '/m/desarrollo',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedMCoordinacion_internaRoute =
-  AuthenticatedMCoordinacion_internaRouteImport.update({
-    id: '/m/coordinacion_interna',
-    path: '/m/coordinacion_interna',
+const AuthenticatedMCompras_facturasRoute =
+  AuthenticatedMCompras_facturasRouteImport.update({
+    id: '/m/compras_facturas',
+    path: '/m/compras_facturas',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedMComunicadosRoute =
@@ -202,38 +147,93 @@ const AuthenticatedMComunicadosRoute =
     path: '/m/comunicados',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedMCompras_facturasRoute =
-  AuthenticatedMCompras_facturasRouteImport.update({
-    id: '/m/compras_facturas',
-    path: '/m/compras_facturas',
+const AuthenticatedMCoordinacion_internaRoute =
+  AuthenticatedMCoordinacion_internaRouteImport.update({
+    id: '/m/coordinacion_interna',
+    path: '/m/coordinacion_interna',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedMAgendaRoute = AuthenticatedMAgendaRouteImport.update({
-  id: '/m/agenda',
-  path: '/m/agenda',
+const AuthenticatedMDesarrolloRoute =
+  AuthenticatedMDesarrolloRouteImport.update({
+    id: '/m/desarrollo',
+    path: '/m/desarrollo',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMDocumentosRoute =
+  AuthenticatedMDocumentosRouteImport.update({
+    id: '/m/documentos',
+    path: '/m/documentos',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMEntrenamientosRoute =
+  AuthenticatedMEntrenamientosRouteImport.update({
+    id: '/m/entrenamientos',
+    path: '/m/entrenamientos',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMInventarioRoute =
+  AuthenticatedMInventarioRouteImport.update({
+    id: '/m/inventario',
+    path: '/m/inventario',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMMesRoute = AuthenticatedMMesRouteImport.update({
+  id: '/m/mes',
+  path: '/m/mes',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedMModuleRoute = AuthenticatedMModuleRouteImport.update({
-  id: '/m/$module',
-  path: '/m/$module',
+const AuthenticatedMMultimediaRoute =
+  AuthenticatedMMultimediaRouteImport.update({
+    id: '/m/multimedia',
+    path: '/m/multimedia',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMMultimedia_gestionRoute =
+  AuthenticatedMMultimedia_gestionRouteImport.update({
+    id: '/m/multimedia_gestion',
+    path: '/m/multimedia_gestion',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMNutricionRoute = AuthenticatedMNutricionRouteImport.update({
+  id: '/m/nutricion',
+  path: '/m/nutricion',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedAdminTorneoRoute =
-  AuthenticatedAdminTorneoRouteImport.update({
-    id: '/torneo',
-    path: '/torneo',
-    getParentRoute: () => AuthenticatedAdminRoute,
+const AuthenticatedMPartidosRoute = AuthenticatedMPartidosRouteImport.update({
+  id: '/m/partidos',
+  path: '/m/partidos',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMPlantelRoute = AuthenticatedMPlantelRouteImport.update({
+  id: '/m/plantel',
+  path: '/m/plantel',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMSaludRoute = AuthenticatedMSaludRouteImport.update({
+  id: '/m/salud',
+  path: '/m/salud',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMSolicitudesRoute =
+  AuthenticatedMSolicitudesRouteImport.update({
+    id: '/m/solicitudes',
+    path: '/m/solicitudes',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedAdminConfiguracionRoute =
-  AuthenticatedAdminConfiguracionRouteImport.update({
-    id: '/configuracion',
-    path: '/configuracion',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminClubsRoute = AuthenticatedAdminClubsRouteImport.update({
-  id: '/clubs',
-  path: '/clubs',
-  getParentRoute: () => AuthenticatedAdminRoute,
+const AuthenticatedMTorneoRoute = AuthenticatedMTorneoRouteImport.update({
+  id: '/m/torneo',
+  path: '/m/torneo',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMUsuariosRoute = AuthenticatedMUsuariosRouteImport.update({
+  id: '/m/usuarios',
+  path: '/m/usuarios',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMViajesRoute = AuthenticatedMViajesRouteImport.update({
+  id: '/m/viajes',
+  path: '/m/viajes',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedMPlantelPlayerIdRoute =
   AuthenticatedMPlantelPlayerIdRouteImport.update({
@@ -476,18 +476,18 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_authenticated': {
       id: '/_authenticated'
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/': {
@@ -497,46 +497,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/invite/$token': {
-      id: '/invite/$token'
-      path: '/invite/$token'
-      fullPath: '/invite/$token'
-      preLoaderRoute: typeof InviteTokenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/mi-perfil': {
-      id: '/_authenticated/mi-perfil'
-      path: '/mi-perfil'
-      fullPath: '/mi-perfil'
-      preLoaderRoute: typeof AuthenticatedMiPerfilRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/mi-club': {
-      id: '/_authenticated/mi-club'
-      path: '/mi-club'
-      fullPath: '/mi-club'
-      preLoaderRoute: typeof AuthenticatedMiClubRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/coordinacion': {
-      id: '/_authenticated/coordinacion'
-      path: '/coordinacion'
-      fullPath: '/coordinacion'
-      preLoaderRoute: typeof AuthenticatedCoordinacionRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/cambiar-contrasena': {
-      id: '/_authenticated/cambiar-contrasena'
-      path: '/cambiar-contrasena'
-      fullPath: '/cambiar-contrasena'
-      preLoaderRoute: typeof AuthenticatedCambiarContrasenaRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/agenda-viajes': {
-      id: '/_authenticated/agenda-viajes'
-      path: '/agenda-viajes'
-      fullPath: '/agenda-viajes'
-      preLoaderRoute: typeof AuthenticatedAgendaViajesRouteImport
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/agenda': {
@@ -546,12 +511,47 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAgendaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/admin': {
-      id: '/_authenticated/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+    '/_authenticated/agenda-viajes': {
+      id: '/_authenticated/agenda-viajes'
+      path: '/agenda-viajes'
+      fullPath: '/agenda-viajes'
+      preLoaderRoute: typeof AuthenticatedAgendaViajesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/cambiar-contrasena': {
+      id: '/_authenticated/cambiar-contrasena'
+      path: '/cambiar-contrasena'
+      fullPath: '/cambiar-contrasena'
+      preLoaderRoute: typeof AuthenticatedCambiarContrasenaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/coordinacion': {
+      id: '/_authenticated/coordinacion'
+      path: '/coordinacion'
+      fullPath: '/coordinacion'
+      preLoaderRoute: typeof AuthenticatedCoordinacionRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/mi-club': {
+      id: '/_authenticated/mi-club'
+      path: '/mi-club'
+      fullPath: '/mi-club'
+      preLoaderRoute: typeof AuthenticatedMiClubRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/mi-perfil': {
+      id: '/_authenticated/mi-perfil'
+      path: '/mi-perfil'
+      fullPath: '/mi-perfil'
+      preLoaderRoute: typeof AuthenticatedMiPerfilRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/invite/$token': {
+      id: '/invite/$token'
+      path: '/invite/$token'
+      fullPath: '/invite/$token'
+      preLoaderRoute: typeof InviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin/': {
       id: '/_authenticated/admin/'
@@ -560,151 +560,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
-    '/_authenticated/m/viajes': {
-      id: '/_authenticated/m/viajes'
-      path: '/m/viajes'
-      fullPath: '/m/viajes'
-      preLoaderRoute: typeof AuthenticatedMViajesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/m/usuarios': {
-      id: '/_authenticated/m/usuarios'
-      path: '/m/usuarios'
-      fullPath: '/m/usuarios'
-      preLoaderRoute: typeof AuthenticatedMUsuariosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/m/torneo': {
-      id: '/_authenticated/m/torneo'
-      path: '/m/torneo'
-      fullPath: '/m/torneo'
-      preLoaderRoute: typeof AuthenticatedMTorneoRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/m/solicitudes': {
-      id: '/_authenticated/m/solicitudes'
-      path: '/m/solicitudes'
-      fullPath: '/m/solicitudes'
-      preLoaderRoute: typeof AuthenticatedMSolicitudesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/m/salud': {
-      id: '/_authenticated/m/salud'
-      path: '/m/salud'
-      fullPath: '/m/salud'
-      preLoaderRoute: typeof AuthenticatedMSaludRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/m/plantel': {
-      id: '/_authenticated/m/plantel'
-      path: '/m/plantel'
-      fullPath: '/m/plantel'
-      preLoaderRoute: typeof AuthenticatedMPlantelRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/m/partidos': {
-      id: '/_authenticated/m/partidos'
-      path: '/m/partidos'
-      fullPath: '/m/partidos'
-      preLoaderRoute: typeof AuthenticatedMPartidosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/m/nutricion': {
-      id: '/_authenticated/m/nutricion'
-      path: '/m/nutricion'
-      fullPath: '/m/nutricion'
-      preLoaderRoute: typeof AuthenticatedMNutricionRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/m/multimedia_gestion': {
-      id: '/_authenticated/m/multimedia_gestion'
-      path: '/m/multimedia_gestion'
-      fullPath: '/m/multimedia_gestion'
-      preLoaderRoute: typeof AuthenticatedMMultimedia_gestionRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/m/multimedia': {
-      id: '/_authenticated/m/multimedia'
-      path: '/m/multimedia'
-      fullPath: '/m/multimedia'
-      preLoaderRoute: typeof AuthenticatedMMultimediaRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/m/mes': {
-      id: '/_authenticated/m/mes'
-      path: '/m/mes'
-      fullPath: '/m/mes'
-      preLoaderRoute: typeof AuthenticatedMMesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/m/inventario': {
-      id: '/_authenticated/m/inventario'
-      path: '/m/inventario'
-      fullPath: '/m/inventario'
-      preLoaderRoute: typeof AuthenticatedMInventarioRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/m/entrenamientos': {
-      id: '/_authenticated/m/entrenamientos'
-      path: '/m/entrenamientos'
-      fullPath: '/m/entrenamientos'
-      preLoaderRoute: typeof AuthenticatedMEntrenamientosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/m/documentos': {
-      id: '/_authenticated/m/documentos'
-      path: '/m/documentos'
-      fullPath: '/m/documentos'
-      preLoaderRoute: typeof AuthenticatedMDocumentosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/m/desarrollo': {
-      id: '/_authenticated/m/desarrollo'
-      path: '/m/desarrollo'
-      fullPath: '/m/desarrollo'
-      preLoaderRoute: typeof AuthenticatedMDesarrolloRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/m/coordinacion_interna': {
-      id: '/_authenticated/m/coordinacion_interna'
-      path: '/m/coordinacion_interna'
-      fullPath: '/m/coordinacion_interna'
-      preLoaderRoute: typeof AuthenticatedMCoordinacion_internaRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/m/comunicados': {
-      id: '/_authenticated/m/comunicados'
-      path: '/m/comunicados'
-      fullPath: '/m/comunicados'
-      preLoaderRoute: typeof AuthenticatedMComunicadosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/m/compras_facturas': {
-      id: '/_authenticated/m/compras_facturas'
-      path: '/m/compras_facturas'
-      fullPath: '/m/compras_facturas'
-      preLoaderRoute: typeof AuthenticatedMCompras_facturasRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/m/agenda': {
-      id: '/_authenticated/m/agenda'
-      path: '/m/agenda'
-      fullPath: '/m/agenda'
-      preLoaderRoute: typeof AuthenticatedMAgendaRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/m/$module': {
-      id: '/_authenticated/m/$module'
-      path: '/m/$module'
-      fullPath: '/m/$module'
-      preLoaderRoute: typeof AuthenticatedMModuleRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/admin/torneo': {
-      id: '/_authenticated/admin/torneo'
-      path: '/torneo'
-      fullPath: '/admin/torneo'
-      preLoaderRoute: typeof AuthenticatedAdminTorneoRouteImport
+    '/_authenticated/admin/clubs': {
+      id: '/_authenticated/admin/clubs'
+      path: '/clubs'
+      fullPath: '/admin/clubs'
+      preLoaderRoute: typeof AuthenticatedAdminClubsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/configuracion': {
@@ -714,12 +574,152 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminConfiguracionRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
-    '/_authenticated/admin/clubs': {
-      id: '/_authenticated/admin/clubs'
-      path: '/clubs'
-      fullPath: '/admin/clubs'
-      preLoaderRoute: typeof AuthenticatedAdminClubsRouteImport
+    '/_authenticated/admin/torneo': {
+      id: '/_authenticated/admin/torneo'
+      path: '/torneo'
+      fullPath: '/admin/torneo'
+      preLoaderRoute: typeof AuthenticatedAdminTorneoRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/m/$module': {
+      id: '/_authenticated/m/$module'
+      path: '/m/$module'
+      fullPath: '/m/$module'
+      preLoaderRoute: typeof AuthenticatedMModuleRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/m/agenda': {
+      id: '/_authenticated/m/agenda'
+      path: '/m/agenda'
+      fullPath: '/m/agenda'
+      preLoaderRoute: typeof AuthenticatedMAgendaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/m/compras_facturas': {
+      id: '/_authenticated/m/compras_facturas'
+      path: '/m/compras_facturas'
+      fullPath: '/m/compras_facturas'
+      preLoaderRoute: typeof AuthenticatedMCompras_facturasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/m/comunicados': {
+      id: '/_authenticated/m/comunicados'
+      path: '/m/comunicados'
+      fullPath: '/m/comunicados'
+      preLoaderRoute: typeof AuthenticatedMComunicadosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/m/coordinacion_interna': {
+      id: '/_authenticated/m/coordinacion_interna'
+      path: '/m/coordinacion_interna'
+      fullPath: '/m/coordinacion_interna'
+      preLoaderRoute: typeof AuthenticatedMCoordinacion_internaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/m/desarrollo': {
+      id: '/_authenticated/m/desarrollo'
+      path: '/m/desarrollo'
+      fullPath: '/m/desarrollo'
+      preLoaderRoute: typeof AuthenticatedMDesarrolloRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/m/documentos': {
+      id: '/_authenticated/m/documentos'
+      path: '/m/documentos'
+      fullPath: '/m/documentos'
+      preLoaderRoute: typeof AuthenticatedMDocumentosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/m/entrenamientos': {
+      id: '/_authenticated/m/entrenamientos'
+      path: '/m/entrenamientos'
+      fullPath: '/m/entrenamientos'
+      preLoaderRoute: typeof AuthenticatedMEntrenamientosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/m/inventario': {
+      id: '/_authenticated/m/inventario'
+      path: '/m/inventario'
+      fullPath: '/m/inventario'
+      preLoaderRoute: typeof AuthenticatedMInventarioRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/m/mes': {
+      id: '/_authenticated/m/mes'
+      path: '/m/mes'
+      fullPath: '/m/mes'
+      preLoaderRoute: typeof AuthenticatedMMesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/m/multimedia': {
+      id: '/_authenticated/m/multimedia'
+      path: '/m/multimedia'
+      fullPath: '/m/multimedia'
+      preLoaderRoute: typeof AuthenticatedMMultimediaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/m/multimedia_gestion': {
+      id: '/_authenticated/m/multimedia_gestion'
+      path: '/m/multimedia_gestion'
+      fullPath: '/m/multimedia_gestion'
+      preLoaderRoute: typeof AuthenticatedMMultimedia_gestionRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/m/nutricion': {
+      id: '/_authenticated/m/nutricion'
+      path: '/m/nutricion'
+      fullPath: '/m/nutricion'
+      preLoaderRoute: typeof AuthenticatedMNutricionRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/m/partidos': {
+      id: '/_authenticated/m/partidos'
+      path: '/m/partidos'
+      fullPath: '/m/partidos'
+      preLoaderRoute: typeof AuthenticatedMPartidosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/m/plantel': {
+      id: '/_authenticated/m/plantel'
+      path: '/m/plantel'
+      fullPath: '/m/plantel'
+      preLoaderRoute: typeof AuthenticatedMPlantelRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/m/salud': {
+      id: '/_authenticated/m/salud'
+      path: '/m/salud'
+      fullPath: '/m/salud'
+      preLoaderRoute: typeof AuthenticatedMSaludRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/m/solicitudes': {
+      id: '/_authenticated/m/solicitudes'
+      path: '/m/solicitudes'
+      fullPath: '/m/solicitudes'
+      preLoaderRoute: typeof AuthenticatedMSolicitudesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/m/torneo': {
+      id: '/_authenticated/m/torneo'
+      path: '/m/torneo'
+      fullPath: '/m/torneo'
+      preLoaderRoute: typeof AuthenticatedMTorneoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/m/usuarios': {
+      id: '/_authenticated/m/usuarios'
+      path: '/m/usuarios'
+      fullPath: '/m/usuarios'
+      preLoaderRoute: typeof AuthenticatedMUsuariosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/m/viajes': {
+      id: '/_authenticated/m/viajes'
+      path: '/m/viajes'
+      fullPath: '/m/viajes'
+      preLoaderRoute: typeof AuthenticatedMViajesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/m/plantel/$playerId': {
       id: '/_authenticated/m/plantel/$playerId'
