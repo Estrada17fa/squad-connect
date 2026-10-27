@@ -95,11 +95,20 @@ export function canSeeModule(key: ModuleKey, level: PermissionLevel | undefined 
 
 /**
  * Acceso al MÓDULO de gestión de viajes (chip en Coordinación, `/m/viajes`):
- * requiere nivel global de lectura o superior. La consulta personal del viaje
- * vive en la pestaña Viajes de Agenda y solo pide lectura.
+ * cualquier nivel de lector o editor (por categoría o global). Vista Jugador
+ * queda fuera: su consulta personal vive en la pestaña Viajes de Agenda.
+ * Con nivel de categoría la RLS solo devuelve los viajes de sus categorías.
  */
 export function canManageTripsModule(level: PermissionLevel | undefined | null): boolean {
-  return LEVEL_RANK[normalizeLevel(level)] >= LEVEL_RANK.lector_global;
+  return LEVEL_RANK[normalizeLevel(level)] >= LEVEL_RANK.lector_categoria;
+}
+
+/**
+ * Acceso a Compras y facturas, alineado con la RLS (can_view_club_module):
+ * cualquier lector/editor; Vista Jugador queda fuera de esta pantalla.
+ */
+export function canAccessExpensesModule(level: PermissionLevel | undefined | null): boolean {
+  return LEVEL_RANK[normalizeLevel(level)] >= LEVEL_RANK.lector_categoria;
 }
 
 
@@ -196,48 +205,48 @@ export function coerceLevelFor(_key: ModuleKey, level: PermissionLevel): Permiss
 
 export const DEFAULT_ROLE_LEVELS: Record<string, Partial<Record<ModuleKey, PermissionLevel>>> = {
   admin: {
-    agenda: "editor_global", mes: "editor_global", plantel: "editor_global",
+    agenda: "editor_global", plantel: "editor_global",
     viajes: "editor_global", inventario: "editor_global", coordinacion_interna: "editor_global",
     partidos: "editor_global",
     solicitudes: "editor_global", compras_facturas: "editor_global", documentos: "editor_global",
     usuarios: "editor_global", comunicados: "editor_global", multimedia: "editor_global",
-    torneo: "editor_global", tacticas: "editor_global", salud: "editor_global",
+    torneo: "editor_global", salud: "editor_global",
     desarrollo: "editor_global", entrenamientos: "editor_global", nutricion: "editor_global",
   },
   tecnico: {
-    agenda: "editor_categoria", mes: "editor_categoria", plantel: "editor_categoria",
+    agenda: "editor_categoria", plantel: "editor_categoria",
     viajes: "lector_categoria", inventario: "lector_categoria", coordinacion_interna: "editor_categoria",
     partidos: "editor_categoria",
     solicitudes: "editor_categoria", compras_facturas: "sin_acceso", documentos: "lector_categoria",
     usuarios: "sin_acceso", comunicados: "editor_categoria", multimedia: "lector_categoria",
-    torneo: "lector_categoria", tacticas: "editor_categoria", salud: "sin_acceso",
+    torneo: "lector_categoria", salud: "sin_acceso",
     desarrollo: "editor_categoria", entrenamientos: "editor_categoria", nutricion: "lector_categoria",
   },
   medico: {
-    agenda: "lector_categoria", mes: "lector_categoria", plantel: "lector_categoria",
+    agenda: "lector_categoria", plantel: "lector_categoria",
     viajes: "lector_categoria", inventario: "lector_categoria", coordinacion_interna: "editor_categoria",
     partidos: "lector_categoria",
     solicitudes: "editor_categoria", compras_facturas: "sin_acceso", documentos: "lector_categoria",
     usuarios: "sin_acceso", comunicados: "lector_categoria", multimedia: "lector_categoria",
-    torneo: "lector_categoria", tacticas: "lector_categoria", salud: "editor_categoria",
+    torneo: "lector_categoria", salud: "editor_categoria",
     desarrollo: "sin_acceso", entrenamientos: "lector_categoria", nutricion: "editor_categoria",
   },
   staff: {
-    agenda: "lector_categoria", mes: "lector_categoria", plantel: "lector_categoria",
+    agenda: "lector_categoria", plantel: "lector_categoria",
     viajes: "editor_categoria", inventario: "editor_categoria", coordinacion_interna: "editor_categoria",
     partidos: "lector_categoria",
     solicitudes: "editor_categoria", compras_facturas: "editor_categoria", documentos: "lector_categoria",
     usuarios: "sin_acceso", comunicados: "lector_categoria", multimedia: "editor_categoria",
-    torneo: "lector_categoria", tacticas: "lector_categoria", salud: "sin_acceso",
+    torneo: "lector_categoria", salud: "sin_acceso",
     desarrollo: "sin_acceso", entrenamientos: "lector_categoria", nutricion: "lector_categoria",
   },
   jugador: {
-    agenda: "vista_jugador", mes: "vista_jugador", plantel: "vista_jugador",
+    agenda: "vista_jugador", plantel: "vista_jugador",
     viajes: "vista_jugador", inventario: "sin_acceso", coordinacion_interna: "sin_acceso",
     partidos: "vista_jugador",
     solicitudes: "vista_jugador", compras_facturas: "sin_acceso", documentos: "sin_acceso",
     usuarios: "sin_acceso", comunicados: "vista_jugador", multimedia: "vista_jugador",
-    torneo: "vista_jugador", tacticas: "vista_jugador", salud: "vista_jugador",
+    torneo: "vista_jugador", salud: "vista_jugador",
     desarrollo: "vista_jugador", entrenamientos: "vista_jugador", nutricion: "vista_jugador",
   },
 };

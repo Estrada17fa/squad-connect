@@ -68,10 +68,10 @@ function ComprasPage() {
   const { permissions, isSuperAdmin, profile, user } = useApp();
   const clubId = profile?.club_id ?? null;
 
-  // Módulo de club: se comporta con Sin acceso / Lector global / Editor global.
+  // Alineado con la RLS: cualquier lector/editor entra; editores editan.
   const level = normalizeLevel(permissions.compras_facturas);
-  const canAccess = isSuperAdmin || LEVEL_RANK[level] >= LEVEL_RANK.lector_global;
-  const canEdit = isSuperAdmin || level === "editor_global";
+  const canAccess = isSuperAdmin || canAccessExpensesModule(level);
+  const canEdit = isSuperAdmin || level === "editor_categoria" || level === "editor_global";
 
   const [view, setView] = React.useState<SubView>("gastos");
   const [filters, setFilters] = React.useState<ExpenseFilterState>(EMPTY_EXPENSE_FILTERS);
