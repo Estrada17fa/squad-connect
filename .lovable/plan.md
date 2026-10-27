@@ -30,6 +30,7 @@ No se toca: escala de 6 niveles, `get_my_access`, `effective_permission`, polít
 - `agenda.tsx` e `index.tsx` (Home): visibilidad y pestaña por defecto dependen de `agenda`; Mes se muestra cuando hay acceso a agenda.
 - Verificar que `getModuleAccess`/`canViewModule` resuelvan alias vía `permissionKeyFor` (como multimedia_gestion); si no, ajustar ahí.
 - `admin.clubs.tsx`: quitar `mes` de la lista de módulos.
+- Revisión previa: los 4 ajustes avanzados de `mes` existentes coinciden con su ajuste de `agenda`, y ningún rol tiene Mes distinto de Agenda; nadie cambia de permiso con el alias.
 
 ## Verificación
 - Revisión de tipos/compilación limpia.
