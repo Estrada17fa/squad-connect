@@ -61,7 +61,7 @@ const ROLE_PAGES: Record<BaseRole, Record<PageKey, ModuleKey[]>> = {
   },
 };
 
-const DEFAULT_PAGE_FOR_MODULE: Record<ModuleKey, PageKey> = {
+const DEFAULT_PAGE_FOR_MODULE: Partial<Record<ModuleKey, PageKey>> = {
   agenda: "agenda",
   mes: "agenda",
   plantel: "club",

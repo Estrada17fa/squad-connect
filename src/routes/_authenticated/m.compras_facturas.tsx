@@ -42,7 +42,7 @@ import {
 import { SupplierFormDialog } from "@/components/compras/SupplierFormDialog";
 import { SupplierDetailSheet } from "@/components/compras/SupplierDetailSheet";
 import { cn } from "@/lib/utils";
-import { LEVEL_RANK, normalizeLevel } from "@/lib/permissions";
+import { canAccessExpensesModule, normalizeLevel } from "@/lib/permissions";
 
 export const Route = createFileRoute("/_authenticated/m/compras_facturas")({
   validateSearch: (search: Record<string, unknown>) => ({
