@@ -77,8 +77,7 @@ export interface ModuleDef {
 }
 
 export const MODULES: ModuleDef[] = [
-  { key: "agenda", label: "Agenda", icon: CalendarClock, description: "Próximos eventos en lista", scope: "mixed" , playerView: "mine" },
-  { key: "mes", label: "Mes", icon: Calendar, description: "Vista mensual de eventos", scope: "mixed" , playerView: "mine" },
+  { key: "agenda", label: "Agenda", icon: CalendarClock, description: "Lista y vista mensual de eventos", scope: "mixed" , playerView: "mine" },
   { key: "plantel", label: "Plantel", icon: Users, description: "Jugadores y cuerpo técnico", scope: "team" , playerView: "mine" },
   { key: "viajes", label: "Viajes", icon: Plane, description: "Logística de traslados y hospedajes", scope: "mixed" , playerView: "mine" },
   { key: "inventario", label: "Inventario", icon: Package, description: "Material deportivo y equipamiento", scope: "mixed" , playerView: "mine" },
@@ -91,7 +90,6 @@ export const MODULES: ModuleDef[] = [
   { key: "comunicados", label: "Comunicados", icon: Megaphone, description: "Avisos oficiales del club", scope: "club" , playerView: "team" },
   { key: "multimedia", label: "Multimedia", icon: ImageIcon, description: "Fotos y videos", scope: "team" , playerView: "team" },
   { key: "torneo", label: "Torneo", icon: Trophy, description: "Competencias y clasificaciones", scope: "team" , playerView: "team" },
-  { key: "tacticas", label: "Tácticas", icon: LayoutGrid, description: "Formaciones y jugadas", scope: "team" , playerView: "team" },
   { key: "salud", label: "Salud", icon: HeartPulse, description: "Parte médico y lesiones", scope: "team" , playerView: "mine" },
   { key: "desarrollo", label: "Desarrollo", icon: TrendingUp, description: "Evaluaciones y progresos", scope: "team" , playerView: "mine" },
   { key: "entrenamientos", label: "Entrenamientos", icon: Dumbbell, description: "Sesiones del equipo y biblioteca de ejercicios", scope: "team" , playerView: "team" },
@@ -104,11 +102,13 @@ export const MODULES: ModuleDef[] = [
  * en las matrices de permisos ni en `accessibleModules`.
  */
 export const NAV_ALIAS_MODULES: ModuleDef[] = [
+  { key: "mes", label: "Mes", icon: Calendar, description: "Vista mensual de eventos", scope: "mixed", playerView: "mine" },
   { key: "multimedia_gestion", label: "Multimedia", icon: ImageIcon, description: "Subir y gestionar fotos y videos", scope: "team", playerView: "team" },
 ];
 
 const NAV_ALIAS_PERMISSION: Partial<Record<ModuleKey, ModuleKey>> = {
   multimedia_gestion: "multimedia",
+  mes: "agenda",
 };
 
 /** Módulo de permisos real detrás de una entrada de navegación. */

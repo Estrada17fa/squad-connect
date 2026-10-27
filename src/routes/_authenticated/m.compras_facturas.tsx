@@ -42,7 +42,7 @@ import {
 import { SupplierFormDialog } from "@/components/compras/SupplierFormDialog";
 import { SupplierDetailSheet } from "@/components/compras/SupplierDetailSheet";
 import { cn } from "@/lib/utils";
-import { LEVEL_RANK, normalizeLevel } from "@/lib/permissions";
+import { canAccessExpensesModule, normalizeLevel } from "@/lib/permissions";
 
 export const Route = createFileRoute("/_authenticated/m/compras_facturas")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -68,10 +68,10 @@ function ComprasPage() {
   const { permissions, isSuperAdmin, profile, user } = useApp();
   const clubId = profile?.club_id ?? null;
 
-  // Módulo de club: se comporta con Sin acceso / Lector global / Editor global.
+  // Alineado con la RLS: cualquier lector/editor entra; editores editan.
   const level = normalizeLevel(permissions.compras_facturas);
-  const canAccess = isSuperAdmin || LEVEL_RANK[level] >= LEVEL_RANK.lector_global;
-  const canEdit = isSuperAdmin || level === "editor_global";
+  const canAccess = isSuperAdmin || canAccessExpensesModule(level);
+  const canEdit = isSuperAdmin || level === "editor_categoria" || level === "editor_global";
 
   const [view, setView] = React.useState<SubView>("gastos");
   const [filters, setFilters] = React.useState<ExpenseFilterState>(EMPTY_EXPENSE_FILTERS);

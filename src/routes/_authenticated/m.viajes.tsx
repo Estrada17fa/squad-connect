@@ -62,7 +62,12 @@ function ViajesPage() {
   // Gestión de viajes: nivel global o superior (la consulta personal vive en Agenda).
   const canAccess = isSuperAdmin || canManageTripsModule(getModuleAccess("viajes"));
 
-  const { canEditTeam } = useTeamAccess("viajes");
+  const { canEditTeam, canReadTeam } = useTeamAccess("viajes");
+  // Solo categorías que el usuario puede leer en Viajes (sin categorías ajenas).
+  const filterTeams = React.useMemo(
+    () => (isSuperAdmin ? teamOptions : teamOptions.filter((t) => !t.id || canReadTeam(t.id))),
+    [isSuperAdmin, teamOptions, canReadTeam],
+  );
 
   const [formOpen, setFormOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<TripRow | null>(null);
@@ -103,7 +108,7 @@ function ViajesPage() {
     <div className="space-y-6">
       <PageHeader hideTitle title="Viajes" subtitle="Todos tus equipos" />
       <ModuleTabs activeKey="viajes" />
-      <TeamFilter teams={teamOptions} value={teamFilter} onChange={setTeamFilter} />
+      <TeamFilter teams={filterTeams} value={teamFilter} onChange={setTeamFilter} />
       <TripFilters value={filters} onChange={setFilters} count={trips.length} />
 
       {editableTeams.length > 0 ? (

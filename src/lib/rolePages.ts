@@ -27,29 +27,29 @@ const ROLE_PAGES: Record<BaseRole, Record<PageKey, ModuleKey[]>> = {
   admin: {
     home: [],
     agenda: ["agenda", "mes"],
-    club: ["plantel", "salud", "desarrollo", "entrenamientos", "nutricion", "tacticas", "torneo", "comunicados", "multimedia"],
-    coordinacion: ["coordinacion_interna", "solicitudes", "inventario", "compras_facturas", "partidos", "viajes", "multimedia_gestion"],
-    admin: ["usuarios", "documentos"],
+    club: ["plantel", "salud", "desarrollo", "entrenamientos", "nutricion", "torneo", "comunicados", "multimedia"],
+    coordinacion: ["coordinacion_interna", "solicitudes", "inventario", "compras_facturas", "documentos", "partidos", "viajes", "multimedia_gestion"],
+    admin: ["usuarios"],
   },
   tecnico: {
     home: [],
     agenda: ["agenda", "mes"],
-    club: ["plantel", "desarrollo", "entrenamientos", "nutricion", "tacticas", "torneo", "comunicados", "multimedia"],
-    coordinacion: ["coordinacion_interna", "solicitudes", "partidos", "viajes", "multimedia_gestion"],
+    club: ["plantel", "desarrollo", "entrenamientos", "nutricion", "torneo", "comunicados", "multimedia"],
+    coordinacion: ["coordinacion_interna", "solicitudes", "documentos", "partidos", "viajes", "multimedia_gestion"],
     admin: [],
   },
   medico: {
     home: [],
     agenda: ["agenda", "mes"],
     club: ["plantel", "salud", "nutricion", "comunicados", "multimedia"],
-    coordinacion: ["coordinacion_interna", "solicitudes", "multimedia_gestion"],
+    coordinacion: ["coordinacion_interna", "solicitudes", "documentos", "multimedia_gestion"],
     admin: [],
   },
   staff: {
     home: [],
     agenda: ["agenda", "mes"],
     club: ["plantel", "entrenamientos", "comunicados", "multimedia"],
-    coordinacion: ["coordinacion_interna", "solicitudes", "inventario", "partidos", "viajes", "multimedia_gestion"],
+    coordinacion: ["coordinacion_interna", "solicitudes", "inventario", "compras_facturas", "documentos", "partidos", "viajes", "multimedia_gestion"],
     admin: [],
   },
   jugador: {
@@ -61,14 +61,13 @@ const ROLE_PAGES: Record<BaseRole, Record<PageKey, ModuleKey[]>> = {
   },
 };
 
-const DEFAULT_PAGE_FOR_MODULE: Record<ModuleKey, PageKey> = {
+const DEFAULT_PAGE_FOR_MODULE: Partial<Record<ModuleKey, PageKey>> = {
   agenda: "agenda",
   mes: "agenda",
   plantel: "club",
   salud: "club",
   desarrollo: "club",
   entrenamientos: "club",
-  tacticas: "club",
   torneo: "club",
   comunicados: "club",
   multimedia: "club",
@@ -81,7 +80,7 @@ const DEFAULT_PAGE_FOR_MODULE: Record<ModuleKey, PageKey> = {
   inventario: "coordinacion",
   viajes: "coordinacion",
   usuarios: "admin",
-  documentos: "admin",
+  documentos: "coordinacion",
 };
 
 /**
@@ -93,6 +92,7 @@ const COORDINACION_ORDER: ModuleKey[] = [
   "solicitudes",
   "inventario",
   "compras_facturas",
+  "documentos",
   "partidos",
   "viajes",
   "multimedia_gestion",
@@ -110,7 +110,6 @@ const CLUB_ORDER: ModuleKey[] = [
   "salud",
   "desarrollo",
   "nutricion",
-  "tacticas",
   "plantel",
   "multimedia",
 ];
