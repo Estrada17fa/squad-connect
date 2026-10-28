@@ -46,6 +46,7 @@ import { Route as AuthenticatedMSolicitudesRouteImport } from './routes/_authent
 import { Route as AuthenticatedMTorneoRouteImport } from './routes/_authenticated/m.torneo'
 import { Route as AuthenticatedMUsuariosRouteImport } from './routes/_authenticated/m.usuarios'
 import { Route as AuthenticatedMViajesRouteImport } from './routes/_authenticated/m.viajes'
+import { Route as AuthenticatedCoordinacionAreaModuleRouteImport } from './routes/_authenticated/coordinacion.$area.$module'
 import { Route as AuthenticatedCoordinacionAdministrativaCompras_facturasRouteImport } from './routes/_authenticated/coordinacion.administrativa.compras_facturas'
 import { Route as AuthenticatedCoordinacionAdministrativaDocumentosRouteImport } from './routes/_authenticated/coordinacion.administrativa.documentos'
 import { Route as AuthenticatedCoordinacionGeneralComunicadosRouteImport } from './routes/_authenticated/coordinacion.general.comunicados'
@@ -264,6 +265,12 @@ const AuthenticatedMViajesRoute = AuthenticatedMViajesRouteImport.update({
   path: '/m/viajes',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCoordinacionAreaModuleRoute =
+  AuthenticatedCoordinacionAreaModuleRouteImport.update({
+    id: '/$module',
+    path: '/$module',
+    getParentRoute: () => AuthenticatedCoordinacionAreaRoute,
+  } as any)
 const AuthenticatedCoordinacionAdministrativaCompras_facturasRoute =
   AuthenticatedCoordinacionAdministrativaCompras_facturasRouteImport.update({
     id: '/administrativa/compras_facturas',
@@ -375,7 +382,7 @@ export interface FileRoutesByFullPath {
   '/admin/clubs': typeof AuthenticatedAdminClubsRoute
   '/admin/configuracion': typeof AuthenticatedAdminConfiguracionRoute
   '/admin/torneo': typeof AuthenticatedAdminTorneoRoute
-  '/coordinacion/$area': typeof AuthenticatedCoordinacionAreaRoute
+  '/coordinacion/$area': typeof AuthenticatedCoordinacionAreaRouteWithChildren
   '/m/$module': typeof AuthenticatedMModuleRoute
   '/m/agenda': typeof AuthenticatedMAgendaRoute
   '/m/compras_facturas': typeof AuthenticatedMCompras_facturasRoute
@@ -398,6 +405,7 @@ export interface FileRoutesByFullPath {
   '/m/viajes': typeof AuthenticatedMViajesRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/coordinacion/': typeof AuthenticatedCoordinacionIndexRoute
+  '/coordinacion/$area/$module': typeof AuthenticatedCoordinacionAreaModuleRoute
   '/coordinacion/administrativa/compras_facturas': typeof AuthenticatedCoordinacionAdministrativaCompras_facturasRoute
   '/coordinacion/administrativa/documentos': typeof AuthenticatedCoordinacionAdministrativaDocumentosRoute
   '/coordinacion/general/comunicados': typeof AuthenticatedCoordinacionGeneralComunicadosRoute
@@ -427,7 +435,7 @@ export interface FileRoutesByTo {
   '/admin/clubs': typeof AuthenticatedAdminClubsRoute
   '/admin/configuracion': typeof AuthenticatedAdminConfiguracionRoute
   '/admin/torneo': typeof AuthenticatedAdminTorneoRoute
-  '/coordinacion/$area': typeof AuthenticatedCoordinacionAreaRoute
+  '/coordinacion/$area': typeof AuthenticatedCoordinacionAreaRouteWithChildren
   '/m/$module': typeof AuthenticatedMModuleRoute
   '/m/agenda': typeof AuthenticatedMAgendaRoute
   '/m/compras_facturas': typeof AuthenticatedMCompras_facturasRoute
@@ -450,6 +458,7 @@ export interface FileRoutesByTo {
   '/m/viajes': typeof AuthenticatedMViajesRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/coordinacion': typeof AuthenticatedCoordinacionIndexRoute
+  '/coordinacion/$area/$module': typeof AuthenticatedCoordinacionAreaModuleRoute
   '/coordinacion/administrativa/compras_facturas': typeof AuthenticatedCoordinacionAdministrativaCompras_facturasRoute
   '/coordinacion/administrativa/documentos': typeof AuthenticatedCoordinacionAdministrativaDocumentosRoute
   '/coordinacion/general/comunicados': typeof AuthenticatedCoordinacionGeneralComunicadosRoute
@@ -483,7 +492,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/clubs': typeof AuthenticatedAdminClubsRoute
   '/_authenticated/admin/configuracion': typeof AuthenticatedAdminConfiguracionRoute
   '/_authenticated/admin/torneo': typeof AuthenticatedAdminTorneoRoute
-  '/_authenticated/coordinacion/$area': typeof AuthenticatedCoordinacionAreaRoute
+  '/_authenticated/coordinacion/$area': typeof AuthenticatedCoordinacionAreaRouteWithChildren
   '/_authenticated/m/$module': typeof AuthenticatedMModuleRoute
   '/_authenticated/m/agenda': typeof AuthenticatedMAgendaRoute
   '/_authenticated/m/compras_facturas': typeof AuthenticatedMCompras_facturasRoute
@@ -506,6 +515,7 @@ export interface FileRoutesById {
   '/_authenticated/m/viajes': typeof AuthenticatedMViajesRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/coordinacion/': typeof AuthenticatedCoordinacionIndexRoute
+  '/_authenticated/coordinacion/$area/$module': typeof AuthenticatedCoordinacionAreaModuleRoute
   '/_authenticated/coordinacion/administrativa/compras_facturas': typeof AuthenticatedCoordinacionAdministrativaCompras_facturasRoute
   '/_authenticated/coordinacion/administrativa/documentos': typeof AuthenticatedCoordinacionAdministrativaDocumentosRoute
   '/_authenticated/coordinacion/general/comunicados': typeof AuthenticatedCoordinacionGeneralComunicadosRoute
@@ -562,6 +572,7 @@ export interface FileRouteTypes {
     | '/m/viajes'
     | '/admin/'
     | '/coordinacion/'
+    | '/coordinacion/$area/$module'
     | '/coordinacion/administrativa/compras_facturas'
     | '/coordinacion/administrativa/documentos'
     | '/coordinacion/general/comunicados'
@@ -614,6 +625,7 @@ export interface FileRouteTypes {
     | '/m/viajes'
     | '/admin'
     | '/coordinacion'
+    | '/coordinacion/$area/$module'
     | '/coordinacion/administrativa/compras_facturas'
     | '/coordinacion/administrativa/documentos'
     | '/coordinacion/general/comunicados'
@@ -669,6 +681,7 @@ export interface FileRouteTypes {
     | '/_authenticated/m/viajes'
     | '/_authenticated/admin/'
     | '/_authenticated/coordinacion/'
+    | '/_authenticated/coordinacion/$area/$module'
     | '/_authenticated/coordinacion/administrativa/compras_facturas'
     | '/_authenticated/coordinacion/administrativa/documentos'
     | '/_authenticated/coordinacion/general/comunicados'
@@ -954,6 +967,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMViajesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/coordinacion/$area/$module': {
+      id: '/_authenticated/coordinacion/$area/$module'
+      path: '/$module'
+      fullPath: '/coordinacion/$area/$module'
+      preLoaderRoute: typeof AuthenticatedCoordinacionAreaModuleRouteImport
+      parentRoute: typeof AuthenticatedCoordinacionAreaRoute
+    }
     '/_authenticated/coordinacion/administrativa/compras_facturas': {
       id: '/_authenticated/coordinacion/administrativa/compras_facturas'
       path: '/administrativa/compras_facturas'
@@ -1086,8 +1106,23 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
 const AuthenticatedAdminRouteWithChildren =
   AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
 
+interface AuthenticatedCoordinacionAreaRouteChildren {
+  AuthenticatedCoordinacionAreaModuleRoute: typeof AuthenticatedCoordinacionAreaModuleRoute
+}
+
+const AuthenticatedCoordinacionAreaRouteChildren: AuthenticatedCoordinacionAreaRouteChildren =
+  {
+    AuthenticatedCoordinacionAreaModuleRoute:
+      AuthenticatedCoordinacionAreaModuleRoute,
+  }
+
+const AuthenticatedCoordinacionAreaRouteWithChildren =
+  AuthenticatedCoordinacionAreaRoute._addFileChildren(
+    AuthenticatedCoordinacionAreaRouteChildren,
+  )
+
 interface AuthenticatedCoordinacionRouteChildren {
-  AuthenticatedCoordinacionAreaRoute: typeof AuthenticatedCoordinacionAreaRoute
+  AuthenticatedCoordinacionAreaRoute: typeof AuthenticatedCoordinacionAreaRouteWithChildren
   AuthenticatedCoordinacionIndexRoute: typeof AuthenticatedCoordinacionIndexRoute
   AuthenticatedCoordinacionAdministrativaCompras_facturasRoute: typeof AuthenticatedCoordinacionAdministrativaCompras_facturasRoute
   AuthenticatedCoordinacionAdministrativaDocumentosRoute: typeof AuthenticatedCoordinacionAdministrativaDocumentosRoute
@@ -1108,7 +1143,8 @@ interface AuthenticatedCoordinacionRouteChildren {
 
 const AuthenticatedCoordinacionRouteChildren: AuthenticatedCoordinacionRouteChildren =
   {
-    AuthenticatedCoordinacionAreaRoute: AuthenticatedCoordinacionAreaRoute,
+    AuthenticatedCoordinacionAreaRoute:
+      AuthenticatedCoordinacionAreaRouteWithChildren,
     AuthenticatedCoordinacionIndexRoute: AuthenticatedCoordinacionIndexRoute,
     AuthenticatedCoordinacionAdministrativaCompras_facturasRoute:
       AuthenticatedCoordinacionAdministrativaCompras_facturasRoute,
