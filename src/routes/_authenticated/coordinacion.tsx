@@ -1,8 +1,9 @@
+import * as React from "react";
 import { createFileRoute, Navigate, Outlet, useRouterState } from "@tanstack/react-router";
 import { MessagesSquare } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { EmptyState } from "@/components/squad/EmptyState";
-import { CoordHeader, InCoordContext, useCoordAreas } from "@/components/squad/CoordShell";
+import { CoordActionSlotContext, CoordHeader, InCoordContext, useCoordAreas } from "@/components/squad/CoordShell";
 import type { ModuleKey } from "@/lib/modules";
 
 export const Route = createFileRoute("/_authenticated/coordinacion")({
@@ -20,6 +21,7 @@ export const Route = createFileRoute("/_authenticated/coordinacion")({
 function CoordinacionLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const areas = useCoordAreas();
+  const [slot, setSlot] = React.useState<HTMLElement | null>(null);
   const [, , areaKey, moduleKey] = pathname.replace(/\/+$/, "").split("/");
 
   if (areas.length === 0) {
@@ -46,10 +48,12 @@ function CoordinacionLayout() {
   }
 
   return (
-    <div className="space-y-4">
-      <CoordHeader areas={areas} active={active} activeModule={moduleKey as ModuleKey} />
+    <div className="space-y-3 md:space-y-4">
+      <CoordHeader areas={areas} active={active} activeModule={moduleKey as ModuleKey} onSlot={setSlot} />
       <InCoordContext.Provider value={true}>
-        <Outlet />
+        <CoordActionSlotContext.Provider value={slot}>
+          <Outlet />
+        </CoordActionSlotContext.Provider>
       </InCoordContext.Provider>
     </div>
   );
