@@ -23,6 +23,7 @@ import {
   resolvePagesForUser,
   inferBaseRole,
   needsSolicitudesShortcut,
+  PAGES,
   type BaseRole,
   type ResolvedPage,
 } from "@/lib/rolePages";
