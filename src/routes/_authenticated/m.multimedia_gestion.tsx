@@ -1,11 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Images } from "lucide-react";
-import { PageHeader } from "@/components/squad/PageHeader";
-import { ModuleTabs } from "@/components/squad/ModuleTabs";
-import { EmptyState } from "@/components/squad/EmptyState";
-import { useApp } from "@/components/squad/AppLayout";
-import { useTeamAccess } from "@/hooks/useTeamAccess";
-import { MediaManagerPanel } from "@/components/multimedia/MediaManagerPanel";
+import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { MultimediaGestionPage } from "@/components/pages/MultimediaGestionPage";
+import { useCoordModuleVisible } from "@/components/squad/CoordShell";
 
 export const Route = createFileRoute("/_authenticated/m/multimedia_gestion")({
   head: () => ({
@@ -24,39 +19,12 @@ export const Route = createFileRoute("/_authenticated/m/multimedia_gestion")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: MultimediaGestionPage,
+  component: ModuleRoute,
 });
 
-function MultimediaGestionPage() {
-  const { isSuperAdmin, accessibleModules } = useApp();
-  const { isPlayerScoped } = useTeamAccess("multimedia");
-  // Vista Jugador no gestiona: su acceso es el feed de Mi Club.
-  const canAccess =
-    isSuperAdmin || (accessibleModules.includes("multimedia") && !isPlayerScoped(null));
-
-  if (!canAccess) {
-    return (
-      <div className="space-y-6">
-        <ModuleTabs activeKey="multimedia_gestion" />
-        <PageHeader hideTitle title="Multimedia" subtitle="Gestión de fotos y videos" />
-        <EmptyState
-          icon={Images}
-          title="Sin acceso"
-          message="Tu rol actual no tiene permisos para gestionar multimedia."
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-6">
-      <ModuleTabs activeKey="multimedia_gestion" />
-      <PageHeader
-        hideTitle
-        title="Multimedia"
-        subtitle="Sube y administra fotos y videos del club"
-      />
-      <MediaManagerPanel />
-    </div>
-  );
+function ModuleRoute() {
+  // Enlaces viejos: quien gestiona el módulo en Coordinación va ahí (con los mismos parámetros).
+  const coordTo = useCoordModuleVisible("multimedia_gestion");
+  if (coordTo) return <Navigate to={coordTo} replace />;
+  return <MultimediaGestionPage />;
 }
