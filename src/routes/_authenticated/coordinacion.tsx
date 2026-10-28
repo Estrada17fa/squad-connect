@@ -1,60 +1,55 @@
-import * as React from "react";
-import { createFileRoute, Navigate, Outlet, useRouterState } from "@tanstack/react-router";
-import { MessagesSquare } from "lucide-react";
+import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { MessagesSquare, ClipboardList } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { EmptyState } from "@/components/squad/EmptyState";
-import { CoordActionSlotContext, CoordHeader, InCoordContext, useCoordAreas } from "@/components/squad/CoordShell";
-import type { ModuleKey } from "@/lib/modules";
+import { useApp } from "@/components/squad/AppLayout";
 
 export const Route = createFileRoute("/_authenticated/coordinacion")({
   head: () => ({
     meta: [
       { title: "Squad — Coordinación" },
-      { name: "description", content: "La oficina del club: áreas Técnica, Médica, Operacional, Administrativa y General." },
-      { property: "og:title", content: "Squad — Coordinación" },
-      { property: "og:description", content: "Captura y gestión del club organizada en 5 áreas." },
+      { name: "description", content: "Tareas, juntas, solicitudes, inventario y viajes." },
     ],
   }),
-  component: CoordinacionLayout,
+  component: CoordinacionHub,
 });
 
-function CoordinacionLayout() {
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const areas = useCoordAreas();
-  const [slot, setSlot] = React.useState<HTMLElement | null>(null);
-  const [, , areaKey, moduleKey] = pathname.replace(/\/+$/, "").split("/");
+function CoordinacionHub() {
+  const { visiblePages, activeBaseRole } = useApp();
+  const coord = visiblePages.find((p) => p.page.key === "coordinacion");
 
-  if (areas.length === 0) {
+  if (coord?.variant === "jugador-solicitudes" || activeBaseRole === "jugador") {
+    const first = coord?.modules[0];
+    if (first) return <Navigate to="/m/$module" params={{ module: first }} replace />;
     return (
       <div className="space-y-6">
-        <PageHeader title="Coordinación" />
+        <PageHeader
+          title="Mis Solicitudes"
+          subtitle="Pide material, permisos o cualquier trámite al staff"
+        />
         <EmptyState
-          icon={MessagesSquare}
-          title="Sin acceso a Coordinación"
-          message="Tus permisos actuales no incluyen módulos de gestión."
+          icon={ClipboardList}
+          title="Sin solicitudes disponibles"
+          message="Aún no tienes módulos de solicitudes habilitados."
         />
       </div>
     );
   }
 
-  const active = areas.find((a) => a.area.key === areaKey);
-  // Área inválida o sin acceso → primera opción válida.
-  if (!active) return <Navigate to={areas[0].modules[0].to} replace />;
-  // /coordinacion/$area → primer módulo con acceso.
-  if (!moduleKey) return <Navigate to={active.modules[0].to} replace />;
-  // Módulo sin acceso → primera opción válida del área.
-  if (!active.modules.some((m) => m.key === moduleKey)) {
-    return <Navigate to={active.modules[0].to} replace />;
-  }
+  const first = coord?.modules[0];
+  if (first) return <Navigate to="/m/$module" params={{ module: first }} replace />;
 
   return (
-    <div className="space-y-3 md:space-y-4">
-      <CoordHeader areas={areas} active={active} activeModule={moduleKey as ModuleKey} onSlot={setSlot} />
-      <InCoordContext.Provider value={true}>
-        <CoordActionSlotContext.Provider value={slot}>
-          <Outlet />
-        </CoordActionSlotContext.Provider>
-      </InCoordContext.Provider>
+    <div className="space-y-6">
+      <PageHeader
+        title="Coordinación"
+        subtitle="Trabajo interno del staff: tareas, juntas y gestión operativa"
+      />
+      <EmptyState
+        icon={MessagesSquare}
+        title="Sin acceso"
+        message="Tu rol actual no tiene acceso a los módulos de coordinación."
+      />
     </div>
   );
 }

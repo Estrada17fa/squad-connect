@@ -11,7 +11,6 @@ import {
   canRead as levelCanRead,
   canSeeUsers,
   canManageTripsModule,
-  canAccessExpensesModule,
 
   maxLevel,
   type PermissionLevel,
@@ -23,7 +22,6 @@ import {
   resolvePagesForUser,
   inferBaseRole,
   needsSolicitudesShortcut,
-  PAGES,
   type BaseRole,
   type ResolvedPage,
 } from "@/lib/rolePages";
@@ -32,7 +30,6 @@ import { ClubCrest } from "./ClubCrest";
 
 import { NotificationBell } from "@/components/notificaciones/NotificationBell";
 import { cn } from "@/lib/utils";
-import { isCoordModuleVisible, resolveCoordAreas } from "@/lib/coordAreas";
 import squadLogo from "@/assets/squad-logo.png.asset.json";
 
 import {
@@ -168,11 +165,9 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
         const lvl = getModuleAccess("multimedia_gestion");
         return levelCanRead(lvl) && lvl !== "vista_jugador";
       }
-      // El MÓDULO de viajes (gestión) pide cualquier lector/editor (categoría o
-      // global); Vista Jugador consulta su viaje en la pestaña Viajes de Agenda.
+      // El MÓDULO de viajes (gestión) exige nivel global; la consulta personal
+      // vive en la pestaña Viajes de Agenda.
       if (key === "viajes") return canManageTripsModule(getModuleAccess("viajes"));
-      // Compras: misma regla que la base (can_view_compras: lector_global o más).
-      if (key === "compras_facturas") return canAccessExpensesModule(getModuleAccess("compras_facturas"));
       return canViewModule(key);
     },
 
@@ -182,22 +177,10 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
   // leer documentos u otros módulos nunca abre Admin.
   const canAccessAdmin = !!data?.isSuperAdmin || canSeeUsers(getModuleAccess("usuarios"));
 
-  // La página Coordinación se arma desde COORD_AREAS + niveles de get_my_access
-  // (nunca desde el rol): aparece solo si hay al menos un área con módulos.
-  const visiblePages = React.useMemo(() => {
-    const pages = resolvePagesForUser(effectiveBaseRole, isModuleAccessible, { canAccessAdmin })
-      .filter((p) => p.page.key !== "coordinacion");
-    const coordModules = resolveCoordAreas((k) =>
-      isCoordModuleVisible(k, getModuleAccess(k), !!data?.isSuperAdmin),
-    ).flatMap((a) => a.modules.map((m) => m.key as ModuleKey));
-    const coordPage = PAGES.find((p) => p.key === "coordinacion");
-    if (coordPage && coordModules.length > 0) {
-      const order = PAGES.map((p) => p.key);
-      pages.push({ page: coordPage, modules: coordModules });
-      pages.sort((a, b) => order.indexOf(a.page.key) - order.indexOf(b.page.key));
-    }
-    return pages;
-  }, [effectiveBaseRole, isModuleAccessible, canAccessAdmin, getModuleAccess, data?.isSuperAdmin]);
+  const visiblePages = React.useMemo(
+    () => resolvePagesForUser(effectiveBaseRole, isModuleAccessible, { canAccessAdmin }),
+    [effectiveBaseRole, isModuleAccessible, canAccessAdmin],
+  );
 
 
   if (isLoading || !data || mustChange.isLoading) {

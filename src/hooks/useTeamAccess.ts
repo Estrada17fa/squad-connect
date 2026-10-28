@@ -1,4 +1,3 @@
-import { permissionKeyFor } from "@/lib/modules";
 import * as React from "react";
 import { useApp } from "@/components/squad/AppLayout";
 import type { ModuleKey } from "@/lib/modules";
@@ -16,9 +15,7 @@ import {
  * (get_my_access -> effective_permission). Sin lógica de respaldo: un equipo
  * que no viene en la respuesta queda en 'sin_acceso'. Sin equipo => contexto club.
  */
-export function useTeamAccess(navKey: ModuleKey) {
-  // Alias de navegación (p. ej. Mes → Agenda) resuelven al permiso real.
-  const moduleKey = permissionKeyFor(navKey);
+export function useTeamAccess(moduleKey: ModuleKey) {
   const { permissionsByTeam, isSuperAdmin } = useApp();
 
   const levelForTeam = React.useCallback(

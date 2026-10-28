@@ -11,7 +11,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
 import { POSITION_GROUP_LABEL, POSITION_GROUP_ORDER, type PositionGroup } from "@/lib/plantel";
 
 export interface PlantelFilterState {
@@ -36,14 +35,11 @@ export function PlantelFilters({
   onChange,
   teams,
   count,
-  countClassName,
 }: {
   value: PlantelFilterState;
   onChange: (v: PlantelFilterState) => void;
   teams: { id: string; name: string }[];
   count: number;
-  /** Clases extra del contador (p. ej. ocultarlo en móvil). */
-  countClassName?: string;
 }) {
   const activeCount = (value.teamId ? 1 : 0) + (value.position ? 1 : 0) + (value.kind ? 1 : 0);
   const set = (patch: Partial<PlantelFilterState>) => onChange({ ...value, ...patch });
@@ -142,7 +138,7 @@ export function PlantelFilters({
           </PopoverContent>
         </Popover>
       </div>
-      <p className={cn("text-xs text-muted-foreground", countClassName)}>
+      <p className="text-xs text-muted-foreground">
         {count} {count === 1 ? "persona" : "personas"}
       </p>
     </div>

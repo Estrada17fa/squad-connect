@@ -46,9 +46,8 @@ function Home() {
 
   const [detailEvent, setDetailEvent] = React.useState<CalendarEventRow | null>(null);
 
-  // Mes es alias de Agenda: un solo permiso.
-  const hasAgenda = accessibleModules.includes("agenda");
-  const agendaTarget = "agenda" as const;
+  const hasAgenda = accessibleModules.includes("agenda") || accessibleModules.includes("mes");
+  const agendaTarget: "agenda" | "mes" = accessibleModules.includes("agenda") ? "agenda" : "mes";
 
   const { data: events } = useUpcomingEvents(clubId, 4);
   const list = events ?? [];

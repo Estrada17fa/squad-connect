@@ -10,5 +10,3 @@
 <!-- LOVABLE:END -->
 - Team memberships are created/edited/removed one row at a time (by id) via server functions in members.functions.ts; profile edits never touch team_memberships — avoids wiping categories on profile save.
 - Effective permissions come only from the get_my_access SQL function (wraps effective_permission); the client never recomputes levels from memberships/overrides — keeps UI and RLS in sync.
-- Coordinación visibility comes only from COORD_AREAS (src/lib/coordAreas.ts) plus get_my_access levels via isCoordModuleVisible, never from the user's role — keeps navigation aligned with permissions.
-- Module screens live in src/components/pages/*Page.tsx; route files only export Route and render the shared page (search params passed as props), so /m/<module> and /coordinacion/<area>/<module> reuse one component without breaking code splitting.

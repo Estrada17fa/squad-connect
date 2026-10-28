@@ -16,8 +16,11 @@ export const Route = createFileRoute("/_authenticated/agenda")({
 
 function AgendaPage() {
   const { accessibleModules } = useApp();
-  // Mes es alias de navegación de Agenda: ambos dependen del permiso "agenda".
-  const target = accessibleModules.includes("agenda") ? "agenda" : null;
+  const target = accessibleModules.includes("agenda")
+    ? "agenda"
+    : accessibleModules.includes("mes")
+      ? "mes"
+      : null;
   if (target) {
     return <Navigate to="/m/$module" params={{ module: target }} replace />;
   }

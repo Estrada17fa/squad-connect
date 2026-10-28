@@ -9,7 +9,7 @@ export const Route = createFileRoute("/_authenticated/admin/")({
   head: () => ({
     meta: [
       { title: "Squad — Admin" },
-      { name: "description", content: "Panel de administración: usuarios y clubes." },
+      { name: "description", content: "Panel de administración: usuarios, documentos y clubes." },
     ],
   }),
   component: AdminPage,

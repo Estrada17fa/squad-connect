@@ -258,8 +258,8 @@ function CreateClubDialog({
       if (adminId) {
         // Admin: editor en todos los módulos
         const moduleKeys = [
-          "agenda","plantel","viajes","inventario","coordinacion_interna","solicitudes",
-          "documentos","usuarios","comunicados","multimedia","torneo","salud",
+          "agenda","mes","plantel","viajes","inventario","coordinacion_interna","solicitudes",
+          "documentos","usuarios","comunicados","multimedia","torneo","tacticas","salud",
           "desarrollo","nutricion",
         ];
         await supabase.from("role_permissions").insert(

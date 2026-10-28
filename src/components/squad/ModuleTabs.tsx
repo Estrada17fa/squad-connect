@@ -7,7 +7,6 @@ import { MODULE_MAP, type ModuleKey } from "@/lib/modules";
 import { findHubForModule, type PageKey } from "@/lib/rolePages";
 import { prefetchModule } from "@/lib/prefetch";
 import { cn } from "@/lib/utils";
-import { InCoordContext } from "./CoordShell";
 
 interface ExtraTab {
   key: string;
@@ -37,8 +36,6 @@ interface ModuleTabsProps {
 export function ModuleTabs({ activeKey, hubKey, extraActiveKey }: ModuleTabsProps) {
   const { visiblePages, isSuperAdmin, profile, accessibleModules, permissions, canViewModule } = useApp();
   const qc = useQueryClient();
-  // Dentro de Coordinación, el contenedor ya pinta áreas y pestañas.
-  const inCoord = React.useContext(InCoordContext);
   const prefetchCtx = React.useMemo(
     () => ({ clubId: profile?.club_id ?? null, teamId: null }),
     [profile?.club_id],
@@ -100,7 +97,7 @@ export function ModuleTabs({ activeKey, hubKey, extraActiveKey }: ModuleTabsProp
 
 
   const total = modules.length + extras.length;
-  if (inCoord || total <= 1) return null;
+  if (total <= 1) return null;
 
   return (
     <div className="sticky top-14 z-20 -mx-4 max-w-[calc(100%+2rem)] overflow-hidden border-b border-border/60 bg-background/85 px-4 backdrop-blur-xl sm:-mx-6 sm:max-w-[calc(100%+3rem)] sm:px-6">
