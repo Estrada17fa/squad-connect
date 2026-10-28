@@ -1,6 +1,10 @@
 import * as React from "react";
 import { useRouterState } from "@tanstack/react-router";
-import { Users } from "lucide-react";
+import { createPortal } from "react-dom";
+import { Search, X, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CoordActionSlotContext, InCoordContext } from "@/components/squad/CoordShell";
+import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { ModuleTabs } from "@/components/squad/ModuleTabs";
 import { EmptyState } from "@/components/squad/EmptyState";
@@ -30,6 +34,9 @@ export function PlantelPage() {
 
   const { data: members, isLoading } = useRoster(clubId, null);
   const [selected, setSelected] = React.useState<RosterMember | null>(null);
+  const inCoord = React.useContext(InCoordContext);
+  const slot = React.useContext(CoordActionSlotContext);
+  const [searchOpen, setSearchOpen] = React.useState(false);
 
   const initialTeam = useRouterState({
     select: (s) => (s.location.search as { team?: string } | undefined)?.team,
@@ -107,16 +114,35 @@ export function PlantelPage() {
   }, [filtered, rankOf]);
 
   return (
-    <div className="space-y-6">
+    <div className={cn("space-y-6", inCoord && "space-y-3 md:space-y-6")}>
       <ModuleTabs activeKey="plantel" />
       <PageHeader hideTitle title="Plantel" subtitle="Equipo de trabajo por categoría" />
 
-      <PlantelFilters
-        value={filters}
-        onChange={setFilters}
-        teams={teamFilterOptions}
-        count={filtered.length}
-      />
+      {inCoord && slot
+        ? createPortal(
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden"
+              aria-label={searchOpen ? "Cerrar búsqueda" : "Buscar"}
+              aria-expanded={searchOpen}
+              onClick={() => setSearchOpen((v) => !v)}
+            >
+              {searchOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
+            </Button>,
+            slot,
+          )
+        : null}
+
+      <div className={cn(inCoord && !searchOpen && "hidden md:block")}>
+        <PlantelFilters
+          value={filters}
+          onChange={setFilters}
+          teams={teamFilterOptions}
+          count={filtered.length}
+          countClassName={inCoord ? "hidden md:block" : undefined}
+        />
+      </div>
 
       {isLoading && !members ? (
         <CardGridSkeleton count={6} />
@@ -132,9 +158,16 @@ export function PlantelPage() {
         />
       ) : (
         <div className="min-w-0 space-y-8">
-          {groups.map((g) => (
+          {groups.map((g, gi) => (
             <section key={g.key} className="min-w-0 space-y-4">
-              <h2 className="font-display text-lg font-semibold text-foreground">{g.name}</h2>
+              <div className="flex min-w-0 items-baseline justify-between gap-2">
+                <h2 className="truncate font-display text-lg font-semibold text-foreground">{g.name}</h2>
+                {inCoord && gi === 0 ? (
+                  <span className="shrink-0 text-xs text-muted-foreground md:hidden">
+                    {filtered.length} {filtered.length === 1 ? "persona" : "personas"}
+                  </span>
+                ) : null}
+              </div>
 
               {g.players.length > 0 ? (
                 <div className="space-y-4">
