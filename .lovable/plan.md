@@ -25,12 +25,11 @@ También va una función `isCoordModuleVisible(key, level, isSuperAdmin)`:
 Los niveles salen solo de get_my_access, a través de `useApp().permissions` y `getModuleAccess`.
 
 ## 2. Rutas
-- `/coordinacion` abre la primera área con acceso y su primer módulo. Si no hay ninguna, muestra el aviso "Sin acceso a Coordinación".
-- `/coordinacion/$area` abre el primer módulo con acceso de esa área. Si el área no es válida o no tiene acceso, manda a la primera opción válida.
-- `/coordinacion/$area/$module` muestra la misma pantalla que hoy tiene `/m/$module`, sin duplicar código. Para lograrlo:
-  - El componente de cada pantalla se exporta desde su archivo `m.<módulo>.tsx`.
-  - Los parámetros de la URL se leen con `useSearch({ strict: false })`, para que funcionen en las dos rutas.
-  - La nueva ruta acepta los mismos parámetros (por ejemplo, `open` y `task`).
+- `/coordinacion` (`coordinacion.index.tsx`) y `/coordinacion/$area` (`coordinacion.$area.tsx`) solo redirigen a la primera opción válida según `COORD_AREAS`. Si no hay ninguna, muestran el aviso "Sin acceso a Coordinación". `coordinacion.tsx` pasa a ser el contenedor con `<Outlet />`.
+- Cada pantalla se mueve a su propio archivo de componente, por ejemplo `src/components/viajes/ViajesPage.tsx`. Los archivos de ruta solo exportan `Route`, y tanto `/m/<módulo>` como la ruta de Coordinación importan el mismo componente. Así no se duplica código ni se rompe la división del código.
+- Cada módulo tiene su propio archivo de ruta en Coordinación, por ejemplo `coordinacion.operacional.viajes.tsx` o `coordinacion.general.solicitudes.tsx`. Son 16 archivos, uno por módulo del mapa.
+- Cada ruta usa el mismo `validateSearch` que su versión `/m/`. El esquema se comparte desde un archivo común (`src/lib/searchSchemas.ts`) para no duplicarlo. Así se conservan el tipado y la validación de `?open=`, `?task=` y los demás parámetros.
+- El componente lee los parámetros que recibe por props desde la ruta que lo monta, sin `strict: false`.
 - Redirecciones de enlaces viejos: `/m/<módulo>` lleva a `/coordinacion/<área>/<módulo>` conservando la URL completa. Aplica a viajes, inventario, compras_facturas, documentos, coordinacion_interna, solicitudes y multimedia_gestion. Se hace en el `beforeLoad` de cada ruta.
 - `/m/<módulo>` sigue igual en Mi Club para plantel, entrenamientos, partidos, desarrollo, torneo, salud, nutrición y comunicados.
 - `/agenda-viajes` no cambia.
