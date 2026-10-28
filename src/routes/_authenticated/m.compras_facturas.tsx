@@ -71,7 +71,8 @@ function ComprasPage() {
   // Alineado con la RLS: cualquier lector/editor entra; editores editan.
   const level = normalizeLevel(permissions.compras_facturas);
   const canAccess = isSuperAdmin || canAccessExpensesModule(level);
-  const canEdit = isSuperAdmin || level === "editor_categoria" || level === "editor_global";
+  // Igual que can_edit_compras en la base: solo editor_global.
+  const canEdit = isSuperAdmin || level === "editor_global";
 
   const [view, setView] = React.useState<SubView>("gastos");
   const [filters, setFilters] = React.useState<ExpenseFilterState>(EMPTY_EXPENSE_FILTERS);
