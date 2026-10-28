@@ -24,6 +24,8 @@ import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminClubsRouteImport } from './routes/_authenticated/admin.clubs'
 import { Route as AuthenticatedAdminConfiguracionRouteImport } from './routes/_authenticated/admin.configuracion'
 import { Route as AuthenticatedAdminTorneoRouteImport } from './routes/_authenticated/admin.torneo'
+import { Route as AuthenticatedCoordinacionIndexRouteImport } from './routes/_authenticated/coordinacion.index'
+import { Route as AuthenticatedCoordinacionAreaRouteImport } from './routes/_authenticated/coordinacion.$area'
 import { Route as AuthenticatedMModuleRouteImport } from './routes/_authenticated/m.$module'
 import { Route as AuthenticatedMAgendaRouteImport } from './routes/_authenticated/m.agenda'
 import { Route as AuthenticatedMCompras_facturasRouteImport } from './routes/_authenticated/m.compras_facturas'
@@ -44,6 +46,22 @@ import { Route as AuthenticatedMSolicitudesRouteImport } from './routes/_authent
 import { Route as AuthenticatedMTorneoRouteImport } from './routes/_authenticated/m.torneo'
 import { Route as AuthenticatedMUsuariosRouteImport } from './routes/_authenticated/m.usuarios'
 import { Route as AuthenticatedMViajesRouteImport } from './routes/_authenticated/m.viajes'
+import { Route as AuthenticatedCoordinacionAreaModuleRouteImport } from './routes/_authenticated/coordinacion.$area.$module'
+import { Route as AuthenticatedCoordinacionAdministrativaCompras_facturasRouteImport } from './routes/_authenticated/coordinacion.administrativa.compras_facturas'
+import { Route as AuthenticatedCoordinacionAdministrativaDocumentosRouteImport } from './routes/_authenticated/coordinacion.administrativa.documentos'
+import { Route as AuthenticatedCoordinacionGeneralComunicadosRouteImport } from './routes/_authenticated/coordinacion.general.comunicados'
+import { Route as AuthenticatedCoordinacionGeneralCoordinacion_internaRouteImport } from './routes/_authenticated/coordinacion.general.coordinacion_interna'
+import { Route as AuthenticatedCoordinacionGeneralMultimedia_gestionRouteImport } from './routes/_authenticated/coordinacion.general.multimedia_gestion'
+import { Route as AuthenticatedCoordinacionGeneralSolicitudesRouteImport } from './routes/_authenticated/coordinacion.general.solicitudes'
+import { Route as AuthenticatedCoordinacionMedicaNutricionRouteImport } from './routes/_authenticated/coordinacion.medica.nutricion'
+import { Route as AuthenticatedCoordinacionMedicaSaludRouteImport } from './routes/_authenticated/coordinacion.medica.salud'
+import { Route as AuthenticatedCoordinacionOperacionalInventarioRouteImport } from './routes/_authenticated/coordinacion.operacional.inventario'
+import { Route as AuthenticatedCoordinacionOperacionalViajesRouteImport } from './routes/_authenticated/coordinacion.operacional.viajes'
+import { Route as AuthenticatedCoordinacionTecnicaDesarrolloRouteImport } from './routes/_authenticated/coordinacion.tecnica.desarrollo'
+import { Route as AuthenticatedCoordinacionTecnicaEntrenamientosRouteImport } from './routes/_authenticated/coordinacion.tecnica.entrenamientos'
+import { Route as AuthenticatedCoordinacionTecnicaPartidosRouteImport } from './routes/_authenticated/coordinacion.tecnica.partidos'
+import { Route as AuthenticatedCoordinacionTecnicaPlantelRouteImport } from './routes/_authenticated/coordinacion.tecnica.plantel'
+import { Route as AuthenticatedCoordinacionTecnicaTorneoRouteImport } from './routes/_authenticated/coordinacion.tecnica.torneo'
 import { Route as AuthenticatedMPlantelPlayerIdRouteImport } from './routes/_authenticated/m.plantel.$playerId'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -124,6 +142,18 @@ const AuthenticatedAdminTorneoRoute =
     id: '/torneo',
     path: '/torneo',
     getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedCoordinacionIndexRoute =
+  AuthenticatedCoordinacionIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedCoordinacionRoute,
+  } as any)
+const AuthenticatedCoordinacionAreaRoute =
+  AuthenticatedCoordinacionAreaRouteImport.update({
+    id: '/$area',
+    path: '/$area',
+    getParentRoute: () => AuthenticatedCoordinacionRoute,
   } as any)
 const AuthenticatedMModuleRoute = AuthenticatedMModuleRouteImport.update({
   id: '/m/$module',
@@ -235,6 +265,102 @@ const AuthenticatedMViajesRoute = AuthenticatedMViajesRouteImport.update({
   path: '/m/viajes',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCoordinacionAreaModuleRoute =
+  AuthenticatedCoordinacionAreaModuleRouteImport.update({
+    id: '/$module',
+    path: '/$module',
+    getParentRoute: () => AuthenticatedCoordinacionAreaRoute,
+  } as any)
+const AuthenticatedCoordinacionAdministrativaCompras_facturasRoute =
+  AuthenticatedCoordinacionAdministrativaCompras_facturasRouteImport.update({
+    id: '/administrativa/compras_facturas',
+    path: '/administrativa/compras_facturas',
+    getParentRoute: () => AuthenticatedCoordinacionRoute,
+  } as any)
+const AuthenticatedCoordinacionAdministrativaDocumentosRoute =
+  AuthenticatedCoordinacionAdministrativaDocumentosRouteImport.update({
+    id: '/administrativa/documentos',
+    path: '/administrativa/documentos',
+    getParentRoute: () => AuthenticatedCoordinacionRoute,
+  } as any)
+const AuthenticatedCoordinacionGeneralComunicadosRoute =
+  AuthenticatedCoordinacionGeneralComunicadosRouteImport.update({
+    id: '/general/comunicados',
+    path: '/general/comunicados',
+    getParentRoute: () => AuthenticatedCoordinacionRoute,
+  } as any)
+const AuthenticatedCoordinacionGeneralCoordinacion_internaRoute =
+  AuthenticatedCoordinacionGeneralCoordinacion_internaRouteImport.update({
+    id: '/general/coordinacion_interna',
+    path: '/general/coordinacion_interna',
+    getParentRoute: () => AuthenticatedCoordinacionRoute,
+  } as any)
+const AuthenticatedCoordinacionGeneralMultimedia_gestionRoute =
+  AuthenticatedCoordinacionGeneralMultimedia_gestionRouteImport.update({
+    id: '/general/multimedia_gestion',
+    path: '/general/multimedia_gestion',
+    getParentRoute: () => AuthenticatedCoordinacionRoute,
+  } as any)
+const AuthenticatedCoordinacionGeneralSolicitudesRoute =
+  AuthenticatedCoordinacionGeneralSolicitudesRouteImport.update({
+    id: '/general/solicitudes',
+    path: '/general/solicitudes',
+    getParentRoute: () => AuthenticatedCoordinacionRoute,
+  } as any)
+const AuthenticatedCoordinacionMedicaNutricionRoute =
+  AuthenticatedCoordinacionMedicaNutricionRouteImport.update({
+    id: '/medica/nutricion',
+    path: '/medica/nutricion',
+    getParentRoute: () => AuthenticatedCoordinacionRoute,
+  } as any)
+const AuthenticatedCoordinacionMedicaSaludRoute =
+  AuthenticatedCoordinacionMedicaSaludRouteImport.update({
+    id: '/medica/salud',
+    path: '/medica/salud',
+    getParentRoute: () => AuthenticatedCoordinacionRoute,
+  } as any)
+const AuthenticatedCoordinacionOperacionalInventarioRoute =
+  AuthenticatedCoordinacionOperacionalInventarioRouteImport.update({
+    id: '/operacional/inventario',
+    path: '/operacional/inventario',
+    getParentRoute: () => AuthenticatedCoordinacionRoute,
+  } as any)
+const AuthenticatedCoordinacionOperacionalViajesRoute =
+  AuthenticatedCoordinacionOperacionalViajesRouteImport.update({
+    id: '/operacional/viajes',
+    path: '/operacional/viajes',
+    getParentRoute: () => AuthenticatedCoordinacionRoute,
+  } as any)
+const AuthenticatedCoordinacionTecnicaDesarrolloRoute =
+  AuthenticatedCoordinacionTecnicaDesarrolloRouteImport.update({
+    id: '/tecnica/desarrollo',
+    path: '/tecnica/desarrollo',
+    getParentRoute: () => AuthenticatedCoordinacionRoute,
+  } as any)
+const AuthenticatedCoordinacionTecnicaEntrenamientosRoute =
+  AuthenticatedCoordinacionTecnicaEntrenamientosRouteImport.update({
+    id: '/tecnica/entrenamientos',
+    path: '/tecnica/entrenamientos',
+    getParentRoute: () => AuthenticatedCoordinacionRoute,
+  } as any)
+const AuthenticatedCoordinacionTecnicaPartidosRoute =
+  AuthenticatedCoordinacionTecnicaPartidosRouteImport.update({
+    id: '/tecnica/partidos',
+    path: '/tecnica/partidos',
+    getParentRoute: () => AuthenticatedCoordinacionRoute,
+  } as any)
+const AuthenticatedCoordinacionTecnicaPlantelRoute =
+  AuthenticatedCoordinacionTecnicaPlantelRouteImport.update({
+    id: '/tecnica/plantel',
+    path: '/tecnica/plantel',
+    getParentRoute: () => AuthenticatedCoordinacionRoute,
+  } as any)
+const AuthenticatedCoordinacionTecnicaTorneoRoute =
+  AuthenticatedCoordinacionTecnicaTorneoRouteImport.update({
+    id: '/tecnica/torneo',
+    path: '/tecnica/torneo',
+    getParentRoute: () => AuthenticatedCoordinacionRoute,
+  } as any)
 const AuthenticatedMPlantelPlayerIdRoute =
   AuthenticatedMPlantelPlayerIdRouteImport.update({
     id: '/$playerId',
@@ -249,13 +375,14 @@ export interface FileRoutesByFullPath {
   '/agenda': typeof AuthenticatedAgendaRoute
   '/agenda-viajes': typeof AuthenticatedAgendaViajesRoute
   '/cambiar-contrasena': typeof AuthenticatedCambiarContrasenaRoute
-  '/coordinacion': typeof AuthenticatedCoordinacionRoute
+  '/coordinacion': typeof AuthenticatedCoordinacionRouteWithChildren
   '/mi-club': typeof AuthenticatedMiClubRoute
   '/mi-perfil': typeof AuthenticatedMiPerfilRoute
   '/invite/$token': typeof InviteTokenRoute
   '/admin/clubs': typeof AuthenticatedAdminClubsRoute
   '/admin/configuracion': typeof AuthenticatedAdminConfiguracionRoute
   '/admin/torneo': typeof AuthenticatedAdminTorneoRoute
+  '/coordinacion/$area': typeof AuthenticatedCoordinacionAreaRouteWithChildren
   '/m/$module': typeof AuthenticatedMModuleRoute
   '/m/agenda': typeof AuthenticatedMAgendaRoute
   '/m/compras_facturas': typeof AuthenticatedMCompras_facturasRoute
@@ -277,6 +404,23 @@ export interface FileRoutesByFullPath {
   '/m/usuarios': typeof AuthenticatedMUsuariosRoute
   '/m/viajes': typeof AuthenticatedMViajesRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/coordinacion/': typeof AuthenticatedCoordinacionIndexRoute
+  '/coordinacion/$area/$module': typeof AuthenticatedCoordinacionAreaModuleRoute
+  '/coordinacion/administrativa/compras_facturas': typeof AuthenticatedCoordinacionAdministrativaCompras_facturasRoute
+  '/coordinacion/administrativa/documentos': typeof AuthenticatedCoordinacionAdministrativaDocumentosRoute
+  '/coordinacion/general/comunicados': typeof AuthenticatedCoordinacionGeneralComunicadosRoute
+  '/coordinacion/general/coordinacion_interna': typeof AuthenticatedCoordinacionGeneralCoordinacion_internaRoute
+  '/coordinacion/general/multimedia_gestion': typeof AuthenticatedCoordinacionGeneralMultimedia_gestionRoute
+  '/coordinacion/general/solicitudes': typeof AuthenticatedCoordinacionGeneralSolicitudesRoute
+  '/coordinacion/medica/nutricion': typeof AuthenticatedCoordinacionMedicaNutricionRoute
+  '/coordinacion/medica/salud': typeof AuthenticatedCoordinacionMedicaSaludRoute
+  '/coordinacion/operacional/inventario': typeof AuthenticatedCoordinacionOperacionalInventarioRoute
+  '/coordinacion/operacional/viajes': typeof AuthenticatedCoordinacionOperacionalViajesRoute
+  '/coordinacion/tecnica/desarrollo': typeof AuthenticatedCoordinacionTecnicaDesarrolloRoute
+  '/coordinacion/tecnica/entrenamientos': typeof AuthenticatedCoordinacionTecnicaEntrenamientosRoute
+  '/coordinacion/tecnica/partidos': typeof AuthenticatedCoordinacionTecnicaPartidosRoute
+  '/coordinacion/tecnica/plantel': typeof AuthenticatedCoordinacionTecnicaPlantelRoute
+  '/coordinacion/tecnica/torneo': typeof AuthenticatedCoordinacionTecnicaTorneoRoute
   '/m/plantel/$playerId': typeof AuthenticatedMPlantelPlayerIdRoute
 }
 export interface FileRoutesByTo {
@@ -284,7 +428,6 @@ export interface FileRoutesByTo {
   '/agenda': typeof AuthenticatedAgendaRoute
   '/agenda-viajes': typeof AuthenticatedAgendaViajesRoute
   '/cambiar-contrasena': typeof AuthenticatedCambiarContrasenaRoute
-  '/coordinacion': typeof AuthenticatedCoordinacionRoute
   '/mi-club': typeof AuthenticatedMiClubRoute
   '/mi-perfil': typeof AuthenticatedMiPerfilRoute
   '/invite/$token': typeof InviteTokenRoute
@@ -292,6 +435,7 @@ export interface FileRoutesByTo {
   '/admin/clubs': typeof AuthenticatedAdminClubsRoute
   '/admin/configuracion': typeof AuthenticatedAdminConfiguracionRoute
   '/admin/torneo': typeof AuthenticatedAdminTorneoRoute
+  '/coordinacion/$area': typeof AuthenticatedCoordinacionAreaRouteWithChildren
   '/m/$module': typeof AuthenticatedMModuleRoute
   '/m/agenda': typeof AuthenticatedMAgendaRoute
   '/m/compras_facturas': typeof AuthenticatedMCompras_facturasRoute
@@ -313,6 +457,23 @@ export interface FileRoutesByTo {
   '/m/usuarios': typeof AuthenticatedMUsuariosRoute
   '/m/viajes': typeof AuthenticatedMViajesRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/coordinacion': typeof AuthenticatedCoordinacionIndexRoute
+  '/coordinacion/$area/$module': typeof AuthenticatedCoordinacionAreaModuleRoute
+  '/coordinacion/administrativa/compras_facturas': typeof AuthenticatedCoordinacionAdministrativaCompras_facturasRoute
+  '/coordinacion/administrativa/documentos': typeof AuthenticatedCoordinacionAdministrativaDocumentosRoute
+  '/coordinacion/general/comunicados': typeof AuthenticatedCoordinacionGeneralComunicadosRoute
+  '/coordinacion/general/coordinacion_interna': typeof AuthenticatedCoordinacionGeneralCoordinacion_internaRoute
+  '/coordinacion/general/multimedia_gestion': typeof AuthenticatedCoordinacionGeneralMultimedia_gestionRoute
+  '/coordinacion/general/solicitudes': typeof AuthenticatedCoordinacionGeneralSolicitudesRoute
+  '/coordinacion/medica/nutricion': typeof AuthenticatedCoordinacionMedicaNutricionRoute
+  '/coordinacion/medica/salud': typeof AuthenticatedCoordinacionMedicaSaludRoute
+  '/coordinacion/operacional/inventario': typeof AuthenticatedCoordinacionOperacionalInventarioRoute
+  '/coordinacion/operacional/viajes': typeof AuthenticatedCoordinacionOperacionalViajesRoute
+  '/coordinacion/tecnica/desarrollo': typeof AuthenticatedCoordinacionTecnicaDesarrolloRoute
+  '/coordinacion/tecnica/entrenamientos': typeof AuthenticatedCoordinacionTecnicaEntrenamientosRoute
+  '/coordinacion/tecnica/partidos': typeof AuthenticatedCoordinacionTecnicaPartidosRoute
+  '/coordinacion/tecnica/plantel': typeof AuthenticatedCoordinacionTecnicaPlantelRoute
+  '/coordinacion/tecnica/torneo': typeof AuthenticatedCoordinacionTecnicaTorneoRoute
   '/m/plantel/$playerId': typeof AuthenticatedMPlantelPlayerIdRoute
 }
 export interface FileRoutesById {
@@ -323,7 +484,7 @@ export interface FileRoutesById {
   '/_authenticated/agenda': typeof AuthenticatedAgendaRoute
   '/_authenticated/agenda-viajes': typeof AuthenticatedAgendaViajesRoute
   '/_authenticated/cambiar-contrasena': typeof AuthenticatedCambiarContrasenaRoute
-  '/_authenticated/coordinacion': typeof AuthenticatedCoordinacionRoute
+  '/_authenticated/coordinacion': typeof AuthenticatedCoordinacionRouteWithChildren
   '/_authenticated/mi-club': typeof AuthenticatedMiClubRoute
   '/_authenticated/mi-perfil': typeof AuthenticatedMiPerfilRoute
   '/invite/$token': typeof InviteTokenRoute
@@ -331,6 +492,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/clubs': typeof AuthenticatedAdminClubsRoute
   '/_authenticated/admin/configuracion': typeof AuthenticatedAdminConfiguracionRoute
   '/_authenticated/admin/torneo': typeof AuthenticatedAdminTorneoRoute
+  '/_authenticated/coordinacion/$area': typeof AuthenticatedCoordinacionAreaRouteWithChildren
   '/_authenticated/m/$module': typeof AuthenticatedMModuleRoute
   '/_authenticated/m/agenda': typeof AuthenticatedMAgendaRoute
   '/_authenticated/m/compras_facturas': typeof AuthenticatedMCompras_facturasRoute
@@ -352,6 +514,23 @@ export interface FileRoutesById {
   '/_authenticated/m/usuarios': typeof AuthenticatedMUsuariosRoute
   '/_authenticated/m/viajes': typeof AuthenticatedMViajesRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/coordinacion/': typeof AuthenticatedCoordinacionIndexRoute
+  '/_authenticated/coordinacion/$area/$module': typeof AuthenticatedCoordinacionAreaModuleRoute
+  '/_authenticated/coordinacion/administrativa/compras_facturas': typeof AuthenticatedCoordinacionAdministrativaCompras_facturasRoute
+  '/_authenticated/coordinacion/administrativa/documentos': typeof AuthenticatedCoordinacionAdministrativaDocumentosRoute
+  '/_authenticated/coordinacion/general/comunicados': typeof AuthenticatedCoordinacionGeneralComunicadosRoute
+  '/_authenticated/coordinacion/general/coordinacion_interna': typeof AuthenticatedCoordinacionGeneralCoordinacion_internaRoute
+  '/_authenticated/coordinacion/general/multimedia_gestion': typeof AuthenticatedCoordinacionGeneralMultimedia_gestionRoute
+  '/_authenticated/coordinacion/general/solicitudes': typeof AuthenticatedCoordinacionGeneralSolicitudesRoute
+  '/_authenticated/coordinacion/medica/nutricion': typeof AuthenticatedCoordinacionMedicaNutricionRoute
+  '/_authenticated/coordinacion/medica/salud': typeof AuthenticatedCoordinacionMedicaSaludRoute
+  '/_authenticated/coordinacion/operacional/inventario': typeof AuthenticatedCoordinacionOperacionalInventarioRoute
+  '/_authenticated/coordinacion/operacional/viajes': typeof AuthenticatedCoordinacionOperacionalViajesRoute
+  '/_authenticated/coordinacion/tecnica/desarrollo': typeof AuthenticatedCoordinacionTecnicaDesarrolloRoute
+  '/_authenticated/coordinacion/tecnica/entrenamientos': typeof AuthenticatedCoordinacionTecnicaEntrenamientosRoute
+  '/_authenticated/coordinacion/tecnica/partidos': typeof AuthenticatedCoordinacionTecnicaPartidosRoute
+  '/_authenticated/coordinacion/tecnica/plantel': typeof AuthenticatedCoordinacionTecnicaPlantelRoute
+  '/_authenticated/coordinacion/tecnica/torneo': typeof AuthenticatedCoordinacionTecnicaTorneoRoute
   '/_authenticated/m/plantel/$playerId': typeof AuthenticatedMPlantelPlayerIdRoute
 }
 export interface FileRouteTypes {
@@ -370,6 +549,7 @@ export interface FileRouteTypes {
     | '/admin/clubs'
     | '/admin/configuracion'
     | '/admin/torneo'
+    | '/coordinacion/$area'
     | '/m/$module'
     | '/m/agenda'
     | '/m/compras_facturas'
@@ -391,6 +571,23 @@ export interface FileRouteTypes {
     | '/m/usuarios'
     | '/m/viajes'
     | '/admin/'
+    | '/coordinacion/'
+    | '/coordinacion/$area/$module'
+    | '/coordinacion/administrativa/compras_facturas'
+    | '/coordinacion/administrativa/documentos'
+    | '/coordinacion/general/comunicados'
+    | '/coordinacion/general/coordinacion_interna'
+    | '/coordinacion/general/multimedia_gestion'
+    | '/coordinacion/general/solicitudes'
+    | '/coordinacion/medica/nutricion'
+    | '/coordinacion/medica/salud'
+    | '/coordinacion/operacional/inventario'
+    | '/coordinacion/operacional/viajes'
+    | '/coordinacion/tecnica/desarrollo'
+    | '/coordinacion/tecnica/entrenamientos'
+    | '/coordinacion/tecnica/partidos'
+    | '/coordinacion/tecnica/plantel'
+    | '/coordinacion/tecnica/torneo'
     | '/m/plantel/$playerId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -398,7 +595,6 @@ export interface FileRouteTypes {
     | '/agenda'
     | '/agenda-viajes'
     | '/cambiar-contrasena'
-    | '/coordinacion'
     | '/mi-club'
     | '/mi-perfil'
     | '/invite/$token'
@@ -406,6 +602,7 @@ export interface FileRouteTypes {
     | '/admin/clubs'
     | '/admin/configuracion'
     | '/admin/torneo'
+    | '/coordinacion/$area'
     | '/m/$module'
     | '/m/agenda'
     | '/m/compras_facturas'
@@ -427,6 +624,23 @@ export interface FileRouteTypes {
     | '/m/usuarios'
     | '/m/viajes'
     | '/admin'
+    | '/coordinacion'
+    | '/coordinacion/$area/$module'
+    | '/coordinacion/administrativa/compras_facturas'
+    | '/coordinacion/administrativa/documentos'
+    | '/coordinacion/general/comunicados'
+    | '/coordinacion/general/coordinacion_interna'
+    | '/coordinacion/general/multimedia_gestion'
+    | '/coordinacion/general/solicitudes'
+    | '/coordinacion/medica/nutricion'
+    | '/coordinacion/medica/salud'
+    | '/coordinacion/operacional/inventario'
+    | '/coordinacion/operacional/viajes'
+    | '/coordinacion/tecnica/desarrollo'
+    | '/coordinacion/tecnica/entrenamientos'
+    | '/coordinacion/tecnica/partidos'
+    | '/coordinacion/tecnica/plantel'
+    | '/coordinacion/tecnica/torneo'
     | '/m/plantel/$playerId'
   id:
     | '__root__'
@@ -444,6 +658,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/clubs'
     | '/_authenticated/admin/configuracion'
     | '/_authenticated/admin/torneo'
+    | '/_authenticated/coordinacion/$area'
     | '/_authenticated/m/$module'
     | '/_authenticated/m/agenda'
     | '/_authenticated/m/compras_facturas'
@@ -465,6 +680,23 @@ export interface FileRouteTypes {
     | '/_authenticated/m/usuarios'
     | '/_authenticated/m/viajes'
     | '/_authenticated/admin/'
+    | '/_authenticated/coordinacion/'
+    | '/_authenticated/coordinacion/$area/$module'
+    | '/_authenticated/coordinacion/administrativa/compras_facturas'
+    | '/_authenticated/coordinacion/administrativa/documentos'
+    | '/_authenticated/coordinacion/general/comunicados'
+    | '/_authenticated/coordinacion/general/coordinacion_interna'
+    | '/_authenticated/coordinacion/general/multimedia_gestion'
+    | '/_authenticated/coordinacion/general/solicitudes'
+    | '/_authenticated/coordinacion/medica/nutricion'
+    | '/_authenticated/coordinacion/medica/salud'
+    | '/_authenticated/coordinacion/operacional/inventario'
+    | '/_authenticated/coordinacion/operacional/viajes'
+    | '/_authenticated/coordinacion/tecnica/desarrollo'
+    | '/_authenticated/coordinacion/tecnica/entrenamientos'
+    | '/_authenticated/coordinacion/tecnica/partidos'
+    | '/_authenticated/coordinacion/tecnica/plantel'
+    | '/_authenticated/coordinacion/tecnica/torneo'
     | '/_authenticated/m/plantel/$playerId'
   fileRoutesById: FileRoutesById
 }
@@ -580,6 +812,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/torneo'
       preLoaderRoute: typeof AuthenticatedAdminTorneoRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/coordinacion/': {
+      id: '/_authenticated/coordinacion/'
+      path: '/'
+      fullPath: '/coordinacion/'
+      preLoaderRoute: typeof AuthenticatedCoordinacionIndexRouteImport
+      parentRoute: typeof AuthenticatedCoordinacionRoute
+    }
+    '/_authenticated/coordinacion/$area': {
+      id: '/_authenticated/coordinacion/$area'
+      path: '/$area'
+      fullPath: '/coordinacion/$area'
+      preLoaderRoute: typeof AuthenticatedCoordinacionAreaRouteImport
+      parentRoute: typeof AuthenticatedCoordinacionRoute
     }
     '/_authenticated/m/$module': {
       id: '/_authenticated/m/$module'
@@ -721,6 +967,118 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMViajesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/coordinacion/$area/$module': {
+      id: '/_authenticated/coordinacion/$area/$module'
+      path: '/$module'
+      fullPath: '/coordinacion/$area/$module'
+      preLoaderRoute: typeof AuthenticatedCoordinacionAreaModuleRouteImport
+      parentRoute: typeof AuthenticatedCoordinacionAreaRoute
+    }
+    '/_authenticated/coordinacion/administrativa/compras_facturas': {
+      id: '/_authenticated/coordinacion/administrativa/compras_facturas'
+      path: '/administrativa/compras_facturas'
+      fullPath: '/coordinacion/administrativa/compras_facturas'
+      preLoaderRoute: typeof AuthenticatedCoordinacionAdministrativaCompras_facturasRouteImport
+      parentRoute: typeof AuthenticatedCoordinacionRoute
+    }
+    '/_authenticated/coordinacion/administrativa/documentos': {
+      id: '/_authenticated/coordinacion/administrativa/documentos'
+      path: '/administrativa/documentos'
+      fullPath: '/coordinacion/administrativa/documentos'
+      preLoaderRoute: typeof AuthenticatedCoordinacionAdministrativaDocumentosRouteImport
+      parentRoute: typeof AuthenticatedCoordinacionRoute
+    }
+    '/_authenticated/coordinacion/general/comunicados': {
+      id: '/_authenticated/coordinacion/general/comunicados'
+      path: '/general/comunicados'
+      fullPath: '/coordinacion/general/comunicados'
+      preLoaderRoute: typeof AuthenticatedCoordinacionGeneralComunicadosRouteImport
+      parentRoute: typeof AuthenticatedCoordinacionRoute
+    }
+    '/_authenticated/coordinacion/general/coordinacion_interna': {
+      id: '/_authenticated/coordinacion/general/coordinacion_interna'
+      path: '/general/coordinacion_interna'
+      fullPath: '/coordinacion/general/coordinacion_interna'
+      preLoaderRoute: typeof AuthenticatedCoordinacionGeneralCoordinacion_internaRouteImport
+      parentRoute: typeof AuthenticatedCoordinacionRoute
+    }
+    '/_authenticated/coordinacion/general/multimedia_gestion': {
+      id: '/_authenticated/coordinacion/general/multimedia_gestion'
+      path: '/general/multimedia_gestion'
+      fullPath: '/coordinacion/general/multimedia_gestion'
+      preLoaderRoute: typeof AuthenticatedCoordinacionGeneralMultimedia_gestionRouteImport
+      parentRoute: typeof AuthenticatedCoordinacionRoute
+    }
+    '/_authenticated/coordinacion/general/solicitudes': {
+      id: '/_authenticated/coordinacion/general/solicitudes'
+      path: '/general/solicitudes'
+      fullPath: '/coordinacion/general/solicitudes'
+      preLoaderRoute: typeof AuthenticatedCoordinacionGeneralSolicitudesRouteImport
+      parentRoute: typeof AuthenticatedCoordinacionRoute
+    }
+    '/_authenticated/coordinacion/medica/nutricion': {
+      id: '/_authenticated/coordinacion/medica/nutricion'
+      path: '/medica/nutricion'
+      fullPath: '/coordinacion/medica/nutricion'
+      preLoaderRoute: typeof AuthenticatedCoordinacionMedicaNutricionRouteImport
+      parentRoute: typeof AuthenticatedCoordinacionRoute
+    }
+    '/_authenticated/coordinacion/medica/salud': {
+      id: '/_authenticated/coordinacion/medica/salud'
+      path: '/medica/salud'
+      fullPath: '/coordinacion/medica/salud'
+      preLoaderRoute: typeof AuthenticatedCoordinacionMedicaSaludRouteImport
+      parentRoute: typeof AuthenticatedCoordinacionRoute
+    }
+    '/_authenticated/coordinacion/operacional/inventario': {
+      id: '/_authenticated/coordinacion/operacional/inventario'
+      path: '/operacional/inventario'
+      fullPath: '/coordinacion/operacional/inventario'
+      preLoaderRoute: typeof AuthenticatedCoordinacionOperacionalInventarioRouteImport
+      parentRoute: typeof AuthenticatedCoordinacionRoute
+    }
+    '/_authenticated/coordinacion/operacional/viajes': {
+      id: '/_authenticated/coordinacion/operacional/viajes'
+      path: '/operacional/viajes'
+      fullPath: '/coordinacion/operacional/viajes'
+      preLoaderRoute: typeof AuthenticatedCoordinacionOperacionalViajesRouteImport
+      parentRoute: typeof AuthenticatedCoordinacionRoute
+    }
+    '/_authenticated/coordinacion/tecnica/desarrollo': {
+      id: '/_authenticated/coordinacion/tecnica/desarrollo'
+      path: '/tecnica/desarrollo'
+      fullPath: '/coordinacion/tecnica/desarrollo'
+      preLoaderRoute: typeof AuthenticatedCoordinacionTecnicaDesarrolloRouteImport
+      parentRoute: typeof AuthenticatedCoordinacionRoute
+    }
+    '/_authenticated/coordinacion/tecnica/entrenamientos': {
+      id: '/_authenticated/coordinacion/tecnica/entrenamientos'
+      path: '/tecnica/entrenamientos'
+      fullPath: '/coordinacion/tecnica/entrenamientos'
+      preLoaderRoute: typeof AuthenticatedCoordinacionTecnicaEntrenamientosRouteImport
+      parentRoute: typeof AuthenticatedCoordinacionRoute
+    }
+    '/_authenticated/coordinacion/tecnica/partidos': {
+      id: '/_authenticated/coordinacion/tecnica/partidos'
+      path: '/tecnica/partidos'
+      fullPath: '/coordinacion/tecnica/partidos'
+      preLoaderRoute: typeof AuthenticatedCoordinacionTecnicaPartidosRouteImport
+      parentRoute: typeof AuthenticatedCoordinacionRoute
+    }
+    '/_authenticated/coordinacion/tecnica/plantel': {
+      id: '/_authenticated/coordinacion/tecnica/plantel'
+      path: '/tecnica/plantel'
+      fullPath: '/coordinacion/tecnica/plantel'
+      preLoaderRoute: typeof AuthenticatedCoordinacionTecnicaPlantelRouteImport
+      parentRoute: typeof AuthenticatedCoordinacionRoute
+    }
+    '/_authenticated/coordinacion/tecnica/torneo': {
+      id: '/_authenticated/coordinacion/tecnica/torneo'
+      path: '/tecnica/torneo'
+      fullPath: '/coordinacion/tecnica/torneo'
+      preLoaderRoute: typeof AuthenticatedCoordinacionTecnicaTorneoRouteImport
+      parentRoute: typeof AuthenticatedCoordinacionRoute
+    }
     '/_authenticated/m/plantel/$playerId': {
       id: '/_authenticated/m/plantel/$playerId'
       path: '/$playerId'
@@ -748,6 +1106,83 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
 const AuthenticatedAdminRouteWithChildren =
   AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
 
+interface AuthenticatedCoordinacionAreaRouteChildren {
+  AuthenticatedCoordinacionAreaModuleRoute: typeof AuthenticatedCoordinacionAreaModuleRoute
+}
+
+const AuthenticatedCoordinacionAreaRouteChildren: AuthenticatedCoordinacionAreaRouteChildren =
+  {
+    AuthenticatedCoordinacionAreaModuleRoute:
+      AuthenticatedCoordinacionAreaModuleRoute,
+  }
+
+const AuthenticatedCoordinacionAreaRouteWithChildren =
+  AuthenticatedCoordinacionAreaRoute._addFileChildren(
+    AuthenticatedCoordinacionAreaRouteChildren,
+  )
+
+interface AuthenticatedCoordinacionRouteChildren {
+  AuthenticatedCoordinacionAreaRoute: typeof AuthenticatedCoordinacionAreaRouteWithChildren
+  AuthenticatedCoordinacionIndexRoute: typeof AuthenticatedCoordinacionIndexRoute
+  AuthenticatedCoordinacionAdministrativaCompras_facturasRoute: typeof AuthenticatedCoordinacionAdministrativaCompras_facturasRoute
+  AuthenticatedCoordinacionAdministrativaDocumentosRoute: typeof AuthenticatedCoordinacionAdministrativaDocumentosRoute
+  AuthenticatedCoordinacionGeneralComunicadosRoute: typeof AuthenticatedCoordinacionGeneralComunicadosRoute
+  AuthenticatedCoordinacionGeneralCoordinacion_internaRoute: typeof AuthenticatedCoordinacionGeneralCoordinacion_internaRoute
+  AuthenticatedCoordinacionGeneralMultimedia_gestionRoute: typeof AuthenticatedCoordinacionGeneralMultimedia_gestionRoute
+  AuthenticatedCoordinacionGeneralSolicitudesRoute: typeof AuthenticatedCoordinacionGeneralSolicitudesRoute
+  AuthenticatedCoordinacionMedicaNutricionRoute: typeof AuthenticatedCoordinacionMedicaNutricionRoute
+  AuthenticatedCoordinacionMedicaSaludRoute: typeof AuthenticatedCoordinacionMedicaSaludRoute
+  AuthenticatedCoordinacionOperacionalInventarioRoute: typeof AuthenticatedCoordinacionOperacionalInventarioRoute
+  AuthenticatedCoordinacionOperacionalViajesRoute: typeof AuthenticatedCoordinacionOperacionalViajesRoute
+  AuthenticatedCoordinacionTecnicaDesarrolloRoute: typeof AuthenticatedCoordinacionTecnicaDesarrolloRoute
+  AuthenticatedCoordinacionTecnicaEntrenamientosRoute: typeof AuthenticatedCoordinacionTecnicaEntrenamientosRoute
+  AuthenticatedCoordinacionTecnicaPartidosRoute: typeof AuthenticatedCoordinacionTecnicaPartidosRoute
+  AuthenticatedCoordinacionTecnicaPlantelRoute: typeof AuthenticatedCoordinacionTecnicaPlantelRoute
+  AuthenticatedCoordinacionTecnicaTorneoRoute: typeof AuthenticatedCoordinacionTecnicaTorneoRoute
+}
+
+const AuthenticatedCoordinacionRouteChildren: AuthenticatedCoordinacionRouteChildren =
+  {
+    AuthenticatedCoordinacionAreaRoute:
+      AuthenticatedCoordinacionAreaRouteWithChildren,
+    AuthenticatedCoordinacionIndexRoute: AuthenticatedCoordinacionIndexRoute,
+    AuthenticatedCoordinacionAdministrativaCompras_facturasRoute:
+      AuthenticatedCoordinacionAdministrativaCompras_facturasRoute,
+    AuthenticatedCoordinacionAdministrativaDocumentosRoute:
+      AuthenticatedCoordinacionAdministrativaDocumentosRoute,
+    AuthenticatedCoordinacionGeneralComunicadosRoute:
+      AuthenticatedCoordinacionGeneralComunicadosRoute,
+    AuthenticatedCoordinacionGeneralCoordinacion_internaRoute:
+      AuthenticatedCoordinacionGeneralCoordinacion_internaRoute,
+    AuthenticatedCoordinacionGeneralMultimedia_gestionRoute:
+      AuthenticatedCoordinacionGeneralMultimedia_gestionRoute,
+    AuthenticatedCoordinacionGeneralSolicitudesRoute:
+      AuthenticatedCoordinacionGeneralSolicitudesRoute,
+    AuthenticatedCoordinacionMedicaNutricionRoute:
+      AuthenticatedCoordinacionMedicaNutricionRoute,
+    AuthenticatedCoordinacionMedicaSaludRoute:
+      AuthenticatedCoordinacionMedicaSaludRoute,
+    AuthenticatedCoordinacionOperacionalInventarioRoute:
+      AuthenticatedCoordinacionOperacionalInventarioRoute,
+    AuthenticatedCoordinacionOperacionalViajesRoute:
+      AuthenticatedCoordinacionOperacionalViajesRoute,
+    AuthenticatedCoordinacionTecnicaDesarrolloRoute:
+      AuthenticatedCoordinacionTecnicaDesarrolloRoute,
+    AuthenticatedCoordinacionTecnicaEntrenamientosRoute:
+      AuthenticatedCoordinacionTecnicaEntrenamientosRoute,
+    AuthenticatedCoordinacionTecnicaPartidosRoute:
+      AuthenticatedCoordinacionTecnicaPartidosRoute,
+    AuthenticatedCoordinacionTecnicaPlantelRoute:
+      AuthenticatedCoordinacionTecnicaPlantelRoute,
+    AuthenticatedCoordinacionTecnicaTorneoRoute:
+      AuthenticatedCoordinacionTecnicaTorneoRoute,
+  }
+
+const AuthenticatedCoordinacionRouteWithChildren =
+  AuthenticatedCoordinacionRoute._addFileChildren(
+    AuthenticatedCoordinacionRouteChildren,
+  )
+
 interface AuthenticatedMPlantelRouteChildren {
   AuthenticatedMPlantelPlayerIdRoute: typeof AuthenticatedMPlantelPlayerIdRoute
 }
@@ -766,7 +1201,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAgendaRoute: typeof AuthenticatedAgendaRoute
   AuthenticatedAgendaViajesRoute: typeof AuthenticatedAgendaViajesRoute
   AuthenticatedCambiarContrasenaRoute: typeof AuthenticatedCambiarContrasenaRoute
-  AuthenticatedCoordinacionRoute: typeof AuthenticatedCoordinacionRoute
+  AuthenticatedCoordinacionRoute: typeof AuthenticatedCoordinacionRouteWithChildren
   AuthenticatedMiClubRoute: typeof AuthenticatedMiClubRoute
   AuthenticatedMiPerfilRoute: typeof AuthenticatedMiPerfilRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
@@ -797,7 +1232,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAgendaRoute: AuthenticatedAgendaRoute,
   AuthenticatedAgendaViajesRoute: AuthenticatedAgendaViajesRoute,
   AuthenticatedCambiarContrasenaRoute: AuthenticatedCambiarContrasenaRoute,
-  AuthenticatedCoordinacionRoute: AuthenticatedCoordinacionRoute,
+  AuthenticatedCoordinacionRoute: AuthenticatedCoordinacionRouteWithChildren,
   AuthenticatedMiClubRoute: AuthenticatedMiClubRoute,
   AuthenticatedMiPerfilRoute: AuthenticatedMiPerfilRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,

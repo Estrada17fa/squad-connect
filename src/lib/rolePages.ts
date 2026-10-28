@@ -134,7 +134,6 @@ export interface ResolvedPage {
   page: PageDef;
   modules: ModuleKey[];
   labelOverride?: string;
-  variant?: "jugador-solicitudes";
 }
 
 export function resolvePagesForUser(
@@ -194,15 +193,6 @@ export function resolvePagesForUser(
     if (p.key === "admin") {
       const canAdmin = opts?.canAccessAdmin ?? role === "admin";
       if (canAdmin && perPage.admin.length > 0) out.push({ page: p, modules: perPage.admin });
-      continue;
-    }
-
-    if (p.key === "coordinacion" && role === "jugador") {
-      // Para el jugador, Solicitudes vive SOLO en el menú del avatar
-      // ("Mis Solicitudes"); nunca ocupa un lugar en la navegación ni arrastra
-      // módulos hermanos (partidos, etc.) a esa vista.
-      const rest = perPage.coordinacion.filter((mk) => mk !== "solicitudes");
-      if (rest.length > 0) out.push({ page: p, modules: rest });
       continue;
     }
 

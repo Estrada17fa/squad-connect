@@ -104,11 +104,12 @@ export function canManageTripsModule(level: PermissionLevel | undefined | null):
 }
 
 /**
- * Acceso a Compras y facturas, alineado con la RLS (can_view_club_module):
- * cualquier lector/editor; Vista Jugador queda fuera de esta pantalla.
+ * Acceso a Compras y facturas, alineado con la base de datos: `can_view_compras`
+ * exige lector_global o más (y `can_edit_compras`, editor_global para editar).
+ * Los niveles por categoría no abren esta pantalla.
  */
 export function canAccessExpensesModule(level: PermissionLevel | undefined | null): boolean {
-  return LEVEL_RANK[normalizeLevel(level)] >= LEVEL_RANK.lector_categoria;
+  return LEVEL_RANK[normalizeLevel(level)] >= LEVEL_RANK.lector_global;
 }
 
 
