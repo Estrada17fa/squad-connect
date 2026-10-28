@@ -39,7 +39,7 @@ import { canEdit as levelCanEdit } from "@/lib/permissions";
 
 type SubView = "catalogo" | "prestamos";
 
-export function InventarioPage({ search = {}, onClearSearch }: PageSearchProps<{ open?: string }> = {}) {
+export function InventarioPage({ search: urlSearch = {}, onClearSearch }: PageSearchProps<{ open?: string }> = {}) {
   const { permissions, isSuperAdmin, accessibleModules, profile, user } = useApp();
   const clubId = profile?.club_id ?? null;
   const canAccess = isSuperAdmin || accessibleModules.includes("inventario");
