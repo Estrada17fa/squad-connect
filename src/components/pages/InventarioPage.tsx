@@ -89,7 +89,7 @@ export function InventarioPage({ search: urlSearch = {}, onClearSearch }: PageSe
   const returned = loans.filter((l) => !!l.returned_at);
 
   // Deep-link desde el centro de notificaciones: /m/inventario?open=<loanId>
-  const { open: openParam } = search;
+  const { open: openParam } = urlSearch;
   const navigate = useNavigate();
   React.useEffect(() => {
     if (!openParam) return;
