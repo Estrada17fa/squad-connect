@@ -55,6 +55,7 @@ interface RoleRow {
   name: string;
   is_system_default: boolean;
   base_role: string | null;
+  default_all_categories?: boolean | null;
 }
 interface PermRow {
   role_id: string;
