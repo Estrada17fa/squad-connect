@@ -94,6 +94,10 @@
   --glass-bg: hsl(0 0% 100% / 0.04);
   --glass-border: hsl(0 0% 100% / 0.08);
   --glass-blur: 18px;
+  --card-surface: linear-gradient(160deg, hsl(0 0% 100% / 0.06), hsl(0 0% 100% / 0.025));
+  --card-border-hover: hsl(150 100% 50% / 0.3);
+  --card-lead-bg: hsl(0 0% 100% / 0.05);
+  --shadow-card: inset 0 1px 0 hsl(0 0% 100% / 0.05), 0 4px 18px -8px hsl(0 0% 0% / 0.6);
 
   --glow-primary: 0 0 24px hsl(150 100% 50% / 0.35), 0 0 6px hsl(150 100% 50% / 0.5);
 
@@ -136,10 +140,27 @@
 }
 
 @utility glass {
-  background: var(--glass-bg);
+  background: var(--card-surface);
   border: 1px solid var(--glass-border);
   backdrop-filter: blur(var(--glass-blur)) saturate(140%);
-  border-radius: var(--radius-lg);
+  border-radius: calc(var(--radius-lg) + 2px);
+  box-shadow: var(--shadow-card);
+}
+
+@utility card-scoreboard {
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+  &:hover {
+    border-color: var(--card-border-hover);
+    box-shadow: var(--shadow-card), 0 0 0 1px var(--card-border-hover), 0 8px 28px -12px hsl(150 100% 50% / 0.25);
+  }
+}
+
+@utility card-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted-foreground);
 }
 
 @utility glow-primary {
