@@ -43,6 +43,10 @@ export function RequestCard({
     <StandardCard
       interactive
       icon={def.icon}
+      lead={{
+        top: new Date(request.created_at).getDate(),
+        bottom: new Date(request.created_at).toLocaleDateString("es-MX", { month: "short" }).replace(".", ""),
+      }}
       title={requestSummary(request)}
       subtitle={def.label}
       status={{ label: STATUS_LABEL[request.status], variant: STATUS_VARIANT[request.status] }}
@@ -51,22 +55,26 @@ export function RequestCard({
       onClick={() => onOpen(request)}
       className={cn(highlighted && "border-primary/40 ring-1 ring-primary/25")}
     >
-      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+      <div className="flex flex-wrap items-end justify-between gap-2 text-xs text-muted-foreground">
         <span className="flex min-w-0 items-center gap-2">
           <Avatar className="h-6 w-6">
             <AvatarImage src={request.requester?.avatar_url ?? undefined} alt={who} />
             <AvatarFallback className="text-[10px]">{who.slice(0, 2).toUpperCase()}</AvatarFallback>
           </Avatar>
-          <span className="truncate text-foreground">{who}</span>
-          <span className="shrink-0 rounded-full border border-border/60 bg-white/[0.04] px-2 py-0.5 text-[11px]">
+          <span className="truncate font-medium text-foreground">{who}</span>
+          <span className="shrink-0 rounded-full border border-border/60 bg-secondary/40 px-2 py-0.5 text-[11px]">
             {request.team?.name ?? "Todo el club"}
           </span>
+          <span className="shrink-0">· {formatDateTime(request.created_at)}</span>
         </span>
-        <span className="flex shrink-0 items-center gap-3">
-          <span>{formatDateTime(request.created_at)}</span>
-          {money ? <span className="text-foreground">{money}</span> : null}
-        </span>
+        {money ? (
+          <span className="flex shrink-0 flex-col items-end">
+            <span className="card-label">Monto</span>
+            <span className="font-display text-base font-bold text-foreground tabular-nums">{money}</span>
+          </span>
+        ) : null}
       </div>
+
 
       {quick ? (
         <div className="mt-3 flex flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
