@@ -35,7 +35,7 @@ export const Route = createFileRoute("/_authenticated/m/agenda")({
 function AgendaModulePage() {
   const { user, profile, teamOptions } = useApp();
   const editableTeams = useEditableTeams("agenda");
-  const { canEditTeam } = useTeamAccess("agenda");
+  const { canEditRecord } = useTeamAccess("agenda");
 
   const [detailEvent, setDetailEvent] = React.useState<CalendarEventRow | null>(null);
   const [teamFilter, setTeamFilter] = useTeamFilter();

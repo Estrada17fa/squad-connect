@@ -42,7 +42,7 @@ export const Route = createFileRoute("/_authenticated/m/documentos")({
 function DocumentosPage() {
   const { profile, teamOptions, isSuperAdmin } = useApp();
   const clubId = profile?.club_id ?? null;
-  const { canEditTeam, canReadTeam, levelForTeam } = useTeamAccess("documentos");
+  const { canEditRecord, canReadTeam, levelForTeam } = useTeamAccess("documentos");
 
   // Vista Jugador: los documentos personales viven en el perfil, no aquí.
   const playerOnly =

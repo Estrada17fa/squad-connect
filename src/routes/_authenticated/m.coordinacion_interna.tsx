@@ -58,7 +58,7 @@ const MEETING_STATUS_VARIANT: Record<MeetingStatus, StatusVariant> = {
 function CoordinacionPage() {
   const { isSuperAdmin, user, accessibleModules, profile, teamOptions } = useApp();
   const clubId = profile?.club_id ?? null;
-  const { canEditTeam, isPlayerScoped } = useTeamAccess("coordinacion_interna");
+  const { canEditRecord, isPlayerScoped } = useTeamAccess("coordinacion_interna");
   const editableTeams = useEditableTeams("coordinacion_interna");
   const canCreate = editableTeams.length > 0 || canEditRecord(null);
   const playerScoped = isPlayerScoped(null);
