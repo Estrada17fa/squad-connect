@@ -24,7 +24,7 @@ export function useTeamMembers(clubId: string | null | undefined, teamId: string
       const { data, error } = await supabase
         .from("team_memberships")
         .select(
-          "user_id, team_id, job_title, profile:profiles!inner(id, full_name, email, avatar_url, club_id), role:roles!inner(name, allows_club_wide, club_id)",
+          "user_id, team_id, job_title, profile:profiles!inner(id, full_name, email, avatar_url, club_id), role:roles!inner(name, club_id)",
         )
         .eq("profile.club_id", clubId!);
       if (error) throw error;
@@ -34,7 +34,7 @@ export function useTeamMembers(clubId: string | null | undefined, teamId: string
         const p = row.profile;
         const role = row.role;
         if (!p || !role || role.club_id !== clubId) continue;
-        const belongs = row.team_id === teamId || (row.team_id === null && role.allows_club_wide);
+        const belongs = row.team_id === teamId;
         if (!belongs || seen.has(p.id)) continue;
         seen.add(p.id);
         out.push({
