@@ -3,7 +3,7 @@ import { useClubPrefsFor } from "@/hooks/useClubSettings";
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { prefetchModule } from "@/lib/prefetch";
-import { Building2, ChevronDown, ClipboardList, LogOut, User } from "lucide-react";
+import { ChevronDown, ClipboardList, LogOut, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccess, hasAccess, type TeamOption } from "@/hooks/useAccess";
 import {
@@ -17,8 +17,7 @@ import {
 } from "@/lib/permissions";
 
 
-import { MODULES, MODULE_MAP, COMING_SOON_MODULES, moduleFromPath, permissionKeyFor, type ModuleKey } from "@/lib/modules";
-import { ComingSoonModule } from "./ComingSoonModule";
+import { MODULES, MODULE_MAP, moduleFromPath, permissionKeyFor, type ModuleKey } from "@/lib/modules";
 import {
   resolvePagesForUser,
   inferBaseRole,
@@ -159,8 +158,6 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
   // pasan el predicado simplemente no se incluyen en el array renderizado.
   const isModuleAccessible = React.useCallback(
     (key: ModuleKey) => {
-      // Agenda es fija y de solo lectura para todos.
-      if (key === "agenda" || key === "mes") return true;
       if (key === "usuarios") return canSeeUsers(getModuleAccess("usuarios"));
       // La gestión de Multimedia (Coordinación) no es para Vista Jugador:
       // ese nivel solo accede al feed de Mi Club.
@@ -185,11 +182,6 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
     [effectiveBaseRole, isModuleAccessible, canAccessAdmin],
   );
 
-
-  const navPages = visiblePages.filter((p) => !p.hidden);
-  const currentModule = moduleFromPath(pathname);
-  const comingSoon =
-    currentModule && COMING_SOON_MODULES.includes(currentModule) ? currentModule : null;
 
   if (isLoading || !data || mustChange.isLoading) {
     return (
@@ -266,14 +258,13 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
           isSuperAdmin={data.isSuperAdmin}
           canOpenModule={(key) => isModuleAccessible(key as ModuleKey)}
           showSolicitudes={needsSolicitudesShortcut(visiblePages, isModuleAccessible("solicitudes"))}
-          showAdmin={canAccessAdmin}
           onSignOut={signOut}
         />
-        <DesktopNav pages={navPages} />
+        <DesktopNav pages={visiblePages} />
         <main className="mx-auto min-w-0 w-full max-w-6xl overflow-x-clip px-4 py-6 sm:px-6">
-          {comingSoon ? <ComingSoonModule moduleKey={comingSoon} /> : <Outlet />}
+          <Outlet />
         </main>
-        <BottomNav pages={navPages} />
+        <BottomNav pages={visiblePages} />
 
       </div>
     </AppContext.Provider>
@@ -296,7 +287,6 @@ function Header({
   isSuperAdmin,
   canOpenModule,
   showSolicitudes,
-  showAdmin,
   onSignOut,
 }: {
   clubId: string | null;
@@ -308,7 +298,6 @@ function Header({
   canOpenModule: (key: string) => boolean;
   /** Atajo "Mis Solicitudes" para quien no ve la página Coordinación. */
   showSolicitudes: boolean;
-  showAdmin: boolean;
   onSignOut: () => void;
 }) {
   const fallback = initials(userName || "?");
@@ -349,14 +338,6 @@ function Header({
                   Mi perfil
                 </Link>
               </DropdownMenuItem>
-              {showAdmin ? (
-                <DropdownMenuItem asChild>
-                  <Link to="/admin">
-                    <Building2 className="mr-2 h-4 w-4" />
-                    Admin
-                  </Link>
-                </DropdownMenuItem>
-              ) : null}
               {showSolicitudes ? (
                 <DropdownMenuItem asChild>
                   <Link to="/m/$module" params={{ module: "solicitudes" }}>
