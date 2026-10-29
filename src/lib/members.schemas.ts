@@ -54,8 +54,10 @@ export const baseMemberSchema = z.object({
   emergency_contact_phone: z.string().trim().max(40).optional().nullable(),
   role_id: z.string().uuid(),
   assignments: z.array(assignmentSchema).max(30).default([]),
-  /** Puesto de la membresía global ("Todo el club"), p. ej. para Admin. */
+  /** Puesto cuando el interruptor "Todas las categorías" está encendido. */
   club_job_title: z.string().trim().max(60).optional().nullable(),
+  /** Interruptor "Todas las categorías": crea la membresía en todas (y en las nuevas). */
+  all_categories: z.boolean().optional().default(false),
   player: playerSchema.optional().nullable(),
 });
 
@@ -76,7 +78,7 @@ export const createMemberSchema = baseMemberSchema.extend({
 
 /** Editar perfil: solo datos personales. Rol, categorías, dorsal y posición se editan por membresía. */
 export const updateMemberSchema = baseMemberSchema
-  .omit({ role_id: true, assignments: true, club_job_title: true })
+  .omit({ role_id: true, assignments: true, club_job_title: true, all_categories: true })
   .extend({
     user_id: z.string().uuid(),
     password: passwordField.optional().nullable(),
@@ -90,10 +92,23 @@ const playerTeamFields = {
 
 export const addMembershipSchema = z.object({
   user_id: z.string().uuid(),
-  team_id: z.string().uuid().nullable(),
+  team_id: z.string().uuid(),
   role_id: z.string().uuid(),
   job_title: z.string().trim().max(60).optional().nullable(),
   ...playerTeamFields,
+});
+
+export const allCategoriesSchema = z.object({
+  user_id: z.string().uuid(),
+  role_id: z.string().uuid().optional().nullable(),
+  on: z.boolean(),
+  replace_conflicts: z.boolean().optional().default(false),
+  job_title: z.string().trim().max(60).optional().nullable(),
+});
+
+export const allCategoriesPreviewSchema = z.object({
+  user_id: z.string().uuid(),
+  role_id: z.string().uuid(),
 });
 
 export const updateMembershipSchema = z.object({
