@@ -3,7 +3,7 @@ import { useClubPrefsFor } from "@/hooks/useClubSettings";
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { prefetchModule } from "@/lib/prefetch";
-import { ChevronDown, ClipboardList, LogOut, User } from "lucide-react";
+import { Building2, ChevronDown, ClipboardList, LogOut, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccess, hasAccess, type TeamOption } from "@/hooks/useAccess";
 import {
