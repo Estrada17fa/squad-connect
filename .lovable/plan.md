@@ -13,10 +13,10 @@
 - Validaciones existentes (no escalar privilegios, último admin) se reutilizan.
 
 ## Paso 2 — Migrar a los 3 Admin
-Para Emilio, Sebastian y Connor: encender interruptor con rol Admin → se crean Primer Equipo y Equipo Juvenil con su `job_title` → borrar su membresía `team_id NULL` (borrado por id). Después: restricción `team_memberships.team_id NOT NULL` (en migración posterior, ya sin filas nulas).
+**Va en la MISMA migración y transacción que el Paso 3**, para que Sebastian y Connor no pierdan acceso ni un instante. Para Emilio, Sebastian y Connor: encender interruptor con rol Admin → se crean Primer Equipo y Equipo Juvenil con su `job_title` → borrar su membresía `team_id NULL` (borrado por id). La restricción `team_memberships.team_id NOT NULL` va en una migración posterior, ya sin filas nulas.
 
 ## Paso 3 — Quitar lo "global"
-Inventario encontrado en la base viva. Distingo dos casos: (M) usa membresía sin categoría / nivel global → se cambia; (R) `team_id IS NULL` del **registro** ("Todo el club" en eventos, documentos, solicitudes) → no es membresía; la regla pasa de "exige global" a "máximo entre sus categorías".
+Inventario encontrado en la base viva. Dos casos: (M) usa membresía sin categoría / nivel global → se cambia; (R) `team_id IS NULL` del **registro** ("Todo el club" en tareas, solicitudes, eventos, comunicados, multimedia, documentos). Un registro de todo el club pertenece a TODAS las categorías: lo **ve** quien tenga Ver en al menos una categoría; lo **edita** solo quien tenga Editar en TODAS las categorías del club (si le falta membresía en alguna, no edita). Helpers nuevos: `level_any_team` (máximo) y `level_all_teams` (mínimo entre todas las categorías del club). Nunca se usa "editor en alguna categoría" para editar registros de todo el club.
 
 Funciones SQL:
 | Función | Uso actual | Cómo queda |
@@ -30,9 +30,11 @@ Funciones SQL:
 | can_edit_media_post, can_view/edit_team_media | global | categoría (máx.) |
 | can_approve_request_type, request_type_approver_ids | global | categoría (máx.) |
 | development_level, health_level, training_level | global / NULL | solo por categorías |
-| coord_scope_ok, request_scope_ok | global + registro NULL (R) | registro NULL: exige editor_categoria en alguna categoría (comportamiento actual de hecho; los hallazgos pendientes no se resuelven aquí) |
+| coord_scope_ok, request_scope_ok | global + registro NULL (R) | registro NULL: ver = Ver en alguna; editar = Editar en TODAS |
 | has_team_access, has_team_scope | membresía NULL = todas | solo membresías reales |
-| can_view_event_new, can_view_request, notify_group, notify_calendar_event_* | registro NULL (R) | sin cambio de lógica; se revisa que no dependan de membresía NULL |
+| can_view_event_new, can_view_request | registro NULL (R) | ver = Ver en alguna categoría |
+| comunicados, multimedia, eventos, documentos (funciones y políticas) | registro NULL (R) | ver = Ver en alguna; editar = Editar en TODAS |
+| notify_group, notify_calendar_event_* | registro NULL (R) | destinatarios = quien puede ver el registro |
 
 Políticas RLS: announcements (insert/update/delete), calendar_events (4), documents (4), exercises (select/write), media_posts_insert, requests (select_club/update), role_perms_write_own_club, routine_exercises_select, training_routines.routines_select → sustituir comparaciones `_global` por el equivalente de categoría; las de registro NULL (R) se mantienen.
 
@@ -50,6 +52,7 @@ Código (sin cambiar pantallas ni rutas): `permissions.ts`, `useAccess.ts`, `mem
 4. Persona de prueba con dos categorías y roles distintos; excepción en una celda afecta solo esa categoría. Borrarla al final.
 5. Jugador ve lo mismo.
 6. Cero membresías con team_id NULL y cero referencias activas a club_wide.
+7. Acceso de más: para cada función con umbral cambiado (can_view_users, is_user_admin, can_view/edit_compras, can_edit_club_module, can_edit_module, comunicados, multimedia, can_approve_request_type, request_type_approver_ids, coord_scope_ok, request_scope_ok, development/health/training_level), tabla "quién pasa ANTES / DESPUÉS" con todos los usuarios del club, simulada antes de aplicar. Debe ser idéntica salvo los 3 Admin por la vía nueva. Si alguien nuevo pasa, no se habilita: en la misma migración su rol queda en Sin acceso en ese módulo, y se reporta.
 - Agregar a AGENTS.md la regla "Todo es por categoría; 'Todas las categorías' es solo un interruptor que crea membresías".
 - Reporte final: archivos/migraciones, tabla del Paso 3 con su estado final, resultados de pruebas.
 
