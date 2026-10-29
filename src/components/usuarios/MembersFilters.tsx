@@ -111,7 +111,6 @@ export function MembersFilters({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={ALL}>Todas las categorías</SelectItem>
-                  <SelectItem value="__club__">Todo el club</SelectItem>
                   {teams.map((t) => (
                     <SelectItem key={t.id} value={t.id}>
                       {t.name}

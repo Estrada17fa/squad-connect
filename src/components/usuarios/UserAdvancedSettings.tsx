@@ -3,10 +3,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, Sliders } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { MODULES, MODULE_MAP, type ModuleKey } from "@/lib/modules";
+import { MODULE_MAP, type ModuleKey } from "@/lib/modules";
 import { groupPermissionModulesByPage } from "@/lib/rolePages";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Select,
