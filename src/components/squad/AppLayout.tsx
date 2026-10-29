@@ -54,7 +54,7 @@ const LEGACY_ACTIVE_TEAM_KEY = "squad.activeTeamId";
 export function AppLayout({ user }: { user: { id: string; email?: string | null } }) {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const { data, isLoading } = useAccess(user.id);
+  const { data, isLoading, isError, refetch } = useAccess(user.id);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   // Cambio de contraseña obligatorio en el primer acceso (cuenta creada por un admin).
@@ -182,6 +182,21 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
     [effectiveBaseRole, isModuleAccessible, canAccessAdmin],
   );
 
+
+  if (isError && !data) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-background p-6 text-center">
+        <p className="text-sm text-muted-foreground">No pudimos cargar tus permisos.</p>
+        <button
+          type="button"
+          onClick={() => refetch()}
+          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+        >
+          Reintentar
+        </button>
+      </div>
+    );
+  }
 
   if (isLoading || !data || mustChange.isLoading) {
     return (
