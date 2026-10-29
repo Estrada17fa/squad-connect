@@ -9,7 +9,7 @@ export const Route = createFileRoute("/_authenticated/admin/")({
   head: () => ({
     meta: [
       { title: "Squad — Admin" },
-      { name: "description", content: "Panel de administración: usuarios, documentos y clubes." },
+      { name: "description", content: "Panel de administración: usuarios y clubes." },
     ],
   }),
   component: AdminPage,
@@ -17,11 +17,11 @@ export const Route = createFileRoute("/_authenticated/admin/")({
 
 function AdminPage() {
   const navigate = useNavigate();
-  const { visiblePages, isSuperAdmin, activeBaseRole } = useApp();
+  const { visiblePages, isSuperAdmin } = useApp();
   const adminPage = visiblePages.find((p) => p.page.key === "admin");
   const modules = adminPage?.modules ?? [];
 
-  if (activeBaseRole !== "admin" && !isSuperAdmin) {
+  if (!adminPage && !isSuperAdmin) {
     return (
       <EmptyState
         icon={Shield}

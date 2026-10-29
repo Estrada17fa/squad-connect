@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { Building2, Plane, Settings2, Trophy, type LucideIcon } from "lucide-react";
 import { useApp } from "./AppLayout";
-import { MODULE_MAP, type ModuleKey } from "@/lib/modules";
+import { COORD_LAYOUT, MODULE_MAP, coordAreaOf, type ModuleKey } from "@/lib/modules";
 import { findHubForModule, type PageKey } from "@/lib/rolePages";
 import { prefetchModule } from "@/lib/prefetch";
 import { cn } from "@/lib/utils";
@@ -46,7 +46,9 @@ export function ModuleTabs({ activeKey, hubKey, extraActiveKey }: ModuleTabsProp
       ? visiblePages.find((p) => p.page.key === hubKey) ?? null
       : null;
 
-  const modules = hub?.modules ?? [];
+  // En Coordinación las pestañas muestran solo los módulos del área activa.
+  const area = hub?.page.key === "coordinacion" && activeKey ? coordAreaOf(activeKey) : null;
+  const modules = (hub?.modules ?? []).filter((k) => !area || COORD_LAYOUT[area].includes(k));
 
   const extras: ExtraTab[] = React.useMemo(() => {
     const out: ExtraTab[] = [];
