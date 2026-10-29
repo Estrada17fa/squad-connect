@@ -58,7 +58,7 @@ function SolicitudesPage() {
 
   const level = getModuleAccess("solicitudes");
   const canManage = isSuperAdmin || levelCanEdit(level);
-  const { levelForTeam } = useTeamAccess("solicitudes");
+  const { levelForTeam, canEditAllTeams } = useTeamAccess("solicitudes");
 
   /** Categorías donde la persona tiene membresía (alcance de los niveles "categoría"). */
   const scopeOk = React.useCallback(
@@ -80,10 +80,12 @@ function SolicitudesPage() {
     (teamId: string | null) => {
       const lvl = rowLevel(teamId);
       if (isSuperAdmin) return true;
+      // Registro de "Todo el club": editar exige Editar en TODAS las categorías.
+      if (teamId === null) return canEditAllTeams;
       if (isGlobalLevel(lvl)) return levelCanEdit(lvl);
       return levelCanEdit(lvl) && scopeOk(teamId);
     },
-    [rowLevel, isSuperAdmin, scopeOk],
+    [rowLevel, isSuperAdmin, scopeOk, canEditAllTeams],
   );
 
   const myApproverTypes = useMyApproverTypes(clubId, user.id, isSuperAdmin, getModuleAccess);

@@ -9,6 +9,7 @@ import { CategoriesTab } from "@/components/admin/CategoriesTab";
 import { ClubIdentityTab } from "@/components/admin/ClubIdentityTab";
 import { ClubPreferencesTab } from "@/components/admin/ClubPreferencesTab";
 import { useApp } from "@/components/squad/AppLayout";
+import { canManageUsers } from "@/lib/permissions";
 
 export const Route = createFileRoute("/_authenticated/admin/configuracion")({
   head: () => ({
