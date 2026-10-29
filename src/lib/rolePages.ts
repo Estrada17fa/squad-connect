@@ -1,5 +1,14 @@
 import { Home, Calendar, Building2, MessagesSquare, Shield, type LucideIcon } from "lucide-react";
-import { MODULES, MODULE_MAP, type ModuleKey } from "./modules";
+import {
+  MODULES,
+  MODULE_MAP,
+  COORD_AREAS,
+  COORD_LAYOUT,
+  RETIRED_MODULES,
+  TOGGLE_MODULES,
+  type CoordArea,
+  type ModuleKey,
+} from "./modules";
 
 export type PageKey = "home" | "agenda" | "club" | "coordinacion" | "admin";
 export type BaseRole = "admin" | "tecnico" | "medico" | "staff" | "jugador";
@@ -23,202 +32,58 @@ export const PAGE_MAP: Record<PageKey, PageDef> = Object.fromEntries(
   PAGES.map((p) => [p.key, p]),
 ) as Record<PageKey, PageDef>;
 
-const ROLE_PAGES: Record<BaseRole, Record<PageKey, ModuleKey[]>> = {
-  admin: {
-    home: [],
-    agenda: ["agenda", "mes"],
-    club: ["plantel", "salud", "desarrollo", "entrenamientos", "nutricion", "tacticas", "torneo", "comunicados", "multimedia"],
-    coordinacion: ["coordinacion_interna", "solicitudes", "inventario", "compras_facturas", "partidos", "viajes", "multimedia_gestion"],
-    admin: ["usuarios", "documentos"],
-  },
-  tecnico: {
-    home: [],
-    agenda: ["agenda", "mes"],
-    club: ["plantel", "desarrollo", "entrenamientos", "nutricion", "tacticas", "torneo", "comunicados", "multimedia"],
-    coordinacion: ["coordinacion_interna", "solicitudes", "partidos", "viajes", "multimedia_gestion"],
-    admin: [],
-  },
-  medico: {
-    home: [],
-    agenda: ["agenda", "mes"],
-    club: ["plantel", "salud", "nutricion", "comunicados", "multimedia"],
-    coordinacion: ["coordinacion_interna", "solicitudes", "multimedia_gestion"],
-    admin: [],
-  },
-  staff: {
-    home: [],
-    agenda: ["agenda", "mes"],
-    club: ["plantel", "entrenamientos", "comunicados", "multimedia"],
-    coordinacion: ["coordinacion_interna", "solicitudes", "inventario", "partidos", "viajes", "multimedia_gestion"],
-    admin: [],
-  },
-  jugador: {
-    home: [],
-    agenda: ["agenda", "mes"],
-    club: ["plantel", "desarrollo", "entrenamientos", "nutricion", "torneo", "partidos", "comunicados", "multimedia"],
-    coordinacion: [],
-    admin: [],
-  },
-};
+/** Orden plano de Coordinación (área por área). */
+export const COORDINACION_ORDER: ModuleKey[] = COORD_AREAS.flatMap((a) => COORD_LAYOUT[a.key]);
 
-const DEFAULT_PAGE_FOR_MODULE: Record<ModuleKey, PageKey> = {
-  agenda: "agenda",
-  mes: "agenda",
-  plantel: "club",
-  salud: "club",
-  desarrollo: "club",
-  entrenamientos: "club",
-  tacticas: "club",
-  torneo: "club",
-  comunicados: "club",
-  multimedia: "club",
-  multimedia_gestion: "coordinacion",
-  nutricion: "club",
-  coordinacion_interna: "coordinacion",
-  partidos: "coordinacion",
-  solicitudes: "coordinacion",
-  compras_facturas: "coordinacion",
-  inventario: "coordinacion",
-  viajes: "coordinacion",
-  usuarios: "admin",
-  documentos: "admin",
-};
-
-/**
- * Orden fijo de los módulos dentro de la página Coordinación. Se aplica tanto
- * a la navegación como a la matriz de permisos para que ambas coincidan.
- */
-const COORDINACION_ORDER: ModuleKey[] = [
-  "coordinacion_interna",
-  "solicitudes",
-  "inventario",
-  "compras_facturas",
-  "partidos",
-  "viajes",
-  "multimedia_gestion",
-  "multimedia",
-];
-
-/**
- * Orden fijo de los módulos dentro de la página Mi Club. Si falta acceso a
- * alguno, los demás se recorren solos.
- */
-const CLUB_ORDER: ModuleKey[] = [
-  "entrenamientos",
-  "torneo",
-  "comunicados",
-  "salud",
-  "desarrollo",
-  "nutricion",
-  "tacticas",
-  "plantel",
-  "multimedia",
-];
-
-function sortByOrder(keys: ModuleKey[], order: ModuleKey[]): ModuleKey[] {
-  const idx = (k: ModuleKey) => {
-    const i = order.indexOf(k);
-    return i === -1 ? order.length : i;
-  };
-  return [...keys].sort((a, b) => idx(a) - idx(b));
-}
-
-function sortCoordinacion(keys: ModuleKey[]): ModuleKey[] {
-  const idx = (k: ModuleKey) => {
-    const i = COORDINACION_ORDER.indexOf(k);
-    return i === -1 ? COORDINACION_ORDER.length : i;
-  };
-  return [...keys].sort((a, b) => idx(a) - idx(b));
-}
+/** Módulos que viven en la página Admin (menú del perfil). */
+const ADMIN_MODULES: ModuleKey[] = ["usuarios"];
 
 export interface ResolvedPage {
   page: PageDef;
   modules: ModuleKey[];
   labelOverride?: string;
+  /** No aparece en la barra principal (Admin vive en el menú del perfil). */
+  hidden?: boolean;
   variant?: "jugador-solicitudes";
 }
 
+/**
+ * Páginas del usuario. Inicio, Agenda y Mi Club son fijas (solo lectura).
+ * Coordinación muestra solo los módulos con acceso; Admin va en el menú del perfil.
+ */
 export function resolvePagesForUser(
-  baseRole: BaseRole | null,
+  _baseRole: BaseRole | null,
   accessibleModules: ModuleKey[] | ((key: ModuleKey) => boolean),
-  opts?: {
-    /**
-     * Acceso real a la sección Admin: super admin o EDITOR del módulo
-     * `usuarios`. Nunca basta con leer documentos u otros módulos.
-     */
-    canAccessAdmin?: boolean;
-  },
+  opts?: { canAccessAdmin?: boolean },
 ): ResolvedPage[] {
-  const role = baseRole ?? "staff";
+  const isAccessible: (k: ModuleKey) => boolean =
+    typeof accessibleModules === "function"
+      ? accessibleModules
+      : ((set) => (k: ModuleKey) => set.has(k))(new Set(accessibleModules));
 
-  const roleMap = ROLE_PAGES[role];
-
-  // Fuente de verdad única: un predicado `isAccessible(module)` que se aplica
-  // idénticamente al construir la navbar y los chips de módulos.
-  const isAccessible: (k: ModuleKey) => boolean = typeof accessibleModules === "function"
-    ? accessibleModules
-    : ((set) => (k: ModuleKey) => set.has(k))(new Set(accessibleModules));
-
-  const extraModules = Array.isArray(accessibleModules)
-    ? accessibleModules
-    : ALL_MODULE_KEYS.filter(isAccessible);
-
-  const perPage: Record<PageKey, ModuleKey[]> = {
-    home: [], agenda: [], club: [], coordinacion: [], admin: [],
-  };
-
-  // 1) Módulos mapeados explícitamente al rol.
-  for (const p of PAGES) {
-    for (const mk of roleMap[p.key]) {
-      if (isAccessible(mk) && !perPage[p.key].includes(mk)) perPage[p.key].push(mk);
-    }
+  const coord = COORDINACION_ORDER.filter(isAccessible);
+  const out: ResolvedPage[] = [
+    { page: PAGE_MAP.home, modules: [] },
+    { page: PAGE_MAP.agenda, modules: ["agenda", "mes"] },
+    { page: PAGE_MAP.club, modules: [] },
+  ];
+  if (coord.length > 0) out.push({ page: PAGE_MAP.coordinacion, modules: coord });
+  if (opts?.canAccessAdmin) {
+    out.push({ page: PAGE_MAP.admin, modules: ADMIN_MODULES.filter(isAccessible), hidden: true });
   }
-
-  // 2) Cualquier módulo accesible que no esté ya colocado se envía a su página por defecto.
-  const placed = new Set<ModuleKey>(Object.values(perPage).flat());
-  for (const mk of extraModules) {
-    if (placed.has(mk)) continue;
-    const dest = DEFAULT_PAGE_FOR_MODULE[mk];
-    if (dest && dest !== "home" && dest !== "agenda") {
-      perPage[dest].push(mk);
-    }
-  }
-
-  perPage.coordinacion = sortCoordinacion(perPage.coordinacion);
-  perPage.club = sortByOrder(perPage.club, CLUB_ORDER);
-
-  // 3) Construye la lista final SOLO con páginas que tienen módulos visibles.
-  //    Home siempre presente. Cero display:none: si no está en el array, no se renderiza.
-  const out: ResolvedPage[] = [];
-  for (const p of PAGES) {
-    if (p.key === "home") { out.push({ page: p, modules: [] }); continue; }
-    if (p.key === "admin") {
-      const canAdmin = opts?.canAccessAdmin ?? role === "admin";
-      if (canAdmin && perPage.admin.length > 0) out.push({ page: p, modules: perPage.admin });
-      continue;
-    }
-
-    if (p.key === "coordinacion" && role === "jugador") {
-      // Para el jugador, Solicitudes vive SOLO en el menú del avatar
-      // ("Mis Solicitudes"); nunca ocupa un lugar en la navegación ni arrastra
-      // módulos hermanos (partidos, etc.) a esa vista.
-      const rest = perPage.coordinacion.filter((mk) => mk !== "solicitudes");
-      if (rest.length > 0) out.push({ page: p, modules: rest });
-      continue;
-    }
-
-    if (perPage[p.key].length > 0) {
-      out.push({ page: p, modules: perPage[p.key] });
-    }
-  }
-
   return out;
 }
 
-/**
- * ¿Necesita el atajo "Mis Solicitudes" en el menú del avatar? Cuando puede ver
- * Solicitudes pero ese módulo no aparece en ninguna página de su navegación.
- */
+/** Coordinación agrupada por área, sin áreas vacías. */
+export function coordAreasForUser(
+  modules: ModuleKey[],
+): Array<{ key: CoordArea; label: string; modules: ModuleKey[] }> {
+  const set = new Set(modules);
+  return COORD_AREAS.map((a) => ({ ...a, modules: COORD_LAYOUT[a.key].filter((k) => set.has(k)) })).filter(
+    (a) => a.modules.length > 0,
+  );
+}
+
 export function needsSolicitudesShortcut(
   pages: ResolvedPage[],
   canViewSolicitudes: boolean,
@@ -238,10 +103,6 @@ export function inferBaseRole(roleName: string | null | undefined): BaseRole {
 export const ALL_MODULE_KEYS: ModuleKey[] = MODULES.map((m) => m.key);
 export { MODULE_MAP };
 
-/**
- * Devuelve el hub (Mi Club, Coordinación, Admin, ...) al que pertenece un módulo
- * dentro de la navegación del usuario actual, junto con sus módulos hermanos.
- */
 export function findHubForModule(
   visiblePages: ResolvedPage[],
   moduleKey: ModuleKey,
@@ -249,70 +110,31 @@ export function findHubForModule(
   return visiblePages.find((p) => p.modules.includes(moduleKey)) ?? null;
 }
 
-/**
- * Agrupa módulos por página. Usa el mapa del `base_role` como fuente principal
- * y, para cualquier módulo no listado en ese rol, cae al `DEFAULT_PAGE_FOR_MODULE`.
- * Nunca produce un grupo "Otros": si un módulo no tiene página por defecto, se omite.
- */
+/** Agrupa módulos por página (para listados informativos). */
 export function groupModulesByPage(
-  baseRole: BaseRole | null | undefined,
+  _baseRole: BaseRole | null | undefined,
   moduleKeys: ModuleKey[],
 ): Array<{ page: PageDef; modules: ModuleKey[] }> {
-  const role: BaseRole = baseRole ?? "staff";
-  const roleMap = ROLE_PAGES[role];
   const set = new Set(moduleKeys);
-  const perPage: Record<PageKey, ModuleKey[]> = {
-    home: [], agenda: [], club: [], coordinacion: [], admin: [],
-  };
-  const placed = new Set<ModuleKey>();
-
-  for (const p of PAGES) {
-    for (const mk of roleMap[p.key]) {
-      if (set.has(mk) && !placed.has(mk)) {
-        perPage[p.key].push(mk);
-        placed.add(mk);
-      }
-    }
-  }
-  for (const mk of moduleKeys) {
-    if (placed.has(mk)) continue;
-    const dest = DEFAULT_PAGE_FOR_MODULE[mk];
-    if (!dest || dest === "home") continue;
-    perPage[dest].push(mk);
-    placed.add(mk);
-  }
-
-  perPage.coordinacion = sortCoordinacion(perPage.coordinacion);
-  perPage.club = sortByOrder(perPage.club, CLUB_ORDER);
-
   const out: Array<{ page: PageDef; modules: ModuleKey[] }> = [];
-  for (const p of PAGES) {
-    if (perPage[p.key].length > 0) out.push({ page: p, modules: perPage[p.key] });
-  }
+  const coord = COORDINACION_ORDER.filter((k) => set.has(k));
+  if (coord.length) out.push({ page: PAGE_MAP.coordinacion, modules: coord });
+  const admin = ADMIN_MODULES.filter((k) => set.has(k));
+  if (admin.length) out.push({ page: PAGE_MAP.admin, modules: admin });
   return out;
 }
 
 /**
- * Fuente canónica para las matrices de permisos. A diferencia de la navegación,
- * no depende del rol base ni de los permisos activos: todos los módulos reales
- * deben seguir siendo configurables aunque una página esté desactivada.
+ * Grupos para las matrices de permisos: una tarjeta por área de Coordinación
+ * (Sin acceso / Ver / Editor) y una de "Otros" para los de Con/Sin acceso.
  */
 export function groupPermissionModulesByPage(): Array<{ page: PageDef; modules: ModuleKey[] }> {
-  const perPage: Record<PageKey, ModuleKey[]> = {
-    home: [], agenda: [], club: [], coordinacion: [], admin: [],
-  };
-
-  for (const module of MODULES) {
-    const page = DEFAULT_PAGE_FOR_MODULE[module.key];
-    if (!page || page === "home") continue;
-    perPage[page].push(module.key);
-  }
-
-  perPage.coordinacion = sortCoordinacion(perPage.coordinacion);
-  perPage.club = sortByOrder(perPage.club, CLUB_ORDER);
-
-  return PAGES.flatMap((page) => {
-    const modules = perPage[page.key];
-    return modules.length > 0 ? [{ page, modules }] : [];
-  });
+  const groups: Array<{ page: PageDef; modules: ModuleKey[] }> = COORD_AREAS.map((a) => ({
+    page: { ...PAGE_MAP.coordinacion, label: `Coordinación · ${a.label}` },
+    modules: COORD_LAYOUT[a.key]
+      .map((k) => (k === "multimedia_gestion" ? ("multimedia" as ModuleKey) : k))
+      .filter((k) => !RETIRED_MODULES.includes(k)),
+  }));
+  groups.push({ page: { ...PAGE_MAP.admin, label: "Otros" }, modules: TOGGLE_MODULES });
+  return groups;
 }

@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { MODULES, MODULE_MAP, type ModuleKey } from "@/lib/modules";
+import { MODULES, MODULE_MAP, RETIRED_MODULES, type ModuleKey } from "@/lib/modules";
 import { groupPermissionModulesByPage } from "@/lib/rolePages";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -57,9 +57,11 @@ export function RolePermissionsMatrix({
   const initial = React.useMemo(() => {
     const map: Record<string, PermissionLevel> = {};
     for (const m of MODULES) map[m.key] = "sin_acceso";
-    for (const p of perms) map[p.module_key] = coerceLevelFor(p.module_key as ModuleKey, normalizeLevel(p.level));
+    // Agenda siempre es de lectura para todos.
+    map.agenda = map.mes = role.base_role === "jugador" ? "vista_jugador" : "lector_categoria";
+    for (const p of perms) map[p.module_key] = coerceLevelFor(p.module_key as ModuleKey, normalizeLevel(p.level), role.base_role);
     return map;
-  }, [perms]);
+  }, [perms, role.base_role]);
 
   const initialApprovals = React.useMemo(() => [...approvalTypes].sort().join(","), [approvalTypes]);
 
@@ -121,7 +123,7 @@ export function RolePermissionsMatrix({
           if (!next[mk] || next[mk] === "sin_acceso") {
             next[mk] = defaults?.[mk] && defaults[mk] !== "sin_acceso"
               ? defaults[mk]
-              : coerceLevelFor(mk, "lector_categoria");
+              : coerceLevelFor(mk, "lector_categoria", role.base_role);
           }
         } else {
           next[mk] = "sin_acceso";
@@ -133,9 +135,12 @@ export function RolePermissionsMatrix({
 
   function restoreDefaults() {
     if (!defaults) return;
-    setDraft(() => {
-      const next: Record<string, PermissionLevel> = {};
-      for (const m of MODULES) next[m.key] = coerceLevelFor(m.key, defaults[m.key] ?? "sin_acceso");
+    setDraft((d) => {
+      const next: Record<string, PermissionLevel> = { ...d };
+      for (const m of MODULES) {
+        if (RETIRED_MODULES.includes(m.key)) continue;
+        next[m.key] = coerceLevelFor(m.key, defaults[m.key] ?? "sin_acceso", role.base_role);
+      }
       return next;
     });
     toast.info("Valores por defecto cargados. Guarda para aplicarlos.");
@@ -147,7 +152,7 @@ export function RolePermissionsMatrix({
         <div className="min-w-0">
           <h3 className="font-display text-lg font-semibold">{role.name}</h3>
           <p className="text-xs text-muted-foreground">
-            Define qué ve y qué edita este rol en cada módulo, y hasta dónde llega su alcance.
+            Valores por defecto del rol. Ver y Editor aplican solo a las categorías asignadas de cada persona.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -197,7 +202,7 @@ export function RolePermissionsMatrix({
                     const m = MODULE_MAP[mk];
                     if (!m) return null;
                     const Icon = m.icon;
-                    const options = levelOptionsFor(mk);
+                    const options = levelOptionsFor(mk, role.base_role);
                     const current = draft[mk] ?? "sin_acceso";
                     const hint = options.find((o) => o.value === current)?.hint;
                     return (

@@ -21,7 +21,7 @@ import {
   coerceLevelFor,
   levelOptionsFor,
   levelToLegacy,
-  LEVEL_LABEL,
+  simpleLevelLabel,
   normalizeLevel,
   type PermissionLevel,
 } from "@/lib/permissions";
@@ -50,15 +50,9 @@ export function UserAdvancedSettings({
   canEdit: boolean;
 }) {
   const [open, setOpen] = React.useState(false);
-  const [ctxId, setCtxId] = React.useState<string | null>(memberships[0]?.id ?? null);
-
-  React.useEffect(() => {
-    if (!ctxId || !memberships.find((m) => m.id === ctxId)) {
-      setCtxId(memberships[0]?.id ?? null);
-    }
-  }, [memberships, ctxId]);
-
-  const ctx = memberships.find((m) => m.id === ctxId) ?? null;
+  // Un solo juego de excepciones por persona (sin ajustes por categoría).
+  const first = memberships[0] ?? null;
+  const ctx: MembershipCtx | null = first ? { ...first, teamId: null } : null;
 
   return (
     <Collapsible open={open} onOpenChange={setOpen} className="glass rounded-lg">
@@ -86,24 +80,9 @@ export function UserAdvancedSettings({
           </p>
         ) : (
           <>
-            <div className="space-y-1.5">
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">Contexto</p>
-              <Select value={ctxId ?? undefined} onValueChange={setCtxId}>
-                <SelectTrigger className="w-full sm:w-[280px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {memberships.map((m) => (
-                    <SelectItem key={m.id} value={m.id}>
-                      {m.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-[11px] text-muted-foreground">
-                Los cambios solo afectan a esta persona en esta membresía.
-              </p>
-            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Los cambios solo afectan a esta persona y aplican a todas sus categorías asignadas.
+            </p>
             {ctx ? <OverridesEditor userId={userId} ctx={ctx} canEdit={canEdit} /> : null}
           </>
         )}
@@ -129,7 +108,7 @@ function OverridesEditor({
   canEdit: boolean;
 }) {
   const qc = useQueryClient();
-  const teamKey = ctx.teamId ?? "club";
+  const teamKey = "club";
 
   const roleQ = useQuery({
     queryKey: ["role-info", ctx.roleId],
@@ -184,8 +163,8 @@ function OverridesEditor({
 
   const effectiveLevel = React.useCallback(
     (mk: ModuleKey): PermissionLevel =>
-      coerceLevelFor(mk, overrideMap[mk] ?? roleMap[mk] ?? "sin_acceso"),
-    [overrideMap, roleMap],
+      coerceLevelFor(mk, overrideMap[mk] ?? roleMap[mk] ?? "sin_acceso", roleQ.data?.base_role),
+    [overrideMap, roleMap, roleQ.data?.base_role],
   );
 
   const pageGroups = React.useMemo(() => groupPermissionModulesByPage(), []);
@@ -246,7 +225,7 @@ function OverridesEditor({
     for (const mk of modules) {
       const eff = effectiveLevel(mk);
       if (on && eff === "sin_acceso") {
-        const err = await setOverride(mk, coerceLevelFor(mk, "lector_categoria"));
+        const err = await setOverride(mk, coerceLevelFor(mk, "lector_categoria", roleQ.data?.base_role));
         if (err) errors.push(err.message);
       } else if (!on && eff !== "sin_acceso") {
         const err = await setOverride(mk, "sin_acceso");
@@ -304,8 +283,8 @@ function OverridesEditor({
                   const m = MODULE_MAP[mk];
                   if (!m) return null;
                   const Icon = m.icon;
-                  const roleLvl = coerceLevelFor(mk, roleMap[mk] ?? "sin_acceso");
-                  const overrideLvl = overrideMap[mk] ? coerceLevelFor(mk, overrideMap[mk]) : undefined;
+                  const roleLvl = coerceLevelFor(mk, roleMap[mk] ?? "sin_acceso", roleQ.data?.base_role);
+                  const overrideLvl = overrideMap[mk] ? coerceLevelFor(mk, overrideMap[mk], roleQ.data?.base_role) : undefined;
                   const effective = overrideLvl ?? roleLvl;
                   return (
                     <div
@@ -318,7 +297,7 @@ function OverridesEditor({
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium">{m.label}</p>
                         <p className="truncate text-xs text-muted-foreground">
-                          Rol: {LEVEL_LABEL[roleLvl]}
+                          Rol: {simpleLevelLabel(mk, roleLvl)}
                           {overrideLvl ? " · Personalizado" : ""}
                         </p>
                       </div>
@@ -337,7 +316,7 @@ function OverridesEditor({
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {levelOptionsFor(mk).map((l) => (
+                            {levelOptionsFor(mk, roleQ.data?.base_role).map((l) => (
                               <SelectItem key={l.value} value={l.value}>
                                 {l.label}
                               </SelectItem>

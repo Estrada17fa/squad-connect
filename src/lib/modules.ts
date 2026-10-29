@@ -19,6 +19,9 @@ import {
   Receipt,
   Volleyball,
   Home,
+  Wallet,
+  ShoppingCart,
+  ClipboardCheck,
   type LucideIcon,
 } from "lucide-react";
 
@@ -47,7 +50,49 @@ export type ModuleKey =
   | "salud"
   | "desarrollo"
   | "entrenamientos"
-  | "nutricion";
+  | "nutricion"
+  | "finanzas"
+  | "compras"
+  | "operacion_partido";
+
+/** Áreas de la página Coordinación. */
+export type CoordArea = "general" | "administrativa" | "operacional" | "tecnica" | "medica";
+
+export const COORD_AREAS: { key: CoordArea; label: string }[] = [
+  { key: "general", label: "General" },
+  { key: "administrativa", label: "Administrativa" },
+  { key: "operacional", label: "Operacional" },
+  { key: "tecnica", label: "Técnica" },
+  { key: "medica", label: "Médica" },
+];
+
+/**
+ * Fuente única: qué módulo (entrada de navegación) va en qué área de
+ * Coordinación y en qué orden. Mover un módulo = mover una línea.
+ */
+export const COORD_LAYOUT: Record<CoordArea, ModuleKey[]> = {
+  general: ["coordinacion_interna", "comunicados", "multimedia_gestion", "solicitudes"],
+  administrativa: ["finanzas", "compras", "documentos"],
+  operacional: ["operacion_partido", "viajes", "inventario"],
+  tecnica: ["entrenamientos", "partidos", "desarrollo", "plantel", "torneo"],
+  medica: ["salud", "nutricion"],
+};
+
+/** Módulos que solo tienen "Con acceso / Sin acceso". */
+export const TOGGLE_MODULES: ModuleKey[] = ["usuarios"];
+
+/** Módulos aún en construcción: muestran el aviso "En desarrollo". */
+export const COMING_SOON_MODULES: ModuleKey[] = [
+  "finanzas", "compras", "operacion_partido", "desarrollo", "plantel", "torneo", "salud", "nutricion",
+];
+
+/** Módulos guardados (código y datos intactos) pero fuera de la navegación y las matrices. */
+export const RETIRED_MODULES: ModuleKey[] = ["compras_facturas", "tacticas", "agenda", "mes"];
+
+export function coordAreaOf(key: ModuleKey): CoordArea | null {
+  for (const a of COORD_AREAS) if (COORD_LAYOUT[a.key].includes(key)) return a.key;
+  return null;
+}
 
 /**
  * Ámbito de datos del módulo:
@@ -96,6 +141,9 @@ export const MODULES: ModuleDef[] = [
   { key: "desarrollo", label: "Desarrollo", icon: TrendingUp, description: "Evaluaciones y progresos", scope: "team" , playerView: "mine" },
   { key: "entrenamientos", label: "Entrenamientos", icon: Dumbbell, description: "Sesiones del equipo y biblioteca de ejercicios", scope: "team" , playerView: "team" },
   { key: "nutricion", label: "Nutrición", icon: Apple, description: "Planes alimenticios", scope: "team" , playerView: "mine" },
+  { key: "finanzas", label: "Finanzas", icon: Wallet, description: "Presupuesto y finanzas del club", scope: "club", playerView: "mine" },
+  { key: "compras", label: "Compras", icon: ShoppingCart, description: "Compras del club", scope: "club", playerView: "mine" },
+  { key: "operacion_partido", label: "Operación de partido", icon: ClipboardCheck, description: "Operación el día de partido", scope: "team", playerView: "mine" },
 ];
 
 /**
