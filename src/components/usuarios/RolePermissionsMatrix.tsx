@@ -57,6 +57,8 @@ export function RolePermissionsMatrix({
   const initial = React.useMemo(() => {
     const map: Record<string, PermissionLevel> = {};
     for (const m of MODULES) map[m.key] = "sin_acceso";
+    // Agenda siempre es de lectura para todos.
+    map.agenda = map.mes = role.base_role === "jugador" ? "vista_jugador" : "lector_categoria";
     for (const p of perms) map[p.module_key] = coerceLevelFor(p.module_key as ModuleKey, normalizeLevel(p.level), role.base_role);
     return map;
   }, [perms, role.base_role]);
