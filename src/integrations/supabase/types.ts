@@ -2041,6 +2041,49 @@ export type Database = {
           },
         ]
       }
+      member_all_categories: {
+        Row: {
+          club_id: string
+          created_at: string
+          role_id: string
+          user_id: string
+        }
+        Insert: {
+          club_id: string
+          created_at?: string
+          role_id: string
+          user_id: string
+        }
+        Update: {
+          club_id?: string
+          created_at?: string
+          role_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_all_categories_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_all_categories_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_all_categories_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       membership_audit_log: {
         Row: {
           action: string
@@ -3317,6 +3360,7 @@ export type Database = {
           base_role: string
           club_id: string
           created_at: string
+          default_all_categories: boolean
           id: string
           is_system_default: boolean
           name: string
@@ -3326,6 +3370,7 @@ export type Database = {
           base_role?: string
           club_id: string
           created_at?: string
+          default_all_categories?: boolean
           id?: string
           is_system_default?: boolean
           name: string
@@ -3335,6 +3380,7 @@ export type Database = {
           base_role?: string
           club_id?: string
           created_at?: string
+          default_all_categories?: boolean
           id?: string
           is_system_default?: boolean
           name?: string
@@ -5306,6 +5352,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      can_edit_all_teams: {
+        Args: { _club_id: string; _module_key: string; _user_id: string }
+        Returns: boolean
+      }
       can_edit_announcement: {
         Args: { _announcement_id: string; _user_id: string }
         Returns: boolean
@@ -5572,6 +5622,10 @@ export type Database = {
         Returns: boolean
       }
       is_user_admin: { Args: { _user_id: string }; Returns: boolean }
+      level_all_teams: {
+        Args: { _club_id: string; _module_key: string; _user_id: string }
+        Returns: Database["public"]["Enums"]["permission_level"]
+      }
       match_calendar_title: {
         Args: {
           _ag: number

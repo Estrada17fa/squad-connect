@@ -8,6 +8,13 @@
       "when": 1791330968012,
       "tag": "0000_get_my_access",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793292108266,
+      "tag": "0001_permisos_todo_por_categoria",
+      "breakpoints": true
     }
   ]
 }
