@@ -74,8 +74,7 @@ export function EditMembershipDialog({
 
   const role = roles.find((r) => r.id === roleId);
   const isPlayer = isPlayerName(role?.name);
-  const clubWide = !membership?.team_id;
-  const invalid = !roleId || (isPlayer && clubWide);
+  const invalid = !roleId;
 
   async function handleSave() {
     if (!membership || invalid) return;
@@ -121,7 +120,6 @@ export function EditMembershipDialog({
               </SelectTrigger>
               <SelectContent>
                 {roles
-                  .filter((r) => !clubWide || r.allows_club_wide || r.id === membership?.role_id)
                   .map((r) => (
                     <SelectItem key={r.id} value={r.id}>
                       {r.name}
@@ -129,15 +127,12 @@ export function EditMembershipDialog({
                   ))}
               </SelectContent>
             </Select>
-            {isPlayer && clubWide ? (
-              <p className="text-[11px] text-destructive">Un jugador necesita una categoría concreta.</p>
-            ) : null}
-          </div>
+            </div>
           <div className="space-y-2">
             <Label>Cargo (opcional)</Label>
             <Input value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} maxLength={60} />
           </div>
-          {isPlayer && !clubWide ? (
+          {isPlayer ? (
             <div className="grid gap-3 sm:grid-cols-3">
               <div className="space-y-2">
                 <Label>Dorsal</Label>
