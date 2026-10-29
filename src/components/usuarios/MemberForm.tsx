@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   EntitySheet,
@@ -41,6 +42,7 @@ export interface RoleOpt {
   name: string;
   base_role?: string | null;
   allows_club_wide?: boolean;
+  default_all_categories?: boolean;
 }
 export interface TeamOpt {
   id: string;
@@ -162,13 +164,18 @@ export function MemberForm({
   const [roleId, setRoleId] = React.useState("");
   const [assignments, setAssignments] = React.useState<Record<string, string>>({});
   const [clubJobTitle, setClubJobTitle] = React.useState("");
+  const [allCats, setAllCats] = React.useState(false);
   const [player, setPlayer] = React.useState<PlayerState>(emptyPlayer);
   const [saving, setSaving] = React.useState(false);
 
   const role = roles.find((r) => r.id === roleId) ?? null;
   const roleKey = (role?.base_role ?? role?.name ?? "").toLowerCase();
   const isPlayer = roleKey === "jugador";
-  const isAdmin = roleKey === "admin";
+  // El interruptor sigue al rol elegido, pero se puede cambiar a mano.
+  React.useEffect(() => {
+    if (isEdit) return;
+    setAllCats(!!role?.default_all_categories && !isPlayer);
+  }, [roleId, isEdit]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Carga de datos en edición
   const memberQ = useQuery({
@@ -209,6 +216,7 @@ export function MemberForm({
     setRoleId("");
     setAssignments({});
     setClubJobTitle("");
+    setAllCats(false);
     setPlayer(emptyPlayer);
     setSaving(false);
   }, []);
@@ -269,7 +277,7 @@ export function MemberForm({
   const passCheck = checkPassword(password);
   const passOk = isEdit ? password === "" || passCheck.isValid : passCheck.isValid;
   const namesOk = !!firstName.trim() && !!paternal.trim();
-  const teamsOk = isAdmin || !isPlayer || selectedTeams.length > 0;
+  const teamsOk = allCats || selectedTeams.length > 0;
   const canSubmit = emailOk && passOk && namesOk && (isEdit || (!!roleId && teamsOk)) && !saving;
 
   function toggleTeam(id: string, on: boolean) {
@@ -318,7 +326,8 @@ export function MemberForm({
         emergency_contact_name: emgName.trim() || null,
         emergency_contact_phone: emgPhone.trim() || null,
         role_id: roleId,
-        assignments: isAdmin
+        all_categories: allCats,
+        assignments: allCats
           ? []
           : selectedTeams.map((tid) => ({ team_id: tid, job_title: assignments[tid]?.trim() || null })),
         club_job_title: clubJobTitle.trim() || null,
@@ -463,7 +472,19 @@ export function MemberForm({
             </Select>
           </Section>
 
-          {!isAdmin ? (
+          {!isPlayer ? (
+            <label className="flex items-center justify-between gap-3 rounded-lg border border-border/60 p-3">
+              <span className="min-w-0">
+                <span className="block text-sm font-medium">Todas las categorías</span>
+                <span className="block text-[11px] text-muted-foreground">
+                  Lo asigna en todas las categorías del club con este rol, incluidas las nuevas.
+                </span>
+              </span>
+              <Switch checked={allCats} onCheckedChange={setAllCats} />
+            </label>
+          ) : null}
+
+          {!allCats ? (
             <Section
               title="Categorías y puesto"
               hint="Marca las categorías donde participa y escribe su puesto (etiqueta libre)."
@@ -500,14 +521,14 @@ export function MemberForm({
                   );
                 })}
               </div>
-              {isPlayer && selectedTeams.length === 0 ? (
-                <p className="text-[11px] text-destructive">Un jugador necesita al menos una categoría.</p>
+              {roleId && selectedTeams.length === 0 ? (
+                <p className="text-[11px] text-destructive">Elige al menos una categoría.</p>
               ) : null}
             </Section>
           ) : (
             <Section
-              title="Puesto"
-              hint="Este rol tiene alcance de todo el club: no se asigna a categorías."
+              title="Todas (incluye las nuevas)"
+              hint="Tendrá este rol en cada categoría del club; el puesto aplica a todas."
             >
               <Field label="Puesto (opcional)" htmlFor="mf-club-job">
                 <Input
