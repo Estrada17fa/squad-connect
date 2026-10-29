@@ -44,10 +44,10 @@ export function MediaManagerPanel() {
   const { profile, user, isSuperAdmin, teamOptions } = useApp();
   const clubId = profile?.club_id ?? null;
   const userId = user?.id ?? "";
-  const { levelForTeam } = useTeamAccess("multimedia");
+  const { levelForTeam, canEditAllTeams } = useTeamAccess("multimedia");
   const editableTeams = useEditableTeams("multimedia");
 
-  const canPublishClubWide = isSuperAdmin || levelForTeam(null) === "editor_global";
+  const canPublishClubWide = canEditAllTeams;
   const canCreate = canPublishClubWide || editableTeams.length > 0;
 
   const [filters, setFilters] = React.useState<MediaFilterState>(EMPTY_MEDIA_FILTERS);

@@ -57,10 +57,10 @@ function ComunicadosPage() {
   const clubId = profile?.club_id ?? null;
   const userId = user?.id ?? "";
   const canAccess = isSuperAdmin || accessibleModules.includes("comunicados");
-  const { levelForTeam } = useTeamAccess("comunicados");
+  const { levelForTeam, canEditAllTeams } = useTeamAccess("comunicados");
   const editableTeams = useEditableTeams("comunicados");
 
-  const canPublishClubWide = isSuperAdmin || levelForTeam(null) === "editor_global";
+  const canPublishClubWide = canEditAllTeams;
   const canEditAny = editableTeams.length > 0 || canPublishClubWide;
 
   const [filters, setFilters] = React.useState<AnnouncementFilterState>(

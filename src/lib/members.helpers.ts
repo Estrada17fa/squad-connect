@@ -101,17 +101,34 @@ export async function insertInitialMemberships(
   admin: any,
   userId: string,
   role: RoleLite,
+  clubId: string,
   assignments: { team_id: string; job_title?: string | null }[],
-  clubJobTitle?: string | null,
+  clubJobTitle: string | null | undefined,
+  allCategories: boolean,
 ) {
-  const rows = assignments.length
-    ? assignments.map((a) => ({
-        user_id: userId,
-        role_id: role.id,
-        team_id: a.team_id,
-        job_title: a.job_title ? a.job_title : null,
-      }))
-    : [{ user_id: userId, role_id: role.id, team_id: null, job_title: clubJobTitle || null }];
+  // Todo es por categoría: "Todas las categorías" solo crea una membresía por categoría.
+  let rows: { user_id: string; role_id: string; team_id: string; job_title: string | null }[];
+  if (allCategories) {
+    const { error: sErr } = await admin
+      .from("member_all_categories")
+      .upsert({ club_id: clubId, user_id: userId, role_id: role.id });
+    if (sErr) throw new Error("No se pudo activar 'Todas las categorías'");
+    const { data: teams } = await admin.from("teams").select("id").eq("club_id", clubId);
+    rows = ((teams ?? []) as { id: string }[]).map((t) => ({
+      user_id: userId,
+      role_id: role.id,
+      team_id: t.id,
+      job_title: clubJobTitle || null,
+    }));
+  } else {
+    rows = assignments.map((a) => ({
+      user_id: userId,
+      role_id: role.id,
+      team_id: a.team_id,
+      job_title: a.job_title ? a.job_title : null,
+    }));
+  }
+  if (!rows.length) throw new Error("Elige al menos una categoría");
   const { error } = await admin.from("team_memberships").insert(rows);
   if (error) throw new Error("No se pudieron asignar las categorías");
 }
@@ -218,11 +235,11 @@ export async function assertNoEscalation(
 export async function assertNoDuplicateMembership(
   admin: any,
   userId: string,
-  teamId: string | null,
+  teamId: string,
   exceptId?: string,
 ) {
   let q = admin.from("team_memberships").select("id").eq("user_id", userId);
-  q = teamId ? q.eq("team_id", teamId) : q.is("team_id", null);
+  q = q.eq("team_id", teamId as string);
   const { data } = await q;
   if ((data ?? []).some((r: any) => r.id !== exceptId)) {
     throw new Error("Esta persona ya tiene una membresía en esa categoría");

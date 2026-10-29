@@ -184,6 +184,31 @@ export function playerViewHint(key: ModuleKey): string {
     : "Ve el contenido de su categoría en modo lectura. Nunca edita.";
 }
 
+/**
+ * Selector simple de la interfaz: Sin acceso · Ver · Editar (siempre por
+ * categoría). "Solo lo suyo (temporal)" aparece SOLO si el valor guardado ya
+ * es vista_jugador (rol Jugador); no se ofrece para nada nuevo.
+ */
+export function simpleLevelOptions(key: ModuleKey, current: PermissionLevel | null | undefined): LevelOption[] {
+  const opts: LevelOption[] = [
+    { value: "sin_acceso", label: "Sin acceso", hint: "No ve el módulo." },
+    { value: "lector_categoria", label: "Ver", hint: "Ve el contenido de sus categorías. No edita." },
+    { value: "editor_categoria", label: "Editar", hint: "Ve y edita en sus categorías." },
+  ];
+  if (normalizeLevel(current) === "vista_jugador") {
+    opts.splice(1, 0, { value: "vista_jugador", label: "Solo lo suyo (temporal)", hint: playerViewHint(key) });
+  }
+  return opts;
+}
+
+/** Lleva un nivel guardado a la opción simple equivalente (global -> categoría). */
+export function toSimpleLevel(level: PermissionLevel | null | undefined): PermissionLevel {
+  const l = normalizeLevel(level);
+  if (l === "lector_global") return "lector_categoria";
+  if (l === "editor_global") return "editor_categoria";
+  return l;
+}
+
 /** Ajusta un nivel guardado a una opción válida del módulo (para el <Select>). */
 export function coerceLevelFor(_key: ModuleKey, level: PermissionLevel): PermissionLevel {
   return level;
@@ -196,13 +221,13 @@ export function coerceLevelFor(_key: ModuleKey, level: PermissionLevel): Permiss
 
 export const DEFAULT_ROLE_LEVELS: Record<string, Partial<Record<ModuleKey, PermissionLevel>>> = {
   admin: {
-    agenda: "editor_global", mes: "editor_global", plantel: "editor_global",
-    viajes: "editor_global", inventario: "editor_global", coordinacion_interna: "editor_global",
-    partidos: "editor_global",
-    solicitudes: "editor_global", compras_facturas: "editor_global", documentos: "editor_global",
-    usuarios: "editor_global", comunicados: "editor_global", multimedia: "editor_global",
-    torneo: "editor_global", tacticas: "editor_global", salud: "editor_global",
-    desarrollo: "editor_global", entrenamientos: "editor_global", nutricion: "editor_global",
+    agenda: "editor_categoria", mes: "editor_categoria", plantel: "editor_categoria",
+    viajes: "editor_categoria", inventario: "editor_categoria", coordinacion_interna: "editor_categoria",
+    partidos: "editor_categoria",
+    solicitudes: "editor_categoria", compras_facturas: "editor_categoria", documentos: "editor_categoria",
+    usuarios: "editor_categoria", comunicados: "editor_categoria", multimedia: "editor_categoria",
+    torneo: "editor_categoria", tacticas: "editor_categoria", salud: "editor_categoria",
+    desarrollo: "editor_categoria", entrenamientos: "editor_categoria", nutricion: "editor_categoria",
   },
   tecnico: {
     agenda: "editor_categoria", mes: "editor_categoria", plantel: "editor_categoria",
@@ -258,10 +283,11 @@ export function defaultLevelsFor(baseRole: string | null | undefined): Partial<R
  * sin_acceso / vista_jugador / lector_categoria => no ve el módulo.
  */
 export function canSeeUsers(level: PermissionLevel | undefined | null): boolean {
-  return LEVEL_RANK[normalizeLevel(level)] >= LEVEL_RANK.lector_global;
+  // temporal hasta que el módulo tenga categoría por registro
+  return LEVEL_RANK[normalizeLevel(level)] >= LEVEL_RANK.lector_categoria;
 }
 
 /** Solo Editor global administra usuarios (crear, editar, baja, roles). */
 export function canManageUsers(level: PermissionLevel | undefined | null): boolean {
-  return normalizeLevel(level) === "editor_global";
+  return canEdit(level);
 }

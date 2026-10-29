@@ -41,8 +41,8 @@ function MultimediaPage() {
   const clubId = profile?.club_id ?? null;
   const userId = user?.id ?? "";
   const canAccess = isSuperAdmin || accessibleModules.includes("multimedia");
-  const { levelForTeam } = useTeamAccess("multimedia");
-  const canModerate = isSuperAdmin || levelForTeam(null) === "editor_global";
+  const { levelForTeam, canEditAllTeams } = useTeamAccess("multimedia");
+  const canModerate = canEditAllTeams;
 
   const [filters, setFilters] = React.useState<MediaFilterState>(EMPTY_MEDIA_FILTERS);
   const listQ = useMediaPosts(canAccess ? clubId : null, userId);

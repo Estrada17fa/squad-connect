@@ -1,0 +1,1 @@
+ALTER TABLE public.team_memberships ALTER COLUMN team_id SET NOT NULL;

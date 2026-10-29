@@ -50,7 +50,7 @@ export function ModuleTabs({ activeKey, hubKey, extraActiveKey }: ModuleTabsProp
 
   const extras: ExtraTab[] = React.useMemo(() => {
     const out: ExtraTab[] = [];
-    const isEditorGlobal = isSuperAdmin || permissions["usuarios"] === "editor_global";
+    const isEditorGlobal = isSuperAdmin || permissions["usuarios"] === "editor_categoria" || permissions["usuarios"] === "editor_global";
     if (hub?.page.key === "admin" && isEditorGlobal) {
       out.push({
         key: "admin-config",

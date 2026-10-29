@@ -31,6 +31,7 @@ export interface AppCtx {
   permissionsByTeam: Record<string, Record<string, PermissionLevel>>;
   /** Niveles globales (aplican a cualquier equipo del club). */
   globalPermissions: Record<string, PermissionLevel>;
+  allTeamsLevels: Record<string, PermissionLevel>;
 
   clubName: string | null;
   isSuperAdmin: boolean;

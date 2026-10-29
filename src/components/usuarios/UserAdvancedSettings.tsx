@@ -3,10 +3,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, Sliders } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { MODULES, MODULE_MAP, type ModuleKey } from "@/lib/modules";
+import { MODULE_MAP, type ModuleKey } from "@/lib/modules";
 import { groupPermissionModulesByPage } from "@/lib/rolePages";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Select,
@@ -18,11 +17,10 @@ import {
 import { LoadingState } from "@/components/squad/LoadingState";
 import { cn } from "@/lib/utils";
 import {
-  coerceLevelFor,
-  levelOptionsFor,
   levelToLegacy,
-  LEVEL_LABEL,
   normalizeLevel,
+  simpleLevelOptions,
+  toSimpleLevel,
   type PermissionLevel,
 } from "@/lib/permissions";
 import { MemberApproverTypes } from "./ApproverTypesEditor";
@@ -50,317 +48,219 @@ export function UserAdvancedSettings({
   canEdit: boolean;
 }) {
   const [open, setOpen] = React.useState(false);
-  const [ctxId, setCtxId] = React.useState<string | null>(memberships[0]?.id ?? null);
-
-  React.useEffect(() => {
-    if (!ctxId || !memberships.find((m) => m.id === ctxId)) {
-      setCtxId(memberships[0]?.id ?? null);
-    }
-  }, [memberships, ctxId]);
-
-  const ctx = memberships.find((m) => m.id === ctxId) ?? null;
+  const columns = memberships.filter((m) => !!m.teamId);
 
   return (
     <Collapsible open={open} onOpenChange={setOpen} className="glass rounded-lg">
       <CollapsibleTrigger asChild>
-        <button
-          type="button"
-          className="flex w-full items-center gap-3 px-3 py-2.5 text-left"
-        >
+        <button type="button" className="flex w-full items-center gap-3 px-3 py-2.5 text-left">
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white/5">
             <Sliders className="h-4 w-4" />
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-semibold">Ajustes avanzados</span>
             <span className="block truncate text-[11px] text-muted-foreground">
-              Excepciones de permisos y aprobación de solicitudes solo para esta persona.
+              Excepciones por categoría y aprobación de solicitudes solo para esta persona.
             </span>
           </span>
           <ChevronDown className={cn("h-4 w-4 shrink-0 transition-transform", open && "rotate-180")} />
         </button>
       </CollapsibleTrigger>
       <CollapsibleContent className="space-y-4 border-t border-border/50 p-3">
-        {memberships.length === 0 ? (
+        {columns.length === 0 ? (
           <p className="text-xs text-muted-foreground">
-            Añade una membresía para poder personalizar sus permisos.
+            Añade una categoría para poder personalizar sus permisos.
           </p>
-        ) : (
-          <>
-            <div className="space-y-1.5">
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">Contexto</p>
-              <Select value={ctxId ?? undefined} onValueChange={setCtxId}>
-                <SelectTrigger className="w-full sm:w-[280px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {memberships.map((m) => (
-                    <SelectItem key={m.id} value={m.id}>
-                      {m.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-[11px] text-muted-foreground">
-                Los cambios solo afectan a esta persona en esta membresía.
-              </p>
-            </div>
-            {ctx ? <OverridesEditor userId={userId} ctx={ctx} canEdit={canEdit} /> : null}
-          </>
-        )}
-
+        ) : open ? (
+          <OverridesGrid userId={userId} columns={columns} canEdit={canEdit} />
+        ) : null}
         <MemberApproverTypes clubId={clubId} userId={userId} canEdit={canEdit} />
       </CollapsibleContent>
     </Collapsible>
   );
 }
 
-interface LevelRow {
+interface OverrideRow {
   module_key: string;
   level: PermissionLevel | null;
+  team_id: string | null;
 }
 
-function OverridesEditor({
+/**
+ * Columnas = categorías de la persona; filas = módulos. Cada celda parte del
+ * nivel de su rol en esa categoría. Cambiarla guarda una excepción SOLO para
+ * esa categoría (override con team_id). Las excepciones viejas sin categoría
+ * se muestran en todas las columnas.
+ */
+function OverridesGrid({
   userId,
-  ctx,
+  columns,
   canEdit,
 }: {
   userId: string;
-  ctx: MembershipCtx;
+  columns: MembershipCtx[];
   canEdit: boolean;
 }) {
   const qc = useQueryClient();
-  const teamKey = ctx.teamId ?? "club";
-
-  const roleQ = useQuery({
-    queryKey: ["role-info", ctx.roleId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("roles")
-        .select("id, name, base_role")
-        .eq("id", ctx.roleId)
-        .maybeSingle();
-      if (error) throw error;
-      return data as { id: string; name: string; base_role: string | null } | null;
-    },
-  });
+  const roleIds = React.useMemo(() => [...new Set(columns.map((c) => c.roleId))].sort(), [columns]);
 
   const rolePermsQ = useQuery({
-    queryKey: ["role-perms", ctx.roleId],
-    queryFn: async (): Promise<LevelRow[]> => {
+    queryKey: ["role-perms-many", roleIds.join(",")],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from("role_permissions")
-        .select("module_key, level")
-        .eq("role_id", ctx.roleId);
+        .select("role_id, module_key, level")
+        .in("role_id", roleIds);
       if (error) throw error;
-      return (data ?? []) as any;
+      return (data ?? []) as { role_id: string; module_key: string; level: PermissionLevel | null }[];
     },
   });
 
   const overridesQ = useQuery({
-    queryKey: ["user-overrides", userId, teamKey],
-    queryFn: async (): Promise<LevelRow[]> => {
-      let q = supabase
+    queryKey: ["user-overrides-all", userId],
+    queryFn: async (): Promise<OverrideRow[]> => {
+      const { data, error } = await supabase
         .from("user_permission_overrides")
-        .select("module_key, level")
+        .select("module_key, level, team_id")
         .eq("user_id", userId);
-      q = ctx.teamId ? q.eq("team_id", ctx.teamId) : q.is("team_id", null);
-      const { data, error } = await q;
       if (error) throw error;
       return (data ?? []) as any;
     },
   });
 
-  const roleMap = React.useMemo(() => {
-    const m: Record<string, PermissionLevel> = {};
-    for (const p of rolePermsQ.data ?? []) m[p.module_key] = normalizeLevel(p.level);
-    return m;
-  }, [rolePermsQ.data]);
-
-  const overrideMap = React.useMemo(() => {
-    const m: Record<string, PermissionLevel> = {};
-    for (const p of overridesQ.data ?? []) m[p.module_key] = normalizeLevel(p.level);
-    return m;
-  }, [overridesQ.data]);
-
-  const effectiveLevel = React.useCallback(
-    (mk: ModuleKey): PermissionLevel =>
-      coerceLevelFor(mk, overrideMap[mk] ?? roleMap[mk] ?? "sin_acceso"),
-    [overrideMap, roleMap],
+  const roleLevel = React.useCallback(
+    (roleId: string, mk: string): PermissionLevel =>
+      normalizeLevel(
+        (rolePermsQ.data ?? []).find((p) => p.role_id === roleId && p.module_key === mk)?.level ?? "sin_acceso",
+      ),
+    [rolePermsQ.data],
   );
-
-  const pageGroups = React.useMemo(() => groupPermissionModulesByPage(), []);
+  const teamOverride = (teamId: string, mk: string) =>
+    (overridesQ.data ?? []).find((o) => o.team_id === teamId && o.module_key === mk);
+  const generalOverride = (mk: string) =>
+    (overridesQ.data ?? []).find((o) => o.team_id === null && o.module_key === mk);
 
   function invalidate() {
-    qc.invalidateQueries({ queryKey: ["user-overrides", userId, teamKey] });
+    qc.invalidateQueries({ queryKey: ["user-overrides-all", userId] });
+    qc.invalidateQueries({ queryKey: ["user-overrides", userId] });
     qc.invalidateQueries({ queryKey: ["squad-access", userId] });
   }
 
-  async function setOverride(moduleKey: string, level: PermissionLevel) {
-    const existing = (overridesQ.data ?? []).find((o) => o.module_key === moduleKey);
-    if (existing) {
-      let q = supabase
-        .from("user_permission_overrides")
-        .update({ level, access_level: levelToLegacy(level) } as any)
-        .eq("user_id", userId)
-        .eq("module_key", moduleKey);
-      q = ctx.teamId ? q.eq("team_id", ctx.teamId) : q.is("team_id", null);
-      return (await q).error;
-    }
-    return (
-      await supabase.from("user_permission_overrides").insert({
-        user_id: userId,
-        team_id: ctx.teamId,
-        module_key: moduleKey,
-        level,
-        access_level: levelToLegacy(level),
-      } as any)
-    ).error;
+  async function setCell(teamId: string, mk: string, level: PermissionLevel) {
+    const existing = teamOverride(teamId, mk);
+    const { error } = existing
+      ? await supabase
+          .from("user_permission_overrides")
+          .update({ level, access_level: levelToLegacy(level) } as any)
+          .eq("user_id", userId)
+          .eq("module_key", mk)
+          .eq("team_id", teamId)
+      : await supabase.from("user_permission_overrides").insert({
+          user_id: userId,
+          team_id: teamId,
+          module_key: mk,
+          level,
+          access_level: levelToLegacy(level),
+        } as any);
+    if (error) return toast.error(error.message);
+    toast.success("Excepción guardada para esta categoría");
+    invalidate();
   }
 
-  async function resetOverride(moduleKey: string) {
-    let q = supabase
+  async function resetCell(teamId: string, mk: string) {
+    const { error } = await supabase
       .from("user_permission_overrides")
       .delete()
       .eq("user_id", userId)
-      .eq("module_key", moduleKey);
-    q = ctx.teamId ? q.eq("team_id", ctx.teamId) : q.is("team_id", null);
-    return (await q).error;
-  }
-
-  async function handleSetOne(moduleKey: string, level: PermissionLevel) {
-    const err = await setOverride(moduleKey, level);
-    if (err) return toast.error(err.message);
-    toast.success("Permiso actualizado");
+      .eq("module_key", mk)
+      .eq("team_id", teamId);
+    if (error) return toast.error(error.message);
+    toast.success("Vuelve al rol");
     invalidate();
   }
 
-  async function handleResetOne(moduleKey: string) {
-    const err = await resetOverride(moduleKey);
-    if (err) return toast.error(err.message);
-    toast.success("Restablecido al rol");
-    invalidate();
-  }
-
-  async function togglePage(modules: ModuleKey[], on: boolean) {
-    const errors: string[] = [];
-    for (const mk of modules) {
-      const eff = effectiveLevel(mk);
-      if (on && eff === "sin_acceso") {
-        const err = await setOverride(mk, coerceLevelFor(mk, "lector_categoria"));
-        if (err) errors.push(err.message);
-      } else if (!on && eff !== "sin_acceso") {
-        const err = await setOverride(mk, "sin_acceso");
-        if (err) errors.push(err.message);
-      }
-    }
-    invalidate();
-    if (errors.length) toast.error(errors[0]);
-    else toast.success(on ? "Página activada" : "Página desactivada");
-  }
-
-  async function handleResetPage(modules: ModuleKey[]) {
-    for (const mk of modules) await resetOverride(mk);
-    invalidate();
-    toast.success("Página restablecida al rol");
-  }
-
-  if (rolePermsQ.isLoading || overridesQ.isLoading || roleQ.isLoading) return <LoadingState />;
+  const pageGroups = React.useMemo(() => groupPermissionModulesByPage(), []);
+  if (rolePermsQ.isLoading || overridesQ.isLoading) return <LoadingState />;
 
   return (
     <div className="space-y-3">
-      {pageGroups.map(({ page, modules }) => {
-        const PageIcon = page.icon;
-        const activeCount = modules.filter((mk) => effectiveLevel(mk) !== "sin_acceso").length;
-        const isActive = activeCount > 0;
-        const hasOverride = modules.some((mk) => overrideMap[mk] !== undefined);
-        return (
-          <div key={page.key + page.label} className="rounded-lg border border-border/60 overflow-hidden">
-            <div className="flex items-center gap-3 px-3 py-2.5">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white/5">
-                <PageIcon className="h-4 w-4" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold">{page.label}</p>
-                <p className="truncate text-[11px] text-muted-foreground">
-                  {isActive ? `${activeCount} de ${modules.length} activos` : "Página desactivada"}
-                </p>
-              </div>
-              {canEdit && hasOverride ? (
-                <Button size="sm" variant="ghost" onClick={() => handleResetPage(modules)}>
-                  Restablecer
-                </Button>
-              ) : null}
-              <Switch
-                checked={isActive}
-                disabled={!canEdit}
-                onCheckedChange={(on) => togglePage(modules, on)}
-              />
-            </div>
-            {/* Las filas SIEMPRE se muestran: una página apagada también debe
-                poder configurarse módulo por módulo. */}
-            <div className="divide-y divide-border/50 border-t border-border/50 px-3">
-
-                {modules.map((mk) => {
-                  const m = MODULE_MAP[mk];
-                  if (!m) return null;
-                  const Icon = m.icon;
-                  const roleLvl = coerceLevelFor(mk, roleMap[mk] ?? "sin_acceso");
-                  const overrideLvl = overrideMap[mk] ? coerceLevelFor(mk, overrideMap[mk]) : undefined;
-                  const effective = overrideLvl ?? roleLvl;
-                  return (
-                    <div
-                      key={mk}
-                      className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 py-2.5 sm:grid-cols-[auto_minmax(0,1fr)_auto_auto]"
-                    >
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white/5">
-                        <Icon className="h-4 w-4" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">{m.label}</p>
-                        <p className="truncate text-xs text-muted-foreground">
-                          Rol: {LEVEL_LABEL[roleLvl]}
-                          {overrideLvl ? " · Personalizado" : ""}
-                        </p>
-                      </div>
-                      <div className="col-span-2 flex items-center gap-2 sm:col-span-1">
-                        <Select
-                          value={effective}
-                          onValueChange={(v) => handleSetOne(mk, v as PermissionLevel)}
-                          disabled={!canEdit}
-                        >
-                          <SelectTrigger
-                            className={cn(
-                              "flex-1 sm:w-[200px] sm:flex-none",
-                              overrideLvl && "border-primary/60",
-                            )}
-                          >
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {levelOptionsFor(mk).map((l) => (
-                              <SelectItem key={l.value} value={l.value}>
-                                {l.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        {canEdit && overrideLvl ? (
-                          <Button size="sm" variant="ghost" onClick={() => handleResetOne(mk)}>
-                            Restablecer
-                          </Button>
-                        ) : null}
-                      </div>
-                    </div>
-                  );
-                })}
-            </div>
-
-          </div>
-        );
-      })}
-      {pageGroups.length === 0 ? (
-        <p className="text-xs text-muted-foreground">Este rol no tiene páginas configurables.</p>
-      ) : null}
+      <p className="text-[11px] text-muted-foreground">
+        Cada cambio aplica solo a esa persona en esa categoría.{" "}
+        <span className="inline-flex items-center gap-1">
+          <span className="h-1.5 w-1.5 rounded-full bg-primary" /> excepción de categoría
+        </span>
+      </p>
+      {pageGroups.map(({ page, modules }) => (
+        <div key={page.key + page.label} className="overflow-x-auto rounded-lg border border-border/60">
+          <table className="w-full min-w-[420px] text-sm">
+            <thead>
+              <tr className="border-b border-border/50 text-left text-[11px] uppercase tracking-wide text-muted-foreground">
+                <th className="px-3 py-2 font-semibold">{page.label}</th>
+                {columns.map((c) => (
+                  <th key={c.id} className="px-2 py-2 font-semibold">
+                    {c.label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/50">
+              {modules.map((mk) => {
+                const m = MODULE_MAP[mk as ModuleKey];
+                if (!m) return null;
+                const general = generalOverride(mk);
+                return (
+                  <tr key={mk}>
+                    <td className="px-3 py-2 align-top">
+                      <p className="font-medium">{m.label}</p>
+                      {general ? (
+                        <p className="text-[10px] text-muted-foreground">Excepción en todas las categorías</p>
+                      ) : null}
+                    </td>
+                    {columns.map((c) => {
+                      const own = teamOverride(c.teamId!, mk);
+                      const stored = normalizeLevel(own?.level ?? general?.level ?? roleLevel(c.roleId, mk));
+                      const value = toSimpleLevel(stored);
+                      return (
+                        <td key={c.id} className="px-2 py-2 align-top">
+                          <div className="flex items-center gap-1.5">
+                            {own ? <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" /> : null}
+                            <Select
+                              value={value}
+                              onValueChange={(v) => setCell(c.teamId!, mk, v as PermissionLevel)}
+                              disabled={!canEdit}
+                            >
+                              <SelectTrigger className={cn("h-8 w-[130px]", own && "border-primary/60")}>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {simpleLevelOptions(mk as ModuleKey, stored).map((l) => (
+                                  <SelectItem key={l.value} value={l.value}>
+                                    {l.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          {canEdit && own ? (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="mt-1 h-6 px-2 text-[11px]"
+                              onClick={() => resetCell(c.teamId!, mk)}
+                            >
+                              Volver al rol
+                            </Button>
+                          ) : null}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      ))}
     </div>
   );
 }

@@ -55,6 +55,7 @@ interface RoleRow {
   name: string;
   is_system_default: boolean;
   base_role: string | null;
+  default_all_categories?: boolean | null;
 }
 interface PermRow {
   role_id: string;
@@ -120,7 +121,7 @@ function RolesTab({ clubId, canEdit }: { clubId: string | null; canEdit: boolean
     queryFn: async (): Promise<RoleRow[]> => {
       const { data, error } = await supabase
         .from("roles")
-        .select("id, club_id, name, is_system_default, base_role")
+        .select("id, club_id, name, is_system_default, base_role, default_all_categories")
         .eq("club_id", clubId!)
         .order("is_system_default", { ascending: false })
         .order("name");
@@ -239,7 +240,7 @@ function RolesTab({ clubId, canEdit }: { clubId: string | null; canEdit: boolean
               .filter((a) => a.role_id === selected.id)
               .map((a) => a.request_type)}
             canEdit={canEdit}
-            onSaved={() => qc.invalidateQueries({ queryKey: ["club-role-permissions", clubId] })}
+            onSaved={() => { qc.invalidateQueries({ queryKey: ["club-role-permissions", clubId] }); qc.invalidateQueries({ queryKey: ["club-roles", clubId] }); }}
           />
 
         ) : (

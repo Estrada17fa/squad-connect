@@ -54,8 +54,6 @@ export function AddMembershipDialog({
   const [saving, setSaving] = React.useState(false);
   const addFn = useServerFn(addMembership);
 
-  const selectedRole = roles.find((r) => r.id === roleId) ?? null;
-  const clubWideAllowed = !!selectedRole?.allows_club_wide;
 
   React.useEffect(() => {
     if (!open) {
@@ -65,9 +63,6 @@ export function AddMembershipDialog({
     }
   }, [open]);
 
-  React.useEffect(() => {
-    if (teamId === "__club__" && !clubWideAllowed) setTeamId("");
-  }, [clubWideAllowed, teamId]);
 
   async function handleAdd() {
     if (!roleId || !teamId) return;
@@ -76,7 +71,7 @@ export function AddMembershipDialog({
       await addFn({
         data: {
           user_id: userId,
-          team_id: teamId === "__club__" ? null : teamId,
+          team_id: teamId,
           role_id: roleId,
           job_title: jobTitle.trim() || null,
         },
@@ -97,8 +92,7 @@ export function AddMembershipDialog({
         <DialogHeader>
           <DialogTitle>Añadir membresía</DialogTitle>
           <DialogDescription>
-            Elige primero el rol, luego el equipo/categoría. "Todo el club" solo aparece si el rol
-            tiene alcance de club.
+            Elige el rol y la categoría. Cada membresía aplica solo a esa categoría.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
@@ -112,7 +106,6 @@ export function AddMembershipDialog({
                 {roles.map((r) => (
                   <SelectItem key={r.id} value={r.id}>
                     {r.name}
-                    {r.allows_club_wide ? " · alcance club" : ""}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -125,7 +118,6 @@ export function AddMembershipDialog({
                 <SelectValue placeholder={roleId ? "Selecciona categoría" : "Elige un rol primero"} />
               </SelectTrigger>
               <SelectContent>
-                {clubWideAllowed ? <SelectItem value="__club__">Todo el club</SelectItem> : null}
                 {teams.map((t) => (
                   <SelectItem key={t.id} value={t.id}>
                     {t.name}
@@ -133,11 +125,6 @@ export function AddMembershipDialog({
                 ))}
               </SelectContent>
             </Select>
-            {roleId && !clubWideAllowed ? (
-              <p className="text-[11px] text-muted-foreground">
-                Este rol no admite alcance de club. Elige una categoría específica.
-              </p>
-            ) : null}
           </div>
           <div className="space-y-2">
             <Label>Puesto (opcional)</Label>

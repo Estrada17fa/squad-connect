@@ -58,9 +58,9 @@ const MEETING_STATUS_VARIANT: Record<MeetingStatus, StatusVariant> = {
 function CoordinacionPage() {
   const { isSuperAdmin, user, accessibleModules, profile, teamOptions } = useApp();
   const clubId = profile?.club_id ?? null;
-  const { canEditTeam, isPlayerScoped } = useTeamAccess("coordinacion_interna");
+  const { canEditRecord, isPlayerScoped } = useTeamAccess("coordinacion_interna");
   const editableTeams = useEditableTeams("coordinacion_interna");
-  const canCreate = editableTeams.length > 0 || canEditTeam(null);
+  const canCreate = editableTeams.length > 0 || canEditRecord(null);
   const playerScoped = isPlayerScoped(null);
   const canAccess = isSuperAdmin || accessibleModules.includes("coordinacion_interna");
 
@@ -229,7 +229,7 @@ function CoordinacionPage() {
             <TaskBoard
               tasks={tasks}
               userId={user.id}
-              canEdit={canEditTeam(null)}
+              canEdit={canEditRecord(null)}
               onOpen={(t) => setDetailTaskId(t.id)}
               onStatus={(t, status) => setTaskStatus.mutate({ id: t.id, status })}
             />
@@ -320,7 +320,7 @@ function CoordinacionPage() {
         task={detailTask}
         userId={user.id}
         clubId={clubId}
-        canEdit={canEditTeam(detailTask?.team_id ?? null)}
+        canEdit={canEditRecord(detailTask?.team_id ?? null)}
         onEdit={() => {
           if (!detailTask) return;
           setEditingTask(detailTask);
@@ -336,7 +336,7 @@ function CoordinacionPage() {
         meeting={detailMeeting}
         userId={user.id}
         clubId={clubId}
-        canEdit={canEditTeam(detailMeeting?.team_id ?? null)}
+        canEdit={canEditRecord(detailMeeting?.team_id ?? null)}
         onEdit={() => {
           if (!detailMeeting) return;
           setEditingMeeting(detailMeeting);

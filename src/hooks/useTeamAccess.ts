@@ -16,7 +16,7 @@ import {
  * que no viene en la respuesta queda en 'sin_acceso'. Sin equipo => contexto club.
  */
 export function useTeamAccess(moduleKey: ModuleKey) {
-  const { permissionsByTeam, isSuperAdmin } = useApp();
+  const { permissionsByTeam, isSuperAdmin, allTeamsLevels } = useApp();
 
   const levelForTeam = React.useCallback(
     (teamId: string | null | undefined): PermissionLevel => {
@@ -51,5 +51,14 @@ export function useTeamAccess(moduleKey: ModuleKey) {
     [isPlayerScoped, moduleKey],
   );
 
-  return { levelForTeam, canEditTeam, canReadTeam, isPlayerScoped, onlyOwnRows };
+  /** Registros de "Todo el club": editar exige Editar en TODAS las categorías. */
+  const canEditAllTeams = isSuperAdmin || levelCanEdit(allTeamsLevels?.[moduleKey]);
+
+  /** Editar un registro: con categoría usa esa categoría; sin categoría ("Todo el club") exige TODAS. */
+  const canEditRecord = React.useCallback(
+    (teamId: string | null | undefined) => (teamId ? canEditTeam(teamId) : canEditAllTeams),
+    [canEditTeam, canEditAllTeams],
+  );
+
+  return { levelForTeam, canEditTeam, canReadTeam, isPlayerScoped, onlyOwnRows, canEditAllTeams, canEditRecord };
 }

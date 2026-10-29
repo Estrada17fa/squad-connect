@@ -8,6 +8,8 @@ import {
   addMembershipSchema,
   updateMembershipSchema,
   removeMembershipSchema,
+  allCategoriesSchema,
+  allCategoriesPreviewSchema,
 } from "@/lib/members.schemas";
 import {
   assertNotLastAdmin,
@@ -38,6 +40,12 @@ export const createClubMember = createServerFn({ method: "POST" })
     await validateClubTeams(ctx.supabase, data.assignments.map((a) => a.team_id), clubId);
     if (isPlayerRole(role) && data.assignments.length === 0) {
       throw new Error("El rol Jugador requiere al menos una categoría");
+    }
+    if (isPlayerRole(role) && data.all_categories) {
+      throw new Error("Un jugador se asigna categoría por categoría");
+    }
+    if (!data.all_categories && data.assignments.length === 0) {
+      throw new Error("Elige al menos una categoría o activa 'Todas las categorías'");
     }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -81,7 +89,9 @@ export const createClubMember = createServerFn({ method: "POST" })
       .eq("id", newUserId);
     if (profErr) console.error("[createClubMember] profile", profErr);
 
-    await insertInitialMemberships(supabaseAdmin, newUserId, role, data.assignments, data.club_job_title);
+    await insertInitialMemberships(
+      supabaseAdmin, newUserId, role, clubId, data.assignments, data.club_job_title, !!data.all_categories,
+    );
     if (isPlayerRole(role)) {
       for (const a of data.assignments) await ensurePlayerRow(supabaseAdmin, newUserId, a.team_id, data.player);
     }
@@ -166,8 +176,7 @@ export const addMembership = createServerFn({ method: "POST" })
       .from("profiles").select("club_id").eq("id", data.user_id).maybeSingle();
     if (!target || target.club_id !== clubId) throw new Error("Miembro inválido");
     const role = await loadClubRole(ctx.supabase, data.role_id, clubId);
-    if (data.team_id) await validateClubTeams(ctx.supabase, [data.team_id], clubId);
-    if (isPlayerRole(role) && !data.team_id) throw new Error("Un jugador necesita una categoría");
+    await validateClubTeams(ctx.supabase, [data.team_id], clubId);
     await assertNoEscalation(ctx.supabase, ctx.userId, role.id, data.team_id);
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -179,7 +188,7 @@ export const addMembership = createServerFn({ method: "POST" })
       job_title: norm(data.job_title),
     });
     if (error) throw new Error("No se pudo añadir la membresía");
-    if (isPlayerRole(role) && data.team_id) {
+    if (isPlayerRole(role)) {
       await ensurePlayerRow(supabaseAdmin, data.user_id, data.team_id, {
         jersey_number: data.jersey_number,
         position: data.position,
@@ -360,4 +369,96 @@ export const hardDeleteClubMember = createServerFn({ method: "POST" })
     const { error } = await supabaseAdmin.auth.admin.deleteUser(data.user_id);
     if (error) throw new Error("No se pudo eliminar la cuenta");
     return { ok: true as const, items: [] as { label: string; count: number }[] };
+  });
+
+
+/** Categorías del club donde la persona ya tiene un rol DISTINTO (para avisar antes de reemplazar). */
+export const previewAllCategories = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => allCategoriesPreviewSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    const ctx = context as unknown as MemberCtx;
+    const clubId = await authorizeMemberAdmin(ctx);
+    await loadClubRole(ctx.supabase, data.role_id, clubId);
+    const { data: rows } = await ctx.supabase
+      .from("team_memberships")
+      .select("id, team_id, role_id, team:teams!inner(name, club_id), role:roles!inner(name)")
+      .eq("user_id", data.user_id)
+      .eq("team.club_id", clubId);
+    const conflicts = ((rows ?? []) as any[])
+      .filter((r) => r.role_id !== data.role_id)
+      .map((r) => ({ team: r.team?.name ?? "", role: r.role?.name ?? "" }));
+    return { conflicts };
+  });
+
+/**
+ * Interruptor "Todas las categorías". Encender: guarda el interruptor y crea las
+ * membresías que falten (fila por fila); reemplaza roles distintos SOLO si se confirmó.
+ * Apagar: quita únicamente el interruptor y conserva las membresías.
+ */
+export const setAllCategories = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => allCategoriesSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    const ctx = context as unknown as MemberCtx;
+    const clubId = await authorizeMemberAdmin(ctx);
+    const { data: target } = await ctx.supabase
+      .from("profiles").select("club_id").eq("id", data.user_id).maybeSingle();
+    if (!target || target.club_id !== clubId) throw new Error("Miembro inválido");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const admin = supabaseAdmin as any;
+
+    if (!data.on) {
+      const { error } = await admin
+        .from("member_all_categories").delete().eq("club_id", clubId).eq("user_id", data.user_id);
+      if (error) throw new Error("No se pudo apagar 'Todas las categorías'");
+      return { ok: true };
+    }
+
+    if (!data.role_id) throw new Error("Elige un rol");
+    const role = await loadClubRole(ctx.supabase, data.role_id, clubId);
+    if (isPlayerRole(role)) throw new Error("Un jugador se asigna categoría por categoría");
+
+    const { data: teams } = await admin.from("teams").select("id").eq("club_id", clubId);
+    const { data: mine } = await admin
+      .from("team_memberships")
+      .select("id, team_id, role_id, job_title, role:roles!inner(id, name, base_role)")
+      .eq("user_id", data.user_id);
+    const byTeam = new Map<string, any>();
+    for (const m of (mine ?? []) as any[]) if (m.team_id) byTeam.set(m.team_id, m);
+
+    const conflicts = [...byTeam.values()].filter((m) => m.role_id !== role.id);
+    if (conflicts.length && !data.replace_conflicts) {
+      throw new Error("La persona ya tiene otro rol en algunas categorías; confirma el reemplazo");
+    }
+    for (const t of (teams ?? []) as { id: string }[]) {
+      await assertNoEscalation(ctx.supabase, ctx.userId, role.id, t.id);
+    }
+
+    const jobTitle =
+      norm(data.job_title) ?? ((mine ?? []) as any[]).find((m) => m.job_title)?.job_title ?? null;
+
+    for (const t of (teams ?? []) as { id: string }[]) {
+      const existing = byTeam.get(t.id);
+      if (!existing) {
+        const { error } = await admin
+          .from("team_memberships")
+          .insert({ user_id: data.user_id, team_id: t.id, role_id: role.id, job_title: jobTitle });
+        if (error) throw new Error("No se pudo asignar una categoría");
+      } else if (existing.role_id !== role.id) {
+        if (isAdminRole(existing.role) && !isAdminRole(role)) {
+          if (data.user_id === ctx.userId) throw new Error("No puedes degradar tu propia membresía de administrador");
+          await assertNotLastAdmin(ctx.supabase, clubId, data.user_id);
+        }
+        if (isPlayerRole(existing.role)) await archivePlayerRow(admin, data.user_id, t.id);
+        const { error } = await admin
+          .from("team_memberships").update({ role_id: role.id }).eq("id", existing.id);
+        if (error) throw new Error("No se pudo reemplazar un rol");
+      }
+    }
+    const { error: sErr } = await admin
+      .from("member_all_categories")
+      .upsert({ club_id: clubId, user_id: data.user_id, role_id: role.id });
+    if (sErr) throw new Error("No se pudo activar 'Todas las categorías'");
+    return { ok: true };
   });

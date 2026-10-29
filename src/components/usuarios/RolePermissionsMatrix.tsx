@@ -19,7 +19,8 @@ import { cn } from "@/lib/utils";
 import {
   coerceLevelFor,
   defaultLevelsFor,
-  levelOptionsFor,
+  simpleLevelOptions,
+  toSimpleLevel,
   levelToLegacy,
   normalizeLevel,
   type PermissionLevel,
@@ -47,7 +48,7 @@ export function RolePermissionsMatrix({
   onSaved,
 }: {
   clubId: string;
-  role: { id: string; name: string; base_role: string | null };
+  role: { id: string; name: string; base_role: string | null; default_all_categories?: boolean | null };
   perms: RolePermRow[];
   approvalTypes: RequestType[];
   canEdit: boolean;
@@ -57,7 +58,7 @@ export function RolePermissionsMatrix({
   const initial = React.useMemo(() => {
     const map: Record<string, PermissionLevel> = {};
     for (const m of MODULES) map[m.key] = "sin_acceso";
-    for (const p of perms) map[p.module_key] = coerceLevelFor(p.module_key as ModuleKey, normalizeLevel(p.level));
+    for (const p of perms) map[p.module_key] = toSimpleLevel(coerceLevelFor(p.module_key as ModuleKey, normalizeLevel(p.level)));
     return map;
   }, [perms]);
 
@@ -66,6 +67,9 @@ export function RolePermissionsMatrix({
   const [draft, setDraft] = React.useState<Record<string, PermissionLevel>>(initial);
   const [approvalDraft, setApprovalDraft] = React.useState<RequestType[]>(approvalTypes);
   const [saving, setSaving] = React.useState(false);
+  const initialAllCats = !!role.default_all_categories;
+  const [allCats, setAllCats] = React.useState(initialAllCats);
+  React.useEffect(() => setAllCats(initialAllCats), [initialAllCats, role.id]);
   const saveApprovals = useSaveRoleApprovals(clubId);
 
   React.useEffect(() => setDraft(initial), [initial]);
@@ -76,8 +80,8 @@ export function RolePermissionsMatrix({
     [approvalDraft, initialApprovals],
   );
   const dirty = React.useMemo(
-    () => MODULES.some((m) => draft[m.key] !== initial[m.key]) || approvalsDirty,
-    [draft, initial, approvalsDirty],
+    () => MODULES.some((m) => draft[m.key] !== initial[m.key]) || approvalsDirty || allCats !== initialAllCats,
+    [draft, initial, approvalsDirty, allCats, initialAllCats],
   );
 
   const defaults = defaultLevelsFor(role.base_role);
@@ -95,6 +99,13 @@ export function RolePermissionsMatrix({
         .from("role_permissions")
         .upsert(rows as any, { onConflict: "role_id,module_key" });
       if (error) throw error;
+      if (allCats !== initialAllCats) {
+        const { error: rErr } = await (supabase as any)
+          .from("roles")
+          .update({ default_all_categories: allCats })
+          .eq("id", role.id);
+        if (rErr) throw rErr;
+      }
       if (approvalsDirty) {
         await saveApprovals.mutateAsync({ roleId: role.id, types: approvalDraft });
       }
@@ -147,8 +158,12 @@ export function RolePermissionsMatrix({
         <div className="min-w-0">
           <h3 className="font-display text-lg font-semibold">{role.name}</h3>
           <p className="text-xs text-muted-foreground">
-            Define qué ve y qué edita este rol en cada módulo, y hasta dónde llega su alcance.
+            Define qué ve y qué edita este rol en cada módulo. Siempre aplica solo a las categorías de la persona.
           </p>
+          <label className="mt-2 flex items-center gap-2 text-xs">
+            <Switch checked={allCats} disabled={!canEdit} onCheckedChange={setAllCats} />
+            <span>Asignar todas las categorías por defecto</span>
+          </label>
         </div>
         <div className="flex items-center gap-2">
           {canEdit && defaults ? (
@@ -197,8 +212,8 @@ export function RolePermissionsMatrix({
                     const m = MODULE_MAP[mk];
                     if (!m) return null;
                     const Icon = m.icon;
-                    const options = levelOptionsFor(mk);
                     const current = draft[mk] ?? "sin_acceso";
+                    const options = simpleLevelOptions(mk, initial[mk]);
                     const hint = options.find((o) => o.value === current)?.hint;
                     return (
                       <div

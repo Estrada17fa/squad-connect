@@ -49,6 +49,12 @@ export interface AccessData {
   permissionsByTeam: Record<string, Record<string, PermissionLevel>>;
   /** Niveles globales (lector_global / editor_global): aplican a CUALQUIER equipo. */
   globalPermissions: Record<string, PermissionLevel>;
+  /**
+   * Nivel en TODAS las categorías del club (mínimo entre ellas; sin_acceso si
+   * falta membresía en alguna). Equivale a level_all_teams en SQL: decide
+   * quién edita registros de "Todo el club".
+   */
+  allTeamsLevels: Record<string, PermissionLevel>;
   isSuperAdmin: boolean;
   /** true si TODAS las membresías del usuario son de rol base 'jugador' (y no es super admin). */
   isPlayerOnly: boolean;
@@ -98,7 +104,7 @@ export function useAccess(userId: string) {
     queryFn: async (): Promise<AccessData> => {
       // Fuente única de verdad: get_my_access (effective_permission en SQL).
       // Las membresías propias solo se leen para nombres/rol base (mapa de páginas).
-      const [profileRes, membershipsRes] = await Promise.all([
+      const [profileRes, membershipsRes, clubTeamsRes] = await Promise.all([
         supabase
           .from("profiles")
           .select("full_name, email, avatar_url, club_id, club:clubs(name)")
@@ -108,6 +114,7 @@ export function useAccess(userId: string) {
           .from("team_memberships")
           .select("team_id, role_id, team:teams(name, category, display_order, is_primary), role:roles(name, base_role)")
           .eq("user_id", userId),
+        supabase.from("teams").select("id, club_id"),
       ]);
       if (profileRes.error) throw profileRes.error;
       if (membershipsRes.error) throw membershipsRes.error;
@@ -144,6 +151,7 @@ export function useAccess(userId: string) {
         permissions: {},
         permissionsByTeam: { [TEAM_CLUB_KEY]: {} },
         globalPermissions: {},
+        allTeamsLevels: {},
         isSuperAdmin: false,
         isPlayerOnly: false,
         noMemberships: true,
@@ -178,14 +186,13 @@ export function useAccess(userId: string) {
         return out;
       };
 
-      const clubWide = memberships.find((m) => !m.team_id);
       const permissionsByTeam: Record<string, Record<string, PermissionLevel>> = {
         [TEAM_CLUB_KEY]: normMap(res.club_levels),
       };
       const teamOptions: TeamOption[] = sortTeams(
         (res.teams ?? []).map((t) => {
           permissionsByTeam[t.id] = normMap(t.levels);
-          const own = memberships.find((m) => m.team_id === t.id) ?? clubWide;
+          const own = memberships.find((m) => m.team_id === t.id);
           return {
             id: t.id,
             name: t.name,
@@ -209,6 +216,24 @@ export function useAccess(userId: string) {
       }
 
       const isSuper = !!res.is_super_admin;
+
+      // Todas las categorías del club: mínimo por módulo, exigiendo membresía en cada una.
+      const clubTeamIds = ((clubTeamsRes.data ?? []) as { id: string; club_id: string }[])
+        .filter((t) => t.club_id === clubId)
+        .map((t) => t.id);
+      const memberOfAll =
+        clubTeamIds.length > 0 && clubTeamIds.every((id) => memberships.some((m) => m.team_id === id));
+      const allTeamsLevels: Record<string, PermissionLevel> = {};
+      for (const k of Object.keys(permissionsByTeam[TEAM_CLUB_KEY] ?? {})) {
+        if (isSuper) { allTeamsLevels[k] = "editor_global"; continue; }
+        if (!memberOfAll) { allTeamsLevels[k] = "sin_acceso"; continue; }
+        let min: PermissionLevel | null = null;
+        for (const id of clubTeamIds) {
+          const l = permissionsByTeam[id]?.[k] ?? "sin_acceso";
+          if (min === null || RANK[l] < RANK[min]) min = l;
+        }
+        allTeamsLevels[k] = min ?? "sin_acceso";
+      }
       return {
         profile,
         clubName,
@@ -218,6 +243,7 @@ export function useAccess(userId: string) {
         permissions,
         permissionsByTeam,
         globalPermissions,
+        allTeamsLevels,
         isSuperAdmin: isSuper,
         isPlayerOnly:
           !isSuper &&
