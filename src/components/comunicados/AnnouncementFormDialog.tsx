@@ -33,7 +33,7 @@ interface Props {
   userId: string;
   /** Categorías donde el usuario puede publicar. */
   teams: TeamOption[];
-  /** Solo editor_global puede dirigir a todo el club. */
+  /** Solo quien tiene Editar en TODAS las categorías puede dirigir a todo el club. */
   canPublishClubWide: boolean;
   announcement?: AnnouncementRow | null;
   /** Se ejecuta tras eliminar (para cerrar también la ficha de lectura). */
