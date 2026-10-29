@@ -54,5 +54,11 @@ export function useTeamAccess(moduleKey: ModuleKey) {
   /** Registros de "Todo el club": editar exige Editar en TODAS las categorías. */
   const canEditAllTeams = isSuperAdmin || levelCanEdit(allTeamsLevels?.[moduleKey]);
 
-  return { levelForTeam, canEditTeam, canReadTeam, isPlayerScoped, onlyOwnRows, canEditAllTeams };
+  /** Editar un registro: con categoría usa esa categoría; sin categoría ("Todo el club") exige TODAS. */
+  const canEditRecord = React.useCallback(
+    (teamId: string | null | undefined) => (teamId ? canEditTeam(teamId) : canEditAllTeams),
+    [canEditTeam, canEditAllTeams],
+  );
+
+  return { levelForTeam, canEditTeam, canReadTeam, isPlayerScoped, onlyOwnRows, canEditAllTeams, canEditRecord };
 }

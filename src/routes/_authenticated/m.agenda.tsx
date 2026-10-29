@@ -194,7 +194,7 @@ function AgendaModulePage() {
         open={!!detailEvent}
         onOpenChange={(v) => !v && setDetailEvent(null)}
         event={detailEvent}
-        canEdit={!!detailEvent && canEditTeam(detailEvent.team_id)}
+        canEdit={!!detailEvent && canEditRecord(detailEvent.team_id)}
         clubId={clubId}
         userId={user.id}
         teams={editableTeams}

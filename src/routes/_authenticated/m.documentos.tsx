@@ -55,7 +55,7 @@ function DocumentosPage() {
     [teamOptions, canReadTeam],
   );
   const canReadAny = canReadTeam(null) || readableTeams.length > 0;
-  const canCreate = canEditTeam(null) || teamOptions.some((t) => canEditTeam(t.id));
+  const canCreate = canEditRecord(null) || teamOptions.some((t) => canEditRecord(t.id));
 
   const { data, isLoading } = useDocuments({ clubId, scope: "general" });
   const [filters, setFilters] = React.useState<DocumentsFilterState>(EMPTY_DOC_FILTERS);
@@ -142,7 +142,7 @@ function DocumentosPage() {
         open={detailOpen}
         onOpenChange={setDetailOpen}
         doc={selected}
-        canEdit={selected ? canEditTeam(selected.team_id) : false}
+        canEdit={selected ? canEditRecord(selected.team_id) : false}
       />
     </div>
   );
