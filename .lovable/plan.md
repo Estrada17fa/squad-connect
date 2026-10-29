@@ -26,8 +26,8 @@ Funciones SQL:
 | can_view_compras / can_edit_compras | exige lector/editor_global | lector/editor_categoria (máx.), comentario "temporal hasta que el módulo tenga categoría por registro" |
 | can_view_users, is_user_admin | global | igual que arriba |
 | can_edit_club_module, can_edit_module | global | igual |
-| can_edit_announcement, can_view/edit_team_announcement | global para club | categoría (máx.) |
-| can_edit_media_post, can_view/edit_team_media | global | categoría (máx.) |
+| can_edit_announcement, can_view/edit_team_announcement | global para club | Regla única: ve = Ver en al menos una de sus categorías (announcement_teams); edita = Editar en TODAS sus categorías (todo el club = todas las del club) |
+| can_edit_media_post, can_view/edit_team_media | global | Regla única con media_post_teams: ve = Ver en al menos una; edita = Editar en TODAS |
 | can_approve_request_type, request_type_approver_ids | global | categoría (máx.) |
 | development_level, health_level, training_level | global / NULL | solo por categorías |
 | coord_scope_ok, request_scope_ok | global + registro NULL (R) | registro NULL: ver = Ver en alguna; editar = Editar en TODAS |
