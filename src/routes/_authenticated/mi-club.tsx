@@ -1,35 +1,30 @@
-import { createFileRoute, Navigate } from "@tanstack/react-router";
-import { Users } from "lucide-react";
+import { createFileRoute } from "@tanstack/react-router";
+import { Shield } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { EmptyState } from "@/components/squad/EmptyState";
-import { useApp } from "@/components/squad/AppLayout";
 
 export const Route = createFileRoute("/_authenticated/mi-club")({
   head: () => ({
     meta: [
       { title: "Squad — Mi Club" },
-      { name: "description", content: "Plantel, salud, tácticas, torneo, comunicados y más." },
+      { name: "description", content: "Resumen de solo lectura de tu club." },
+      { property: "og:title", content: "Squad — Mi Club" },
+      { property: "og:description", content: "Resumen de solo lectura de tu club." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: MiClubPage,
 });
 
 function MiClubPage() {
-  const { visiblePages } = useApp();
-  const club = visiblePages.find((p) => p.page.key === "club");
-  const first = club?.modules[0];
-
-  if (first) {
-    return <Navigate to="/m/$module" params={{ module: first }} replace />;
-  }
-
   return (
     <div className="space-y-6">
-      <PageHeader title="Mi Club" subtitle="Módulos del club y del equipo" />
+      <PageHeader title="Mi Club" subtitle="Resumen del club (solo lectura)" />
       <EmptyState
-        icon={Users}
-        title="Sin módulos disponibles"
-        message="Tu rol actual no tiene acceso a los módulos del club."
+        icon={Shield}
+        title="Próximamente"
+        message="Aquí verás la información del club que se carga desde Coordinación."
       />
     </div>
   );
