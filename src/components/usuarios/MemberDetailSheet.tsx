@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/squad/ConfirmDialog";
 import { EditMembershipDialog } from "./EditMembershipDialog";
+import { AllCategoriesToggle } from "./AllCategoriesToggle";
 import type { RoleRow } from "./AddMembershipDialog";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -206,6 +207,15 @@ export function MemberDetailSheet({
 
 
         <DetailSection title="Membresías">
+          <div className="mb-3">
+            <AllCategoriesToggle
+              clubId={clubId}
+              userId={member.id}
+              roles={roles}
+              canManage={canManage}
+              onChanged={onMembershipsChanged}
+            />
+          </div>
           {memberships.length === 0 ? (
             <EmptyState
               icon={Shield}
