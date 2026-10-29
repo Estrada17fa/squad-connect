@@ -1,4 +1,4 @@
-import { MODULES, MODULE_MAP, type ModuleKey } from "./modules";
+import { MODULES, MODULE_MAP, RETIRED_MODULES, TOGGLE_MODULES, type ModuleKey } from "./modules";
 
 /**
  * Escala nueva de permisos (tipo `permission_level` en la base).
@@ -99,7 +99,7 @@ export function canSeeModule(key: ModuleKey, level: PermissionLevel | undefined 
  * vive en la pestaña Viajes de Agenda y solo pide lectura.
  */
 export function canManageTripsModule(level: PermissionLevel | undefined | null): boolean {
-  return LEVEL_RANK[normalizeLevel(level)] >= LEVEL_RANK.lector_global;
+  return LEVEL_RANK[normalizeLevel(level)] >= LEVEL_RANK.lector_categoria;
 }
 
 
@@ -164,17 +164,46 @@ const HINTS: Record<PermissionLevel, string> = {
 };
 
 /**
- * Niveles disponibles: TODOS los módulos ofrecen los 6 niveles, sin recortes
- * por ámbito. Elegir un nivel de categoría en un módulo de club limita lo que
- * la persona ve a los registros de sus categorías (y a los marcados como
- * "Todo el club").
+ * Escala simplificada que ve el administrador:
+ * - Módulos de Coordinación: Sin acceso / Ver / Editor.
+ * - Módulos "toggle" (Usuarios): Sin acceso / Con acceso.
+ * "Ver" y "Editor" siempre se limitan a las categorías asignadas; con la
+ * membresía "Todo el club" la base los amplía a todo el club.
+ * Para el rol Jugador, "Ver" = vista de jugador (solo lo suyo).
  */
-export function levelOptionsFor(key: ModuleKey): LevelOption[] {
-  return PERMISSION_LEVELS.map((value) => ({
-    value,
-    label: LEVEL_LABEL[value],
-    hint: value === "vista_jugador" ? playerViewHint(key) : HINTS[value],
-  }));
+export function isToggleModule(key: ModuleKey): boolean {
+  return TOGGLE_MODULES.includes(key);
+}
+
+function viewLevelFor(baseRole?: string | null): PermissionLevel {
+  return (baseRole ?? "").toLowerCase() === "jugador" ? "vista_jugador" : "lector_categoria";
+}
+
+export function levelOptionsFor(key: ModuleKey, baseRole?: string | null): LevelOption[] {
+  if (isToggleModule(key)) {
+    return [
+      { value: "sin_acceso", label: "Sin acceso", hint: "El módulo no aparece." },
+      { value: "editor_categoria", label: "Con acceso", hint: "Ve y usa el módulo." },
+    ];
+  }
+  const view = viewLevelFor(baseRole);
+  return [
+    { value: "sin_acceso", label: "Sin acceso", hint: "El módulo no aparece." },
+    {
+      value: view,
+      label: "Ver",
+      hint: view === "vista_jugador" ? playerViewHint(key) : "Ve lo de sus categorías. No edita.",
+    },
+    { value: "editor_categoria", label: "Editor", hint: "Ve y edita en sus categorías." },
+  ];
+}
+
+/** Texto corto del nivel en la escala simplificada. */
+export function simpleLevelLabel(key: ModuleKey, level: PermissionLevel | null | undefined): string {
+  const l = normalizeLevel(level);
+  if (l === "sin_acceso") return "Sin acceso";
+  if (isToggleModule(key)) return "Con acceso";
+  return canEdit(l) ? "Editor" : "Ver";
 }
 
 /** Texto de ayuda de 'vista_jugador' según lo que muestra el módulo. */
@@ -184,9 +213,14 @@ export function playerViewHint(key: ModuleKey): string {
     : "Ve el contenido de su categoría en modo lectura. Nunca edita.";
 }
 
-/** Ajusta un nivel guardado a una opción válida del módulo (para el <Select>). */
-export function coerceLevelFor(_key: ModuleKey, level: PermissionLevel): PermissionLevel {
-  return level;
+/** Ajusta un nivel guardado a una opción válida de la escala simplificada. */
+export function coerceLevelFor(key: ModuleKey, level: PermissionLevel, baseRole?: string | null): PermissionLevel {
+  if (RETIRED_MODULES.includes(key)) return level;
+  const l = normalizeLevel(level);
+  if (l === "sin_acceso") return l;
+  if (isToggleModule(key)) return "editor_categoria";
+  if (canEdit(l)) return "editor_categoria";
+  return viewLevelFor(baseRole);
 }
 
 
@@ -194,51 +228,43 @@ export function coerceLevelFor(_key: ModuleKey, level: PermissionLevel): Permiss
 /* Valores por defecto de los roles del sistema                        */
 /* ------------------------------------------------------------------ */
 
+const E: PermissionLevel = "editor_categoria";
+const V: PermissionLevel = "lector_categoria";
+const J: PermissionLevel = "vista_jugador";
+const N: PermissionLevel = "sin_acceso";
+
 export const DEFAULT_ROLE_LEVELS: Record<string, Partial<Record<ModuleKey, PermissionLevel>>> = {
-  admin: {
-    agenda: "editor_global", mes: "editor_global", plantel: "editor_global",
-    viajes: "editor_global", inventario: "editor_global", coordinacion_interna: "editor_global",
-    partidos: "editor_global",
-    solicitudes: "editor_global", compras_facturas: "editor_global", documentos: "editor_global",
-    usuarios: "editor_global", comunicados: "editor_global", multimedia: "editor_global",
-    torneo: "editor_global", tacticas: "editor_global", salud: "editor_global",
-    desarrollo: "editor_global", entrenamientos: "editor_global", nutricion: "editor_global",
-  },
+  admin: Object.fromEntries(
+    MODULES.filter((m) => !RETIRED_MODULES.includes(m.key)).map((m) => [m.key, E]),
+  ) as Partial<Record<ModuleKey, PermissionLevel>>,
+  // General: Tareas/juntas, Comunicados, Multimedia, Solicitudes
   tecnico: {
-    agenda: "editor_categoria", mes: "editor_categoria", plantel: "editor_categoria",
-    viajes: "lector_categoria", inventario: "lector_categoria", coordinacion_interna: "editor_categoria",
-    partidos: "editor_categoria",
-    solicitudes: "editor_categoria", compras_facturas: "sin_acceso", documentos: "lector_categoria",
-    usuarios: "sin_acceso", comunicados: "editor_categoria", multimedia: "lector_categoria",
-    torneo: "lector_categoria", tacticas: "editor_categoria", salud: "sin_acceso",
-    desarrollo: "editor_categoria", entrenamientos: "editor_categoria", nutricion: "lector_categoria",
+    coordinacion_interna: E, comunicados: E, multimedia: E, solicitudes: E,
+    finanzas: N, compras: N, documentos: N,
+    operacion_partido: V, viajes: V, inventario: V,
+    entrenamientos: E, partidos: E, desarrollo: E, plantel: E, torneo: E,
+    salud: N, nutricion: N, usuarios: N,
   },
   medico: {
-    agenda: "lector_categoria", mes: "lector_categoria", plantel: "lector_categoria",
-    viajes: "lector_categoria", inventario: "lector_categoria", coordinacion_interna: "editor_categoria",
-    partidos: "lector_categoria",
-    solicitudes: "editor_categoria", compras_facturas: "sin_acceso", documentos: "lector_categoria",
-    usuarios: "sin_acceso", comunicados: "lector_categoria", multimedia: "lector_categoria",
-    torneo: "lector_categoria", tacticas: "lector_categoria", salud: "editor_categoria",
-    desarrollo: "sin_acceso", entrenamientos: "lector_categoria", nutricion: "editor_categoria",
+    coordinacion_interna: V, comunicados: V, multimedia: V, solicitudes: V,
+    finanzas: N, compras: N, documentos: N,
+    operacion_partido: N, viajes: N, inventario: N,
+    entrenamientos: N, partidos: N, desarrollo: N, plantel: N, torneo: N,
+    salud: E, nutricion: E, usuarios: N,
   },
   staff: {
-    agenda: "lector_categoria", mes: "lector_categoria", plantel: "lector_categoria",
-    viajes: "editor_categoria", inventario: "editor_categoria", coordinacion_interna: "editor_categoria",
-    partidos: "lector_categoria",
-    solicitudes: "editor_categoria", compras_facturas: "editor_categoria", documentos: "lector_categoria",
-    usuarios: "sin_acceso", comunicados: "lector_categoria", multimedia: "editor_categoria",
-    torneo: "lector_categoria", tacticas: "lector_categoria", salud: "sin_acceso",
-    desarrollo: "sin_acceso", entrenamientos: "lector_categoria", nutricion: "lector_categoria",
+    coordinacion_interna: V, comunicados: V, multimedia: V, solicitudes: V,
+    finanzas: N, compras: N, documentos: N,
+    operacion_partido: E, viajes: E, inventario: E,
+    entrenamientos: N, partidos: N, desarrollo: N, plantel: N, torneo: N,
+    salud: N, nutricion: N, usuarios: N,
   },
   jugador: {
-    agenda: "vista_jugador", mes: "vista_jugador", plantel: "vista_jugador",
-    viajes: "vista_jugador", inventario: "sin_acceso", coordinacion_interna: "sin_acceso",
-    partidos: "vista_jugador",
-    solicitudes: "vista_jugador", compras_facturas: "sin_acceso", documentos: "sin_acceso",
-    usuarios: "sin_acceso", comunicados: "vista_jugador", multimedia: "vista_jugador",
-    torneo: "vista_jugador", tacticas: "vista_jugador", salud: "vista_jugador",
-    desarrollo: "vista_jugador", entrenamientos: "vista_jugador", nutricion: "vista_jugador",
+    coordinacion_interna: N, comunicados: J, multimedia: J, solicitudes: N,
+    finanzas: N, compras: N, documentos: N,
+    operacion_partido: N, viajes: N, inventario: N,
+    entrenamientos: N, partidos: N, desarrollo: N, plantel: N, torneo: N,
+    salud: N, nutricion: N, usuarios: N,
   },
 };
 
