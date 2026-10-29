@@ -3781,7 +3781,7 @@ export type Database = {
           id: string
           job_title: string | null
           role_id: string
-          team_id: string | null
+          team_id: string
           user_id: string
         }
         Insert: {
@@ -3789,7 +3789,7 @@ export type Database = {
           id?: string
           job_title?: string | null
           role_id: string
-          team_id?: string | null
+          team_id: string
           user_id: string
         }
         Update: {
@@ -3797,7 +3797,7 @@ export type Database = {
           id?: string
           job_title?: string | null
           role_id?: string
-          team_id?: string | null
+          team_id?: string
           user_id?: string
         }
         Relationships: [

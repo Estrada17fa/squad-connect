@@ -22,6 +22,13 @@
       "when": 1793292142007,
       "tag": "0002_level_all_teams_requiere_membresia",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793292488286,
+      "tag": "0003_team_memberships_team_id_not_null",
+      "breakpoints": true
     }
   ]
 }
