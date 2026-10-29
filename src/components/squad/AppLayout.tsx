@@ -204,6 +204,7 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
     primaryTeamId,
     permissionsByTeam: data.permissionsByTeam,
     globalPermissions: data.globalPermissions,
+    allTeamsLevels: data.allTeamsLevels,
 
     clubName: data.clubName,
     isSuperAdmin: data.isSuperAdmin,

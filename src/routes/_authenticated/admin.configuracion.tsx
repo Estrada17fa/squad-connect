@@ -26,7 +26,7 @@ export const Route = createFileRoute("/_authenticated/admin/configuracion")({
 function ClubSettingsPage() {
   const { user, profile, isSuperAdmin, permissions } = useApp();
   // Configuración del club: solo Editor global (o super admin).
-  const isEditorGlobal = isSuperAdmin || permissions["usuarios"] === "editor_global";
+  const isEditorGlobal = isSuperAdmin || canManageUsers(permissions["usuarios"]);
   const canEdit = isEditorGlobal;
 
   if (!isEditorGlobal) {

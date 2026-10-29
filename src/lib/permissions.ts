@@ -258,10 +258,11 @@ export function defaultLevelsFor(baseRole: string | null | undefined): Partial<R
  * sin_acceso / vista_jugador / lector_categoria => no ve el módulo.
  */
 export function canSeeUsers(level: PermissionLevel | undefined | null): boolean {
-  return LEVEL_RANK[normalizeLevel(level)] >= LEVEL_RANK.lector_global;
+  // temporal hasta que el módulo tenga categoría por registro
+  return LEVEL_RANK[normalizeLevel(level)] >= LEVEL_RANK.lector_categoria;
 }
 
 /** Solo Editor global administra usuarios (crear, editar, baja, roles). */
 export function canManageUsers(level: PermissionLevel | undefined | null): boolean {
-  return normalizeLevel(level) === "editor_global";
+  return canEdit(level);
 }

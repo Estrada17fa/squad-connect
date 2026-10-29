@@ -70,8 +70,9 @@ function ComprasPage() {
 
   // Módulo de club: se comporta con Sin acceso / Lector global / Editor global.
   const level = normalizeLevel(permissions.compras_facturas);
-  const canAccess = isSuperAdmin || LEVEL_RANK[level] >= LEVEL_RANK.lector_global;
-  const canEdit = isSuperAdmin || level === "editor_global";
+  // temporal hasta que el módulo tenga categoría por registro
+  const canAccess = isSuperAdmin || (LEVEL_RANK[level] >= LEVEL_RANK.lector_categoria);
+  const canEdit = isSuperAdmin || level === "editor_categoria" || level === "editor_global";
 
   const [view, setView] = React.useState<SubView>("gastos");
   const [filters, setFilters] = React.useState<ExpenseFilterState>(EMPTY_EXPENSE_FILTERS);
