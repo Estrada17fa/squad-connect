@@ -239,7 +239,7 @@ function RolesTab({ clubId, canEdit }: { clubId: string | null; canEdit: boolean
               .filter((a) => a.role_id === selected.id)
               .map((a) => a.request_type)}
             canEdit={canEdit}
-            onSaved={() => qc.invalidateQueries({ queryKey: ["club-role-permissions", clubId] })}
+            onSaved={() => { qc.invalidateQueries({ queryKey: ["club-role-permissions", clubId] }); qc.invalidateQueries({ queryKey: ["club-roles", clubId] }); }}
           />
 
         ) : (
