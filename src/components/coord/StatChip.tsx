@@ -1,22 +1,17 @@
 import { cn } from "@/lib/utils";
 import type { CoordArea } from "@/lib/coordAreas";
 
-export function StatChip({ value, label, area }: { value: string; label: string; area: CoordArea }) {
-  return (
-    <div className="coord-card min-w-0 flex-1 px-4 py-3">
-      <div className={cn("truncate text-2xl font-bold leading-none tracking-tight sm:text-[28px]", area.text)}>
-        {value}
-      </div>
-      <div className="mt-1.5 truncate text-xs text-muted-foreground">{label}</div>
-    </div>
-  );
-}
-
+/** Datos del módulo como números grandes en línea, sin cajas. */
 export function AreaSummary({ stats, area }: { stats: { value: string; label: string }[]; area: CoordArea }) {
   if (!stats.length) return null;
   return (
-    <div className="flex gap-2.5">
-      {stats.map((s) => <StatChip key={s.label} {...s} area={area} />)}
+    <div className="flex flex-wrap gap-x-8 gap-y-3">
+      {stats.map((s) => (
+        <div key={s.label}>
+          <div className={cn("text-[28px] font-bold leading-none tracking-tight", area.text)}>{s.value}</div>
+          <div className="mt-1 text-xs text-muted-foreground">{s.label}</div>
+        </div>
+      ))}
     </div>
   );
 }

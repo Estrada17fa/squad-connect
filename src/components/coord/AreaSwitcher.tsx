@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 export interface SegmentItem { key: string; label: string; icon?: LucideIcon }
 
-/** Control segmentado con indicador deslizante. Sirve para áreas y pestañas internas. */
+/** Pestañas de texto sin marco con línea inferior deslizante. */
 export function AreaSwitcher({
   items, active, onChange, indicatorClass = "bg-primary", activeTextClass = "text-foreground",
 }: {
@@ -15,7 +15,7 @@ export function AreaSwitcher({
 }) {
   const idx = Math.max(0, items.findIndex((i) => i.key === active));
   return (
-    <div className="coord-card relative flex p-1" role="tablist">
+    <div className="relative flex border-b border-border/50" role="tablist">
       {items.map((it) => {
         const on = it.key === active;
         const Icon = it.icon;
@@ -26,8 +26,8 @@ export function AreaSwitcher({
             aria-selected={on}
             onClick={() => onChange(it.key)}
             className={cn(
-              "relative z-10 flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl text-sm font-semibold transition-colors",
-              on ? activeTextClass : "text-muted-foreground",
+              "flex min-h-11 flex-1 items-center justify-center gap-1.5 text-sm font-semibold transition-colors",
+              on ? activeTextClass : "text-muted-foreground hover:text-foreground",
             )}
           >
             {Icon && <Icon className="h-4 w-4" />}
@@ -37,10 +37,10 @@ export function AreaSwitcher({
       })}
       <span
         aria-hidden
-        className="absolute inset-y-1 left-1 rounded-xl bg-muted transition-transform duration-300 ease-out"
-        style={{ width: `calc((100% - 0.5rem) / ${items.length})`, transform: `translateX(${idx * 100}%)` }}
+        className="absolute -bottom-px left-0 flex justify-center transition-transform duration-300 ease-out"
+        style={{ width: `${100 / items.length}%`, transform: `translateX(${idx * 100}%)` }}
       >
-        <span className={cn("absolute bottom-1 left-1/2 h-1 w-8 -translate-x-1/2 rounded-full", indicatorClass)} />
+        <span className={cn("h-0.5 w-3/5 rounded-full", indicatorClass)} />
       </span>
     </div>
   );

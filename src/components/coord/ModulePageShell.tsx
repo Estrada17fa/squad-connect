@@ -56,7 +56,7 @@ export function ModulePageShell({
           {module.name}
         </h1>
         {open && (
-          <div className="coord-card coord-enter flex items-center gap-2 px-3">
+          <div className="coord-enter flex items-center gap-2 rounded-xl bg-muted px-3">
             {open === "search" ? <Search className="h-4 w-4 text-muted-foreground" /> : <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />}
             <input
               autoFocus
@@ -98,7 +98,7 @@ export function ModulePageShell({
       <button
         aria-label={action}
         onClick={() => toast("Próximamente")}
-        className="coord-press fixed bottom-24 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground md:hidden"
+        className={cn("coord-press fixed bottom-24 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full text-background md:hidden", area.bg)}
       >
         <Plus className="h-6 w-6" />
       </button>

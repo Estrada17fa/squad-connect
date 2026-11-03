@@ -1,5 +1,30 @@
 // Datos de EJEMPLO para el nuevo look de Coordinación. Reemplazar por datos reales después.
+import { ListChecks, Inbox, Megaphone, LineChart, Dumbbell, HeartPulse, CalendarClock, type LucideIcon } from "lucide-react";
 import type { AreaKey } from "./coordAreas";
+
+export interface MockHero { label: string; title: string; support: string; cta: string }
+export const AREA_HERO: Record<AreaKey, MockHero> = {
+  general: { label: "PRÓXIMO VIAJE", title: "Tuxtepec · en 3 días", support: "2 pendientes de logística", cta: "Ver viaje" },
+  tecnica: { label: "PRÓXIMO PARTIDO", title: "Sáb 7:00 pm · vs Racing", support: "Convocatoria sin publicar", cta: "Armar convocatoria" },
+  medica: { label: "HOY", title: "Revisión 5:00 pm", support: "2 jugadores lesionados", cta: "Ver lesionados" },
+};
+
+export interface MockPending { icon: LucideIcon; text: string; value: string }
+export const AREA_PENDING: Record<AreaKey, MockPending[]> = {
+  general: [
+    { icon: ListChecks, text: "Tareas pendientes", value: "4" },
+    { icon: Inbox, text: "Solicitudes por responder", value: "2" },
+    { icon: Megaphone, text: "Comunicados sin leer", value: "1" },
+  ],
+  tecnica: [
+    { icon: LineChart, text: "Evaluaciones por hacer", value: "3" },
+    { icon: Dumbbell, text: "Entrenamiento hoy", value: "7:00 am" },
+  ],
+  medica: [
+    { icon: HeartPulse, text: "Lesionados", value: "2" },
+    { icon: CalendarClock, text: "Citas de hoy", value: "1" },
+  ],
+};
 
 export interface MockStat { value: string; label: string }
 
