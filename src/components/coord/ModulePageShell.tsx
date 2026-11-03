@@ -8,13 +8,15 @@ import { AreaSummary } from "./StatChip";
 import { AreaSwitcher } from "./AreaSwitcher";
 
 export function ModulePageShell({
-  area, module, stats, tabs, action, children,
+  area, module, stats, tabs, action, showFab = true, children,
 }: {
   area: CoordArea;
   module: CoordModule;
   stats: { value: string; label: string }[];
   tabs?: string[];
   action: string;
+  /** El "+" flotante solo aparece cuando la lista tiene contenido. */
+  showFab?: boolean;
   children: React.ReactNode;
 }) {
   const [tab, setTab] = React.useState(tabs?.[0] ?? "");
@@ -22,8 +24,8 @@ export function ModulePageShell({
   const Icon = module.icon;
 
   return (
-    <div className="coord-enter mx-auto max-w-4xl space-y-5 pb-24">
-      <header className="sticky top-0 z-20 -mx-4 space-y-2 bg-background/90 px-4 pb-3 pt-2 backdrop-blur">
+    <div className="coord-enter mx-auto max-w-4xl space-y-4 pb-24">
+      <header className="sticky top-0 z-20 -mx-4 space-y-1 bg-background/90 px-4 pb-2 pt-1 backdrop-blur">
         <div className="flex items-center justify-between">
           <Link
             to="/coordinacion/$area"
@@ -40,7 +42,7 @@ export function ModulePageShell({
                   key={k}
                   aria-label={k === "search" ? "Buscar" : "Filtrar"}
                   onClick={() => setOpen(open === k ? null : k)}
-                  className={cn("coord-press flex h-11 w-11 items-center justify-center rounded-xl", open === k ? "bg-muted" : "")}
+                  className={cn("coord-press flex h-10 w-10 items-center justify-center rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-ring", open === k ? "bg-muted" : "")}
                 >
                   <I className="h-5 w-5" />
                 </button>
@@ -48,11 +50,8 @@ export function ModulePageShell({
             })}
           </div>
         </div>
-        <div className="text-xs text-muted-foreground">Coordinación · {area.name}</div>
-        <h1 className="flex items-center gap-3 text-2xl font-bold">
-          <span className={cn("flex h-10 w-10 items-center justify-center rounded-xl", area.bgSoft)}>
-            <Icon className={cn("h-5 w-5", area.text)} />
-          </span>
+        <h1 className="flex items-center gap-3 text-xl font-bold">
+          <Icon className={cn("h-5 w-5", area.text)} />
           {module.name}
         </h1>
         {open && (
@@ -84,7 +83,7 @@ export function ModulePageShell({
       {children}
 
       {module.legacy && (
-        <div className="text-center">
+        <div className="pt-8 text-center">
           <Link
             to="/m/$module"
             params={{ module: module.legacy }}
@@ -95,13 +94,13 @@ export function ModulePageShell({
         </div>
       )}
 
-      <button
+      {showFab && (<button
         aria-label={action}
         onClick={() => toast("Próximamente")}
         className={cn("coord-press fixed bottom-24 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full text-background md:hidden", area.bg)}
       >
         <Plus className="h-6 w-6" />
-      </button>
+      </button>)}
     </div>
   );
 }
