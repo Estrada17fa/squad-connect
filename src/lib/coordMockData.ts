@@ -1,11 +1,20 @@
 // Datos de EJEMPLO para el nuevo look de Coordinación. Reemplazar por datos reales después.
 import { ListChecks, Inbox, Megaphone, LineChart, Dumbbell, HeartPulse, CalendarClock, type LucideIcon } from "lucide-react";
 import type { AreaKey } from "./coordAreas";
+import type { CrestTeam } from "@/components/match/TeamCrest";
+import { Plane, ClipboardList, Stethoscope } from "lucide-react";
 
-export interface MockHero { label: string; title: string; support: string; cta: string }
+export interface MockHero {
+  label: string; title: string; support: string; cta: string;
+  subtitle?: string;
+  rival?: CrestTeam;
+  match?: { home: CrestTeam; away: CrestTeam; when: string; venue: string };
+}
+const LCU: CrestTeam = { shortName: "LCU", own: true };
+const RACING: CrestTeam = { shortName: "Racing" };
 export const AREA_HERO: Record<AreaKey, MockHero> = {
-  general: { label: "PRÓXIMO VIAJE", title: "Tuxtepec · en 3 días", support: "2 pendientes de logística", cta: "Ver viaje" },
-  tecnica: { label: "PRÓXIMO PARTIDO", title: "Sáb 7:00 pm · vs Racing", support: "Convocatoria sin publicar", cta: "Armar convocatoria" },
+  general: { label: "PRÓXIMO VIAJE", title: "vs Racing · Tuxtepec", subtitle: "En 3 días · Vie 23 oct", rival: RACING, support: "2 pendientes de logística", cta: "Ver viaje" },
+  tecnica: { label: "PRÓXIMO PARTIDO", title: "Sáb 7:00 pm · vs Racing", match: { home: LCU, away: RACING, when: "Sáb 7:00 pm", venue: "Estadio Don Koll" }, support: "Convocatoria sin publicar", cta: "Armar convocatoria" },
   medica: { label: "HOY", title: "Revisión 5:00 pm", support: "2 jugadores lesionados", cta: "Ver lesionados" },
 };
 
@@ -16,14 +25,19 @@ export const AREA_PENDING: Record<AreaKey, MockPending[]> = {
     { icon: ListChecks, text: "Tareas", context: "1 vence hoy", value: "4", urgency: "red" },
     { icon: Inbox, text: "Solicitudes", context: "La más antigua: hace 2 días", value: "2", urgency: "amber" },
     { icon: Megaphone, text: "Comunicados", context: "Sin leer por 5 personas", value: "1", urgency: "gray" },
+    { icon: Plane, text: "Viaje Tuxtepec", context: "Falta confirmar hotel", value: "2", urgency: "amber" },
+    { icon: ClipboardList, text: "Inventario", context: "3 artículos por reponer", value: "3", urgency: "gray" },
   ],
   tecnica: [
     { icon: LineChart, text: "Evaluaciones", context: "2 atrasadas", value: "3", urgency: "red" },
     { icon: Dumbbell, text: "Entrenamiento", context: "Hoy · Cancha principal", value: "7:00 am", urgency: "gray" },
+    { icon: ClipboardList, text: "Convocatoria", context: "Partido vs Racing", value: "18", urgency: "amber" },
+    { icon: LineChart, text: "Objetivos", context: "Revisión mensual", value: "5", urgency: "gray" },
   ],
   medica: [
     { icon: CalendarClock, text: "Citas", context: "Hoy 5:00 pm", value: "1", urgency: "red" },
     { icon: HeartPulse, text: "Lesionados", context: "1 regresa esta semana", value: "2", urgency: "amber" },
+    { icon: Stethoscope, text: "Valoraciones", context: "Pretemporada pendiente", value: "4", urgency: "gray" },
   ],
 };
 const URGENCY_ORDER: Record<Urgency, number> = { red: 0, amber: 1, gray: 2 };
