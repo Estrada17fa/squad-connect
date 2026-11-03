@@ -9,22 +9,26 @@ export const AREA_HERO: Record<AreaKey, MockHero> = {
   medica: { label: "HOY", title: "Revisión 5:00 pm", support: "2 jugadores lesionados", cta: "Ver lesionados" },
 };
 
-export interface MockPending { icon: LucideIcon; text: string; value: string }
+export type Urgency = "red" | "amber" | "gray";
+export interface MockPending { icon: LucideIcon; text: string; context: string; value: string; urgency: Urgency }
 export const AREA_PENDING: Record<AreaKey, MockPending[]> = {
   general: [
-    { icon: ListChecks, text: "Tareas pendientes", value: "4" },
-    { icon: Inbox, text: "Solicitudes por responder", value: "2" },
-    { icon: Megaphone, text: "Comunicados sin leer", value: "1" },
+    { icon: ListChecks, text: "Tareas", context: "1 vence hoy", value: "4", urgency: "red" },
+    { icon: Inbox, text: "Solicitudes", context: "La más antigua: hace 2 días", value: "2", urgency: "amber" },
+    { icon: Megaphone, text: "Comunicados", context: "Sin leer por 5 personas", value: "1", urgency: "gray" },
   ],
   tecnica: [
-    { icon: LineChart, text: "Evaluaciones por hacer", value: "3" },
-    { icon: Dumbbell, text: "Entrenamiento hoy", value: "7:00 am" },
+    { icon: LineChart, text: "Evaluaciones", context: "2 atrasadas", value: "3", urgency: "red" },
+    { icon: Dumbbell, text: "Entrenamiento", context: "Hoy · Cancha principal", value: "7:00 am", urgency: "gray" },
   ],
   medica: [
-    { icon: HeartPulse, text: "Lesionados", value: "2" },
-    { icon: CalendarClock, text: "Citas de hoy", value: "1" },
+    { icon: CalendarClock, text: "Citas", context: "Hoy 5:00 pm", value: "1", urgency: "red" },
+    { icon: HeartPulse, text: "Lesionados", context: "1 regresa esta semana", value: "2", urgency: "amber" },
   ],
 };
+const URGENCY_ORDER: Record<Urgency, number> = { red: 0, amber: 1, gray: 2 };
+export const sortByUrgency = (items: MockPending[]) => [...items].sort((a, b) => URGENCY_ORDER[a.urgency] - URGENCY_ORDER[b.urgency]);
+export const areaHasUrgent = (key: AreaKey) => AREA_PENDING[key].some((p) => p.urgency === "red");
 
 export interface MockStat { value: string; label: string }
 

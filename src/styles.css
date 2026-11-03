@@ -11,6 +11,12 @@
   --color-area-tecnica-soft: var(--area-tecnica-soft);
   --color-area-medica: var(--area-medica);
   --color-area-medica-soft: var(--area-medica-soft);
+  --color-urgency-red: var(--urgency-red);
+  --color-urgency-red-soft: var(--urgency-red-soft);
+  --color-urgency-amber: var(--urgency-amber);
+  --color-urgency-amber-soft: var(--urgency-amber-soft);
+  --color-urgency-gray: var(--urgency-gray);
+  --color-urgency-gray-soft: var(--urgency-gray-soft);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -65,6 +71,12 @@
   --area-tecnica-soft: hsl(212 100% 62% / 0.14);
   --area-medica: hsl(6 92% 66%);
   --area-medica-soft: hsl(6 92% 66% / 0.14);
+  --urgency-red: hsl(0 90% 64%);
+  --urgency-red-soft: hsl(0 90% 64% / 0.18);
+  --urgency-amber: hsl(38 95% 58%);
+  --urgency-amber-soft: hsl(38 95% 58% / 0.18);
+  --urgency-gray: hsl(0 0% 72%);
+  --urgency-gray-soft: hsl(0 0% 100% / 0.08);
 
   --background: hsl(0 0% 4%);
   --foreground: hsl(0 0% 98%);
