@@ -1,4 +1,6 @@
 import { toast } from "sonner";
+import { Link } from "@tanstack/react-router";
+import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { CoordArea } from "@/lib/coordAreas";
 import { sortByUrgency, type MockPending, type Urgency } from "@/lib/coordMockData";
@@ -13,19 +15,23 @@ const PILL: Record<Urgency, string> = {
   gray: "bg-urgency-gray-soft text-urgency-gray",
 };
 
-export function PendingList({ area, items }: { area: CoordArea; items: MockPending[] }) {
-  const shown = sortByUrgency(items).slice(0, 3);
+export function PendingList({ area, items, all = false }: { area: CoordArea; items: MockPending[]; all?: boolean }) {
+  const sorted = sortByUrgency(items);
+  const shown = all ? sorted : sorted.slice(0, 3);
   return (
     <section>
-      <div className="mb-1.5 flex items-center justify-between">
-        <h2 className="text-xs font-semibold text-muted-foreground">Pendientes</h2>
-        <button
-          onClick={() => toast("Próximamente")}
-          className={cn("text-xs font-semibold outline-none focus-visible:underline", area.text)}
-        >
-          Ver todos
-        </button>
-      </div>
+      {!all && (
+        <div className="mb-1.5 flex items-center justify-between">
+          <h2 className="text-xs font-semibold text-muted-foreground">Pendientes</h2>
+          <Link
+            to="/coordinacion/$area/$module"
+            params={{ area: area.key, module: "pendientes" }}
+            className={cn("text-xs font-semibold outline-none focus-visible:underline", area.text)}
+          >
+            Ver todos
+          </Link>
+        </div>
+      )}
       <ul className="divide-y divide-border/40 overflow-hidden rounded-[14px] bg-card">
         {shown.map((p) => {
           const I = p.icon;
@@ -45,6 +51,7 @@ export function PendingList({ area, items }: { area: CoordArea; items: MockPendi
                 <span className={cn("shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold", PILL[p.urgency])}>
                   {p.value}
                 </span>
+                <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60" />
               </button>
             </li>
           );

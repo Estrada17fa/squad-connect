@@ -41,7 +41,7 @@ function AreaHome() {
       <CoordHeader area={area} category={MOCK_CATEGORY} actions={QUICK_ACTIONS[area.key]} />
 
       <AreaSwitcher
-        items={COORD_AREAS.map((a) => ({ key: a.key, label: a.name, icon: a.icon, dot: areaHasUrgent(a.key) }))}
+        items={COORD_AREAS.map((a) => ({ key: a.key, label: a.name, icon: a.icon, dot: a.key !== area.key && areaHasUrgent(a.key) }))}
         active={area.key}
         onChange={(k) => navigate({ to: "/coordinacion/$area", params: { area: k } })}
         indicatorClass={area.bg}

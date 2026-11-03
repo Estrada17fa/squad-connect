@@ -1,12 +1,14 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { getArea } from "@/lib/coordAreas";
-import { MODULE_MOCK } from "@/lib/coordMockData";
+import { MODULE_MOCK, AREA_PENDING } from "@/lib/coordMockData";
+import { PendingList } from "@/components/coord/PendingList";
+import { ListChecks } from "lucide-react";
 import { ModulePageShell } from "@/components/coord/ModulePageShell";
 import { CoordEmptyState } from "@/components/coord/EmptyState";
 
 export const Route = createFileRoute("/_authenticated/coordinacion/$area/$module")({
   head: ({ params }) => {
-    const mod = getArea(params.area)?.modules.find((m) => m.key === params.module);
+    const mod = params.module === "pendientes" ? { name: "Pendientes" } : getArea(params.area)?.modules.find((m) => m.key === params.module);
     const title = `${mod?.name ?? "Módulo"} — Coordinación Squad`;
     return {
       meta: [
@@ -26,6 +28,19 @@ function ModulePage() {
   const params = Route.useParams();
   const area = getArea(params.area);
   if (!area) return <Navigate to="/coordinacion/$area" params={{ area: "general" }} replace />;
+  if (params.module === "pendientes") {
+    return (
+      <ModulePageShell
+        area={area}
+        module={{ key: "pendientes", name: `Pendientes · ${area.name}`, icon: ListChecks }}
+        stats={[]}
+        action="Agregar"
+        showFab={false}
+      >
+        <PendingList area={area} items={AREA_PENDING[area.key]} all />
+      </ModulePageShell>
+    );
+  }
   const mod = area.modules.find((m) => m.key === params.module && !m.comingSoon);
   if (!mod) return <Navigate to="/coordinacion/$area" params={{ area: area.key }} replace />;
   const mock = MODULE_MOCK[mod.key];
