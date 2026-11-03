@@ -13,6 +13,8 @@ export interface CoordModule {
   /** Módulo actual en /m/<legacy> (solo referencia). */
   legacy?: string;
   comingSoon?: boolean;
+  /** Nombre corto para la cuadrícula de íconos. */
+  short?: string;
 }
 
 export interface CoordArea {
@@ -31,7 +33,7 @@ export const COORD_AREAS: CoordArea[] = [
     key: "general", name: "General", icon: Users,
     text: "text-area-general", bgSoft: "bg-area-general-soft", bg: "bg-area-general",
     modules: [
-      { key: "tareas", name: "Tareas y juntas", icon: ListChecks, legacy: "coordinacion_interna" },
+      { key: "tareas", name: "Tareas y juntas", short: "Tareas", icon: ListChecks, legacy: "coordinacion_interna" },
       { key: "comunicados", name: "Comunicados", icon: Megaphone, legacy: "comunicados" },
       { key: "multimedia", name: "Multimedia", icon: Image, legacy: "multimedia" },
       { key: "solicitudes", name: "Solicitudes", icon: Inbox, legacy: "solicitudes" },
@@ -45,8 +47,8 @@ export const COORD_AREAS: CoordArea[] = [
     modules: [
       { key: "plantel", name: "Plantel", icon: Shirt, legacy: "plantel" },
       { key: "partidos", name: "Partidos", icon: Trophy, legacy: "partidos" },
-      { key: "entrenamientos", name: "Entrenamientos", icon: Dumbbell, legacy: "entrenamientos" },
-      { key: "evaluaciones", name: "Evaluaciones", icon: LineChart, legacy: "desarrollo" },
+      { key: "entrenamientos", name: "Entrenamientos", short: "Entrenos", icon: Dumbbell, legacy: "entrenamientos" },
+      { key: "evaluaciones", name: "Evaluaciones", short: "Evaluac.", icon: LineChart, legacy: "desarrollo" },
       { key: "torneo", name: "Torneo", icon: Medal, legacy: "torneo" },
       { key: "utileria", name: "Utilería", icon: Package, legacy: "inventario" },
     ],
