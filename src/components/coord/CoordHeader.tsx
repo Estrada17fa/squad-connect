@@ -8,14 +8,14 @@ export function CoordHeader({ area, category, actions }: { area: CoordArea; cate
   return (
     <div className="flex items-start justify-between gap-3">
       <div>
-        <h1 className="text-[21px] font-bold leading-tight tracking-tight">Coordinación</h1>
-        <div className="mt-0.5 inline-flex items-center gap-0.5 text-xs text-muted-foreground">
+        <h1 className="text-xl font-bold leading-tight tracking-tight">Coordinación</h1>
+        <div className="inline-flex items-center gap-0.5 text-xs text-muted-foreground">
           {category} <ChevronDown className="h-3.5 w-3.5" />
         </div>
       </div>
       <Popover>
         <PopoverTrigger asChild>
-          <button aria-label="Crear" className="coord-press -mr-2 flex h-11 w-11 items-center justify-center rounded-full hover:bg-muted">
+          <button aria-label="Crear" className="coord-press -mr-2 -mt-1.5 flex h-10 w-10 items-center justify-center rounded-full hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <Plus className="h-6 w-6" />
           </button>
         </PopoverTrigger>

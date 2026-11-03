@@ -31,8 +31,15 @@ function ModulePage() {
   const mock = MODULE_MOCK[mod.key];
 
   return (
-    <ModulePageShell area={area} module={mod} stats={mock?.stats ?? []} tabs={mock?.tabs} action={mock?.action ?? "Agregar"}>
-      <CoordEmptyState icon={mod.icon} text={mock?.empty ?? ""} action={mock?.action ?? "Agregar"} area={area} />
+    <ModulePageShell
+      area={area}
+      module={mod}
+      stats={mock?.stats ?? []}
+      tabs={mock?.tabs}
+      action={mock?.action ?? "Agregar"}
+      showFab={false}
+    >
+      <CoordEmptyState icon={mod.icon} text={mock?.empty ?? ""} action={mock?.emptyCta} area={area} />
     </ModulePageShell>
   );
 }

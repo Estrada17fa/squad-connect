@@ -37,7 +37,7 @@ function AreaHome() {
   if (!area) return <Navigate to="/coordinacion/$area" params={{ area: "general" }} replace />;
 
   return (
-    <div className="mx-auto max-w-4xl space-y-5">
+    <div className="mx-auto -mt-2 max-w-4xl space-y-2">
       <CoordHeader area={area} category={MOCK_CATEGORY} actions={QUICK_ACTIONS[area.key]} />
 
       <AreaSwitcher
@@ -48,14 +48,14 @@ function AreaHome() {
         activeTextClass={area.text}
       />
 
-      <div key={area.key} className="coord-enter space-y-7">
-        <div className="grid gap-6 md:grid-cols-2 md:items-start">
+      <div key={area.key} className="coord-enter space-y-4 pt-2">
+        <div className="grid gap-3 md:grid-cols-2 md:items-start md:gap-6">
           <HeroCard area={area} hero={AREA_HERO[area.key]} />
           <PendingList area={area} items={AREA_PENDING[area.key]} />
         </div>
         <section>
           <SectionTitle>Módulos</SectionTitle>
-          <div className="grid grid-cols-3 gap-x-3 gap-y-4 md:grid-cols-6">
+          <div className="grid grid-cols-3 gap-x-3 gap-y-2 md:grid-cols-6">
             {area.modules.map((m) => (
               <ModuleTile key={m.key} area={area} module={m} badge={MODULE_MOCK[m.key]?.badge} />
             ))}
