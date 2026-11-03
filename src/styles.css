@@ -5,6 +5,12 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  --color-area-general: var(--area-general);
+  --color-area-general-soft: var(--area-general-soft);
+  --color-area-tecnica: var(--area-tecnica);
+  --color-area-tecnica-soft: var(--area-tecnica-soft);
+  --color-area-medica: var(--area-medica);
+  --color-area-medica-soft: var(--area-medica-soft);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -51,6 +57,14 @@
  */
 :root {
   --radius: 0.875rem;
+
+  /* Coordinación: acento por área */
+  --area-general: hsl(150 100% 50%);
+  --area-general-soft: hsl(150 100% 50% / 0.12);
+  --area-tecnica: hsl(212 100% 62%);
+  --area-tecnica-soft: hsl(212 100% 62% / 0.14);
+  --area-medica: hsl(6 92% 66%);
+  --area-medica-soft: hsl(6 92% 66% / 0.14);
 
   --background: hsl(0 0% 4%);
   --foreground: hsl(0 0% 98%);
@@ -187,4 +201,27 @@
 
 @utility animate-fab-menu {
   animation: squad-fab-menu-in 0.2s ease-out both;
+}
+
+/* Coordinación: tarjeta y movimiento */
+@utility coord-card {
+  border-radius: 16px;
+  border: 1px solid color-mix(in oklab, var(--foreground) 12%, transparent);
+  background: color-mix(in oklab, var(--foreground) 6%, var(--background));
+  transition: transform 150ms ease, border-color 150ms ease, background 150ms ease;
+}
+@utility coord-press {
+  transition: transform 150ms ease;
+  &:active { transform: scale(0.97); }
+  @media (hover: hover) {
+    &:hover { transform: translateY(-2px); }
+    &:active { transform: scale(0.97); }
+  }
+}
+@utility coord-enter {
+  animation: coord-enter 220ms ease-out both;
+}
+@keyframes coord-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
 }
