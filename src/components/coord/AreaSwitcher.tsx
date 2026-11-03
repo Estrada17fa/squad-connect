@@ -26,7 +26,7 @@ export function AreaSwitcher({
             aria-selected={on}
             onClick={() => onChange(it.key)}
             className={cn(
-              "flex min-h-11 flex-1 items-center justify-center gap-1.5 text-sm font-semibold transition-colors",
+              "flex h-10 flex-1 items-center justify-center gap-1.5 rounded-md text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               on ? activeTextClass : "text-muted-foreground hover:text-foreground",
             )}
           >
