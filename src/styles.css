@@ -202,3 +202,26 @@
 @utility animate-fab-menu {
   animation: squad-fab-menu-in 0.2s ease-out both;
 }
+
+/* Coordinación: tarjeta y movimiento */
+@utility coord-card {
+  border-radius: 16px;
+  border: 1px solid color-mix(in oklab, var(--foreground) 12%, transparent);
+  background: color-mix(in oklab, var(--foreground) 6%, var(--background));
+  transition: transform 150ms ease, border-color 150ms ease, background 150ms ease;
+}
+@utility coord-press {
+  transition: transform 150ms ease;
+  &:active { transform: scale(0.97); }
+  @media (hover: hover) {
+    &:hover { transform: translateY(-2px); }
+    &:active { transform: scale(0.97); }
+  }
+}
+@utility coord-enter {
+  animation: coord-enter 220ms ease-out both;
+}
+@keyframes coord-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
