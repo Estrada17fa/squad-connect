@@ -1,7 +1,7 @@
 import * as React from "react";
 import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router";
 import { COORD_AREAS, getArea, LAST_AREA_KEY } from "@/lib/coordAreas";
-import { AREA_HERO, AREA_PENDING, MODULE_MOCK, MOCK_CATEGORY, QUICK_ACTIONS } from "@/lib/coordMockData";
+import { AREA_HERO, AREA_PENDING, areaHasUrgent, MODULE_MOCK, MOCK_CATEGORY, QUICK_ACTIONS } from "@/lib/coordMockData";
 import { AreaSwitcher } from "@/components/coord/AreaSwitcher";
 import { CoordHeader } from "@/components/coord/CoordHeader";
 import { HeroCard } from "@/components/coord/HeroCard";
@@ -41,7 +41,7 @@ function AreaHome() {
       <CoordHeader area={area} category={MOCK_CATEGORY} actions={QUICK_ACTIONS[area.key]} />
 
       <AreaSwitcher
-        items={COORD_AREAS.map((a) => ({ key: a.key, label: a.name, icon: a.icon }))}
+        items={COORD_AREAS.map((a) => ({ key: a.key, label: a.name, icon: a.icon, dot: areaHasUrgent(a.key) }))}
         active={area.key}
         onChange={(k) => navigate({ to: "/coordinacion/$area", params: { area: k } })}
         indicatorClass={area.bg}
