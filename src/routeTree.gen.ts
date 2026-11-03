@@ -24,6 +24,7 @@ import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminClubsRouteImport } from './routes/_authenticated/admin.clubs'
 import { Route as AuthenticatedAdminConfiguracionRouteImport } from './routes/_authenticated/admin.configuracion'
 import { Route as AuthenticatedAdminTorneoRouteImport } from './routes/_authenticated/admin.torneo'
+import { Route as AuthenticatedCoordinacionIndexRouteImport } from './routes/_authenticated/coordinacion.index'
 import { Route as AuthenticatedMModuleRouteImport } from './routes/_authenticated/m.$module'
 import { Route as AuthenticatedMAgendaRouteImport } from './routes/_authenticated/m.agenda'
 import { Route as AuthenticatedMCompras_facturasRouteImport } from './routes/_authenticated/m.compras_facturas'
@@ -44,6 +45,8 @@ import { Route as AuthenticatedMSolicitudesRouteImport } from './routes/_authent
 import { Route as AuthenticatedMTorneoRouteImport } from './routes/_authenticated/m.torneo'
 import { Route as AuthenticatedMUsuariosRouteImport } from './routes/_authenticated/m.usuarios'
 import { Route as AuthenticatedMViajesRouteImport } from './routes/_authenticated/m.viajes'
+import { Route as AuthenticatedCoordinacionAreaIndexRouteImport } from './routes/_authenticated/coordinacion.$area.index'
+import { Route as AuthenticatedCoordinacionAreaModuleRouteImport } from './routes/_authenticated/coordinacion.$area.$module'
 import { Route as AuthenticatedMPlantelPlayerIdRouteImport } from './routes/_authenticated/m.plantel.$playerId'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -124,6 +127,12 @@ const AuthenticatedAdminTorneoRoute =
     id: '/torneo',
     path: '/torneo',
     getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedCoordinacionIndexRoute =
+  AuthenticatedCoordinacionIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedCoordinacionRoute,
   } as any)
 const AuthenticatedMModuleRoute = AuthenticatedMModuleRouteImport.update({
   id: '/m/$module',
@@ -235,6 +244,18 @@ const AuthenticatedMViajesRoute = AuthenticatedMViajesRouteImport.update({
   path: '/m/viajes',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCoordinacionAreaIndexRoute =
+  AuthenticatedCoordinacionAreaIndexRouteImport.update({
+    id: '/$area/',
+    path: '/$area/',
+    getParentRoute: () => AuthenticatedCoordinacionRoute,
+  } as any)
+const AuthenticatedCoordinacionAreaModuleRoute =
+  AuthenticatedCoordinacionAreaModuleRouteImport.update({
+    id: '/$area/$module',
+    path: '/$area/$module',
+    getParentRoute: () => AuthenticatedCoordinacionRoute,
+  } as any)
 const AuthenticatedMPlantelPlayerIdRoute =
   AuthenticatedMPlantelPlayerIdRouteImport.update({
     id: '/$playerId',
@@ -249,7 +270,7 @@ export interface FileRoutesByFullPath {
   '/agenda': typeof AuthenticatedAgendaRoute
   '/agenda-viajes': typeof AuthenticatedAgendaViajesRoute
   '/cambiar-contrasena': typeof AuthenticatedCambiarContrasenaRoute
-  '/coordinacion': typeof AuthenticatedCoordinacionRoute
+  '/coordinacion': typeof AuthenticatedCoordinacionRouteWithChildren
   '/mi-club': typeof AuthenticatedMiClubRoute
   '/mi-perfil': typeof AuthenticatedMiPerfilRoute
   '/invite/$token': typeof InviteTokenRoute
@@ -277,14 +298,16 @@ export interface FileRoutesByFullPath {
   '/m/usuarios': typeof AuthenticatedMUsuariosRoute
   '/m/viajes': typeof AuthenticatedMViajesRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/coordinacion/': typeof AuthenticatedCoordinacionIndexRoute
+  '/coordinacion/$area/$module': typeof AuthenticatedCoordinacionAreaModuleRoute
   '/m/plantel/$playerId': typeof AuthenticatedMPlantelPlayerIdRoute
+  '/coordinacion/$area/': typeof AuthenticatedCoordinacionAreaIndexRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/agenda': typeof AuthenticatedAgendaRoute
   '/agenda-viajes': typeof AuthenticatedAgendaViajesRoute
   '/cambiar-contrasena': typeof AuthenticatedCambiarContrasenaRoute
-  '/coordinacion': typeof AuthenticatedCoordinacionRoute
   '/mi-club': typeof AuthenticatedMiClubRoute
   '/mi-perfil': typeof AuthenticatedMiPerfilRoute
   '/invite/$token': typeof InviteTokenRoute
@@ -313,7 +336,10 @@ export interface FileRoutesByTo {
   '/m/usuarios': typeof AuthenticatedMUsuariosRoute
   '/m/viajes': typeof AuthenticatedMViajesRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/coordinacion': typeof AuthenticatedCoordinacionIndexRoute
+  '/coordinacion/$area/$module': typeof AuthenticatedCoordinacionAreaModuleRoute
   '/m/plantel/$playerId': typeof AuthenticatedMPlantelPlayerIdRoute
+  '/coordinacion/$area': typeof AuthenticatedCoordinacionAreaIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -323,7 +349,7 @@ export interface FileRoutesById {
   '/_authenticated/agenda': typeof AuthenticatedAgendaRoute
   '/_authenticated/agenda-viajes': typeof AuthenticatedAgendaViajesRoute
   '/_authenticated/cambiar-contrasena': typeof AuthenticatedCambiarContrasenaRoute
-  '/_authenticated/coordinacion': typeof AuthenticatedCoordinacionRoute
+  '/_authenticated/coordinacion': typeof AuthenticatedCoordinacionRouteWithChildren
   '/_authenticated/mi-club': typeof AuthenticatedMiClubRoute
   '/_authenticated/mi-perfil': typeof AuthenticatedMiPerfilRoute
   '/invite/$token': typeof InviteTokenRoute
@@ -352,7 +378,10 @@ export interface FileRoutesById {
   '/_authenticated/m/usuarios': typeof AuthenticatedMUsuariosRoute
   '/_authenticated/m/viajes': typeof AuthenticatedMViajesRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/coordinacion/': typeof AuthenticatedCoordinacionIndexRoute
+  '/_authenticated/coordinacion/$area/$module': typeof AuthenticatedCoordinacionAreaModuleRoute
   '/_authenticated/m/plantel/$playerId': typeof AuthenticatedMPlantelPlayerIdRoute
+  '/_authenticated/coordinacion/$area/': typeof AuthenticatedCoordinacionAreaIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -391,14 +420,16 @@ export interface FileRouteTypes {
     | '/m/usuarios'
     | '/m/viajes'
     | '/admin/'
+    | '/coordinacion/'
+    | '/coordinacion/$area/$module'
     | '/m/plantel/$playerId'
+    | '/coordinacion/$area/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/auth'
     | '/agenda'
     | '/agenda-viajes'
     | '/cambiar-contrasena'
-    | '/coordinacion'
     | '/mi-club'
     | '/mi-perfil'
     | '/invite/$token'
@@ -427,7 +458,10 @@ export interface FileRouteTypes {
     | '/m/usuarios'
     | '/m/viajes'
     | '/admin'
+    | '/coordinacion'
+    | '/coordinacion/$area/$module'
     | '/m/plantel/$playerId'
+    | '/coordinacion/$area'
   id:
     | '__root__'
     | '/_authenticated'
@@ -465,7 +499,10 @@ export interface FileRouteTypes {
     | '/_authenticated/m/usuarios'
     | '/_authenticated/m/viajes'
     | '/_authenticated/admin/'
+    | '/_authenticated/coordinacion/'
+    | '/_authenticated/coordinacion/$area/$module'
     | '/_authenticated/m/plantel/$playerId'
+    | '/_authenticated/coordinacion/$area/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -580,6 +617,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/torneo'
       preLoaderRoute: typeof AuthenticatedAdminTorneoRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/coordinacion/': {
+      id: '/_authenticated/coordinacion/'
+      path: '/'
+      fullPath: '/coordinacion/'
+      preLoaderRoute: typeof AuthenticatedCoordinacionIndexRouteImport
+      parentRoute: typeof AuthenticatedCoordinacionRoute
     }
     '/_authenticated/m/$module': {
       id: '/_authenticated/m/$module'
@@ -721,6 +765,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMViajesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/coordinacion/$area/': {
+      id: '/_authenticated/coordinacion/$area/'
+      path: '/$area'
+      fullPath: '/coordinacion/$area/'
+      preLoaderRoute: typeof AuthenticatedCoordinacionAreaIndexRouteImport
+      parentRoute: typeof AuthenticatedCoordinacionRoute
+    }
+    '/_authenticated/coordinacion/$area/$module': {
+      id: '/_authenticated/coordinacion/$area/$module'
+      path: '/$area/$module'
+      fullPath: '/coordinacion/$area/$module'
+      preLoaderRoute: typeof AuthenticatedCoordinacionAreaModuleRouteImport
+      parentRoute: typeof AuthenticatedCoordinacionRoute
+    }
     '/_authenticated/m/plantel/$playerId': {
       id: '/_authenticated/m/plantel/$playerId'
       path: '/$playerId'
@@ -748,6 +806,26 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
 const AuthenticatedAdminRouteWithChildren =
   AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
 
+interface AuthenticatedCoordinacionRouteChildren {
+  AuthenticatedCoordinacionIndexRoute: typeof AuthenticatedCoordinacionIndexRoute
+  AuthenticatedCoordinacionAreaModuleRoute: typeof AuthenticatedCoordinacionAreaModuleRoute
+  AuthenticatedCoordinacionAreaIndexRoute: typeof AuthenticatedCoordinacionAreaIndexRoute
+}
+
+const AuthenticatedCoordinacionRouteChildren: AuthenticatedCoordinacionRouteChildren =
+  {
+    AuthenticatedCoordinacionIndexRoute: AuthenticatedCoordinacionIndexRoute,
+    AuthenticatedCoordinacionAreaModuleRoute:
+      AuthenticatedCoordinacionAreaModuleRoute,
+    AuthenticatedCoordinacionAreaIndexRoute:
+      AuthenticatedCoordinacionAreaIndexRoute,
+  }
+
+const AuthenticatedCoordinacionRouteWithChildren =
+  AuthenticatedCoordinacionRoute._addFileChildren(
+    AuthenticatedCoordinacionRouteChildren,
+  )
+
 interface AuthenticatedMPlantelRouteChildren {
   AuthenticatedMPlantelPlayerIdRoute: typeof AuthenticatedMPlantelPlayerIdRoute
 }
@@ -766,7 +844,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAgendaRoute: typeof AuthenticatedAgendaRoute
   AuthenticatedAgendaViajesRoute: typeof AuthenticatedAgendaViajesRoute
   AuthenticatedCambiarContrasenaRoute: typeof AuthenticatedCambiarContrasenaRoute
-  AuthenticatedCoordinacionRoute: typeof AuthenticatedCoordinacionRoute
+  AuthenticatedCoordinacionRoute: typeof AuthenticatedCoordinacionRouteWithChildren
   AuthenticatedMiClubRoute: typeof AuthenticatedMiClubRoute
   AuthenticatedMiPerfilRoute: typeof AuthenticatedMiPerfilRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
@@ -797,7 +875,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAgendaRoute: AuthenticatedAgendaRoute,
   AuthenticatedAgendaViajesRoute: AuthenticatedAgendaViajesRoute,
   AuthenticatedCambiarContrasenaRoute: AuthenticatedCambiarContrasenaRoute,
-  AuthenticatedCoordinacionRoute: AuthenticatedCoordinacionRoute,
+  AuthenticatedCoordinacionRoute: AuthenticatedCoordinacionRouteWithChildren,
   AuthenticatedMiClubRoute: AuthenticatedMiClubRoute,
   AuthenticatedMiPerfilRoute: AuthenticatedMiPerfilRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
