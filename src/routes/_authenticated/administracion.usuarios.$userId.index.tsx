@@ -199,11 +199,11 @@ function FichaMiembro() {
       />
 
       <section className="flex flex-col items-center text-center">
-        <PersonAvatar name={name} src={member.avatar_url} size={88} />
+        <PersonAvatar name={name} src={member.avatar_url} size={112} />
         <h1 className="mt-3 font-display text-[22px] font-bold leading-tight [overflow-wrap:anywhere]">{name}</h1>
         <div className="mt-2 flex flex-wrap justify-center gap-1.5">
           {isBaja ? <Pill tone="gray">Baja</Pill> : null}
-          {mems.length === 0 ? <Pill tone="red">Sin categoría</Pill> : null}
+          {mems.length === 0 ? <Pill tone="gray">Sin categoría</Pill> : null}
           {mems.map((m) => <Pill key={m.id}>{m.teamName ?? "Todo el club"} · {m.roleName}</Pill>)}
         </div>
         <p className={never ? "mt-2 text-xs font-semibold text-urgency-amber" : "mt-2 text-xs text-muted-foreground"}>
@@ -220,8 +220,8 @@ function FichaMiembro() {
           const I = a.icon;
           const inner = (
             <>
-              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/12 bg-primary/10">
-                <I className="h-5 w-5 text-primary" />
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                <I className="h-5 w-5 text-muted-foreground" />
               </span>
               <span className="mt-1 text-xs font-medium">{a.label}</span>
             </>
@@ -278,7 +278,7 @@ function FichaMiembro() {
         <GroupCard>
           <InfoRow label="Estado" value={never ? <span className="text-urgency-amber">Aún no entra</span> : last ? relativeTime(last) : "Ya entró"} />
           {canEdit ? (
-            <RowButton onClick={() => setConfirm("reset")}><span className="text-sm font-semibold text-primary">Restablecer contraseña</span></RowButton>
+            <RowButton onClick={() => setConfirm("reset")}><span className="text-sm font-semibold">Restablecer contraseña</span></RowButton>
           ) : null}
         </GroupCard>
       </section>
@@ -305,7 +305,7 @@ function FichaMiembro() {
 
       {canEdit ? (
         <section>
-          <SectionLabel action={<Link to="/administracion/usuarios" search={{ tab: "actividad" }} className="text-xs font-semibold text-primary">Ver todo</Link>}>Actividad</SectionLabel>
+          <SectionLabel action={<Link to="/administracion/usuarios/actividad" className="text-xs font-semibold text-muted-foreground">Ver todo</Link>}>Actividad</SectionLabel>
           {audit.isError ? (
             <p className="px-1 text-sm text-muted-foreground">Próximamente</p>
           ) : (

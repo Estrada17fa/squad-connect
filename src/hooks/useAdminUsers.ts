@@ -24,6 +24,7 @@ export interface AdminMember {
   nationality: string | null;
   emergency_contact_name: string | null;
   emergency_contact_phone: string | null;
+  jersey_number: number | null;
 }
 
 export interface AdminRole {
@@ -43,7 +44,7 @@ export interface AdminTeam {
 }
 
 const MEMBER_COLS =
-  "id, full_name, first_name, paternal_last_name, maternal_last_name, name_completed, email, phone, avatar_url, status, created_at, must_change_password, birthdate, birthplace, nationality, emergency_contact_name, emergency_contact_phone";
+  "id, full_name, first_name, paternal_last_name, maternal_last_name, name_completed, email, phone, avatar_url, status, created_at, must_change_password, birthdate, birthplace, nationality, emergency_contact_name, emergency_contact_phone, jersey_number";
 
 export function useAdminUsers(clubId: string | null | undefined) {
   const enabled = !!clubId;

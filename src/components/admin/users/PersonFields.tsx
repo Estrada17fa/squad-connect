@@ -1,6 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AvatarUploadField } from "@/components/perfil/AvatarUploadField";
+import { PhotoCircle, BirthDatePicker, MoreFields } from "./FormParts";
 
 export interface PersonData {
   first_name: string;
@@ -47,44 +47,44 @@ export function personPayload(p: PersonData) {
 
 function F({ id, label, children }: { id: string; label: string; children: React.ReactNode }) {
   return (
-    <div className="space-y-1.5">
-      <Label htmlFor={id} className="text-xs text-muted-foreground">{label}</Label>
+    <div className="space-y-1">
+      <Label htmlFor={id} className="text-[11px] text-muted-foreground">{label}</Label>
       {children}
     </div>
   );
 }
 
 export function PersonFields({
-  value, onChange, withEmail, userId,
-}: { value: PersonData; onChange: (v: PersonData) => void; withEmail: boolean; userId?: string }) {
+  value, onChange, withEmail, userId, moreOpen,
+}: { value: PersonData; onChange: (v: PersonData) => void; withEmail: boolean; userId?: string; moreOpen?: boolean }) {
   const set = (k: keyof PersonData) => (e: React.ChangeEvent<HTMLInputElement>) => onChange({ ...value, [k]: e.target.value });
   const cls = "h-11 rounded-xl";
   return (
     <div className="space-y-4">
-      <AvatarUploadField
-        label="Foto"
-        value={value.avatar_url || null}
-        onChange={(url) => onChange({ ...value, avatar_url: url ?? "" })}
-        userId={userId ?? "nuevos"}
-        name={`${value.first_name} ${value.paternal_last_name}`.trim() || null}
-      />
-      <F id="pf-fn" label="Nombre *"><Input id="pf-fn" className={cls} value={value.first_name} onChange={set("first_name")} /></F>
-      <div className="grid grid-cols-2 gap-3">
-        <F id="pf-ap" label="Apellido paterno *"><Input id="pf-ap" className={cls} value={value.paternal_last_name} onChange={set("paternal_last_name")} /></F>
-        <F id="pf-am" label="Apellido materno"><Input id="pf-am" className={cls} value={value.maternal_last_name} onChange={set("maternal_last_name")} /></F>
+      <PhotoCircle value={value.avatar_url || null} onChange={(url) => onChange({ ...value, avatar_url: url ?? "" })} userId={userId ?? "nuevos"} />
+      <div className="space-y-3 rounded-[14px] bg-card p-3">
+        <F id="pf-fn" label="Nombre *"><Input id="pf-fn" className={cls} value={value.first_name} onChange={set("first_name")} /></F>
+        <div className="grid grid-cols-2 gap-3">
+          <F id="pf-ap" label="Apellido paterno *"><Input id="pf-ap" className={cls} value={value.paternal_last_name} onChange={set("paternal_last_name")} /></F>
+          <F id="pf-am" label="Apellido materno"><Input id="pf-am" className={cls} value={value.maternal_last_name} onChange={set("maternal_last_name")} /></F>
+        </div>
+        {withEmail ? (
+          <F id="pf-em" label="Correo *"><Input id="pf-em" type="email" inputMode="email" className={cls} value={value.email} onChange={set("email")} /></F>
+        ) : null}
+        <F id="pf-ph" label="Teléfono"><Input id="pf-ph" type="tel" inputMode="tel" className={cls} value={value.phone} onChange={set("phone")} /></F>
       </div>
-      {withEmail ? (
-        <F id="pf-em" label="Correo *"><Input id="pf-em" type="email" inputMode="email" className={cls} value={value.email} onChange={set("email")} /></F>
-      ) : null}
-      <F id="pf-ph" label="Teléfono"><Input id="pf-ph" type="tel" inputMode="tel" className={cls} value={value.phone} onChange={set("phone")} /></F>
-      <div className="grid grid-cols-2 gap-3">
-        <F id="pf-bd" label="Fecha de nacimiento"><Input id="pf-bd" type="date" className={cls} value={value.birthdate} onChange={set("birthdate")} /></F>
-        <F id="pf-nat" label="Nacionalidad"><Input id="pf-nat" className={cls} value={value.nationality} onChange={set("nationality")} /></F>
-      </div>
-      <F id="pf-bp" label="Lugar de nacimiento"><Input id="pf-bp" className={cls} value={value.birthplace} onChange={set("birthplace")} placeholder="ej. Guadalajara, Jalisco" /></F>
-      <div className="grid grid-cols-2 gap-3">
-        <F id="pf-en" label="Contacto de emergencia"><Input id="pf-en" className={cls} value={value.emergency_contact_name} onChange={set("emergency_contact_name")} /></F>
-        <F id="pf-ep" label="Teléfono de emergencia"><Input id="pf-ep" type="tel" className={cls} value={value.emergency_contact_phone} onChange={set("emergency_contact_phone")} /></F>
+      <div className="rounded-[14px] bg-card px-3 pb-3 pt-0.5">
+        <MoreFields defaultOpen={moreOpen}>
+          <div className="grid grid-cols-2 gap-3">
+            <F id="pf-bd" label="Fecha de nacimiento"><BirthDatePicker id="pf-bd" value={value.birthdate} onChange={(v) => onChange({ ...value, birthdate: v })} /></F>
+            <F id="pf-nat" label="Nacionalidad"><Input id="pf-nat" className={cls} value={value.nationality} onChange={set("nationality")} /></F>
+          </div>
+          <F id="pf-bp" label="Lugar de nacimiento"><Input id="pf-bp" className={cls} value={value.birthplace} onChange={set("birthplace")} placeholder="ej. Guadalajara, Jalisco" /></F>
+          <div className="grid grid-cols-2 gap-3">
+            <F id="pf-en" label="Contacto de emergencia"><Input id="pf-en" className={cls} value={value.emergency_contact_name} onChange={set("emergency_contact_name")} /></F>
+            <F id="pf-ep" label="Teléfono de emergencia"><Input id="pf-ep" type="tel" className={cls} value={value.emergency_contact_phone} onChange={set("emergency_contact_phone")} /></F>
+          </div>
+        </MoreFields>
       </div>
     </div>
   );

@@ -12,6 +12,7 @@ import { createClubMember, addMembership } from "@/lib/members.functions";
 import { canManageUsers } from "@/lib/permissions";
 import { inferBaseRole } from "@/lib/rolePages";
 import { useAdminUsers, useRefreshAdminUsers, generateTempPassword } from "@/hooks/useAdminUsers";
+import { StickyFooterActions } from "@/components/admin/users/FormParts";
 import { PersonFields, EMPTY_PERSON, personErrors, personPayload, type PersonData } from "@/components/admin/users/PersonFields";
 import { UsersHeader, BackLabel, StepIndicator, GroupCard, AccessReady, SectionLabel } from "@/components/admin/users/ui";
 
@@ -236,18 +237,15 @@ function NuevoMiembro() {
         <ul className="space-y-1 text-sm text-urgency-red">{errors.map((e) => <li key={e}>{e}</li>)}</ul>
       ) : null}
 
-      <div className="flex gap-2 pt-2">
-        {step > 0 ? (
-          <button onClick={() => { setErrors([]); setStep(step - 1); }} className="coord-press min-h-11 flex-1 rounded-full bg-muted text-sm font-semibold">Atrás</button>
-        ) : null}
+      <StickyFooterActions onBack={step > 0 ? () => { setErrors([]); setStep(step - 1); } : undefined}>
         {step < 2 ? (
-          <button onClick={next} className="coord-press min-h-11 flex-1 rounded-full bg-primary text-sm font-semibold text-primary-foreground">Siguiente</button>
+          <button onClick={next} className="coord-press min-h-11 w-full rounded-full bg-primary text-sm font-semibold text-primary-foreground">Siguiente</button>
         ) : (
-          <button onClick={submit} disabled={saving} className="coord-press min-h-11 flex-1 rounded-full bg-primary text-sm font-semibold text-primary-foreground disabled:opacity-60">
+          <button onClick={submit} disabled={saving} className="coord-press min-h-11 w-full rounded-full bg-primary text-sm font-semibold text-primary-foreground disabled:opacity-60">
             {saving ? "Creando…" : "Crear miembro"}
           </button>
         )}
-      </div>
+      </StickyFooterActions>
     </div>
   );
 }
