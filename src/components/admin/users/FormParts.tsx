@@ -110,7 +110,7 @@ export function StickyFooterActions({ onBack, children }: { onBack?: () => void;
   return (
     <>
       <div className="h-20" aria-hidden />
-      <div className="fixed inset-x-0 bottom-16 z-30 bg-background/95 px-4 py-2 backdrop-blur md:bottom-0">
+      <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 bg-background/95 px-4 py-2 backdrop-blur sm:bottom-0">
         <div className="mx-auto flex max-w-3xl items-center gap-3">
           {onBack ? (
             <button type="button" onClick={onBack} className="coord-press min-h-11 shrink-0 px-2 text-sm font-semibold text-muted-foreground">Atrás</button>
