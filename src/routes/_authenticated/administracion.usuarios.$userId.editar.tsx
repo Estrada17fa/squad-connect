@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/squad/EmptyState";
 import { canManageUsers } from "@/lib/permissions";
 import { updateClubMember } from "@/lib/members.functions";
 import { useAdminUsers, useRefreshAdminUsers } from "@/hooks/useAdminUsers";
+import { StickyFooterActions } from "@/components/admin/users/FormParts";
 import { PersonFields, personErrors, personPayload, type PersonData } from "@/components/admin/users/PersonFields";
 import { UsersHeader, BackLabel } from "@/components/admin/users/ui";
 
@@ -72,11 +73,13 @@ function EditarMiembro() {
   return (
     <div className="coord-enter mx-auto max-w-md space-y-5 pb-28">
       <UsersHeader back={<Link to="/administracion/usuarios/$userId" params={{ userId }}><BackLabel>Ficha</BackLabel></Link>} title="Editar datos" />
-      <PersonFields value={value} onChange={setValue} withEmail={false} userId={userId} />
+      <PersonFields value={value} onChange={setValue} withEmail={false} userId={userId} moreOpen />
       {errors.length ? <ul className="space-y-1 text-sm text-urgency-red">{errors.map((e) => <li key={e}>{e}</li>)}</ul> : null}
-      <button onClick={save} disabled={saving} className="coord-press min-h-11 w-full rounded-full bg-primary text-sm font-semibold text-primary-foreground disabled:opacity-60">
-        {saving ? "Guardando…" : "Guardar"}
-      </button>
+      <StickyFooterActions>
+        <button onClick={save} disabled={saving} className="coord-press min-h-11 w-full rounded-full bg-primary text-sm font-semibold text-primary-foreground disabled:opacity-60">
+          {saving ? "Guardando…" : "Guardar"}
+        </button>
+      </StickyFooterActions>
     </div>
   );
 }

@@ -44,8 +44,8 @@ function AdministracionPage() {
   ];
 
   const pending = [
-    { key: "sin-categoria", icon: Tag, text: "Sin categoría", context: "Miembros sin rol asignado", value: sinCategoria, urgency: sinCategoria ? "red" : "gray" },
-    { key: "sin-entrar", icon: UserX, text: "Sin entrar a la app", context: "Nunca han iniciado sesión", value: sinEntrar, urgency: sinEntrar ? "amber" : "gray" },
+    { key: "sin_categoria", icon: Tag, text: "Sin categoría", context: "Miembros sin rol asignado", value: sinCategoria, urgency: sinCategoria ? "red" : "gray" },
+    { key: "sin_entrar", icon: UserX, text: "Sin entrar a la app", context: "Nunca han iniciado sesión", value: sinEntrar, urgency: sinEntrar ? "amber" : "gray" },
   ] as const;
 
   const statFor = (key: string, fallback: string) =>
@@ -86,7 +86,7 @@ function AdministracionPage() {
               <li key={p.key}>
                 <Link
                   to="/administracion/usuarios"
-                  search={{ filtro: p.key }}
+                  search={{ alerta: p.key }}
                   className="coord-press flex w-full items-center gap-3 px-3 py-2.5 outline-none hover:bg-muted/40 focus-visible:bg-muted/50"
                 >
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10">
