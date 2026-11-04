@@ -242,3 +242,16 @@ export function AccessReady({
     </div>
   );
 }
+
+/** Barra de progreso delgada: "Paso X de N · Nombre". */
+export function StepProgress({ steps, current }: { steps: string[]; current: number }) {
+  const pct = ((current + 1) / steps.length) * 100;
+  return (
+    <div className="space-y-1.5">
+      <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
+        <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
+      </div>
+      <p className="text-[11px] font-medium text-muted-foreground">Paso {current + 1} de {steps.length} · {steps[current]}</p>
+    </div>
+  );
+}

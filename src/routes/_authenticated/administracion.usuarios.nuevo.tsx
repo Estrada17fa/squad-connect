@@ -13,22 +13,24 @@ import { canManageUsers } from "@/lib/permissions";
 import { inferBaseRole } from "@/lib/rolePages";
 import { useAdminUsers, useRefreshAdminUsers, generateTempPassword } from "@/hooks/useAdminUsers";
 import { StickyFooterActions } from "@/components/admin/users/FormParts";
-import { PersonFields, EMPTY_PERSON, personErrors, personPayload, type PersonData } from "@/components/admin/users/PersonFields";
-import { UsersHeader, BackLabel, StepIndicator, GroupCard, AccessReady, SectionLabel } from "@/components/admin/users/ui";
+import { PersonFields, EMPTY_PERSON, fieldErrors, PERSONA_KEYS, CONTACTO_KEYS, personPayload, type PersonData } from "@/components/admin/users/PersonFields";
+import { UsersHeader, BackLabel, StepProgress, GroupCard, AccessReady, SectionLabel } from "@/components/admin/users/ui";
 
 export const Route = createFileRoute("/_authenticated/administracion/usuarios/nuevo")({
   head: () => ({
     meta: [
       { title: "Nuevo miembro — Squad" },
-      { name: "description", content: "Da de alta a un miembro del club en tres pasos." },
+      { name: "description", content: "Da de alta a un miembro del club en cuatro pasos." },
       { property: "og:title", content: "Nuevo miembro — Squad" },
-      { property: "og:description", content: "Da de alta a un miembro del club en tres pasos." },
+      { property: "og:description", content: "Da de alta a un miembro del club en cuatro pasos." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
   }),
   component: NuevoMiembro,
 });
+
+const STEPS = ["Persona", "Contacto", "Categorías", "Acceso"];
 
 interface Assign { team_id: string; role_id: string; job_title: string }
 
@@ -52,6 +54,7 @@ function NuevoMiembro() {
   const [showPw, setShowPw] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
   const [errors, setErrors] = React.useState<string[]>([]);
+  const [tried, setTried] = React.useState<Record<number, boolean>>({});
   const [done, setDone] = React.useState<{ id: string; name: string; email: string; password: string; phone: string | null } | null>(null);
 
   const roles = data.roles.data ?? [];
@@ -67,8 +70,9 @@ function NuevoMiembro() {
   }
 
   function stepErrors(s: number): string[] {
-    if (s === 0) return personErrors(person, true);
-    if (s === 1) {
+    if (s === 0) return Object.values(fieldErrors(person, PERSONA_KEYS)) as string[];
+    if (s === 1) return Object.values(fieldErrors(person, CONTACTO_KEYS)) as string[];
+    if (s === 2) {
       if (allOn) {
         if (!allRole) return ["Elige el rol para todas las categorías"];
         if (isPlayer(allRole)) return ["Un jugador se asigna categoría por categoría"];
@@ -84,8 +88,9 @@ function NuevoMiembro() {
 
   function next() {
     const e = stepErrors(step);
-    setErrors(e);
-    if (e.length === 0) setStep(step + 1);
+    setTried({ ...tried, [step]: true });
+    setErrors(step >= 2 ? e : []);
+    if (e.length === 0) { setErrors([]); setStep(step + 1); window.scrollTo({ top: 0 }); }
   }
 
   async function submit() {
@@ -128,6 +133,7 @@ function NuevoMiembro() {
   function reset() {
     setDone(null);
     setStep(0);
+    setTried({});
     setPerson(EMPTY_PERSON);
     setAllOn(false);
     setAllRole("");
@@ -155,13 +161,16 @@ function NuevoMiembro() {
   }
 
   return (
-    <div className="coord-enter mx-auto max-w-md space-y-5 pb-28">
-      <UsersHeader back={back} title="Nuevo miembro" />
-      <StepIndicator steps={["Datos", "Categorías", "Acceso"]} current={step} />
+    <div className="coord-enter mx-auto max-w-md space-y-3 pb-28">
+      <div className="sticky top-0 z-20 -mx-4 -mt-2 space-y-1.5 bg-background/95 px-4 pb-1.5 backdrop-blur">
+        <UsersHeader back={back} title="Nuevo miembro" />
+        <StepProgress steps={STEPS} current={step} />
+      </div>
 
-      {step === 0 ? <PersonFields value={person} onChange={setPerson} withEmail /> : null}
+      {step === 0 ? <PersonFields section="persona" value={person} onChange={setPerson} withEmail showAll={tried[0]} /> : null}
+      {step === 1 ? <PersonFields section="contacto" value={person} onChange={setPerson} withEmail showAll={tried[1]} /> : null}
 
-      {step === 1 ? (
+      {step === 2 ? (
         <div className="space-y-4">
           <GroupCard>
             <label className="flex min-h-12 items-center justify-between gap-3 px-3 py-2">
@@ -218,7 +227,7 @@ function NuevoMiembro() {
         </div>
       ) : null}
 
-      {step === 2 ? (
+      {step === 3 ? (
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">Esta es su contraseña temporal. La persona deberá cambiarla al entrar.</p>
           <div className="flex items-center gap-2 rounded-[14px] bg-card p-3">
@@ -237,9 +246,9 @@ function NuevoMiembro() {
         <ul className="space-y-1 text-sm text-urgency-red">{errors.map((e) => <li key={e}>{e}</li>)}</ul>
       ) : null}
 
-      <StickyFooterActions onBack={step > 0 ? () => { setErrors([]); setStep(step - 1); } : undefined}>
-        {step < 2 ? (
-          <button onClick={next} className="coord-press min-h-11 w-full rounded-full bg-primary text-sm font-semibold text-primary-foreground">Siguiente</button>
+      <StickyFooterActions noNav onBack={step > 0 ? () => { setErrors([]); setStep(step - 1); } : undefined}>
+        {step < 3 ? (
+          <button onClick={next} aria-disabled={stepErrors(step).length > 0} className={"coord-press min-h-11 w-full rounded-full bg-primary text-sm font-semibold text-primary-foreground " + (stepErrors(step).length > 0 ? "opacity-40" : "")}>Siguiente</button>
         ) : (
           <button onClick={submit} disabled={saving} className="coord-press min-h-11 w-full rounded-full bg-primary text-sm font-semibold text-primary-foreground disabled:opacity-60">
             {saving ? "Creando…" : "Crear miembro"}

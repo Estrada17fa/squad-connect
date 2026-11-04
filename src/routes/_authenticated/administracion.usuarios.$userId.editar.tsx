@@ -27,12 +27,14 @@ function EditarMiembro() {
   const updateFn = useServerFn(updateClubMember);
   const member = (data.members.data ?? []).find((m) => m.id === userId);
   const [value, setValue] = React.useState<PersonData | null>(null);
+  const [initial, setInitial] = React.useState<PersonData | null>(null);
+  const [tried, setTried] = React.useState(false);
   const [errors, setErrors] = React.useState<string[]>([]);
   const [saving, setSaving] = React.useState(false);
 
   React.useEffect(() => {
     if (member && !value) {
-      setValue({
+      const v: PersonData = {
         first_name: member.first_name ?? "",
         paternal_last_name: member.paternal_last_name ?? "",
         maternal_last_name: member.maternal_last_name ?? "",
@@ -44,7 +46,9 @@ function EditarMiembro() {
         avatar_url: member.avatar_url ?? "",
         emergency_contact_name: member.emergency_contact_name ?? "",
         emergency_contact_phone: member.emergency_contact_phone ?? "",
-      });
+      };
+      setValue(v);
+      setInitial(v);
     }
   }, [member, value]);
 
@@ -53,7 +57,8 @@ function EditarMiembro() {
   if (!member || !value) return <EmptyState title="No encontrado" message="Esta persona no pertenece a tu club." />;
 
   async function save() {
-    const e = personErrors(value!, false);
+    setTried(true);
+    const e = personErrors(value!, false, { mode: "edit", initial: initial ?? undefined });
     setErrors(e);
     if (e.length) return;
     setSaving(true);
@@ -73,8 +78,8 @@ function EditarMiembro() {
   return (
     <div className="coord-enter mx-auto max-w-md space-y-5 pb-28">
       <UsersHeader back={<Link to="/administracion/usuarios/$userId" params={{ userId }}><BackLabel>Ficha</BackLabel></Link>} title="Editar datos" />
-      <PersonFields value={value} onChange={setValue} withEmail={false} userId={userId} moreOpen />
-      {errors.length ? <ul className="space-y-1 text-sm text-urgency-red">{errors.map((e) => <li key={e}>{e}</li>)}</ul> : null}
+      <PersonFields value={value} onChange={setValue} withEmail={false} userId={userId} mode="edit" initial={initial ?? undefined} showAll={tried} />
+      {errors.length ? <p className="text-sm text-urgency-red">Revisa los datos marcados.</p> : null}
       <StickyFooterActions>
         <button onClick={save} disabled={saving} className="coord-press min-h-11 w-full rounded-full bg-primary text-sm font-semibold text-primary-foreground disabled:opacity-60">
           {saving ? "Guardando…" : "Guardar"}

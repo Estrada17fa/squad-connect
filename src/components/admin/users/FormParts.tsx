@@ -11,7 +11,7 @@ import { uploadAvatar } from "@/lib/avatars";
 import { cn } from "@/lib/utils";
 
 /** Círculo grande de foto con ícono de cámara (sube y recorta). */
-export function PhotoCircle({ value, onChange, userId }: { value: string | null; onChange: (url: string | null) => void; userId: string }) {
+export function PhotoCircle({ value, onChange, userId, size = 96, hideCaption }: { value: string | null; onChange: (url: string | null) => void; userId: string; size?: number; hideCaption?: boolean }) {
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [file, setFile] = React.useState<File | null>(null);
   const [cropOpen, setCropOpen] = React.useState(false);
@@ -40,12 +40,13 @@ export function PhotoCircle({ value, onChange, userId }: { value: string | null;
         type="button"
         aria-label={value ? "Cambiar foto" : "Subir foto"}
         onClick={() => inputRef.current?.click()}
-        className="coord-press relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-muted text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        style={{ width: size, height: size }}
+        className="coord-press relative flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         {value ? <img src={value} alt="Foto" className="h-full w-full object-cover" /> : <Camera className="h-7 w-7" />}
         {uploading ? <span className="absolute inset-0 flex items-center justify-center bg-background/70 text-xs">Subiendo…</span> : null}
       </button>
-      {value ? (
+      {hideCaption ? null : value ? (
         <button type="button" onClick={() => onChange(null)} className="text-xs text-muted-foreground">Quitar foto</button>
       ) : (
         <span className="text-xs text-muted-foreground">Foto (opcional)</span>
@@ -57,7 +58,7 @@ export function PhotoCircle({ value, onChange, userId }: { value: string | null;
 }
 
 /** Selector de fecha propio de la app (sin el del navegador). Valor ISO yyyy-MM-dd. */
-export function BirthDatePicker({ id, value, onChange }: { id?: string; value: string; onChange: (v: string) => void }) {
+export function BirthDatePicker({ id, value, onChange, filled }: { id?: string; value: string; onChange: (v: string) => void; filled?: boolean }) {
   const [open, setOpen] = React.useState(false);
   const date = value ? parseISO(value) : undefined;
   const now = new Date();
@@ -68,7 +69,8 @@ export function BirthDatePicker({ id, value, onChange }: { id?: string; value: s
           id={id}
           type="button"
           className={cn(
-            "flex h-11 w-full items-center justify-between rounded-xl border border-input bg-transparent px-3 text-left text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            filled ? "flex h-11 w-full items-center justify-between rounded-xl border-0 bg-card px-3" : "flex h-11 w-full items-center justify-between rounded-xl border border-input bg-transparent px-3",
+            " text-left text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring",
             !date && "text-muted-foreground",
           )}
         >
@@ -107,11 +109,11 @@ export function MoreFields({ children, defaultOpen }: { children: React.ReactNod
 }
 
 /** Barra fija abajo, sobre la navegación inferior: "Atrás" en texto + acción principal a lo ancho. */
-export function StickyFooterActions({ onBack, children }: { onBack?: () => void; children: React.ReactNode }) {
+export function StickyFooterActions({ onBack, children, noNav }: { onBack?: () => void; children: React.ReactNode; noNav?: boolean }) {
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => setMounted(true), []);
   const bar = (
-      <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 bg-background/95 px-4 py-2 backdrop-blur sm:bottom-0">
+      <div className={cn("fixed inset-x-0 z-30 bg-background/95 px-4 py-2 backdrop-blur sm:bottom-0", noNav ? "bottom-0 pb-[calc(0.5rem+env(safe-area-inset-bottom))]" : "bottom-[calc(4rem+env(safe-area-inset-bottom))]")}>
         <div className="mx-auto flex max-w-3xl items-center gap-3">
           {onBack ? (
             <button type="button" onClick={onBack} className="coord-press min-h-11 shrink-0 px-2 text-sm font-semibold text-muted-foreground">Atrás</button>
