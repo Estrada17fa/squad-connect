@@ -56,6 +56,9 @@ import { Route as AuthenticatedCoordinacionAreaIndexRouteImport } from './routes
 import { Route as AuthenticatedCoordinacionAreaModuleRouteImport } from './routes/_authenticated/coordinacion.$area.$module'
 import { Route as AuthenticatedMPlantelPlayerIdRouteImport } from './routes/_authenticated/m.plantel.$playerId'
 import { Route as AuthenticatedAdministracionUsuariosUserIdIndexRouteImport } from './routes/_authenticated/administracion.usuarios.$userId.index'
+import { Route as AuthenticatedAdministracionUsuariosUserIdEditarRouteImport } from './routes/_authenticated/administracion.usuarios.$userId.editar'
+import { Route as AuthenticatedAdministracionUsuariosUserIdPermisosRouteImport } from './routes/_authenticated/administracion.usuarios.$userId.permisos'
+import { Route as AuthenticatedAdministracionUsuariosRolesRoleIdRouteImport } from './routes/_authenticated/administracion.usuarios.roles.$roleId'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -318,6 +321,24 @@ const AuthenticatedAdministracionUsuariosUserIdIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedAdministracionUsuariosUserIdRoute,
   } as any)
+const AuthenticatedAdministracionUsuariosUserIdEditarRoute =
+  AuthenticatedAdministracionUsuariosUserIdEditarRouteImport.update({
+    id: '/editar',
+    path: '/editar',
+    getParentRoute: () => AuthenticatedAdministracionUsuariosUserIdRoute,
+  } as any)
+const AuthenticatedAdministracionUsuariosUserIdPermisosRoute =
+  AuthenticatedAdministracionUsuariosUserIdPermisosRouteImport.update({
+    id: '/permisos',
+    path: '/permisos',
+    getParentRoute: () => AuthenticatedAdministracionUsuariosUserIdRoute,
+  } as any)
+const AuthenticatedAdministracionUsuariosRolesRoleIdRoute =
+  AuthenticatedAdministracionUsuariosRolesRoleIdRouteImport.update({
+    id: '/roles/$roleId',
+    path: '/roles/$roleId',
+    getParentRoute: () => AuthenticatedAdministracionUsuariosRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -365,6 +386,9 @@ export interface FileRoutesByFullPath {
   '/m/plantel/$playerId': typeof AuthenticatedMPlantelPlayerIdRoute
   '/administracion/usuarios/': typeof AuthenticatedAdministracionUsuariosIndexRoute
   '/coordinacion/$area/': typeof AuthenticatedCoordinacionAreaIndexRoute
+  '/administracion/usuarios/$userId/editar': typeof AuthenticatedAdministracionUsuariosUserIdEditarRoute
+  '/administracion/usuarios/$userId/permisos': typeof AuthenticatedAdministracionUsuariosUserIdPermisosRoute
+  '/administracion/usuarios/roles/$roleId': typeof AuthenticatedAdministracionUsuariosRolesRoleIdRoute
   '/administracion/usuarios/$userId/': typeof AuthenticatedAdministracionUsuariosUserIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -408,6 +432,9 @@ export interface FileRoutesByTo {
   '/m/plantel/$playerId': typeof AuthenticatedMPlantelPlayerIdRoute
   '/administracion/usuarios': typeof AuthenticatedAdministracionUsuariosIndexRoute
   '/coordinacion/$area': typeof AuthenticatedCoordinacionAreaIndexRoute
+  '/administracion/usuarios/$userId/editar': typeof AuthenticatedAdministracionUsuariosUserIdEditarRoute
+  '/administracion/usuarios/$userId/permisos': typeof AuthenticatedAdministracionUsuariosUserIdPermisosRoute
+  '/administracion/usuarios/roles/$roleId': typeof AuthenticatedAdministracionUsuariosRolesRoleIdRoute
   '/administracion/usuarios/$userId': typeof AuthenticatedAdministracionUsuariosUserIdIndexRoute
 }
 export interface FileRoutesById {
@@ -458,6 +485,9 @@ export interface FileRoutesById {
   '/_authenticated/m/plantel/$playerId': typeof AuthenticatedMPlantelPlayerIdRoute
   '/_authenticated/administracion/usuarios/': typeof AuthenticatedAdministracionUsuariosIndexRoute
   '/_authenticated/coordinacion/$area/': typeof AuthenticatedCoordinacionAreaIndexRoute
+  '/_authenticated/administracion/usuarios/$userId/editar': typeof AuthenticatedAdministracionUsuariosUserIdEditarRoute
+  '/_authenticated/administracion/usuarios/$userId/permisos': typeof AuthenticatedAdministracionUsuariosUserIdPermisosRoute
+  '/_authenticated/administracion/usuarios/roles/$roleId': typeof AuthenticatedAdministracionUsuariosRolesRoleIdRoute
   '/_authenticated/administracion/usuarios/$userId/': typeof AuthenticatedAdministracionUsuariosUserIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -508,6 +538,9 @@ export interface FileRouteTypes {
     | '/m/plantel/$playerId'
     | '/administracion/usuarios/'
     | '/coordinacion/$area/'
+    | '/administracion/usuarios/$userId/editar'
+    | '/administracion/usuarios/$userId/permisos'
+    | '/administracion/usuarios/roles/$roleId'
     | '/administracion/usuarios/$userId/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -551,6 +584,9 @@ export interface FileRouteTypes {
     | '/m/plantel/$playerId'
     | '/administracion/usuarios'
     | '/coordinacion/$area'
+    | '/administracion/usuarios/$userId/editar'
+    | '/administracion/usuarios/$userId/permisos'
+    | '/administracion/usuarios/roles/$roleId'
     | '/administracion/usuarios/$userId'
   id:
     | '__root__'
@@ -600,6 +636,9 @@ export interface FileRouteTypes {
     | '/_authenticated/m/plantel/$playerId'
     | '/_authenticated/administracion/usuarios/'
     | '/_authenticated/coordinacion/$area/'
+    | '/_authenticated/administracion/usuarios/$userId/editar'
+    | '/_authenticated/administracion/usuarios/$userId/permisos'
+    | '/_authenticated/administracion/usuarios/roles/$roleId'
     | '/_authenticated/administracion/usuarios/$userId/'
   fileRoutesById: FileRoutesById
 }
@@ -940,6 +979,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdministracionUsuariosUserIdIndexRouteImport
       parentRoute: typeof AuthenticatedAdministracionUsuariosUserIdRoute
     }
+    '/_authenticated/administracion/usuarios/$userId/editar': {
+      id: '/_authenticated/administracion/usuarios/$userId/editar'
+      path: '/editar'
+      fullPath: '/administracion/usuarios/$userId/editar'
+      preLoaderRoute: typeof AuthenticatedAdministracionUsuariosUserIdEditarRouteImport
+      parentRoute: typeof AuthenticatedAdministracionUsuariosUserIdRoute
+    }
+    '/_authenticated/administracion/usuarios/$userId/permisos': {
+      id: '/_authenticated/administracion/usuarios/$userId/permisos'
+      path: '/permisos'
+      fullPath: '/administracion/usuarios/$userId/permisos'
+      preLoaderRoute: typeof AuthenticatedAdministracionUsuariosUserIdPermisosRouteImport
+      parentRoute: typeof AuthenticatedAdministracionUsuariosUserIdRoute
+    }
+    '/_authenticated/administracion/usuarios/roles/$roleId': {
+      id: '/_authenticated/administracion/usuarios/roles/$roleId'
+      path: '/roles/$roleId'
+      fullPath: '/administracion/usuarios/roles/$roleId'
+      preLoaderRoute: typeof AuthenticatedAdministracionUsuariosRolesRoleIdRouteImport
+      parentRoute: typeof AuthenticatedAdministracionUsuariosRoute
+    }
   }
 }
 
@@ -961,11 +1021,17 @@ const AuthenticatedAdminRouteWithChildren =
   AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
 
 interface AuthenticatedAdministracionUsuariosUserIdRouteChildren {
+  AuthenticatedAdministracionUsuariosUserIdEditarRoute: typeof AuthenticatedAdministracionUsuariosUserIdEditarRoute
+  AuthenticatedAdministracionUsuariosUserIdPermisosRoute: typeof AuthenticatedAdministracionUsuariosUserIdPermisosRoute
   AuthenticatedAdministracionUsuariosUserIdIndexRoute: typeof AuthenticatedAdministracionUsuariosUserIdIndexRoute
 }
 
 const AuthenticatedAdministracionUsuariosUserIdRouteChildren: AuthenticatedAdministracionUsuariosUserIdRouteChildren =
   {
+    AuthenticatedAdministracionUsuariosUserIdEditarRoute:
+      AuthenticatedAdministracionUsuariosUserIdEditarRoute,
+    AuthenticatedAdministracionUsuariosUserIdPermisosRoute:
+      AuthenticatedAdministracionUsuariosUserIdPermisosRoute,
     AuthenticatedAdministracionUsuariosUserIdIndexRoute:
       AuthenticatedAdministracionUsuariosUserIdIndexRoute,
   }
@@ -979,6 +1045,7 @@ interface AuthenticatedAdministracionUsuariosRouteChildren {
   AuthenticatedAdministracionUsuariosUserIdRoute: typeof AuthenticatedAdministracionUsuariosUserIdRouteWithChildren
   AuthenticatedAdministracionUsuariosNuevoRoute: typeof AuthenticatedAdministracionUsuariosNuevoRoute
   AuthenticatedAdministracionUsuariosIndexRoute: typeof AuthenticatedAdministracionUsuariosIndexRoute
+  AuthenticatedAdministracionUsuariosRolesRoleIdRoute: typeof AuthenticatedAdministracionUsuariosRolesRoleIdRoute
 }
 
 const AuthenticatedAdministracionUsuariosRouteChildren: AuthenticatedAdministracionUsuariosRouteChildren =
@@ -989,6 +1056,8 @@ const AuthenticatedAdministracionUsuariosRouteChildren: AuthenticatedAdministrac
       AuthenticatedAdministracionUsuariosNuevoRoute,
     AuthenticatedAdministracionUsuariosIndexRoute:
       AuthenticatedAdministracionUsuariosIndexRoute,
+    AuthenticatedAdministracionUsuariosRolesRoleIdRoute:
+      AuthenticatedAdministracionUsuariosRolesRoleIdRoute,
   }
 
 const AuthenticatedAdministracionUsuariosRouteWithChildren =

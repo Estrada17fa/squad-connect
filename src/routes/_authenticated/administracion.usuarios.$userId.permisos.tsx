@@ -28,7 +28,7 @@ function PermisosMiembro() {
     <div className="coord-enter mx-auto max-w-4xl space-y-4 pb-28">
       <UsersHeader back={<Link to="/administracion/usuarios/$userId" params={{ userId }}><BackLabel>{shortName(member)}</BackLabel></Link>} title="Permisos" />
       <p className="text-sm text-muted-foreground">Por categoría: Sin acceso · Ver · Editar. Lo que cambies aquí aplica solo a esta persona.</p>
-      <div className="adm-reskin">
+      <div>
         <UserAdvancedSettings
           clubId={clubId}
           userId={userId}
