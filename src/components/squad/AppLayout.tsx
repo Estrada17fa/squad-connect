@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Building2 } from "lucide-react";
 import { useClubPrefsFor } from "@/hooks/useClubSettings";
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -260,6 +261,8 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
     );
   }
 
+  const navPages = visiblePages.filter((p) => p.page.key !== "admin");
+
   return (
     <AppContext.Provider value={ctx}>
       <ClubPrefsSync clubId={data.profile?.club_id ?? null} />
@@ -273,14 +276,15 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
           userId={user.id}
           isSuperAdmin={data.isSuperAdmin}
           canOpenModule={(key) => isModuleAccessible(key as ModuleKey)}
+          showAdmin={canAccessAdmin}
           showSolicitudes={needsSolicitudesShortcut(visiblePages, isModuleAccessible("solicitudes"))}
           onSignOut={signOut}
         />
-        <DesktopNav pages={visiblePages} />
+        <DesktopNav pages={navPages} />
         <main className="mx-auto min-w-0 w-full max-w-6xl overflow-x-clip px-4 py-6 sm:px-6">
           <Outlet />
         </main>
-        <BottomNav pages={visiblePages} />
+        <BottomNav pages={navPages} />
 
       </div>
     </AppContext.Provider>
@@ -302,6 +306,7 @@ function Header({
   userId,
   isSuperAdmin,
   canOpenModule,
+  showAdmin,
   showSolicitudes,
   onSignOut,
 }: {
@@ -312,6 +317,7 @@ function Header({
   userId: string;
   isSuperAdmin: boolean;
   canOpenModule: (key: string) => boolean;
+  showAdmin: boolean;
   /** Atajo "Mis Solicitudes" para quien no ve la página Coordinación. */
   showSolicitudes: boolean;
   onSignOut: () => void;
@@ -354,6 +360,14 @@ function Header({
                   Mi perfil
                 </Link>
               </DropdownMenuItem>
+              {showAdmin ? (
+                <DropdownMenuItem asChild>
+                  <Link to="/administracion">
+                    <Building2 className="mr-2 h-4 w-4" />
+                    Administrar club
+                  </Link>
+                </DropdownMenuItem>
+              ) : null}
               {showSolicitudes ? (
                 <DropdownMenuItem asChild>
                   <Link to="/m/$module" params={{ module: "solicitudes" }}>
