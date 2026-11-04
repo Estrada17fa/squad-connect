@@ -1,4 +1,5 @@
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { toast } from "sonner";
 import { Camera, ChevronDown, CalendarDays } from "lucide-react";
 import { format, parseISO } from "date-fns";
@@ -107,9 +108,9 @@ export function MoreFields({ children, defaultOpen }: { children: React.ReactNod
 
 /** Barra fija abajo, sobre la navegación inferior: "Atrás" en texto + acción principal a lo ancho. */
 export function StickyFooterActions({ onBack, children }: { onBack?: () => void; children: React.ReactNode }) {
-  return (
-    <>
-      <div className="h-20" aria-hidden />
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => setMounted(true), []);
+  const bar = (
       <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 bg-background/95 px-4 py-2 backdrop-blur sm:bottom-0">
         <div className="mx-auto flex max-w-3xl items-center gap-3">
           {onBack ? (
@@ -118,6 +119,12 @@ export function StickyFooterActions({ onBack, children }: { onBack?: () => void;
           <div className="flex-1">{children}</div>
         </div>
       </div>
+  );
+  // Se monta en <body> para que quede fija a la pantalla aunque la página tenga animación.
+  return (
+    <>
+      <div className="h-20" aria-hidden />
+      {mounted ? createPortal(bar, document.body) : null}
     </>
   );
 }
