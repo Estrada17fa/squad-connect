@@ -117,7 +117,7 @@ export const fieldCls =
 
 function Field({ id, label, error, hint, children }: { id: string; label: string; error?: string; hint?: string; children: React.ReactNode }) {
   return (
-    <div className="min-w-0 space-y-1">
+    <div className="min-w-0 space-y-0.5">
       <label htmlFor={id} className="block text-[11px] font-medium text-muted-foreground">{label}</label>
       {children}
       {error ? <p className="text-[11px] text-urgency-red">{error}</p> : hint ? <p className="text-[11px] text-urgency-amber">{hint}</p> : null}
@@ -254,17 +254,17 @@ export function PersonFields({
   );
 
   const persona = (
-    <div className="space-y-3">
+    <div className="space-y-2.5">
       <PhotoRow value={value.avatar_url} onChange={set("avatar_url")} userId={userId ?? "nuevos"} />
       <Field id="pf-fn" label="Nombre" error={err("first_name")} hint={hint("first_name")}>{txt("first_name", "pf-fn", { autoComplete: "given-name", autoCapitalize: "words" })}</Field>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2.5">
         <Field id="pf-ap" label="Apellido paterno" error={err("paternal_last_name")} hint={hint("paternal_last_name")}>{txt("paternal_last_name", "pf-ap", { autoComplete: "family-name", autoCapitalize: "words" })}</Field>
         <Field id="pf-am" label="Apellido materno (opcional)">{txt("maternal_last_name", "pf-am", { autoCapitalize: "words" })}</Field>
       </div>
       <Field id="pf-bd" label="Fecha de nacimiento" error={err("birthdate")} hint={hint("birthdate")}>
         <BirthDatePicker id="pf-bd" value={value.birthdate} onChange={(v) => { onChange({ ...value, birthdate: v }); touch("birthdate")(); }} filled />
       </Field>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2.5">
         <Field id="pf-bp" label="Lugar de nacimiento" error={err("birthplace")} hint={hint("birthplace")}>{txt("birthplace", "pf-bp", { placeholder: "Ciudad, estado", autoCapitalize: "words", enterKeyHint: "done" })}</Field>
         <Field id="pf-nat" label="Nacionalidad" error={err("nationality")} hint={hint("nationality")}>
           <NationalityPicker id="pf-nat" value={value.nationality} onChange={set("nationality")} onBlur={touch("nationality")} />
@@ -274,7 +274,7 @@ export function PersonFields({
   );
 
   const contacto = (
-    <div className="space-y-3">
+    <div className="space-y-2.5">
       {withEmail ? (
         <Field id="pf-em" label="Correo" error={err("email")}>
           {txt("email", "pf-em", { type: "email", inputMode: "email", autoComplete: "email", autoCapitalize: "none", placeholder: "nombre@correo.com" })}

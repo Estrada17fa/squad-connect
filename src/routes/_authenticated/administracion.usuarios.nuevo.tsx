@@ -161,8 +161,8 @@ function NuevoMiembro() {
   }
 
   return (
-    <div className="coord-enter mx-auto max-w-md space-y-5 pb-28">
-      <div className="sticky top-0 z-20 -mx-4 -mt-2 space-y-2 bg-background/95 px-4 pb-2 backdrop-blur">
+    <div className="coord-enter mx-auto max-w-md space-y-3 pb-28">
+      <div className="sticky top-0 z-20 -mx-4 -mt-2 space-y-1.5 bg-background/95 px-4 pb-1.5 backdrop-blur">
         <UsersHeader back={back} title="Nuevo miembro" />
         <StepProgress steps={STEPS} current={step} />
       </div>
