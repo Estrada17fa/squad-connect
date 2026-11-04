@@ -48,7 +48,7 @@ function RolDetalle() {
 
   return (
     <div className="coord-enter mx-auto max-w-3xl space-y-4 pb-28">
-      <UsersHeader back={<Link to="/administracion/usuarios" search={{ tab: "roles" }}><BackLabel>Roles</BackLabel></Link>} title={role.name} />
+      <UsersHeader back={<Link to="/administracion/usuarios/roles"><BackLabel>Roles</BackLabel></Link>} title={role.name} />
       <RolePermissionsMatrix
         key={role.id}
         clubId={clubId}
