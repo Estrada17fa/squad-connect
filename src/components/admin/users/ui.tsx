@@ -192,7 +192,9 @@ export function accessMessage(name: string, email: string, password: string) {
 }
 
 export function whatsappUrl(text: string, phone?: string | null) {
-  const digits = (phone ?? "").replace(/\D/g, "");
+  let digits = (phone ?? "").replace(/\D/g, "");
+  // Números de 10 dígitos se asumen de México (+52), como el resto del club.
+  if (digits.length === 10) digits = `52${digits}`;
   return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
 }
 
