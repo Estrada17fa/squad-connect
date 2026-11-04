@@ -11,7 +11,7 @@ import { uploadAvatar } from "@/lib/avatars";
 import { cn } from "@/lib/utils";
 
 /** Círculo grande de foto con ícono de cámara (sube y recorta). */
-export function PhotoCircle({ value, onChange, userId }: { value: string | null; onChange: (url: string | null) => void; userId: string }) {
+export function PhotoCircle({ value, onChange, userId, size = 96, hideCaption }: { value: string | null; onChange: (url: string | null) => void; userId: string; size?: number; hideCaption?: boolean }) {
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [file, setFile] = React.useState<File | null>(null);
   const [cropOpen, setCropOpen] = React.useState(false);
@@ -40,12 +40,13 @@ export function PhotoCircle({ value, onChange, userId }: { value: string | null;
         type="button"
         aria-label={value ? "Cambiar foto" : "Subir foto"}
         onClick={() => inputRef.current?.click()}
-        className="coord-press relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-muted text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        style={{ width: size, height: size }}
+        className="coord-press relative flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         {value ? <img src={value} alt="Foto" className="h-full w-full object-cover" /> : <Camera className="h-7 w-7" />}
         {uploading ? <span className="absolute inset-0 flex items-center justify-center bg-background/70 text-xs">Subiendo…</span> : null}
       </button>
-      {value ? (
+      {hideCaption ? null : value ? (
         <button type="button" onClick={() => onChange(null)} className="text-xs text-muted-foreground">Quitar foto</button>
       ) : (
         <span className="text-xs text-muted-foreground">Foto (opcional)</span>
@@ -57,7 +58,7 @@ export function PhotoCircle({ value, onChange, userId }: { value: string | null;
 }
 
 /** Selector de fecha propio de la app (sin el del navegador). Valor ISO yyyy-MM-dd. */
-export function BirthDatePicker({ id, value, onChange }: { id?: string; value: string; onChange: (v: string) => void }) {
+export function BirthDatePicker({ id, value, onChange, filled }: { id?: string; value: string; onChange: (v: string) => void; filled?: boolean }) {
   const [open, setOpen] = React.useState(false);
   const date = value ? parseISO(value) : undefined;
   const now = new Date();
@@ -68,7 +69,8 @@ export function BirthDatePicker({ id, value, onChange }: { id?: string; value: s
           id={id}
           type="button"
           className={cn(
-            "flex h-11 w-full items-center justify-between rounded-xl border border-input bg-transparent px-3 text-left text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            filled ? "flex h-11 w-full items-center justify-between rounded-xl border-0 bg-card px-3" : "flex h-11 w-full items-center justify-between rounded-xl border border-input bg-transparent px-3",
+            " text-left text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring",
             !date && "text-muted-foreground",
           )}
         >
