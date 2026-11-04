@@ -284,7 +284,8 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
         <main className="mx-auto min-w-0 w-full max-w-6xl overflow-x-clip px-4 py-6 sm:px-6">
           <Outlet />
         </main>
-        <BottomNav pages={navPages} />
+        {/* En el alta de miembro la barra inferior se oculta para que cada paso quepa sin scroll. */}
+        {pathname === "/administracion/usuarios/nuevo" ? null : <BottomNav pages={navPages} />}
 
       </div>
     </AppContext.Provider>

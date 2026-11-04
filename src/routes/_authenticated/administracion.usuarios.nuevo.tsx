@@ -246,7 +246,7 @@ function NuevoMiembro() {
         <ul className="space-y-1 text-sm text-urgency-red">{errors.map((e) => <li key={e}>{e}</li>)}</ul>
       ) : null}
 
-      <StickyFooterActions onBack={step > 0 ? () => { setErrors([]); setStep(step - 1); } : undefined}>
+      <StickyFooterActions noNav onBack={step > 0 ? () => { setErrors([]); setStep(step - 1); } : undefined}>
         {step < 3 ? (
           <button onClick={next} aria-disabled={stepErrors(step).length > 0} className={"coord-press min-h-11 w-full rounded-full bg-primary text-sm font-semibold text-primary-foreground " + (stepErrors(step).length > 0 ? "opacity-40" : "")}>Siguiente</button>
         ) : (

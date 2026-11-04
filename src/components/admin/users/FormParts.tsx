@@ -109,11 +109,11 @@ export function MoreFields({ children, defaultOpen }: { children: React.ReactNod
 }
 
 /** Barra fija abajo, sobre la navegación inferior: "Atrás" en texto + acción principal a lo ancho. */
-export function StickyFooterActions({ onBack, children }: { onBack?: () => void; children: React.ReactNode }) {
+export function StickyFooterActions({ onBack, children, noNav }: { onBack?: () => void; children: React.ReactNode; noNav?: boolean }) {
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => setMounted(true), []);
   const bar = (
-      <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 bg-background/95 px-4 py-2 backdrop-blur sm:bottom-0">
+      <div className={cn("fixed inset-x-0 z-30 bg-background/95 px-4 py-2 backdrop-blur sm:bottom-0", noNav ? "bottom-0 pb-[calc(0.5rem+env(safe-area-inset-bottom))]" : "bottom-[calc(4rem+env(safe-area-inset-bottom))]")}>
         <div className="mx-auto flex max-w-3xl items-center gap-3">
           {onBack ? (
             <button type="button" onClick={onBack} className="coord-press min-h-11 shrink-0 px-2 text-sm font-semibold text-muted-foreground">Atrás</button>
