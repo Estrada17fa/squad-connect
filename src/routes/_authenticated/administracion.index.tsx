@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ChevronLeft, ChevronRight, Building2 } from "lucide-react";
+import { toast } from "sonner";
+import { ChevronLeft, ChevronRight, Building2, UserX, Tag, IdCard } from "lucide-react";
 import { useApp } from "@/components/squad/AppLayout";
 import { ClubCrest } from "@/components/squad/ClubCrest";
-import { PendingList } from "@/components/coord/PendingList";
-import { COORD_AREAS } from "@/lib/coordAreas";
-import { ADMIN_MODULES, ADMIN_PENDING, ADMIN_SEASON, ADMIN_STATS } from "@/lib/admin/mockData";
+import { cn } from "@/lib/utils";
+import { ADMIN_MODULES, ADMIN_SEASON } from "@/lib/admin/mockData";
+import { useAdminUsers, neverSignedIn } from "@/hooks/useAdminUsers";
 
 export const Route = createFileRoute("/_authenticated/administracion/")({
   head: () => ({
@@ -20,11 +21,38 @@ export const Route = createFileRoute("/_authenticated/administracion/")({
   component: AdministracionPage,
 });
 
+const PILL = {
+  red: "bg-urgency-red-soft text-urgency-red",
+  amber: "bg-urgency-amber-soft text-urgency-amber",
+  gray: "bg-urgency-gray-soft text-urgency-gray",
+} as const;
+
 function AdministracionPage() {
   const { clubName, profile, isSuperAdmin } = useApp() as any;
-  const area = COORD_AREAS[0];
+  const data = useAdminUsers(profile?.club_id ?? null);
+  const active = (data.members.data ?? []).filter((m) => (m.status ?? "activo") === "activo");
+  const sinCategoria = active.filter((m) => (data.byUser.get(m.id) ?? []).length === 0).length;
+  const sinEntrar = active.filter((m) => neverSignedIn(m, data.signInMap, data.signInAvailable)).length;
+  const loading = data.members.isLoading || data.memberships.isLoading;
+  const show = (n: number) => (loading ? "…" : String(n));
+  const teamsCount = (data.teams.data ?? []).length;
+
+  const stats = [
+    { value: show(active.length), label: "miembros" },
+    { value: data.teams.isLoading ? "…" : String(teamsCount), label: "categorías" },
+    { value: "1", label: "torneo en curso" },
+  ];
+
+  const pending = [
+    { key: "sin-categoria", icon: Tag, text: "Sin categoría", context: "Miembros sin rol asignado", value: sinCategoria, urgency: sinCategoria ? "red" : "gray" },
+    { key: "sin-entrar", icon: UserX, text: "Sin entrar a la app", context: "Nunca han iniciado sesión", value: sinEntrar, urgency: sinEntrar ? "amber" : "gray" },
+  ] as const;
+
+  const statFor = (key: string, fallback: string) =>
+    key === "usuarios" ? `${show(active.length)} activos` : key === "club" ? `${teamsCount} categorías` : fallback;
+
   return (
-    <div className="-mt-2 space-y-6">
+    <div className="-mt-2 space-y-5">
       <header className="flex items-center gap-1">
         <Link to="/" aria-label="Regresar" className="coord-press -ml-2 flex h-10 w-10 items-center justify-center rounded-xl">
           <ChevronLeft className="h-5 w-5" />
@@ -41,7 +69,7 @@ function AdministracionPage() {
       </section>
 
       <section className="grid grid-cols-3 gap-2">
-        {ADMIN_STATS.map((s) => (
+        {stats.map((s) => (
           <div key={s.label}>
             <p className="font-display text-3xl font-bold leading-none">{s.value}</p>
             <p className="mt-1 text-xs text-muted-foreground">{s.label}</p>
@@ -51,31 +79,67 @@ function AdministracionPage() {
 
       <section>
         <h2 className="mb-1.5 text-xs font-semibold text-muted-foreground">Atención</h2>
-        <PendingList area={area} items={ADMIN_PENDING} all />
+        <ul className="divide-y divide-border/40 overflow-hidden rounded-[14px] bg-card">
+          {pending.map((p) => {
+            const I = p.icon;
+            return (
+              <li key={p.key}>
+                <Link
+                  to="/administracion/usuarios"
+                  search={{ filtro: p.key }}
+                  className="coord-press flex w-full items-center gap-3 px-3 py-2.5 outline-none hover:bg-muted/40 focus-visible:bg-muted/50"
+                >
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                    <I className="h-[15px] w-[15px] text-primary" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium">{p.text}</span>
+                    <span className="block truncate text-[11px] text-muted-foreground">{p.context}</span>
+                  </span>
+                  <span className={cn("shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold", PILL[p.urgency])}>{show(p.value)}</span>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60" />
+                </Link>
+              </li>
+            );
+          })}
+          <li>
+            <button onClick={() => toast("Próximamente")} className="coord-press flex w-full items-center gap-3 px-3 py-2.5 text-left outline-none hover:bg-muted/40">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                <IdCard className="h-[15px] w-[15px] text-primary" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-medium">Jugadores sin ficha deportiva</span>
+                <span className="block truncate text-[11px] text-muted-foreground">Completar en Plantel</span>
+              </span>
+              <span className={cn("shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold", PILL.gray)}>5</span>
+              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60" />
+            </button>
+          </li>
+        </ul>
       </section>
 
       <section>
         <h2 className="mb-1.5 text-xs font-semibold text-muted-foreground">Administrar</h2>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-3">
           {ADMIN_MODULES.map((m) => {
             const I = m.icon;
-            return (
-              <Link
-                key={m.key}
-                to="/administracion/$module"
-                params={{ module: m.key }}
-                className="coord-press flex items-center gap-4 rounded-[18px] bg-card p-4 outline-none focus-visible:ring-2 focus-visible:ring-ring sm:flex-col sm:items-start"
-              >
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
-                  <I className="h-6 w-6 text-primary" />
+            const cls = "coord-press flex items-center gap-3 rounded-[16px] bg-card px-3 py-2.5 outline-none focus-visible:ring-2 focus-visible:ring-ring sm:flex-col sm:items-start sm:p-4";
+            const inner = (
+              <>
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                  <I className="h-5 w-5 text-primary" />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block font-display text-base font-bold">{m.name}</span>
-                  <span className="block truncate text-[13px] text-muted-foreground">{m.line}</span>
-                  <span className="mt-1 block text-xs font-semibold text-primary">{m.stat}</span>
+                  <span className="block font-display text-[15px] font-bold leading-tight">{m.name}</span>
+                  <span className="block truncate text-xs text-muted-foreground">{m.line} · <span className="font-semibold text-primary">{statFor(m.key, m.stat)}</span></span>
                 </span>
                 <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60 sm:hidden" />
-              </Link>
+              </>
+            );
+            return m.key === "usuarios" ? (
+              <Link key={m.key} to="/administracion/usuarios" className={cls}>{inner}</Link>
+            ) : (
+              <Link key={m.key} to="/administracion/$module" params={{ module: m.key }} className={cls}>{inner}</Link>
             );
           })}
         </div>
