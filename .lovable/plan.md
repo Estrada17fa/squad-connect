@@ -23,8 +23,11 @@ Rediseño completo de Usuarios dentro de Administración, reutilizando las funci
 - Nuevas rutas: `administracion.usuarios.tsx` (layout con Outlet), `.index.tsx`, `.nuevo.tsx`, `.$userId.tsx` (layout) + `.$userId.index/editar/permisos.tsx`, `.roles.$roleId.tsx`. La ruta genérica `administracion.$module` deja de cubrir "usuarios".
 - Componentes en `src/components/admin/users/` (MemberRow, RolePills, StepIndicator, AccessReadyScreen, SegmentedLevel, ActivityTimeline, InfoList). La lógica de RolePermissionsMatrix, UserAdvancedSettings y ApproverTypesEditor se extrae a hooks compartidos para que ambas pantallas usen las mismas reglas; la pantalla actual no cambia visualmente.
 - Única función nueva, solo lectura: `getMembersLastSignIn` (requiere ver Usuarios, filtra por club, devuelve last_sign_in_at vía API administrativa). Si falla, se usa must_change_password ("Aún no entra" / "Ya entró").
-- Contraseña temporal con crypto.getRandomValues; mensaje de WhatsApp con enlace https://squadlcu.app, correo y contraseña.
+- Contraseña temporal con crypto.getRandomValues; mensaje de WhatsApp con el enlace de la app tomado de una constante de configuración (APP_URL, con window.location.origin como respaldo), más correo y contraseña. Se reporta cuál quedó.
 - Validaciones existentes intactas (escalada, último admin, confirmaciones, revisión de referencias).
 
 ## Pruebas
-Las 7 pruebas del documento con un usuario de prueba (alta, WhatsApp, primer ingreso, membresías, todas las categorías, excepción, restablecer, baja/reactivar/eliminar, filtros, matriz de rol, /m/usuarios intacta, sin errores). Capturas en celular de lista, alta (3 pasos + Listo), ficha, permisos, Roles y Actividad.
+Las 7 pruebas del documento con un usuario de prueba (alta, WhatsApp, primer ingreso, membresías, todas las categorías, excepción, restablecer, baja/reactivar/eliminar, filtros, matriz de rol, /m/usuarios intacta, sin errores).
+- En /m/usuarios, tras extraer la lógica compartida: cambiar un permiso en la matriz de un rol, una excepción de una persona y un aprobador deben funcionar igual que antes.
+- Al terminar, se elimina al usuario de prueba y se confirma con consultas que no quedan membresías, excepciones ni interruptor de "Todas las categorías".
+- Capturas en celular de lista, alta (3 pasos + Listo), ficha, permisos, Roles y Actividad.
