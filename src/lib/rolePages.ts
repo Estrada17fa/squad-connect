@@ -29,7 +29,7 @@ const ROLE_PAGES: Record<BaseRole, Record<PageKey, ModuleKey[]>> = {
     agenda: ["agenda", "mes"],
     club: ["plantel", "salud", "desarrollo", "entrenamientos", "nutricion", "tacticas", "torneo", "comunicados", "multimedia"],
     coordinacion: ["coordinacion_interna", "solicitudes", "inventario", "compras_facturas", "partidos", "viajes", "multimedia_gestion"],
-    admin: ["usuarios", "documentos"],
+    admin: ["usuarios"],
   },
   tecnico: {
     home: [],
