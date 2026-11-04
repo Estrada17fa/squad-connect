@@ -33,6 +33,7 @@ function PermisosMiembro() {
           clubId={clubId}
           userId={userId}
           canEdit
+          defaultOpen
           memberships={mems.map<MembershipCtx>((m) => ({
             id: m.id,
             teamId: m.team_id,

@@ -41,13 +41,16 @@ export function UserAdvancedSettings({
   userId,
   memberships,
   canEdit,
+  defaultOpen = false,
 }: {
   clubId: string;
   userId: string;
   memberships: MembershipCtx[];
   canEdit: boolean;
+  /** La pantalla nueva de permisos lo abre directamente. */
+  defaultOpen?: boolean;
 }) {
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = React.useState(defaultOpen);
   const columns = memberships.filter((m) => !!m.teamId);
 
   return (

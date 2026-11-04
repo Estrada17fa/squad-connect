@@ -41,7 +41,8 @@ export function ActivityTimeline({
   const groups = React.useMemo(() => {
     const out: { day: string; items: AuditRow[] }[] = [];
     for (const r of rows) {
-      const day = new Date(r.created_at).toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "short" });
+      const raw = new Date(r.created_at).toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "short" });
+      const day = raw.charAt(0).toUpperCase() + raw.slice(1);
       const last = out[out.length - 1];
       if (last && last.day === day) last.items.push(r);
       else out.push({ day, items: [r] });
@@ -62,7 +63,7 @@ export function ActivityTimeline({
     <div className="space-y-4">
       {groups.map((g) => (
         <section key={g.day}>
-          <h3 className="mb-1.5 px-1 text-xs font-semibold capitalize text-muted-foreground">{g.day}</h3>
+          <h3 className="mb-1.5 px-1 text-xs font-semibold text-muted-foreground">{g.day}</h3>
           <GroupCard>
             {g.items.map((r) => {
               const I = ICON[r.action] ?? RefreshCw;
