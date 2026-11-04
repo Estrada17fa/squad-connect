@@ -37,6 +37,7 @@ Solo cambia el diseño de `src/components/admin/users/` y las rutas `/administra
 
 ## 8. General
 - Se eliminan colores por rol e íconos de color en estas pantallas; el verde queda solo para pestaña activa y acción principal.
+- Enlaces: la portada de Administración pasa a usar `?alerta=sin_categoria` y `?alerta=sin_entrar`. Los enlaces viejos siguen funcionando: `?filtro=sin-categoria` / `?filtro=sin-entrar` redirigen al nuevo parámetro, y `?tab=roles` / `?tab=actividad` redirigen a sus páginas nuevas.
 
 ## Entrega
 Capturas a 375 × 667: Staff con las dos alertas, Jugadores agrupado, una alerta filtrando, menú "⋯", Roles y permisos, pasos 1 (con Más datos abierto), 2 y 3 del alta. No se crea ningún miembro real para las capturas del paso 3 (se detiene antes de guardar).
