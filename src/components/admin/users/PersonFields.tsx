@@ -96,17 +96,18 @@ export function personErrors(p: PersonData, withEmail: boolean, opts?: { mode?: 
 
 export function personPayload(p: PersonData) {
   const n = (s: string) => (s.trim() ? s.trim() : null);
+  const ph = (s: string) => (splitPhone(s).num ? s.trim() : null);
   return {
     first_name: p.first_name.trim(),
     paternal_last_name: p.paternal_last_name.trim(),
     maternal_last_name: n(p.maternal_last_name),
-    phone: n(p.phone),
+    phone: ph(p.phone),
     birthdate: n(p.birthdate),
     birthplace: n(p.birthplace),
     nationality: n(p.nationality),
     avatar_url: n(p.avatar_url),
     emergency_contact_name: n(p.emergency_contact_name),
-    emergency_contact_phone: n(p.emergency_contact_phone),
+    emergency_contact_phone: ph(p.emergency_contact_phone),
   };
 }
 
@@ -171,8 +172,7 @@ function PhoneInput({ id, value, onChange, onBlur, enterHint = "next" }: { id: s
         value={lada}
         onChange={(e) => {
           const d = e.target.value.replace(/[^\d]/g, "").slice(0, 4);
-          onChange(joinPhone(`+${d}`, num) || (d ? "" : ""));
-          if (!num) onChange(`+${d} `.trim() === "+" ? "" : `+${d} `);
+          onChange(num ? joinPhone(`+${d}`, num) : `+${d}`);
         }}
         onBlur={onBlur}
       />
