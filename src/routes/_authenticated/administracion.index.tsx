@@ -33,7 +33,7 @@ function AdministracionPage() {
       </header>
 
       <section className="flex items-center gap-4 rounded-[18px] bg-card/60 p-4">
-        <ClubCrest clubId={profile?.club_id ?? null} clubName={clubName ?? null} className="shrink-0 [&_img]:h-14 [&_img]:w-auto [&_img]:object-contain [&_img]:rounded-none [&_span]:hidden" />
+        <ClubCrest clubId={profile?.club_id ?? null} clubName={clubName ?? null} className="shrink-0 [&_img]:h-14 [&_img]:w-auto [&_img]:object-contain [&_img]:rounded-none [&_span]:!hidden" />
         <div className="min-w-0">
           <p className="truncate font-display text-lg font-bold">{clubName ?? "Mi club"}</p>
           <p className="truncate text-[13px] text-muted-foreground">{ADMIN_SEASON}</p>
