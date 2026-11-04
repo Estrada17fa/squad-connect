@@ -1,264 +1,194 @@
 import * as React from "react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Search, SlidersHorizontal, UserPlus, X, ShieldCheck, Plus, CheckCircle2 } from "lucide-react";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
+import { Search, Plus, MoreHorizontal, X, CheckCircle2 } from "lucide-react";
 import { useApp } from "@/components/squad/AppLayout";
 import { LoadingState } from "@/components/squad/LoadingState";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup,
+  DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { canManageUsers } from "@/lib/permissions";
 import { inferBaseRole } from "@/lib/rolePages";
 import { displayName } from "@/components/usuarios/memberUtils";
-import {
-  useAdminUsers, neverSignedIn, shortName, categoriesLine,
-} from "@/hooks/useAdminUsers";
-import {
-  UsersHeader, BackLabel, IconBtn, SectionLabel, GroupCard, RowButton, PersonAvatar, Pill, UsersTabs, Fab,
-} from "@/components/admin/users/ui";
-import { ActivityTimeline, useAudit } from "@/components/admin/users/ActivityTimeline";
-import { CreateRoleDialog } from "@/components/admin/users/CreateRoleDialog";
+import { useAdminUsers, neverSignedIn, type AdminMember } from "@/hooks/useAdminUsers";
+import { UsersHeader, BackLabel, IconBtn } from "@/components/admin/users/ui";
+import { UserTabs, AlertLines, PersonGrid, PersonTile, roleCategoryLine, type UsersTab, type Alerta } from "@/components/admin/users/PeopleGrid";
 
-type Tab = "miembros" | "roles" | "actividad";
+type Search = { tab?: string; alerta?: string; cat?: string };
 
 export const Route = createFileRoute("/_authenticated/administracion/usuarios/")({
-  validateSearch: (s: Record<string, unknown>): { tab?: string; filtro?: string } => ({
+  validateSearch: (s: Record<string, unknown>): Search & { filtro?: string } => ({
     tab: typeof s.tab === "string" ? s.tab : undefined,
+    alerta: typeof s.alerta === "string" ? s.alerta : undefined,
+    cat: typeof s.cat === "string" ? s.cat : undefined,
     filtro: typeof s.filtro === "string" ? s.filtro : undefined,
   }),
+  beforeLoad: ({ search }) => {
+    // Enlaces del diseño anterior: se redirigen al formato nuevo.
+    if (search.tab === "roles") throw redirect({ to: "/administracion/usuarios/roles", replace: true });
+    if (search.tab === "actividad") throw redirect({ to: "/administracion/usuarios/actividad", replace: true });
+    if (search.filtro) {
+      const alerta = search.filtro === "sin-categoria" ? "sin_categoria" : search.filtro === "sin-entrar" ? "sin_entrar" : undefined;
+      throw redirect({ to: "/administracion/usuarios", search: { alerta }, replace: true });
+    }
+  },
   component: UsuariosIndex,
 });
-
-const ROLE_PILLS = [
-  { key: "jugador", label: "Jugadores" },
-  { key: "tecnico", label: "Técnicos" },
-  { key: "medico", label: "Médicos" },
-  { key: "staff", label: "Staff" },
-  { key: "admin", label: "Admin" },
-] as const;
 
 function UsuariosIndex() {
   const search = Route.useSearch();
   const navigate = useNavigate({ from: "/administracion/usuarios/" });
-  const tab: Tab = search.tab === "roles" || search.tab === "actividad" ? search.tab : "miembros";
   const { profile, isSuperAdmin, permissions } = useApp();
   const clubId = profile?.club_id ?? null;
   const canEdit = isSuperAdmin || canManageUsers(permissions["usuarios"]);
   const data = useAdminUsers(clubId);
-
-  return (
-    <div className="coord-enter mx-auto max-w-3xl space-y-4 pb-28">
-      <UsersHeader
-        back={<Link to="/administracion"><BackLabel>Administración</BackLabel></Link>}
-        title="Usuarios"
-      />
-      <UsersTabs<Tab>
-        tabs={[{ key: "miembros", label: "Miembros" }, { key: "roles", label: "Roles" }, { key: "actividad", label: "Actividad" }]}
-        value={tab}
-        onChange={(t) => navigate({ search: { tab: t === "miembros" ? undefined : t }, replace: true })}
-      />
-      {data.members.isLoading ? (
-        <LoadingState />
-      ) : tab === "miembros" ? (
-        <MembersList data={data} canEdit={canEdit} filtro={search.filtro} />
-      ) : tab === "roles" ? (
-        <RolesList data={data} canEdit={canEdit} clubId={clubId} />
-      ) : (
-        <ActivityTab data={data} clubId={clubId} canEdit={canEdit} />
-      )}
-      <div className="pt-6 text-center text-xs text-muted-foreground">
-        <Link to="/m/usuarios" className="underline-offset-2 hover:underline">Ver versión actual</Link>
-      </div>
-    </div>
-  );
-}
-
-type Data = ReturnType<typeof useAdminUsers>;
-
-function MembersList({ data, canEdit, filtro }: { data: Data; canEdit: boolean; filtro?: string }) {
-  const navigate = useNavigate({ from: "/administracion/usuarios/" });
-  const [rolePill, setRolePill] = React.useState<string | null>(null);
-  const [open, setOpen] = React.useState<null | "search" | "filter">(null);
+  const [searchOpen, setSearchOpen] = React.useState(false);
   const [q, setQ] = React.useState("");
-  const [teamId, setTeamId] = React.useState<string>("");
-  const [status, setStatus] = React.useState<"activo" | "baja">("activo");
+
+  const alerta: Alerta | null = search.alerta === "sin_categoria" || search.alerta === "sin_entrar" ? search.alerta : null;
+  const tabParam: UsersTab = search.tab === "jugadores" || search.tab === "bajas" ? search.tab : "staff";
+  const cat = search.cat ?? "";
 
   const members = data.members.data ?? [];
+  const teams = data.teams.data ?? [];
   const allCats = data.allCats.data ?? new Set<string>();
-  const baseOf = (id: string) => new Set((data.byUser.get(id) ?? []).map((m) => inferBaseRole(m.roleName)));
+  const mems = (id: string) => data.byUser.get(id) ?? [];
+  const isPlayer = (id: string) => {
+    const b = mems(id).map((m) => inferBaseRole(m.roleName));
+    return b.length > 0 && b.every((x) => x === "jugador");
+  };
+  const active = members.filter((m) => (m.status ?? "activo") !== "baja");
+  const bucket = (m: AdminMember): UsersTab => ((m.status ?? "activo") === "baja" ? "bajas" : isPlayer(m.id) ? "jugadores" : "staff");
+  const sinCat = active.filter((m) => mems(m.id).length === 0);
+  const sinEntrar = active.filter((m) => mems(m.id).length > 0 && neverSignedIn(m, data.signInMap, data.signInAvailable));
+  const matchAlerta = (m: AdminMember) =>
+    alerta === "sin_categoria" ? mems(m.id).length === 0 : alerta === "sin_entrar" ? sinEntrar.includes(m) : true;
 
-  const statusList = members.filter((m) => (m.status ?? "activo") === status);
-  const counts: Record<string, number> = {};
-  for (const m of statusList) for (const b of baseOf(m.id)) if (b) counts[b] = (counts[b] ?? 0) + 1;
+  // Al activar una alerta: si todas sus personas caen en una pestaña, se usa esa; si no, se muestran todas.
+  const alertaTabs = alerta ? new Set(active.filter(matchAlerta).map(bucket)) : null;
+  const showAll = !!alertaTabs && alertaTabs.size > 1;
+  const tab: UsersTab = alertaTabs && alertaTabs.size === 1 ? [...alertaTabs][0]! : tabParam;
 
-  const filtered = statusList.filter((m) => {
-    const mems = data.byUser.get(m.id) ?? [];
-    if (filtro === "sin-categoria" && mems.length > 0) return false;
-    if (filtro === "sin-entrar" && !neverSignedIn(m, data.signInMap, data.signInAvailable)) return false;
-    if (rolePill && !baseOf(m.id).has(rolePill as any)) return false;
-    if (teamId && !mems.some((x) => x.team_id === teamId)) return false;
-    const s = q.trim().toLowerCase();
+  const counts = { staff: 0, jugadores: 0, bajas: 0 } as Record<UsersTab, number>;
+  for (const m of members) counts[bucket(m)]++;
+
+  const s = q.trim().toLowerCase();
+  const list = members.filter((m) => {
+    if (!showAll && bucket(m) !== tab) return false;
+    if (alerta && ((m.status ?? "activo") === "baja" || !matchAlerta(m))) return false;
+    if (cat && !mems(m.id).some((x) => x.team_id === cat)) return false;
     if (s && !`${displayName(m)} ${m.email ?? ""}`.toLowerCase().includes(s)) return false;
     return true;
   });
-  const isPlayerOnly = (id: string) => {
-    const b = baseOf(id);
-    return b.size > 0 && [...b].every((x) => x === "jugador");
-  };
-  const staff = filtered.filter((m) => !isPlayerOnly(m.id));
-  const players = filtered.filter((m) => isPlayerOnly(m.id));
 
-  const filtroLabel = filtro === "sin-categoria" ? "Sin categoría" : filtro === "sin-entrar" ? "Sin entrar a la app" : null;
-  const emptyText =
-    filtro === "sin-categoria" ? "Nadie sin categoría. Todo en orden"
-      : filtro === "sin-entrar" ? "Todos ya entraron a la app. Todo en orden"
-        : status === "baja" ? "No hay bajas" : "Nadie coincide con la búsqueda";
+  const dotOf = (m: AdminMember) =>
+    mems(m.id).length === 0 ? "red" as const : neverSignedIn(m, data.signInMap, data.signInAvailable) ? "amber" as const : null;
+  const tile = (m: AdminMember, withNumber?: boolean) => (
+    <PersonTile
+      key={m.id}
+      member={m}
+      subtitle={roleCategoryLine(mems(m.id), allCats.has(m.id))}
+      dot={dotOf(m)}
+      number={withNumber ? m.jersey_number : null}
+      onClick={() => navigate({ to: "/administracion/usuarios/$userId", params: { userId: m.id } })}
+    />
+  );
 
-  function renderGroup(title: string, list: typeof filtered) {
-    if (list.length === 0) return null;
-    return (
-      <section>
-        <SectionLabel>{title} · {list.length}</SectionLabel>
-        <GroupCard>
-          {list.map((m) => {
-            const mems = data.byUser.get(m.id) ?? [];
-            const dot = mems.length === 0 ? "red" : neverSignedIn(m, data.signInMap, data.signInAvailable) ? "amber" : null;
-            const name = shortName(m);
-            return (
-              <RowButton key={m.id} onClick={() => navigate({ to: "/administracion/usuarios/$userId", params: { userId: m.id } })}>
-                <span className="flex items-center gap-3">
-                  <PersonAvatar name={name} src={m.avatar_url} dot={dot as any} />
-                  <span className="min-w-0">
-                    <span className="block truncate text-sm font-semibold">{name}</span>
-                    <span className="block truncate text-xs text-muted-foreground">{categoriesLine(mems, allCats.has(m.id))}</span>
-                  </span>
-                </span>
-              </RowButton>
-            );
-          })}
-        </GroupCard>
-      </section>
-    );
+  function playerGroups() {
+    const groups: { title: string; people: AdminMember[] }[] = [];
+    for (const t of teams) {
+      if (cat && t.id !== cat) continue;
+      const people = list.filter((m) => mems(m.id).some((x) => x.team_id === t.id));
+      if (people.length) groups.push({ title: t.name, people });
+    }
+    const none = list.filter((m) => !mems(m.id).some((x) => x.team_id));
+    if (none.length) groups.push({ title: "Sin categoría", people: none });
+    return groups;
   }
 
+  const catName = teams.find((t) => t.id === cat)?.name;
+  const emptyText = alerta === "sin_categoria" ? "Nadie sin categoría. Todo en orden"
+    : alerta === "sin_entrar" ? "Todos ya entraron a la app. Todo en orden"
+      : s ? "Nadie coincide con la búsqueda" : tab === "bajas" ? "No hay bajas" : "Nadie por aquí";
+
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <div className="-mx-1 flex min-w-0 flex-1 gap-1.5 overflow-x-auto px-1 pb-1 [scrollbar-width:none]">
-          <Pill active={!rolePill} onClick={() => setRolePill(null)}>Todos {statusList.length}</Pill>
-          {ROLE_PILLS.filter((p) => counts[p.key]).map((p) => (
-            <Pill key={p.key} active={rolePill === p.key} onClick={() => setRolePill(rolePill === p.key ? null : p.key)}>
-              {p.label} {counts[p.key]}
-            </Pill>
-          ))}
-        </div>
-        <IconBtn label="Buscar" active={open === "search"} onClick={() => setOpen(open === "search" ? null : "search")}><Search className="h-5 w-5" /></IconBtn>
-        <IconBtn label="Filtrar" active={open === "filter" || !!teamId || status === "baja"} onClick={() => setOpen(open === "filter" ? null : "filter")}><SlidersHorizontal className="h-5 w-5" /></IconBtn>
-      </div>
+    <div className="coord-enter mx-auto max-w-5xl space-y-3 pb-28">
+      <UsersHeader
+        back={<Link to="/administracion"><BackLabel>Administración</BackLabel></Link>}
+        title="Usuarios"
+        actions={
+          <>
+            <IconBtn label="Buscar" onClick={() => { setSearchOpen(!searchOpen); if (searchOpen) setQ(""); }}>
+              <Search className="h-5 w-5 text-muted-foreground" />
+            </IconBtn>
+            {canEdit ? (
+              <Link to="/administracion/usuarios/nuevo" aria-label="Nuevo miembro" className="coord-press flex h-10 w-10 items-center justify-center rounded-xl">
+                <Plus className="h-5 w-5 text-muted-foreground" />
+              </Link>
+            ) : null}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button aria-label="Más opciones" className="coord-press flex h-10 w-10 items-center justify-center rounded-xl outline-none">
+                  <MoreHorizontal className="h-5 w-5 text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem asChild><Link to="/administracion/usuarios/roles">Roles y permisos</Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link to="/administracion/usuarios/actividad">Actividad</Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link to="/m/usuarios">Ver versión actual</Link></DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel className="text-xs text-muted-foreground">Filtrar por categoría</DropdownMenuLabel>
+                <DropdownMenuRadioGroup value={cat} onValueChange={(v) => navigate({ search: (p) => ({ ...p, cat: v || undefined }), replace: true })}>
+                  <DropdownMenuRadioItem value="">Todas</DropdownMenuRadioItem>
+                  {teams.map((t) => <DropdownMenuRadioItem key={t.id} value={t.id}>{t.name}</DropdownMenuRadioItem>)}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </>
+        }
+      />
 
-      {open === "search" ? (
-        <Input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Nombre o correo" className="h-11 rounded-xl" />
-      ) : null}
-      {open === "filter" ? (
-        <div className="space-y-2 rounded-[14px] bg-card p-3">
-          <p className="text-xs font-semibold text-muted-foreground">Estado</p>
-          <div className="flex gap-1.5">
-            <Pill active={status === "activo"} onClick={() => setStatus("activo")}>Activos</Pill>
-            <Pill active={status === "baja"} onClick={() => setStatus("baja")}>Bajas</Pill>
-          </div>
-          <p className="pt-1 text-xs font-semibold text-muted-foreground">Categoría</p>
-          <div className="flex flex-wrap gap-1.5">
-            <Pill active={!teamId} onClick={() => setTeamId("")}>Todas</Pill>
-            {(data.teams.data ?? []).map((t) => (
-              <Pill key={t.id} active={teamId === t.id} onClick={() => setTeamId(t.id)}>{t.name}</Pill>
-            ))}
-          </div>
-        </div>
+      {searchOpen ? <Input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Nombre o correo" className="h-11 rounded-xl" /> : null}
+
+      <UserTabs
+        value={showAll ? null : tab}
+        counts={counts}
+        onChange={(t) => navigate({ search: (p) => ({ ...p, tab: t === "staff" ? undefined : t, alerta: undefined }), replace: true })}
+      />
+
+      <AlertLines
+        sinCategoria={sinCat.length}
+        sinEntrar={sinEntrar.length}
+        active={alerta}
+        onToggle={(a) => navigate({ search: (p) => ({ ...p, alerta: a ?? undefined }), replace: true })}
+      />
+
+      {catName ? (
+        <button onClick={() => navigate({ search: (p) => ({ ...p, cat: undefined }), replace: true })} className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+          Categoría: <span className="font-semibold text-foreground">{catName}</span> <X className="h-3.5 w-3.5" />
+        </button>
       ) : null}
 
-      {filtroLabel ? (
-        <div className="flex items-center gap-2">
-          <Pill tone={filtro === "sin-categoria" ? "red" : "amber"}>
-            {filtroLabel}
-            <button aria-label="Quitar filtro" onClick={() => navigate({ search: {}, replace: true })} className="-mr-1 ml-0.5">
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </Pill>
-        </div>
-      ) : null}
-
-      {filtered.length === 0 ? (
+      {data.members.isLoading ? (
+        <LoadingState />
+      ) : list.length === 0 ? (
         <div className="flex flex-col items-center py-10 text-center">
-          <CheckCircle2 className="h-8 w-8 text-primary" />
+          <CheckCircle2 className="h-8 w-8 text-muted-foreground" />
           <p className="mt-3 text-sm text-muted-foreground">{emptyText}</p>
         </div>
+      ) : tab === "jugadores" && !showAll ? (
+        <div className="space-y-5">
+          {playerGroups().map((g) => (
+            <section key={g.title}>
+              <h2 className="mb-2 px-0.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{g.title} · {g.people.length}</h2>
+              <PersonGrid>{g.people.map((m) => tile(m, true))}</PersonGrid>
+            </section>
+          ))}
+        </div>
       ) : (
-        <>
-          {renderGroup("Staff y cuerpo técnico", staff)}
-          {renderGroup("Jugadores", players)}
-        </>
+        <PersonGrid>{list.map((m) => tile(m, bucket(m) === "jugadores"))}</PersonGrid>
       )}
-
-      {canEdit ? (
-        <Fab label="Nuevo miembro" to="/administracion/usuarios/nuevo"><UserPlus className="h-6 w-6" /></Fab>
-      ) : null}
     </div>
-  );
-}
-
-function RolesList({ data, canEdit, clubId }: { data: Data; canEdit: boolean; clubId: string | null }) {
-  const navigate = useNavigate();
-  const [createOpen, setCreateOpen] = React.useState(false);
-  const roles = data.roles.data ?? [];
-  const people = (roleId: string) => new Set((data.memberships.data ?? []).filter((m) => m.role_id === roleId).map((m) => m.user_id)).size;
-  return (
-    <div className="space-y-3">
-      <GroupCard>
-        {roles.map((r) => (
-          <RowButton key={r.id} onClick={() => navigate({ to: "/administracion/usuarios/roles/$roleId", params: { roleId: r.id } })}>
-            <span className="flex items-center gap-3">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                <ShieldCheck className="h-[18px] w-[18px] text-primary" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-semibold">{r.name}</span>
-                <span className="block text-xs text-muted-foreground">{people(r.id)} {people(r.id) === 1 ? "persona" : "personas"}</span>
-              </span>
-              {r.default_all_categories ? <Pill tone="gray">Todas las categorías</Pill> : null}
-            </span>
-          </RowButton>
-        ))}
-      </GroupCard>
-      {canEdit && clubId ? (
-        <>
-          <button onClick={() => setCreateOpen(true)} className="coord-press inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-full bg-muted text-sm font-semibold">
-            <Plus className="h-4 w-4" /> Crear rol
-          </button>
-          <CreateRoleDialog
-            open={createOpen}
-            onOpenChange={setCreateOpen}
-            clubId={clubId}
-            onCreated={(id) => {
-              data.roles.refetch();
-              navigate({ to: "/administracion/usuarios/roles/$roleId", params: { roleId: id } });
-            }}
-          />
-        </>
-      ) : null}
-    </div>
-  );
-}
-
-function ActivityTab({ data, clubId, canEdit }: { data: Data; clubId: string | null; canEdit: boolean }) {
-  const audit = useAudit(clubId);
-  if (!canEdit) {
-    return <p className="py-10 text-center text-sm text-muted-foreground">La actividad solo la ve quien puede editar Usuarios.</p>;
-  }
-  if (audit.isLoading) return <LoadingState />;
-  if (audit.isError) return <p className="py-10 text-center text-sm text-muted-foreground">Próximamente</p>;
-  return (
-    <ActivityTimeline
-      rows={audit.data ?? []}
-      members={data.members.data ?? []}
-      roles={data.roles.data ?? []}
-      teams={data.teams.data ?? []}
-    />
   );
 }
