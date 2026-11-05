@@ -46,7 +46,7 @@ function AdministracionPage() {
     { key: "sin_categoria", icon: Tag, text: "Sin categoría", context: "Miembros sin rol asignado", value: sinCategoria, urgency: sinCategoria ? "red" : "gray" },
     { key: "sin_entrar", icon: UserX, text: "Sin entrar a la app", context: "Nunca han iniciado sesión", value: sinEntrar, urgency: sinEntrar ? "amber" : "gray" },
     ...(data.sinFicha.size > 0
-      ? [{ key: "sin_ficha", icon: IdCard, text: "Jugadores sin ficha deportiva", context: "Sin dorsal ni posición", value: data.sinFicha.size, urgency: "gray" }]
+      ? [{ key: "sin_ficha", icon: IdCard, text: "Jugadores sin ficha deportiva", context: "Sin dorsal ni posición", value: data.sinFicha.size, urgency: "gray" as const }]
       : []),
   ] as const;
 
