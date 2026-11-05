@@ -1,4 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useTournaments } from "@/hooks/useTournaments";
+import { usePlayedMatchCounts } from "@/hooks/useTournamentAdmin";
+import { displayStatus } from "@/lib/torneoAdmin";
 import { ChevronLeft, ChevronRight, Building2, UserX, Tag, IdCard } from "lucide-react";
 import { useApp } from "@/components/squad/AppLayout";
 import { ClubCrest } from "@/components/squad/ClubCrest";
@@ -36,10 +39,15 @@ function AdministracionPage() {
   const show = (n: number) => (loading ? "…" : String(n));
   const teamsCount = (data.teams.data ?? []).length;
 
+  const tq = useTournaments(profile?.club_id ?? null);
+  const pq = usePlayedMatchCounts(profile?.club_id ?? null);
+  const enCurso = (tq.data ?? []).filter((t) => displayStatus(t.status, pq.data?.[t.id] ?? 0) === "en_curso").length;
+  const torneoStat = tq.isLoading || pq.isLoading ? "…" : `${enCurso} en curso`;
+
   const stats = [
     { value: show(active.length), label: "miembros" },
     { value: data.teams.isLoading ? "…" : String(teamsCount), label: "categorías" },
-    { value: "1", label: "torneo en curso" },
+    { value: tq.isLoading || pq.isLoading ? "…" : String(enCurso), label: enCurso === 1 ? "torneo en curso" : "torneos en curso" },
   ];
 
   const pending = [
@@ -51,7 +59,7 @@ function AdministracionPage() {
   ] as const;
 
   const statFor = (key: string, fallback: string) =>
-    key === "usuarios" ? `${show(active.length)} activos` : key === "club" ? `${teamsCount} categorías` : fallback;
+    key === "usuarios" ? `${show(active.length)} activos` : key === "club" ? `${teamsCount} categorías` : key === "torneos" ? torneoStat : fallback;
 
   return (
     <div className="-mt-2 space-y-5">
@@ -127,6 +135,8 @@ function AdministracionPage() {
             );
             return m.key === "usuarios" ? (
               <Link key={m.key} to="/administracion/usuarios" className={cls}>{inner}</Link>
+            ) : m.key === "torneos" ? (
+              <Link key={m.key} to="/administracion/torneos" className={cls}>{inner}</Link>
             ) : (
               <Link key={m.key} to="/administracion/$module" params={{ module: m.key }} className={cls}>{inner}</Link>
             );
