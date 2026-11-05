@@ -385,7 +385,7 @@ export function LocationsTab({
   );
 }
 
-function LocationForm({
+export function LocationForm({
   clubId,
   userId,
   row,
