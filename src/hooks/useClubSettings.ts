@@ -15,6 +15,7 @@ export interface ClubRow {
   currency: string | null;
   date_format: string | null;
   week_start: number | null;
+  home_location_id?: string | null;
 }
 
 const db = supabase as any;

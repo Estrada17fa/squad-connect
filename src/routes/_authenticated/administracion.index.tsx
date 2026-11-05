@@ -135,6 +135,8 @@ function AdministracionPage() {
             );
             return m.key === "usuarios" ? (
               <Link key={m.key} to="/administracion/usuarios" className={cls}>{inner}</Link>
+            ) : m.key === "club" ? (
+              <Link key={m.key} to="/administracion/club" className={cls}>{inner}</Link>
             ) : m.key === "torneos" ? (
               <Link key={m.key} to="/administracion/torneos" className={cls}>{inner}</Link>
             ) : (
