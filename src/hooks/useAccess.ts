@@ -97,9 +97,11 @@ export function useAccess(userId: string) {
     queryKey: ["squad-access", userId],
     // Permisos y membresías cambian raramente; se invalidan por realtime
     // cuando cambian roles/permisos, así que no revalidamos al navegar.
-    staleTime: 5 * 60_000,
+    enabled: !!userId,
+    // Un resultado "sin categorías" nunca se reutiliza: se vuelve a revisar en cada montaje.
+    staleTime: (q) => ((q.state.data as AccessData | undefined)?.noMemberships ? 0 : 5 * 60_000),
     gcTime: 30 * 60_000,
-    refetchOnMount: false,
+    refetchOnMount: (q) => !!(q.state.data as AccessData | undefined)?.noMemberships,
     refetchOnWindowFocus: false,
     queryFn: async (): Promise<AccessData> => {
       // Fuente única de verdad: get_my_access (effective_permission en SQL).
@@ -118,6 +120,9 @@ export function useAccess(userId: string) {
       ]);
       if (profileRes.error) throw profileRes.error;
       if (membershipsRes.error) throw membershipsRes.error;
+      // Sin perfil visible = aún no hay sesión válida (p. ej. justo al salir/entrar).
+      // Nunca se interpreta como "sin categorías": se reintenta.
+      if (!profileRes.data) throw new Error("Sesión no lista");
 
       const profile = profileRes.data
         ? {

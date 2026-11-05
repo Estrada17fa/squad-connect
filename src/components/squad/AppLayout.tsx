@@ -100,6 +100,8 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
     await qc.cancelQueries();
     qc.clear();
     await supabase.auth.signOut();
+    // Consultas que se dispararon durante la salida ya sin sesión: también se descartan.
+    qc.clear();
     navigate({ to: "/auth", replace: true });
   }
 
@@ -249,6 +251,13 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
         <div className="glass max-w-sm space-y-4 rounded-2xl p-6 text-center">
           <p className="font-display text-lg font-semibold">No tienes categorías asignadas</p>
           <p className="text-sm text-muted-foreground">Contacta al administrador de tu club para que te asigne una.</p>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className="w-full rounded-lg bg-muted px-4 py-2 text-sm font-semibold"
+          >
+            Volver a revisar
+          </button>
           <button
             type="button"
             onClick={signOut}
