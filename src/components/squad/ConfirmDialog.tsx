@@ -23,6 +23,7 @@ export function ConfirmDialog({
   destructive = true,
   loading,
   onConfirm,
+  children,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;

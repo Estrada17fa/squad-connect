@@ -20,7 +20,7 @@ import { AllCategoriesToggle } from "@/components/usuarios/AllCategoriesToggle";
 import { AddMembershipDialog } from "@/components/usuarios/AddMembershipDialog";
 import { EditMembershipDialog } from "@/components/usuarios/EditMembershipDialog";
 import { DeleteMemberDialog } from "@/components/usuarios/DeleteMemberDialog";
-import { useAdminUsers, useRefreshAdminUsers, neverSignedIn, relativeTime, generateTempPassword } from "@/hooks/useAdminUsers";
+import { useAdminUsers, useRefreshAdminUsers, neverSignedIn, relativeTime } from "@/hooks/useAdminUsers";
 import { UsersHeader, BackLabel, IconBtn, SectionLabel, GroupCard, InfoRow, RowButton, PersonAvatar, Pill, AccessReady, whatsappUrl } from "@/components/admin/users/ui";
 import { ActivityTimeline, useAudit } from "@/components/admin/users/ActivityTimeline";
 
