@@ -38,3 +38,5 @@ Mismo estilo que Usuarios. Sin cambios en la base de datos ni en las reglas. La 
 - Capturas en 375×667: la lista, los 5 pasos (incluido Pegar lista), la ficha y un ajuste de puntos.
 - Crear un torneo de prueba completo, editarlo y eliminarlo, confirmando que no quede ningún rastro.
 - Comparar "Primera Premier" antes y después para confirmar que no cambió.
+- Al eliminar el torneo de prueba también se borran su logo y los escudos de sus equipos del almacenamiento de escudos (tournament-crests), y se confirma que ya no están.
+- Revisar si al eliminar un torneo normal hoy también se borran sus archivos. Solo se reporta; no se cambia por ahora.
