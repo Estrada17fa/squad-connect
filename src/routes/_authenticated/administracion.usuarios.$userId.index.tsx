@@ -92,9 +92,8 @@ function FichaMiembro() {
   async function doReset() {
     if (!member) return;
     setBusy(true);
-    const pw = generateTempPassword();
     try {
-      await updateFn({
+      const res = await updateFn({
         data: {
           user_id: member.id,
           first_name: member.first_name ?? name,
@@ -107,11 +106,11 @@ function FichaMiembro() {
           birthplace: member.birthplace,
           emergency_contact_name: member.emergency_contact_name,
           emergency_contact_phone: member.emergency_contact_phone,
-          password: pw,
+          ...passwordPayload(resetPw),
         } as any,
       });
       setConfirm(null);
-      setNewAccess(pw);
+      setNewAccess(res.appliedPassword ?? "");
       refresh();
     } catch (e: any) {
       toast.error(e?.message ?? "No se pudo restablecer");
