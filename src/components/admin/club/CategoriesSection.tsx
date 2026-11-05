@@ -205,22 +205,22 @@ function CategorySheet({
 
   React.useEffect(() => {
     setName(current?.name ?? "");
-    setCategory(current?.category ?? "");
+    setCategory(current?.category ?? branches[0] ?? "");
     setBlocked(null);
     setConfirmDel(false);
   }, [row]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function save() {
     if (!name.trim()) return toast.error("Escribe el nombre");
+    if (!category.trim()) return toast.error("Escribe el tipo");
     setBusy(true);
     try {
       if (current) {
-        const { error } = await supabase.from("teams").update({ name: name.trim(), category: (category.trim() || null) as any }).eq("id", current.id);
+        const { error } = await supabase.from("teams").update({ name: name.trim(), category: category.trim() }).eq("id", current.id);
         if (error) throw error;
         toast.success("Categoría actualizada");
       } else {
-        const payload: any = { club_id: clubId, name: name.trim(), display_order: nextOrder };
-        if (category.trim()) payload.category = category.trim();
+        const payload: any = { club_id: clubId, name: name.trim(), category: category.trim(), display_order: nextOrder };
         const { error } = await supabase.from("teams").insert(payload);
         if (error) throw error;
         const { data: all } = await db.from("member_all_categories").select("user_id").eq("club_id", clubId);
@@ -289,11 +289,11 @@ function CategorySheet({
           <Input id="cat-name" value={name} onChange={(e) => setName(e.target.value)} className="h-11" placeholder="Sub-17" enterKeyHint="done" />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="cat-type" className="text-xs text-muted-foreground">Tipo (opcional)</Label>
+          <Label htmlFor="cat-type" className="text-xs text-muted-foreground">Tipo</Label>
           <Input id="cat-type" list="cat-types" value={category} onChange={(e) => setCategory(e.target.value)} className="h-11" placeholder="Varonil, Femenil, Fuerzas básicas…" />
           <datalist id="cat-types">{branches.map((b) => <option key={b} value={b} />)}</datalist>
         </div>
-        <Button className="h-11 w-full" disabled={busy || !name.trim()} onClick={save}>{isNew ? "Agregar" : "Guardar"}</Button>
+        <Button className="h-11 w-full" disabled={busy || !name.trim() || !category.trim()} onClick={save}>{isNew ? "Agregar" : "Guardar"}</Button>
 
         {current ? (
           <div className="divide-y divide-border/40 overflow-hidden rounded-[14px] bg-background/60">
