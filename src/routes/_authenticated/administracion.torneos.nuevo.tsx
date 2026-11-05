@@ -44,9 +44,10 @@ function NuevoTorneo() {
   React.useEffect(() => { if (!data.team_id && teams.length === 1) setData((d) => ({ ...d, team_id: teams[0].id! })); }, [teams, data.team_id]);
   // El equipo del club entra solo, con su logo.
   React.useEffect(() => {
-    if (list.some((t) => t.is_our_team) || !(clubName || club.data?.name)) return;
-    setList((l) => [{ ...newTeamDraft(club.data?.name ?? clubName), is_our_team: true, preview_url: clubLogo.data ?? null }, ...l]);
-  }, [clubName, club.data?.name, clubLogo.data, list]);
+    const name = club.data?.name ?? clubName;
+    if (!name) return;
+    setList((l) => (l.some((t) => t.is_our_team) ? l : [{ ...newTeamDraft(name), is_our_team: true, preview_url: null }, ...l]));
+  }, [clubName, club.data?.name]);
   React.useEffect(() => { setList((l) => l.map((t) => (t.is_our_team ? { ...t, preview_url: clubLogo.data ?? null } : t))); }, [clubLogo.data]);
 
   const errors: string[] = [];
