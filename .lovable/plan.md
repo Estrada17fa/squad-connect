@@ -15,6 +15,7 @@ El servidor hoy no valida dorsales repetidos. Se valida en la pantalla contra lo
 
 ## 2. Después del alta
 - "Listo": si es jugador y saltó la ficha (o no capturó dorsal ni posición), línea "Ficha deportiva pendiente · Completar en Plantel ›" que abre su ficha en Plantel.
+- Si falla alguna llamada posterior al alta (ficha de una categoría extra u otra categoría), "Listo" no se presenta como éxito total: arriba aparece "Miembro creado, pero no se guardó la ficha de <categoría>" (una línea por categoría) con enlace "Completar en Plantel ›", y debajo el resto de "Listo" (contraseña, copiar, WhatsApp).
 - Portada de Administración: "Jugadores sin ficha deportiva" con datos reales = jugadores activos sin dorsal ni posición en alguna de sus categorías. Si son 0, no aparece. Al tocarla abre Usuarios en la pestaña Jugadores con `?alerta=sin_ficha`, filtrada a ellos (con "Quitar filtro" como las demás alertas).
 - /editar de Usuarios no edita datos deportivos; para jugadores muestra el enlace "Editar ficha deportiva en Plantel ›".
 
