@@ -160,8 +160,7 @@ export function PointsFields({ value, onChange }: { value: PointsConfig; onChang
         <Num id="p-draw" label="Empate" value={value.points_draw} onChange={(n) => onChange({ points_draw: n })} />
         <Num id="p-loss" label="Derrota" value={value.points_loss} onChange={(n) => onChange({ points_loss: n })} />
       </div>
-      <MoreFields>
-        <span className="sr-only">Reglas avanzadas</span>
+      <MoreFields label="Reglas avanzadas">
         <div className="space-y-3">
           <div className="flex min-h-12 items-center justify-between rounded-xl bg-card px-3"><span className="text-sm font-semibold">Bonus de visita</span><Switch checked={value.away_bonus_enabled} onCheckedChange={(v) => onChange({ away_bonus_enabled: v })} aria-label="Bonus de visita" /></div>
           {value.away_bonus_enabled ? <div className="flex gap-2"><Num id="ab-diff" label="Ganar por (goles)" value={value.away_bonus_min_diff} onChange={(n) => onChange({ away_bonus_min_diff: n })} /><Num id="ab-pts" label="Puntos extra" value={value.away_bonus_points} onChange={(n) => onChange({ away_bonus_points: n })} /></div> : null}

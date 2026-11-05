@@ -294,7 +294,7 @@ export function AppLayout({ user }: { user: { id: string; email?: string | null 
           <Outlet />
         </main>
         {/* En el alta de miembro la barra inferior se oculta para que cada paso quepa sin scroll. */}
-        {pathname === "/administracion/usuarios/nuevo" ? null : <BottomNav pages={navPages} />}
+        {pathname === "/administracion/usuarios/nuevo" || pathname === "/administracion/torneos/nuevo" || /^\/administracion\/torneos\/[^/]+\/editar$/.test(pathname) ? null : <BottomNav pages={navPages} />}
 
       </div>
     </AppContext.Provider>
