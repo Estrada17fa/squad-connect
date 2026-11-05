@@ -61,6 +61,7 @@ import { Route as AuthenticatedCoordinacionAreaIndexRouteImport } from './routes
 import { Route as AuthenticatedCoordinacionAreaModuleRouteImport } from './routes/_authenticated/coordinacion.$area.$module'
 import { Route as AuthenticatedMPlantelPlayerIdRouteImport } from './routes/_authenticated/m.plantel.$playerId'
 import { Route as AuthenticatedAdministracionTorneosIdIndexRouteImport } from './routes/_authenticated/administracion.torneos.$id.index'
+import { Route as AuthenticatedAdministracionTorneosIdEditarRouteImport } from './routes/_authenticated/administracion.torneos.$id.editar'
 import { Route as AuthenticatedAdministracionUsuariosUserIdIndexRouteImport } from './routes/_authenticated/administracion.usuarios.$userId.index'
 import { Route as AuthenticatedAdministracionUsuariosUserIdEditarRouteImport } from './routes/_authenticated/administracion.usuarios.$userId.editar'
 import { Route as AuthenticatedAdministracionUsuariosUserIdPermisosRouteImport } from './routes/_authenticated/administracion.usuarios.$userId.permisos'
@@ -358,6 +359,12 @@ const AuthenticatedAdministracionTorneosIdIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedAdministracionTorneosIdRoute,
   } as any)
+const AuthenticatedAdministracionTorneosIdEditarRoute =
+  AuthenticatedAdministracionTorneosIdEditarRouteImport.update({
+    id: '/editar',
+    path: '/editar',
+    getParentRoute: () => AuthenticatedAdministracionTorneosIdRoute,
+  } as any)
 const AuthenticatedAdministracionUsuariosUserIdIndexRoute =
   AuthenticatedAdministracionUsuariosUserIdIndexRouteImport.update({
     id: '/',
@@ -440,6 +447,7 @@ export interface FileRoutesByFullPath {
   '/administracion/torneos/': typeof AuthenticatedAdministracionTorneosIndexRoute
   '/administracion/usuarios/': typeof AuthenticatedAdministracionUsuariosIndexRoute
   '/coordinacion/$area/': typeof AuthenticatedCoordinacionAreaIndexRoute
+  '/administracion/torneos/$id/editar': typeof AuthenticatedAdministracionTorneosIdEditarRoute
   '/administracion/usuarios/$userId/editar': typeof AuthenticatedAdministracionUsuariosUserIdEditarRoute
   '/administracion/usuarios/$userId/permisos': typeof AuthenticatedAdministracionUsuariosUserIdPermisosRoute
   '/administracion/usuarios/roles/$roleId': typeof AuthenticatedAdministracionUsuariosRolesRoleIdRoute
@@ -491,6 +499,7 @@ export interface FileRoutesByTo {
   '/administracion/torneos': typeof AuthenticatedAdministracionTorneosIndexRoute
   '/administracion/usuarios': typeof AuthenticatedAdministracionUsuariosIndexRoute
   '/coordinacion/$area': typeof AuthenticatedCoordinacionAreaIndexRoute
+  '/administracion/torneos/$id/editar': typeof AuthenticatedAdministracionTorneosIdEditarRoute
   '/administracion/usuarios/$userId/editar': typeof AuthenticatedAdministracionUsuariosUserIdEditarRoute
   '/administracion/usuarios/$userId/permisos': typeof AuthenticatedAdministracionUsuariosUserIdPermisosRoute
   '/administracion/usuarios/roles/$roleId': typeof AuthenticatedAdministracionUsuariosRolesRoleIdRoute
@@ -551,6 +560,7 @@ export interface FileRoutesById {
   '/_authenticated/administracion/torneos/': typeof AuthenticatedAdministracionTorneosIndexRoute
   '/_authenticated/administracion/usuarios/': typeof AuthenticatedAdministracionUsuariosIndexRoute
   '/_authenticated/coordinacion/$area/': typeof AuthenticatedCoordinacionAreaIndexRoute
+  '/_authenticated/administracion/torneos/$id/editar': typeof AuthenticatedAdministracionTorneosIdEditarRoute
   '/_authenticated/administracion/usuarios/$userId/editar': typeof AuthenticatedAdministracionUsuariosUserIdEditarRoute
   '/_authenticated/administracion/usuarios/$userId/permisos': typeof AuthenticatedAdministracionUsuariosUserIdPermisosRoute
   '/_authenticated/administracion/usuarios/roles/$roleId': typeof AuthenticatedAdministracionUsuariosRolesRoleIdRoute
@@ -611,6 +621,7 @@ export interface FileRouteTypes {
     | '/administracion/torneos/'
     | '/administracion/usuarios/'
     | '/coordinacion/$area/'
+    | '/administracion/torneos/$id/editar'
     | '/administracion/usuarios/$userId/editar'
     | '/administracion/usuarios/$userId/permisos'
     | '/administracion/usuarios/roles/$roleId'
@@ -662,6 +673,7 @@ export interface FileRouteTypes {
     | '/administracion/torneos'
     | '/administracion/usuarios'
     | '/coordinacion/$area'
+    | '/administracion/torneos/$id/editar'
     | '/administracion/usuarios/$userId/editar'
     | '/administracion/usuarios/$userId/permisos'
     | '/administracion/usuarios/roles/$roleId'
@@ -721,6 +733,7 @@ export interface FileRouteTypes {
     | '/_authenticated/administracion/torneos/'
     | '/_authenticated/administracion/usuarios/'
     | '/_authenticated/coordinacion/$area/'
+    | '/_authenticated/administracion/torneos/$id/editar'
     | '/_authenticated/administracion/usuarios/$userId/editar'
     | '/_authenticated/administracion/usuarios/$userId/permisos'
     | '/_authenticated/administracion/usuarios/roles/$roleId'
@@ -1101,6 +1114,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdministracionTorneosIdIndexRouteImport
       parentRoute: typeof AuthenticatedAdministracionTorneosIdRoute
     }
+    '/_authenticated/administracion/torneos/$id/editar': {
+      id: '/_authenticated/administracion/torneos/$id/editar'
+      path: '/editar'
+      fullPath: '/administracion/torneos/$id/editar'
+      preLoaderRoute: typeof AuthenticatedAdministracionTorneosIdEditarRouteImport
+      parentRoute: typeof AuthenticatedAdministracionTorneosIdRoute
+    }
     '/_authenticated/administracion/usuarios/$userId/': {
       id: '/_authenticated/administracion/usuarios/$userId/'
       path: '/'
@@ -1157,11 +1177,14 @@ const AuthenticatedAdminRouteWithChildren =
   AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
 
 interface AuthenticatedAdministracionTorneosIdRouteChildren {
+  AuthenticatedAdministracionTorneosIdEditarRoute: typeof AuthenticatedAdministracionTorneosIdEditarRoute
   AuthenticatedAdministracionTorneosIdIndexRoute: typeof AuthenticatedAdministracionTorneosIdIndexRoute
 }
 
 const AuthenticatedAdministracionTorneosIdRouteChildren: AuthenticatedAdministracionTorneosIdRouteChildren =
   {
+    AuthenticatedAdministracionTorneosIdEditarRoute:
+      AuthenticatedAdministracionTorneosIdEditarRoute,
     AuthenticatedAdministracionTorneosIdIndexRoute:
       AuthenticatedAdministracionTorneosIdIndexRoute,
   }
