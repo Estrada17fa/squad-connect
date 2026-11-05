@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Building2, UserX, Tag, IdCard } from "lucide-react";
 import { useApp } from "@/components/squad/AppLayout";
 import { ClubCrest } from "@/components/squad/ClubCrest";
