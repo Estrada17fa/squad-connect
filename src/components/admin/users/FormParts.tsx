@@ -95,12 +95,12 @@ export function BirthDatePicker({ id, value, onChange, filled }: { id?: string; 
 }
 
 /** Sección plegable "Más datos (opcional)". */
-export function MoreFields({ children, defaultOpen }: { children: React.ReactNode; defaultOpen?: boolean }) {
+export function MoreFields({ children, defaultOpen, label = "Más datos (opcional)" }: { children: React.ReactNode; defaultOpen?: boolean; label?: string }) {
   const [open, setOpen] = React.useState(!!defaultOpen);
   return (
     <div>
       <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} className="coord-press flex min-h-11 w-full items-center justify-between text-sm font-semibold">
-        Más datos (opcional)
+        {label}
         <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", open && "rotate-180")} />
       </button>
       {open ? <div className="space-y-3 pt-1">{children}</div> : null}
