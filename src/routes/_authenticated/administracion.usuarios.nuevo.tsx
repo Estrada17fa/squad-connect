@@ -1,7 +1,8 @@
 import * as React from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { RefreshCw, Eye, EyeOff, Trash2, Plus } from "lucide-react";
+import { Trash2, Plus } from "lucide-react";
+import { PasswordChoice, initialPasswordValue, passwordPayload, passwordErrors, useClubPasswordStatus, type PasswordValue } from "@/components/admin/users/PasswordChoice";
 import { toast } from "sonner";
 import { useApp } from "@/components/squad/AppLayout";
 import { EmptyState } from "@/components/squad/EmptyState";
@@ -11,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { createClubMember, addMembership } from "@/lib/members.functions";
 import { canManageUsers } from "@/lib/permissions";
 import { inferBaseRole } from "@/lib/rolePages";
-import { useAdminUsers, useRefreshAdminUsers, generateTempPassword } from "@/hooks/useAdminUsers";
+import { useAdminUsers, useRefreshAdminUsers } from "@/hooks/useAdminUsers";
 import { StickyFooterActions } from "@/components/admin/users/FormParts";
 import { PersonFields, EMPTY_PERSON, fieldErrors, PERSONA_KEYS, CONTACTO_KEYS, personPayload, type PersonData } from "@/components/admin/users/PersonFields";
 import { UsersHeader, BackLabel, StepProgress, GroupCard, AccessReady, SectionLabel } from "@/components/admin/users/ui";
@@ -50,8 +51,8 @@ function NuevoMiembro() {
   const [allRole, setAllRole] = React.useState("");
   const [allJob, setAllJob] = React.useState("");
   const [assigns, setAssigns] = React.useState<Assign[]>([]);
-  const [password, setPassword] = React.useState(() => generateTempPassword());
-  const [showPw, setShowPw] = React.useState(true);
+  const [pw, setPw] = React.useState<PasswordValue>(initialPasswordValue);
+  const pwStatus = useClubPasswordStatus();
   const [saving, setSaving] = React.useState(false);
   const [errors, setErrors] = React.useState<string[]>([]);
   const [tried, setTried] = React.useState<Record<number, boolean>>({});
@@ -83,6 +84,7 @@ function NuevoMiembro() {
       if (new Set(assigns.map((a) => a.team_id)).size !== assigns.length) return ["Hay una categoría repetida"];
       return [];
     }
+    if (s === 3) return passwordErrors(pw, pwStatus.data?.configured ?? false);
     return [];
   }
 
@@ -94,6 +96,8 @@ function NuevoMiembro() {
   }
 
   async function submit() {
+    const pe = stepErrors(3);
+    if (pe.length) { setErrors(pe); return; }
     setSaving(true);
     setErrors([]);
     try {
@@ -104,7 +108,7 @@ function NuevoMiembro() {
         data: {
           ...personPayload(person),
           email: person.email.trim().toLowerCase(),
-          password,
+          ...passwordPayload(pw),
           role_id: primaryRole,
           assignments: first.map((a) => ({ team_id: a.team_id, job_title: a.job_title.trim() || null })),
           all_categories: allOn,
@@ -119,7 +123,7 @@ function NuevoMiembro() {
         id: res.userId,
         name: `${person.first_name.trim()} ${person.paternal_last_name.trim()}`,
         email: person.email.trim().toLowerCase(),
-        password,
+        password: res.appliedPassword,
         phone: person.phone.trim() || null,
       });
     } catch (e: any) {
@@ -139,7 +143,7 @@ function NuevoMiembro() {
     setAllRole("");
     setAllJob("");
     setAssigns([]);
-    setPassword(generateTempPassword());
+    setPw(initialPasswordValue());
   }
 
   const back = <Link to="/administracion/usuarios"><BackLabel>Usuarios</BackLabel></Link>;
@@ -227,20 +231,7 @@ function NuevoMiembro() {
         </div>
       ) : null}
 
-      {step === 3 ? (
-        <div className="space-y-3">
-          <p className="text-sm text-muted-foreground">Esta es su contraseña temporal. La persona deberá cambiarla al entrar.</p>
-          <div className="flex items-center gap-2 rounded-[14px] bg-card p-3">
-            <span className="min-w-0 flex-1 truncate font-mono text-base font-semibold">{showPw ? password : "••••••••••••"}</span>
-            <button aria-label={showPw ? "Ocultar" : "Mostrar"} onClick={() => setShowPw(!showPw)} className="coord-press flex h-10 w-10 items-center justify-center rounded-xl">
-              {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </button>
-            <button aria-label="Generar otra" onClick={() => setPassword(generateTempPassword())} className="coord-press flex h-10 w-10 items-center justify-center rounded-xl">
-              <RefreshCw className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      ) : null}
+      {step === 3 ? <PasswordChoice value={pw} onChange={setPw} /> : null}
 
       {errors.length ? (
         <ul className="space-y-1 text-sm text-urgency-red">{errors.map((e) => <li key={e}>{e}</li>)}</ul>

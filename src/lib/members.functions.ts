@@ -48,12 +48,18 @@ export const createClubMember = createServerFn({ method: "POST" })
       throw new Error("Elige al menos una categoría o activa 'Todas las categorías'");
     }
 
+    let appliedPassword = data.password ?? "";
+    if (data.password_mode === "club") {
+      const clubPw = process.env["DEFAULT_MEMBER_PASSWORD"];
+      if (!clubPw) throw new Error("Configura la contraseña del club");
+      appliedPassword = clubPw;
+    }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const fullName = fullNameOf(data.first_name, data.paternal_last_name, data.maternal_last_name);
 
     const { data: created, error: createErr } = await supabaseAdmin.auth.admin.createUser({
       email: data.email,
-      password: data.password,
+      password: appliedPassword,
       email_confirm: true,
       user_metadata: { full_name: fullName },
     });
@@ -95,7 +101,8 @@ export const createClubMember = createServerFn({ method: "POST" })
     if (isPlayerRole(role)) {
       for (const a of data.assignments) await ensurePlayerRow(supabaseAdmin, newUserId, a.team_id, data.player);
     }
-    return { userId: newUserId, roleName: role.name };
+    // Solo quien acaba de crear al miembro recibe la contraseña aplicada (para copiarla/enviarla).
+    return { userId: newUserId, roleName: role.name, appliedPassword };
   });
 
 export const updateClubMember = createServerFn({ method: "POST" })
@@ -135,9 +142,15 @@ export const updateClubMember = createServerFn({ method: "POST" })
       .eq("id", data.user_id);
     if (profErr) throw new Error("No se pudo actualizar el perfil");
 
-    if (data.password) {
+    let appliedPassword: string | null = data.password ?? null;
+    if (data.password_mode === "club") {
+      const clubPw = process.env["DEFAULT_MEMBER_PASSWORD"];
+      if (!clubPw) throw new Error("Configura la contraseña del club");
+      appliedPassword = clubPw;
+    }
+    if (appliedPassword) {
       const { error } = await supabaseAdmin.auth.admin.updateUserById(data.user_id, {
-        password: data.password,
+        password: appliedPassword,
       });
       if (error) throw new Error("No se pudo actualizar la contraseña");
       // Contraseña asignada por un admin: el miembro deberá cambiarla al entrar.
@@ -149,7 +162,7 @@ export const updateClubMember = createServerFn({ method: "POST" })
 
     // Editar el perfil NUNCA toca team_memberships ni datos por categoría.
     await updatePersonPlayerData(supabaseAdmin, data.user_id, data.player);
-    return { userId: data.user_id, roleName: null as string | null };
+    return { userId: data.user_id, roleName: null as string | null, appliedPassword };
   });
 
 /** Carga una membresía por id y verifica que pertenezca al club del actor. */
@@ -461,4 +474,12 @@ export const setAllCategories = createServerFn({ method: "POST" })
       .upsert({ club_id: clubId, user_id: data.user_id, role_id: role.id });
     if (sErr) throw new Error("No se pudo activar 'Todas las categorías'");
     return { ok: true };
+  });
+
+/** Solo indica si la contraseña del club está configurada; nunca devuelve el valor. */
+export const getClubPasswordStatus = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await authorizeMemberAdmin(context as unknown as MemberCtx);
+    return { configured: !!process.env["DEFAULT_MEMBER_PASSWORD"] };
   });

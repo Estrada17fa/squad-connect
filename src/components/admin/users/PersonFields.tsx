@@ -28,6 +28,8 @@ export type PersonKey = keyof PersonData;
 export const PERSONA_KEYS: PersonKey[] = ["first_name", "paternal_last_name", "birthdate", "birthplace", "nationality"];
 export const CONTACTO_KEYS: PersonKey[] = ["email", "phone", "emergency_contact_name", "emergency_contact_phone"];
 const OPTIONAL: PersonKey[] = ["maternal_last_name", "avatar_url"];
+/** Opcionales que, si se escriben, se validan. */
+const OPTIONAL_IF_EMPTY: PersonKey[] = ["emergency_contact_name", "emergency_contact_phone"];
 
 const MSG: Partial<Record<PersonKey, string>> = {
   first_name: "Escribe el nombre",
@@ -82,6 +84,7 @@ export function fieldErrors(
   for (const k of keys) {
     if (OPTIONAL.includes(k)) continue;
     const empty = !(p[k] ?? "").trim();
+    if (OPTIONAL_IF_EMPTY.includes(k) && empty) continue;
     if (opts?.mode === "edit" && empty && !(opts.initial?.[k] ?? "").trim()) continue;
     if (!fieldValid(k, p)) out[k] = MSG[k] ?? "Completa este dato";
   }
@@ -223,7 +226,7 @@ export function PersonFields({
   const keys = [...PERSONA_KEYS, ...CONTACTO_KEYS, "maternal_last_name" as PersonKey];
   const errs = fieldErrors(value, keys, { mode, initial });
   const err = (k: PersonKey) => (showAll || touched[k] ? errs[k] : undefined);
-  const hint = (k: PersonKey) => (mode === "edit" && !(value[k] ?? "").trim() && !(initial?.[k] ?? "").trim() ? "Falta completar" : undefined);
+  const hint = (k: PersonKey) => (!OPTIONAL_IF_EMPTY.includes(k) && mode === "edit" && !(value[k] ?? "").trim() && !(initial?.[k] ?? "").trim() ? "Falta completar" : undefined);
   const touch = (k: PersonKey) => () => setTouched((t) => ({ ...t, [k]: true }));
   const set = (k: PersonKey) => (v: string) => onChange({ ...value, [k]: v });
 
@@ -284,10 +287,10 @@ export function PersonFields({
         <PhoneInput id="pf-ph" value={value.phone} onChange={set("phone")} onBlur={touch("phone")} />
       </Field>
       <p className="pt-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Contacto de emergencia</p>
-      <Field id="pf-en" label="Nombre" error={err("emergency_contact_name")} hint={hint("emergency_contact_name")}>
+      <Field id="pf-en" label="Nombre (opcional)" error={err("emergency_contact_name")} hint={hint("emergency_contact_name")}>
         {txt("emergency_contact_name", "pf-en", { autoCapitalize: "words", placeholder: "ej. Mamá, papá, pareja" })}
       </Field>
-      <Field id="pf-ep" label="Teléfono" error={err("emergency_contact_phone")} hint={hint("emergency_contact_phone")}>
+      <Field id="pf-ep" label="Teléfono (opcional)" error={err("emergency_contact_phone")} hint={hint("emergency_contact_phone")}>
         <PhoneInput id="pf-ep" value={value.emergency_contact_phone} onChange={set("emergency_contact_phone")} onBlur={touch("emergency_contact_phone")} enterHint="done" />
       </Field>
     </div>

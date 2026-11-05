@@ -8,6 +8,7 @@ import { useApp } from "@/components/squad/AppLayout";
 import { LoadingState } from "@/components/squad/LoadingState";
 import { EmptyState } from "@/components/squad/EmptyState";
 import { ConfirmDialog } from "@/components/squad/ConfirmDialog";
+import { PasswordChoice, initialPasswordValue, passwordPayload, passwordErrors, useClubPasswordStatus, type PasswordValue } from "@/components/admin/users/PasswordChoice";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,7 +20,7 @@ import { AllCategoriesToggle } from "@/components/usuarios/AllCategoriesToggle";
 import { AddMembershipDialog } from "@/components/usuarios/AddMembershipDialog";
 import { EditMembershipDialog } from "@/components/usuarios/EditMembershipDialog";
 import { DeleteMemberDialog } from "@/components/usuarios/DeleteMemberDialog";
-import { useAdminUsers, useRefreshAdminUsers, neverSignedIn, relativeTime, generateTempPassword } from "@/hooks/useAdminUsers";
+import { useAdminUsers, useRefreshAdminUsers, neverSignedIn, relativeTime } from "@/hooks/useAdminUsers";
 import { UsersHeader, BackLabel, IconBtn, SectionLabel, GroupCard, InfoRow, RowButton, PersonAvatar, Pill, AccessReady, whatsappUrl } from "@/components/admin/users/ui";
 import { ActivityTimeline, useAudit } from "@/components/admin/users/ActivityTimeline";
 
@@ -56,6 +57,8 @@ function FichaMiembro() {
   const [confirm, setConfirm] = React.useState<null | "reset" | "baja">(null);
   const [deleteOpen, setDeleteOpen] = React.useState(false);
   const [newAccess, setNewAccess] = React.useState<string | null>(null);
+  const [resetPw, setResetPw] = React.useState<PasswordValue>(initialPasswordValue);
+  const pwStatus = useClubPasswordStatus();
 
   const member = (data.members.data ?? []).find((m) => m.id === userId);
   const mems = data.byUser.get(userId) ?? [];
@@ -92,9 +95,8 @@ function FichaMiembro() {
   async function doReset() {
     if (!member) return;
     setBusy(true);
-    const pw = generateTempPassword();
     try {
-      await updateFn({
+      const res = await updateFn({
         data: {
           user_id: member.id,
           first_name: member.first_name ?? name,
@@ -107,11 +109,11 @@ function FichaMiembro() {
           birthplace: member.birthplace,
           emergency_contact_name: member.emergency_contact_name,
           emergency_contact_phone: member.emergency_contact_phone,
-          password: pw,
+          ...passwordPayload(resetPw),
         } as any,
       });
       setConfirm(null);
-      setNewAccess(pw);
+      setNewAccess(res.appliedPassword ?? "");
       refresh();
     } catch (e: any) {
       toast.error(e?.message ?? "No se pudo restablecer");
@@ -346,9 +348,15 @@ function FichaMiembro() {
             title="Restablecer contraseña"
             confirmLabel="Restablecer"
             loading={busy}
-            description={`Se generará una contraseña temporal nueva para ${name}. La actual dejará de funcionar.`}
-            onConfirm={doReset}
-          />
+            description={`Elige la nueva contraseña de ${name}. La actual dejará de funcionar.`}
+            onConfirm={() => {
+              const pe = passwordErrors(resetPw, pwStatus.data?.configured ?? false);
+              if (pe.length) { toast.error(pe[0]!); return; }
+              return doReset();
+            }}
+          >
+            <PasswordChoice value={resetPw} onChange={setResetPw} />
+          </ConfirmDialog>
           <ConfirmDialog
             open={confirm === "baja"}
             onOpenChange={(o) => !o && setConfirm(null)}
