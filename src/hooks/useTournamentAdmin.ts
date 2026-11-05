@@ -48,3 +48,18 @@ export async function copyClubLogoAsCrest(clubId: string, logoPath: string | nul
     return null;
   }
 }
+
+import type { TournamentInput, TournamentRow } from "@/hooks/useTournaments";
+/** Arma la entrada de guardado a partir de la fila actual, con cambios encima. */
+export function tournamentInputFrom(t: TournamentRow, patch: Partial<TournamentInput> = {}): TournamentInput {
+  return {
+    id: t.id, club_id: t.club_id, team_id: t.team_id, name: t.name, season: t.season, type: t.type, status: t.status,
+    notes: t.notes, logo_path: t.logo_path, created_by: "",
+    format: t.format, groups_count: t.groups_count, has_playoffs: t.has_playoffs, playoff_start_round: t.playoff_start_round, playoff_two_legs: t.playoff_two_legs,
+    points_win: t.points_win, points_draw: t.points_draw, points_loss: t.points_loss,
+    away_bonus_enabled: t.away_bonus_enabled, away_bonus_min_diff: t.away_bonus_min_diff, away_bonus_points: t.away_bonus_points,
+    shootout_enabled: t.shootout_enabled, shootout_min_goals: t.shootout_min_goals, shootout_winner_points: t.shootout_winner_points,
+    tiebreakers: t.tiebreakers,
+    ...patch,
+  };
+}
