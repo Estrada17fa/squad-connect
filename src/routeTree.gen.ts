@@ -27,6 +27,7 @@ import { Route as AuthenticatedAdminConfiguracionRouteImport } from './routes/_a
 import { Route as AuthenticatedAdminTorneoRouteImport } from './routes/_authenticated/admin.torneo'
 import { Route as AuthenticatedAdministracionIndexRouteImport } from './routes/_authenticated/administracion.index'
 import { Route as AuthenticatedAdministracionModuleRouteImport } from './routes/_authenticated/administracion.$module'
+import { Route as AuthenticatedAdministracionClubRouteImport } from './routes/_authenticated/administracion.club'
 import { Route as AuthenticatedAdministracionTorneosRouteImport } from './routes/_authenticated/administracion.torneos'
 import { Route as AuthenticatedAdministracionUsuariosRouteImport } from './routes/_authenticated/administracion.usuarios'
 import { Route as AuthenticatedCoordinacionIndexRouteImport } from './routes/_authenticated/coordinacion.index'
@@ -163,6 +164,12 @@ const AuthenticatedAdministracionModuleRoute =
   AuthenticatedAdministracionModuleRouteImport.update({
     id: '/$module',
     path: '/$module',
+    getParentRoute: () => AuthenticatedAdministracionRoute,
+  } as any)
+const AuthenticatedAdministracionClubRoute =
+  AuthenticatedAdministracionClubRouteImport.update({
+    id: '/club',
+    path: '/club',
     getParentRoute: () => AuthenticatedAdministracionRoute,
   } as any)
 const AuthenticatedAdministracionTorneosRoute =
@@ -412,6 +419,7 @@ export interface FileRoutesByFullPath {
   '/admin/configuracion': typeof AuthenticatedAdminConfiguracionRoute
   '/admin/torneo': typeof AuthenticatedAdminTorneoRoute
   '/administracion/$module': typeof AuthenticatedAdministracionModuleRoute
+  '/administracion/club': typeof AuthenticatedAdministracionClubRoute
   '/administracion/torneos': typeof AuthenticatedAdministracionTorneosRouteWithChildren
   '/administracion/usuarios': typeof AuthenticatedAdministracionUsuariosRouteWithChildren
   '/m/$module': typeof AuthenticatedMModuleRoute
@@ -468,6 +476,7 @@ export interface FileRoutesByTo {
   '/admin/configuracion': typeof AuthenticatedAdminConfiguracionRoute
   '/admin/torneo': typeof AuthenticatedAdminTorneoRoute
   '/administracion/$module': typeof AuthenticatedAdministracionModuleRoute
+  '/administracion/club': typeof AuthenticatedAdministracionClubRoute
   '/m/$module': typeof AuthenticatedMModuleRoute
   '/m/agenda': typeof AuthenticatedMAgendaRoute
   '/m/compras_facturas': typeof AuthenticatedMCompras_facturasRoute
@@ -525,6 +534,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/configuracion': typeof AuthenticatedAdminConfiguracionRoute
   '/_authenticated/admin/torneo': typeof AuthenticatedAdminTorneoRoute
   '/_authenticated/administracion/$module': typeof AuthenticatedAdministracionModuleRoute
+  '/_authenticated/administracion/club': typeof AuthenticatedAdministracionClubRoute
   '/_authenticated/administracion/torneos': typeof AuthenticatedAdministracionTorneosRouteWithChildren
   '/_authenticated/administracion/usuarios': typeof AuthenticatedAdministracionUsuariosRouteWithChildren
   '/_authenticated/m/$module': typeof AuthenticatedMModuleRoute
@@ -586,6 +596,7 @@ export interface FileRouteTypes {
     | '/admin/configuracion'
     | '/admin/torneo'
     | '/administracion/$module'
+    | '/administracion/club'
     | '/administracion/torneos'
     | '/administracion/usuarios'
     | '/m/$module'
@@ -642,6 +653,7 @@ export interface FileRouteTypes {
     | '/admin/configuracion'
     | '/admin/torneo'
     | '/administracion/$module'
+    | '/administracion/club'
     | '/m/$module'
     | '/m/agenda'
     | '/m/compras_facturas'
@@ -698,6 +710,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/configuracion'
     | '/_authenticated/admin/torneo'
     | '/_authenticated/administracion/$module'
+    | '/_authenticated/administracion/club'
     | '/_authenticated/administracion/torneos'
     | '/_authenticated/administracion/usuarios'
     | '/_authenticated/m/$module'
@@ -874,6 +887,13 @@ declare module '@tanstack/react-router' {
       path: '/$module'
       fullPath: '/administracion/$module'
       preLoaderRoute: typeof AuthenticatedAdministracionModuleRouteImport
+      parentRoute: typeof AuthenticatedAdministracionRoute
+    }
+    '/_authenticated/administracion/club': {
+      id: '/_authenticated/administracion/club'
+      path: '/club'
+      fullPath: '/administracion/club'
+      preLoaderRoute: typeof AuthenticatedAdministracionClubRouteImport
       parentRoute: typeof AuthenticatedAdministracionRoute
     }
     '/_authenticated/administracion/torneos': {
@@ -1268,6 +1288,7 @@ const AuthenticatedAdministracionUsuariosRouteWithChildren =
 
 interface AuthenticatedAdministracionRouteChildren {
   AuthenticatedAdministracionModuleRoute: typeof AuthenticatedAdministracionModuleRoute
+  AuthenticatedAdministracionClubRoute: typeof AuthenticatedAdministracionClubRoute
   AuthenticatedAdministracionTorneosRoute: typeof AuthenticatedAdministracionTorneosRouteWithChildren
   AuthenticatedAdministracionUsuariosRoute: typeof AuthenticatedAdministracionUsuariosRouteWithChildren
   AuthenticatedAdministracionIndexRoute: typeof AuthenticatedAdministracionIndexRoute
@@ -1277,6 +1298,7 @@ const AuthenticatedAdministracionRouteChildren: AuthenticatedAdministracionRoute
   {
     AuthenticatedAdministracionModuleRoute:
       AuthenticatedAdministracionModuleRoute,
+    AuthenticatedAdministracionClubRoute: AuthenticatedAdministracionClubRoute,
     AuthenticatedAdministracionTorneosRoute:
       AuthenticatedAdministracionTorneosRouteWithChildren,
     AuthenticatedAdministracionUsuariosRoute:
