@@ -73,7 +73,11 @@ const passwordField = z
 
 export const createMemberSchema = baseMemberSchema.extend({
   email: z.string().trim().toLowerCase().email().max(255),
-  password: passwordField,
+  /** "club": el servidor usa la contraseña del club (secreto); el navegador no la envía. */
+  password_mode: z.enum(["club", "custom", "random"]).optional().default("custom"),
+  password: passwordField.optional().nullable(),
+}).superRefine((d, ctx) => {
+  if (d.password_mode !== "club" && !d.password) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["password"], message: "Falta la contraseña" });
 });
 
 /** Editar perfil: solo datos personales. Rol, categorías, dorsal y posición se editan por membresía. */
@@ -81,6 +85,7 @@ export const updateMemberSchema = baseMemberSchema
   .omit({ role_id: true, assignments: true, club_job_title: true, all_categories: true })
   .extend({
     user_id: z.string().uuid(),
+    password_mode: z.enum(["club", "custom", "random"]).optional().nullable(),
     password: passwordField.optional().nullable(),
   });
 
