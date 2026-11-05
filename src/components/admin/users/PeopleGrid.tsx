@@ -4,7 +4,7 @@ import { initials, type MembershipLite } from "@/components/usuarios/memberUtils
 import { shortName, type AdminMember } from "@/hooks/useAdminUsers";
 
 export type UsersTab = "staff" | "jugadores" | "bajas";
-export type Alerta = "sin_categoria" | "sin_entrar";
+export type Alerta = "sin_categoria" | "sin_entrar" | "sin_ficha";
 
 const TABS: { key: UsersTab; label: string }[] = [
   { key: "staff", label: "Staff" },
@@ -34,11 +34,12 @@ export function UserTabs({ value, counts, onChange }: { value: UsersTab | null; 
 
 /** Una línea por alerta, sin tarjeta: punto, texto y "Ver"/"Quitar filtro". */
 export function AlertLines({
-  sinCategoria, sinEntrar, active, onToggle,
-}: { sinCategoria: number; sinEntrar: number; active: Alerta | null; onToggle: (a: Alerta | null) => void }) {
+  sinCategoria, sinEntrar, sinFicha = 0, active, onToggle,
+}: { sinCategoria: number; sinEntrar: number; sinFicha?: number; active: Alerta | null; onToggle: (a: Alerta | null) => void }) {
   const rows: { key: Alerta; dot: string; text: string; n: number }[] = [
     { key: "sin_categoria", dot: "bg-urgency-red", n: sinCategoria, text: `${sinCategoria} sin categoría · no ve nada en la app` },
     { key: "sin_entrar", dot: "bg-urgency-amber", n: sinEntrar, text: `${sinEntrar} aún no ${sinEntrar === 1 ? "entra" : "entran"} a la app` },
+    { key: "sin_ficha", dot: "bg-muted-foreground", n: sinFicha, text: `${sinFicha} ${sinFicha === 1 ? "jugador" : "jugadores"} sin ficha deportiva` },
   ];
   const visible = rows.filter((r) => r.n > 0 || r.key === active);
   if (!visible.length) return null;

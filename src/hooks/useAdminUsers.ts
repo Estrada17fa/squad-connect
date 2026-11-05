@@ -37,6 +37,14 @@ export interface AdminRole {
   default_all_categories: boolean;
 }
 
+export interface AdminPlayerRow {
+  id: string;
+  user_id: string;
+  team_id: string;
+  jersey_number: number | null;
+  position: string | null;
+}
+
 export interface AdminTeam {
   id: string;
   name: string;
@@ -125,6 +133,20 @@ export function useAdminUsers(clubId: string | null | undefined) {
     },
   });
 
+  const players = useQuery({
+    queryKey: ["adm-players", clubId],
+    enabled,
+    queryFn: async (): Promise<AdminPlayerRow[]> => {
+      const { data, error } = await supabase
+        .from("player_profiles")
+        .select("id, user_id, team_id, jersey_number, position, team:teams!inner(club_id)")
+        .eq("team.club_id", clubId!)
+        .is("archived_at", null);
+      if (error) throw error;
+      return (data ?? []).map((r: any) => ({ id: r.id, user_id: r.user_id, team_id: r.team_id, jersey_number: r.jersey_number, position: r.position }));
+    },
+  });
+
   const allCats = useQuery({
     queryKey: ["adm-all-cats", clubId],
     enabled,
@@ -151,13 +173,28 @@ export function useAdminUsers(clubId: string | null | undefined) {
     return map;
   }, [lastSignIn.data]);
 
-  return { members, roles, teams, memberships, lastSignIn, allCats, byUser, signInMap, signInAvailable: !!lastSignIn.data?.ok };
+  /** Jugadores activos sin dorsal ni posición en alguna de sus categorías de jugador. */
+  const sinFicha = React.useMemo(() => {
+    const out = new Set<string>();
+    const rows = players.data ?? [];
+    for (const m of members.data ?? []) {
+      if ((m.status ?? "activo") === "baja") continue;
+      for (const ms of byUser.get(m.id) ?? []) {
+        if (!ms.team_id || inferBaseRole(ms.roleName) !== "jugador") continue;
+        const r = rows.find((x) => x.user_id === m.id && x.team_id === ms.team_id);
+        if (!r || (r.jersey_number == null && !r.position)) { out.add(m.id); break; }
+      }
+    }
+    return out;
+  }, [members.data, byUser, players.data]);
+
+  return { members, roles, teams, memberships, lastSignIn, allCats, players, sinFicha, byUser, signInMap, signInAvailable: !!lastSignIn.data?.ok };
 }
 
 export function useRefreshAdminUsers(clubId: string | null | undefined) {
   const qc = useQueryClient();
   return React.useCallback(() => {
-    for (const k of ["adm-members", "adm-roles", "club-memberships-all", "club-members", "adm-last-signin", "adm-all-cats", "club-roles", "club-role-permissions", "adm-audit"]) {
+    for (const k of ["adm-members", "adm-players", "adm-roles", "club-memberships-all", "club-members", "adm-last-signin", "adm-all-cats", "club-roles", "club-role-permissions", "adm-audit"]) {
       qc.invalidateQueries({ queryKey: [k, clubId] });
     }
     qc.invalidateQueries({ queryKey: ["squad-access"] });
