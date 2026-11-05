@@ -142,7 +142,6 @@ function RootComponent() {
         queryClient.clear();
       }
       router.invalidate();
-      if (event === "SIGNED_IN") queryClient.removeQueries({ queryKey: ["squad-access"] });
       if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
     });
     return () => {
