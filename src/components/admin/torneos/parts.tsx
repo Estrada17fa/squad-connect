@@ -16,7 +16,7 @@ export const fieldCls = "h-11 border-0 bg-card text-[15px]";
 
 export interface DataDraft { name: string; season: string; team_id: string; type: TournamentType; logo_path: string | null; logoFile: File | null }
 export interface FormatDraft { format: TournamentFormat; groups_count: number; has_playoffs: boolean; playoff_start_round: number; playoff_two_legs: boolean }
-export interface TeamDraft { key: string; name: string; short_name: string; group_label: string | null; file: File | null; crest_path: string | null; is_our_team: boolean }
+export interface TeamDraft { key: string; name: string; short_name: string; group_label: string | null; file: File | null; crest_path: string | null; is_our_team: boolean; preview_url?: string | null }
 
 export function Label({ children, htmlFor }: { children: React.ReactNode; htmlFor?: string }) {
   return <label htmlFor={htmlFor} className="mb-1 block text-xs font-medium text-muted-foreground">{children}</label>;
@@ -36,7 +36,7 @@ export function Segmented<T extends string | number>({ value, onChange, options,
 }
 
 /** Imagen completa (sin recortar): archivo local o ruta guardada. */
-export function CrestImage({ file, path, alt, className, fallback }: { file?: File | null; path?: string | null; alt: string; className?: string; fallback?: React.ReactNode }) {
+export function CrestImage({ file, path, url, alt, className, fallback }: { file?: File | null; path?: string | null; url?: string | null; alt: string; className?: string; fallback?: React.ReactNode }) {
   const [local, setLocal] = React.useState<string | null>(null);
   React.useEffect(() => {
     if (!file) { setLocal(null); return; }
@@ -44,7 +44,7 @@ export function CrestImage({ file, path, alt, className, fallback }: { file?: Fi
     return () => URL.revokeObjectURL(u);
   }, [file]);
   const { data: remote } = useCrestUrl(file ? null : path);
-  const src = local ?? remote ?? null;
+  const src = local ?? remote ?? url ?? null;
   return (
     <span className={cn("inline-flex items-center justify-center", className)}>
       {src ? <img src={src} alt={alt} className="h-full w-full object-contain" /> : fallback}
@@ -213,7 +213,7 @@ export function TeamsEditor({ teams, onChange, groups }: { teams: TeamDraft[]; o
           <li key={t.key} className="rounded-[16px] bg-card p-2.5">
             <div className="flex items-center gap-2.5">
               <PickFile label={`Escudo de ${t.name || "equipo"}`} onPick={(f) => set(t.key, { file: f })} className="coord-press flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-muted/50 p-1">
-                <CrestImage file={t.file} path={t.crest_path} alt={`Escudo de ${t.name}`} className="h-full w-full" fallback={<ImagePlus className="h-5 w-5 text-muted-foreground" />} />
+                <CrestImage file={t.file} path={t.crest_path} url={t.preview_url} alt={`Escudo de ${t.name}`} className="h-full w-full" fallback={<ImagePlus className="h-5 w-5 text-muted-foreground" />} />
               </PickFile>
               <div className="min-w-0 flex-1 space-y-1.5">
                 <Input aria-label="Nombre del equipo" className="h-9 border-0 bg-muted/40" value={t.name} onChange={(e) => set(t.key, { name: e.target.value })} placeholder="Nombre" />
