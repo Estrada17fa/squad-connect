@@ -46,6 +46,9 @@ function AdministracionPage() {
   const pending = [
     { key: "sin_categoria", icon: Tag, text: "Sin categoría", context: "Miembros sin rol asignado", value: sinCategoria, urgency: sinCategoria ? "red" : "gray" },
     { key: "sin_entrar", icon: UserX, text: "Sin entrar a la app", context: "Nunca han iniciado sesión", value: sinEntrar, urgency: sinEntrar ? "amber" : "gray" },
+    ...(data.sinFicha.size > 0
+      ? [{ key: "sin_ficha", icon: IdCard, text: "Jugadores sin ficha deportiva", context: "Sin dorsal ni posición", value: data.sinFicha.size, urgency: "gray" }]
+      : []),
   ] as const;
 
   const statFor = (key: string, fallback: string) =>
@@ -86,7 +89,7 @@ function AdministracionPage() {
               <li key={p.key}>
                 <Link
                   to="/administracion/usuarios"
-                  search={{ alerta: p.key }}
+                  search={p.key === "sin_ficha" ? { tab: "jugadores", alerta: p.key } : { alerta: p.key }}
                   className="coord-press flex w-full items-center gap-3 px-3 py-2.5 outline-none hover:bg-muted/40 focus-visible:bg-muted/50"
                 >
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10">
@@ -102,19 +105,6 @@ function AdministracionPage() {
               </li>
             );
           })}
-          <li>
-            <button onClick={() => toast("Próximamente")} className="coord-press flex w-full items-center gap-3 px-3 py-2.5 text-left outline-none hover:bg-muted/40">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                <IdCard className="h-[15px] w-[15px] text-primary" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-medium">Jugadores sin ficha deportiva</span>
-                <span className="block truncate text-[11px] text-muted-foreground">Completar en Plantel</span>
-              </span>
-              <span className={cn("shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold", PILL.gray)}>5</span>
-              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60" />
-            </button>
-          </li>
         </ul>
       </section>
 
