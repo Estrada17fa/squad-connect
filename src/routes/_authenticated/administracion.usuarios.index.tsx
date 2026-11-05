@@ -46,7 +46,7 @@ function UsuariosIndex() {
   const [searchOpen, setSearchOpen] = React.useState(false);
   const [q, setQ] = React.useState("");
 
-  const alerta: Alerta | null = search.alerta === "sin_categoria" || search.alerta === "sin_entrar" ? search.alerta : null;
+  const alerta: Alerta | null = search.alerta === "sin_categoria" || search.alerta === "sin_entrar" || search.alerta === "sin_ficha" ? search.alerta : null;
   const tabParam: UsersTab = search.tab === "jugadores" || search.tab === "bajas" ? search.tab : "staff";
   const cat = search.cat ?? "";
 
@@ -63,7 +63,7 @@ function UsuariosIndex() {
   const sinCat = active.filter((m) => mems(m.id).length === 0);
   const sinEntrar = active.filter((m) => mems(m.id).length > 0 && neverSignedIn(m, data.signInMap, data.signInAvailable));
   const matchAlerta = (m: AdminMember) =>
-    alerta === "sin_categoria" ? mems(m.id).length === 0 : alerta === "sin_entrar" ? sinEntrar.includes(m) : true;
+    alerta === "sin_categoria" ? mems(m.id).length === 0 : alerta === "sin_entrar" ? sinEntrar.includes(m) : alerta === "sin_ficha" ? data.sinFicha.has(m.id) : true;
 
   // Al activar una alerta: si todas sus personas caen en una pestaña, se usa esa; si no, se muestran todas.
   const alertaTabs = alerta ? new Set(active.filter(matchAlerta).map(bucket)) : null;
@@ -110,6 +110,7 @@ function UsuariosIndex() {
   const catName = teams.find((t) => t.id === cat)?.name;
   const emptyText = alerta === "sin_categoria" ? "Nadie sin categoría. Todo en orden"
     : alerta === "sin_entrar" ? "Todos ya entraron a la app. Todo en orden"
+    : alerta === "sin_ficha" ? "Todos los jugadores tienen ficha. Todo en orden"
       : s ? "Nadie coincide con la búsqueda" : tab === "bajas" ? "No hay bajas" : "Nadie por aquí";
 
   return (
@@ -160,6 +161,7 @@ function UsuariosIndex() {
       <AlertLines
         sinCategoria={sinCat.length}
         sinEntrar={sinEntrar.length}
+        sinFicha={data.sinFicha.size}
         active={alerta}
         onToggle={(a) => navigate({ search: (p) => ({ ...p, alerta: a ?? undefined }), replace: true })}
       />
