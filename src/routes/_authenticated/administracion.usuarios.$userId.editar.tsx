@@ -1,3 +1,4 @@
+import { inferBaseRole } from "@/lib/rolePages";
 import * as React from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -26,6 +27,9 @@ function EditarMiembro() {
   const refresh = useRefreshAdminUsers(clubId);
   const updateFn = useServerFn(updateClubMember);
   const member = (data.members.data ?? []).find((m) => m.id === userId);
+  const isPlayerMember = (data.byUser.get(userId) ?? []).some((m) => inferBaseRole(m.roleName) === "jugador");
+  // undefined = no es jugador; null = jugador sin ficha localizada.
+  const sheetId: string | null | undefined = isPlayerMember ? (data.players.data ?? []).find((r) => r.user_id === userId)?.id ?? null : undefined;
   const [value, setValue] = React.useState<PersonData | null>(null);
   const [initial, setInitial] = React.useState<PersonData | null>(null);
   const [tried, setTried] = React.useState(false);
@@ -80,6 +84,14 @@ function EditarMiembro() {
       <UsersHeader back={<Link to="/administracion/usuarios/$userId" params={{ userId }}><BackLabel>Ficha</BackLabel></Link>} title="Editar datos" />
       <PersonFields value={value} onChange={setValue} withEmail={false} userId={userId} mode="edit" initial={initial ?? undefined} showAll={tried} />
       {errors.length ? <p className="text-sm text-urgency-red">Revisa los datos marcados.</p> : null}
+      {sheetId !== undefined ? (
+        sheetId ? (
+          <Link to="/m/plantel/$playerId" params={{ playerId: sheetId }} className="block rounded-[14px] bg-card px-3 py-3 text-sm font-semibold text-primary">Editar ficha deportiva en Plantel ›</Link>
+        ) : (
+          <Link to="/m/plantel" className="block rounded-[14px] bg-card px-3 py-3 text-sm font-semibold text-primary">Editar ficha deportiva en Plantel ›</Link>
+        )
+      ) : null}
+
       <StickyFooterActions>
         <button onClick={save} disabled={saving} className="coord-press min-h-11 w-full rounded-full bg-primary text-sm font-semibold text-primary-foreground disabled:opacity-60">
           {saving ? "Guardando…" : "Guardar"}
