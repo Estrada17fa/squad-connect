@@ -348,6 +348,7 @@ export type Database = {
           currency: string
           current_season: string | null
           date_format: string
+          home_location_id: string | null
           id: string
           league_name: string | null
           logo_url: string | null
@@ -362,6 +363,7 @@ export type Database = {
           currency?: string
           current_season?: string | null
           date_format?: string
+          home_location_id?: string | null
           id?: string
           league_name?: string | null
           logo_url?: string | null
@@ -376,6 +378,7 @@ export type Database = {
           currency?: string
           current_season?: string | null
           date_format?: string
+          home_location_id?: string | null
           id?: string
           league_name?: string | null
           logo_url?: string | null
@@ -385,7 +388,15 @@ export type Database = {
           timezone?: string
           week_start?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "clubs_home_location_id_fkey"
+            columns: ["home_location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       development_assessments: {
         Row: {

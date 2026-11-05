@@ -1,0 +1,1 @@
+ALTER TABLE public.clubs ADD COLUMN IF NOT EXISTS home_location_id uuid REFERENCES public.locations(id) ON DELETE SET NULL;
