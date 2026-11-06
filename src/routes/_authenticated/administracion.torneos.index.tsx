@@ -49,7 +49,6 @@ function TorneosList() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild><button aria-label="Más opciones" className="coord-press flex h-10 w-10 items-center justify-center rounded-xl"><MoreHorizontal className="h-5 w-5" /></button></DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild><Link to="/admin/torneo">Ver versión actual</Link></DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </>}

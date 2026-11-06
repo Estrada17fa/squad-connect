@@ -16,7 +16,7 @@ export const PAGES: PageDef[] = [
   { key: "agenda", label: "Agenda", icon: Calendar, to: "/agenda" },
   { key: "club", label: "Mi Club", icon: Shield, to: "/mi-club" },
   { key: "coordinacion", label: "Coordinación", icon: MessagesSquare, to: "/coordinacion" },
-  { key: "admin", label: "Admin", icon: Building2, to: "/admin" },
+  { key: "admin", label: "Admin", icon: Building2, to: "/administracion" },
 ];
 
 export const PAGE_MAP: Record<PageKey, PageDef> = Object.fromEntries(

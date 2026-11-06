@@ -38,9 +38,6 @@ function AdminModulePage() {
         <h1 className="ml-1.5 font-display text-[20px] font-bold">{m.name}</h1>
       </header>
       <CoordEmptyState icon={Hammer} text="En construcción" area={COORD_AREAS[0]} />
-      <div className="pt-8 text-center text-xs text-muted-foreground">
-        <a href={m.legacy} className="underline-offset-2 hover:underline">Ver versión actual</a>
-      </div>
     </div>
   );
 }

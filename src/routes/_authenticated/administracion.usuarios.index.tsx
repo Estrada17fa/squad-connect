@@ -137,7 +137,6 @@ function UsuariosIndex() {
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuItem asChild><Link to="/administracion/usuarios/roles">Roles y permisos</Link></DropdownMenuItem>
                 <DropdownMenuItem asChild><Link to="/administracion/usuarios/actividad">Actividad</Link></DropdownMenuItem>
-                <DropdownMenuItem asChild><Link to="/m/usuarios">Ver versión actual</Link></DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuLabel className="text-xs text-muted-foreground">Filtrar por categoría</DropdownMenuLabel>
                 <DropdownMenuRadioGroup value={cat} onValueChange={(v) => navigate({ search: (p) => ({ ...p, cat: v || undefined }), replace: true })}>

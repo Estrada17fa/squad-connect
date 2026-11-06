@@ -71,9 +71,6 @@ function ClubPage() {
           ) : null}
         </>
       ) : null}
-      <div className="pt-2 text-center text-xs text-muted-foreground">
-        <Link to="/admin/configuracion" className="underline-offset-2 hover:underline">Ver versión actual</Link>
-      </div>
     </div>
   );
 }

@@ -56,7 +56,7 @@ function AdministracionPage() {
     ...(data.sinFicha.size > 0
       ? [{ key: "sin_ficha", icon: IdCard, text: "Jugadores sin ficha deportiva", context: "Sin dorsal ni posición", value: data.sinFicha.size, urgency: "gray" as const }]
       : []),
-  ] as const;
+  ].filter((p) => loading || p.value > 0);
 
   const statFor = (key: string, fallback: string) =>
     key === "usuarios" ? `${show(active.length)} activos` : key === "club" ? `${teamsCount} categorías` : key === "torneos" ? torneoStat : fallback;
@@ -87,7 +87,7 @@ function AdministracionPage() {
         ))}
       </section>
 
-      <section>
+      {pending.length > 0 ? (<section>
         <h2 className="mb-1.5 text-xs font-semibold text-muted-foreground">Atención</h2>
         <ul className="divide-y divide-border/40 overflow-hidden rounded-[14px] bg-card">
           {pending.map((p) => {
@@ -106,14 +106,14 @@ function AdministracionPage() {
                     <span className="block truncate text-sm font-medium">{p.text}</span>
                     <span className="block truncate text-[11px] text-muted-foreground">{p.context}</span>
                   </span>
-                  <span className={cn("shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold", PILL[p.urgency])}>{show(p.value)}</span>
+                  <span className={cn("shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold", PILL[p.urgency as keyof typeof PILL])}>{show(p.value)}</span>
                   <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60" />
                 </Link>
               </li>
             );
           })}
         </ul>
-      </section>
+      </section>) : null}
 
       <section>
         <h2 className="mb-1.5 text-xs font-semibold text-muted-foreground">Administrar</h2>
@@ -128,7 +128,7 @@ function AdministracionPage() {
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block font-display text-[15px] font-bold leading-tight">{m.name}</span>
-                  <span className="block truncate text-xs text-muted-foreground">{m.line} · <span className="font-semibold text-primary">{statFor(m.key, m.stat)}</span></span>
+                  <span className="block text-xs text-muted-foreground">{m.line} · <span className="whitespace-nowrap font-semibold text-primary">{statFor(m.key, m.stat)}</span></span>
                 </span>
                 <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60 sm:hidden" />
               </>
@@ -152,7 +152,6 @@ function AdministracionPage() {
             <Building2 className="h-3.5 w-3.5" /> Clubes
           </Link>
         ) : null}
-        <Link to="/admin" className="underline-offset-2 hover:underline">Ver versión actual</Link>
       </div>
     </div>
   );
