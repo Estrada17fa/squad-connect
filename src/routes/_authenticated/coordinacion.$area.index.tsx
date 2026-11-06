@@ -1,7 +1,7 @@
 import * as React from "react";
 import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router";
 import { COORD_AREAS, getArea, LAST_AREA_KEY } from "@/lib/coordAreas";
-import { AREA_HERO, AREA_PENDING, areaHasUrgent, MODULE_MOCK, MOCK_CATEGORY, QUICK_ACTIONS } from "@/lib/coordMockData";
+import { AREA_HERO, areaHasUrgent, MODULE_MOCK, MOCK_CATEGORY, QUICK_ACTIONS } from "@/lib/coordMockData";
 import { AreaSwitcher } from "@/components/coord/AreaSwitcher";
 import { CoordHeader } from "@/components/coord/CoordHeader";
 import { HeroCard } from "@/components/coord/HeroCard";

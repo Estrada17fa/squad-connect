@@ -1,6 +1,6 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { getArea } from "@/lib/coordAreas";
-import { MODULE_MOCK, AREA_PENDING } from "@/lib/coordMockData";
+import { MODULE_MOCK } from "@/lib/coordMockData";
 import { PendingList } from "@/components/coord/PendingList";
 import { ListChecks } from "lucide-react";
 import { ModulePageShell } from "@/components/coord/ModulePageShell";
