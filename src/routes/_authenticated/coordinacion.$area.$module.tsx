@@ -5,6 +5,7 @@ import { PendingList } from "@/components/coord/PendingList";
 import { ListChecks } from "lucide-react";
 import { ModulePageShell } from "@/components/coord/ModulePageShell";
 import { CoordEmptyState } from "@/components/coord/EmptyState";
+import { useAreaPending } from "@/components/coord/tareas/useGeneralPending";
 
 export const Route = createFileRoute("/_authenticated/coordinacion/$area/$module")({
   head: ({ params }) => {
@@ -27,6 +28,7 @@ export const Route = createFileRoute("/_authenticated/coordinacion/$area/$module
 function ModulePage() {
   const params = Route.useParams();
   const area = getArea(params.area);
+  const pending = useAreaPending(area?.key ?? "general");
   if (!area) return <Navigate to="/coordinacion/$area" params={{ area: "general" }} replace />;
   if (params.module === "pendientes") {
     return (
@@ -37,7 +39,7 @@ function ModulePage() {
         action="Agregar"
         showFab={false}
       >
-        <PendingList area={area} items={AREA_PENDING[area.key]} all />
+        <PendingList area={area} items={pending.items} all />
       </ModulePageShell>
     );
   }
