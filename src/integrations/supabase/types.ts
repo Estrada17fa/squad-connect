@@ -1937,6 +1937,7 @@ export type Database = {
       meeting_attendees: {
         Row: {
           attendance_status: Database["public"]["Enums"]["attendance_status"]
+          attended: boolean | null
           created_at: string
           id: string
           meeting_id: string
@@ -1944,6 +1945,7 @@ export type Database = {
         }
         Insert: {
           attendance_status?: Database["public"]["Enums"]["attendance_status"]
+          attended?: boolean | null
           created_at?: string
           id?: string
           meeting_id: string
@@ -1951,6 +1953,7 @@ export type Database = {
         }
         Update: {
           attendance_status?: Database["public"]["Enums"]["attendance_status"]
+          attended?: boolean | null
           created_at?: string
           id?: string
           meeting_id?: string
@@ -3776,6 +3779,8 @@ export type Database = {
           description: string | null
           due_at: string | null
           id: string
+          location_id: string | null
+          meeting_id: string | null
           priority: Database["public"]["Enums"]["task_priority"]
           requires_evidence: boolean
           status: Database["public"]["Enums"]["task_status"]
@@ -3791,6 +3796,8 @@ export type Database = {
           description?: string | null
           due_at?: string | null
           id?: string
+          location_id?: string | null
+          meeting_id?: string | null
           priority?: Database["public"]["Enums"]["task_priority"]
           requires_evidence?: boolean
           status?: Database["public"]["Enums"]["task_status"]
@@ -3806,6 +3813,8 @@ export type Database = {
           description?: string | null
           due_at?: string | null
           id?: string
+          location_id?: string | null
+          meeting_id?: string | null
           priority?: Database["public"]["Enums"]["task_priority"]
           requires_evidence?: boolean
           status?: Database["public"]["Enums"]["task_status"]
@@ -3819,6 +3828,20 @@ export type Database = {
             columns: ["club_id"]
             isOneToOne: false
             referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
             referencedColumns: ["id"]
           },
           {

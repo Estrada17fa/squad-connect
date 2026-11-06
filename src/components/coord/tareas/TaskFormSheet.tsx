@@ -15,53 +15,28 @@ import { useClubStaff, type TaskPriority, type TaskRow } from "@/hooks/useCoordi
 import { initialsOf } from "@/lib/coordinacion";
 import { cn } from "@/lib/utils";
 import { Segmented } from "./parts";
+import { LocationPicker } from "@/components/location/LocationPicker";
 
 export interface CategoryOption { id: string | null; name: string }
 
 /* ------------------------------ Fecha límite ------------------------------ */
 
-function atTime(d: Date, h = 18) {
-  const out = new Date(d.getFullYear(), d.getMonth(), d.getDate(), h, 0);
-  // "Hoy" después de las 6 pm: al final del día para no nacer vencida.
-  const now = new Date();
-  if (out < now && out.toDateString() === now.toDateString()) return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59);
-  return out;
-}
-function nextFriday(now: Date) {
-  const add = (5 - now.getDay() + 7) % 7 || 7;
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate() + add);
-}
-
 export function DuePicker({ value, onChange }: { value: Date | null; onChange: (d: Date | null) => void }) {
   const [open, setOpen] = React.useState(false);
   const now = new Date();
-  const shortcuts = [
-    { label: "Hoy", d: now },
-    { label: "Mañana", d: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1) },
-    { label: "Viernes", d: nextFriday(now) },
-  ];
   const time = value ? format(value, "HH:mm") : "18:00";
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap gap-1.5">
-        {shortcuts.map((s) => {
-          const on = value && format(value, "yyyy-MM-dd") === format(s.d, "yyyy-MM-dd");
-          return (
-            <button key={s.label} type="button" onClick={() => onChange(atTime(s.d, value ? value.getHours() : 18))}
-              className={cn("coord-press min-h-9 rounded-full px-3 text-xs font-semibold", on ? "bg-area-general text-background" : "bg-muted")}>
-              {s.label}
-            </button>
-          );
-        })}
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <button type="button" className="coord-press inline-flex min-h-9 items-center gap-1 rounded-full bg-muted px-3 text-xs font-semibold">
-              <CalendarDays className="h-3.5 w-3.5" /> Otra fecha
+              <CalendarDays className="h-3.5 w-3.5" /> {value ? "Cambiar fecha" : "Elegir fecha"}
             </button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
             <Calendar mode="single" locale={es} selected={value ?? undefined} defaultMonth={value ?? now}
-              onSelect={(d) => { if (d) { onChange(atTime(d, value ? value.getHours() : 18)); setOpen(false); } }} />
+              onSelect={(d) => { if (d) { onChange(new Date(d.getFullYear(), d.getMonth(), d.getDate(), value ? value.getHours() : 18, value ? value.getMinutes() : 0)); setOpen(false); } }} />
           </PopoverContent>
         </Popover>
         {value ? (
@@ -149,6 +124,7 @@ export function TaskFormSheet({
   const [steps, setSteps] = React.useState<string[]>([]);
   const [step, setStep] = React.useState("");
   const [evidence, setEvidence] = React.useState(false);
+  const [locationId, setLocationId] = React.useState<string | null>(null);
   const [showPeople, setShowPeople] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
   const staff = useClubStaff(clubId);
@@ -162,6 +138,7 @@ export function TaskFormSheet({
     setPriority(task ? (task.priority === "urgente" ? "alta" : task.priority) : "media");
     setTeamId(task ? task.team_id : (categories.find((c) => c.id === null) ? null : categories[0]?.id ?? null));
     setEvidence(task?.requires_evidence ?? false);
+    setLocationId(task?.location_id ?? null);
     setSteps([]);
     setStep("");
     setMore(isEdit);
@@ -183,6 +160,7 @@ export function TaskFormSheet({
         due_at: due ? due.toISOString() : null,
         priority: task?.priority === "urgente" && priority === "alta" ? ("urgente" as const) : priority,
         requires_evidence: evidence,
+        location_id: locationId,
       };
       let id = task?.id;
       if (task) {
@@ -253,6 +231,11 @@ export function TaskFormSheet({
           <div className="space-y-2">
             <p className="text-xs font-semibold text-muted-foreground">Fecha límite</p>
             <DuePicker value={due} onChange={setDue} />
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-muted-foreground">Lugar</p>
+            <LocationPicker clubId={clubId} userId={userId} value={locationId} onChange={(id) => setLocationId(id)} />
           </div>
 
           {!more ? (

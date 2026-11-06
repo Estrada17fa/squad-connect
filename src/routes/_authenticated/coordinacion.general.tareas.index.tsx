@@ -3,7 +3,9 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ChevronDown, ChevronLeft, ListChecks, Plus, Search, SlidersHorizontal, X } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useApp } from "@/components/squad/AppLayout";
-import { useTasks, type TaskRow } from "@/hooks/useCoordinacion";
+import { useMeetings, useTasks, type TaskRow } from "@/hooks/useCoordinacion";
+import { splitMeetings } from "@/lib/juntas";
+import { MeetingListRow } from "@/components/coord/juntas/MeetingListRow";
 import { AreaSwitcher } from "@/components/coord/AreaSwitcher";
 import { getArea } from "@/lib/coordAreas";
 import { WHEN_GROUPS, whenGroup, isRecentDone, isMine, sortTasks, type WhenGroup } from "@/lib/tareas";
@@ -14,6 +16,7 @@ import { useTaskAccess } from "@/components/coord/tareas/useTaskAccess";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/coordinacion/general/tareas/")({
+  validateSearch: (s: Record<string, unknown>): { tab?: "juntas" } => (s.tab === "juntas" ? { tab: "juntas" } : {}),
   head: () => ({
     meta: [
       { title: "Tareas y juntas — Coordinación Squad" },
@@ -37,6 +40,10 @@ function TareasPage() {
   const clubId = profile?.club_id ?? null;
   const { userId, categories, canCreate, canAct } = useTaskAccess();
   const tasksQ = useTasks(clubId);
+  const meetingsQ = useMeetings(clubId);
+  const { tab: tabParam } = Route.useSearch();
+  const tab = tabParam === "juntas" ? "juntas" : "tareas";
+  const [when, setWhen] = React.useState<"proximas" | "pasadas">("proximas");
 
   const [scope, setScope] = React.useState<"mias" | "todas">("mias");
   const [search, setSearch] = React.useState<string | null>(null);
@@ -89,7 +96,7 @@ function TareasPage() {
               {activeFilters ? <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-area-general" /> : null}
             </button>
             {canCreate ? (
-              <button aria-label="Nueva tarea" onClick={() => setCreating(true)} className="coord-press flex h-10 w-10 items-center justify-center rounded-xl">
+              <button aria-label={tab === "juntas" ? "Nueva junta" : "Nueva tarea"} onClick={() => (tab === "juntas" ? navigate({ to: "/coordinacion/general/juntas/nueva" }) : setCreating(true))} className="coord-press flex h-10 w-10 items-center justify-center rounded-xl">
                 <Plus className="h-5 w-5" />
               </button>
             ) : null}
@@ -109,10 +116,23 @@ function TareasPage() {
 
       <AreaSwitcher
         items={[{ key: "tareas", label: "Tareas" }, { key: "juntas", label: "Juntas" }]}
-        active="tareas"
-        onChange={(k) => k === "juntas" && navigate({ to: "/m/coordinacion_interna", search: { open: undefined, kind: undefined } })}
+        active={tab}
+        onChange={(k) => navigate({ to: "/coordinacion/general/tareas", search: k === "juntas" ? { tab: "juntas" } : {}, replace: true })}
         indicatorClass={area.bg}
       />
+
+      {tab === "juntas" ? (() => {
+        const { upcoming, past } = splitMeetings(meetingsQ.data ?? []);
+        const list = when === "proximas" ? upcoming : past;
+        return (
+          <div className="space-y-4">
+            <Segmented items={[{ key: "proximas", label: "Próximas" }, { key: "pasadas", label: "Pasadas" }]} value={when} onChange={setWhen} />
+            {meetingsQ.isLoading ? <p className="py-10 text-center text-sm text-muted-foreground">Cargando…</p>
+              : list.length === 0 ? <p className="py-10 text-center text-sm text-muted-foreground">{when === "proximas" ? "No hay juntas próximas." : "Aún no hay juntas pasadas."}</p>
+              : <ul className="divide-y divide-border/40 overflow-hidden rounded-[14px] bg-card">{list.map((m) => <MeetingListRow key={m.id} m={m} />)}</ul>}
+          </div>
+        );
+      })() : (<>
 
       <Segmented items={[{ key: "mias", label: "Mías" }, { key: "todas", label: "Todas" }]} value={scope} onChange={setScope} />
 
@@ -162,6 +182,8 @@ function TareasPage() {
           })}
         </div>
       )}
+
+      </>)}
 
       <Sheet open={filterOpen} onOpenChange={setFilterOpen}>
         <SheetContent side="bottom" className="max-h-[85dvh] overflow-y-auto rounded-t-[22px] border-0 bg-background px-4 pb-6 pt-4">

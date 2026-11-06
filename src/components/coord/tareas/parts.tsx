@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Link } from "@tanstack/react-router";
-import { Camera, Check, Flag, Loader2, MessageCircle, ListChecks } from "lucide-react";
+import { Camera, Check, Flag, Loader2, MapPin, MessageCircle, ListChecks } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { AvatarStack } from "@/components/coordinacion/AvatarStack";
@@ -81,6 +81,7 @@ export function TaskListRow({ task, userId, clubId, canAct }: { task: TaskRow; u
             {label ? <span className={cn(overdue && "text-urgency-red")}>{label}</span> : null}
             {label ? " · " : ""}
             {cat}
+            {task.location ? <> · <MapPin className="inline h-3 w-3 -translate-y-px" aria-label="Lugar" /> {task.location.name.split(",")[0]}</> : null}
             {task.status === "en_pausa" ? " · En pausa" : ""}
           </span>
         </span>

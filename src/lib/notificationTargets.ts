@@ -26,14 +26,10 @@ export function notificationTarget(n: NotificationRow): NotificationTarget | nul
       return { module: "solicitudes", to: "/m/solicitudes", search: { open: n.related_id } };
 
     case "coordinacion_interna":
-      // Tareas (avisos nuevos y viejos) abren la ficha nueva; las juntas siguen en la pantalla actual.
-      if (!n.type.startsWith("junta"))
-        return { module: "coordinacion_interna", to: `/coordinacion/general/tareas/${n.related_id}` };
-      return {
-        module: "coordinacion_interna",
-        to: "/m/coordinacion_interna",
-        search: { open: n.related_id, kind: n.type.startsWith("junta") ? "junta" : "tarea" },
-      };
+      // Tareas y juntas (avisos nuevos y viejos) abren la ficha nueva.
+      if (n.type.startsWith("junta"))
+        return { module: "coordinacion_interna", to: `/coordinacion/general/juntas/${n.related_id}` };
+      return { module: "coordinacion_interna", to: `/coordinacion/general/tareas/${n.related_id}` };
     case "compras_facturas":
       return {
         module: "compras_facturas",
