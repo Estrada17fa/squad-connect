@@ -21,7 +21,11 @@ export interface CategoryOption { id: string | null; name: string }
 /* ------------------------------ Fecha límite ------------------------------ */
 
 function atTime(d: Date, h = 18) {
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), h, 0);
+  const out = new Date(d.getFullYear(), d.getMonth(), d.getDate(), h, 0);
+  // "Hoy" después de las 6 pm: al final del día para no nacer vencida.
+  const now = new Date();
+  if (out < now && out.toDateString() === now.toDateString()) return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59);
+  return out;
 }
 function nextFriday(now: Date) {
   const add = (5 - now.getDay() + 7) % 7 || 7;
@@ -66,7 +70,7 @@ export function DuePicker({ value, onChange }: { value: Date | null; onChange: (
       </div>
       {value ? (
         <div className="flex items-center gap-2 text-sm">
-          <span className="capitalize">{format(value, "EEEE d 'de' MMMM", { locale: es })}</span>
+          <span>{(() => { const t = format(value, "EEEE d 'de' MMMM", { locale: es }); return t.charAt(0).toUpperCase() + t.slice(1); })()}</span>
           <input type="time" value={time} aria-label="Hora"
             onChange={(e) => { const [h, m] = e.target.value.split(":").map(Number); if (!isNaN(h)) onChange(new Date(value.getFullYear(), value.getMonth(), value.getDate(), h, m || 0)); }}
             className="h-9 rounded-lg bg-muted px-2 text-sm outline-none" />
