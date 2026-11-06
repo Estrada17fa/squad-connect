@@ -317,7 +317,8 @@ export function TripFormDialog({
     setPlayerIds(new Set());
     setStaffIds(new Set());
     setStaffOpen(false);
-  }, [open, trip, defaultTeamId, firstTeamId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, trip?.id, defaultTeamId, firstTeamId]);
 
   // Precarga los convocados del partido elegido.
   React.useEffect(() => {
@@ -403,8 +404,8 @@ export function TripFormDialog({
     onSuccess: (tripId) => {
       toast.success(isEdit ? "Viaje actualizado" : "Viaje creado");
       invalidate();
-      onOpenChange(false);
       if (!isEdit && tripId) onCreated?.(tripId);
+      onOpenChange(false);
     },
     onError: (e: any) => toast.error(e.message ?? "No se pudo guardar"),
   });
