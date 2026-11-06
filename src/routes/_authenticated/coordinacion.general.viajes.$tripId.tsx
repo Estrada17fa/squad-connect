@@ -153,7 +153,7 @@ function ViajeDetailPage() {
         {tab === "documentos" ? <DocumentosTab {...props} /> : null}
       </div>
 
-      <ConfirmDialog open={confirmFinish} onOpenChange={setConfirmFinish} title="Finalizar viaje" description="Sale de Próximos y pasa a Viajes anteriores. Los viajeros pueden seguir viendo su pase." loading={busy} onConfirm={() => setStatus("completado", "Viaje finalizado")} />
+      <ConfirmDialog open={confirmFinish} onOpenChange={setConfirmFinish} title="Finalizar viaje" description="Sale de Próximos y pasa a Viajes anteriores. Los viajeros pueden seguir viendo su pase." confirmLabel="Finalizar" destructive={false} loading={busy} onConfirm={() => setStatus("completado", "Viaje finalizado")} />
       <ConfirmDialog open={confirmDelete} onOpenChange={setConfirmDelete} title="Eliminar viaje" description="Se borran el viaje, su logística y los pases cargados. No se puede deshacer." loading={deleting} onConfirm={remove} />
     </div>
   );
