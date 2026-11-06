@@ -19,6 +19,7 @@ import { useTaskAccess } from "@/components/coord/tareas/useTaskAccess";
 import { initialsOf, PRIORITY_LABEL } from "@/lib/coordinacion";
 import { canCompleteTask, dueLabel } from "@/lib/tareas";
 import { cn } from "@/lib/utils";
+import { LocationCard } from "@/components/location/LocationCard";
 
 export const Route = createFileRoute("/_authenticated/coordinacion/general/tareas/$taskId")({
   head: () => ({
@@ -65,6 +66,7 @@ function TaskPage() {
   const [blocked, setBlocked] = React.useState(false);
   const [viewer, setViewer] = React.useState<string | null>(null);
   const [creator, setCreator] = React.useState<string | null>(null);
+  const [meetingTitle, setMeetingTitle] = React.useState<string | null>(null);
   const evidenceRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
@@ -72,6 +74,12 @@ function TaskPage() {
     supabase.from("profiles").select("full_name, email").eq("id", task.created_by).maybeSingle()
       .then(({ data }) => setCreator(data?.full_name ?? data?.email ?? null));
   }, [task?.created_by]);
+
+  React.useEffect(() => {
+    if (!task?.meeting_id) return setMeetingTitle(null);
+    supabase.from("meetings").select("title").eq("id", task.meeting_id).maybeSingle()
+      .then(({ data }) => setMeetingTitle(data?.title ?? null));
+  }, [task?.meeting_id]);
 
   const back = (
     <Link to="/coordinacion/general/tareas" className="coord-press -ml-2 inline-flex min-h-11 items-center gap-0.5 rounded-xl px-2 text-sm font-semibold">
@@ -170,6 +178,15 @@ function TaskPage() {
           </div>
         ))}
       </dl>
+
+      {task.location_id ? <LocationCard locationId={task.location_id} /> : null}
+
+      {task.meeting_id && meetingTitle ? (
+        <Link to="/coordinacion/general/juntas/$meetingId" params={{ meetingId: task.meeting_id }} className="coord-press flex min-h-12 items-center justify-between gap-3 rounded-[14px] bg-card px-3 text-sm">
+          <span className="min-w-0 truncate"><span className="text-muted-foreground">De la junta: </span>{meetingTitle}</span>
+          <span aria-hidden className="text-muted-foreground">›</span>
+        </Link>
+      ) : null}
 
       {task.description ? (
         <section>
