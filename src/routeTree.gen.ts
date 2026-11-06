@@ -69,6 +69,7 @@ import { Route as AuthenticatedAdministracionUsuariosUserIdPermisosRouteImport }
 import { Route as AuthenticatedAdministracionUsuariosRolesIndexRouteImport } from './routes/_authenticated/administracion.usuarios.roles.index'
 import { Route as AuthenticatedAdministracionUsuariosRolesRoleIdRouteImport } from './routes/_authenticated/administracion.usuarios.roles.$roleId'
 import { Route as AuthenticatedCoordinacionGeneralTareasIndexRouteImport } from './routes/_authenticated/coordinacion.general.tareas.index'
+import { Route as AuthenticatedCoordinacionGeneralTareasTaskIdRouteImport } from './routes/_authenticated/coordinacion.general.tareas.$taskId'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -409,6 +410,12 @@ const AuthenticatedCoordinacionGeneralTareasIndexRoute =
     path: '/general/tareas/',
     getParentRoute: () => AuthenticatedCoordinacionRoute,
   } as any)
+const AuthenticatedCoordinacionGeneralTareasTaskIdRoute =
+  AuthenticatedCoordinacionGeneralTareasTaskIdRouteImport.update({
+    id: '/general/tareas/$taskId',
+    path: '/general/tareas/$taskId',
+    getParentRoute: () => AuthenticatedCoordinacionRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -466,6 +473,7 @@ export interface FileRoutesByFullPath {
   '/administracion/usuarios/$userId/editar': typeof AuthenticatedAdministracionUsuariosUserIdEditarRoute
   '/administracion/usuarios/$userId/permisos': typeof AuthenticatedAdministracionUsuariosUserIdPermisosRoute
   '/administracion/usuarios/roles/$roleId': typeof AuthenticatedAdministracionUsuariosRolesRoleIdRoute
+  '/coordinacion/general/tareas/$taskId': typeof AuthenticatedCoordinacionGeneralTareasTaskIdRoute
   '/administracion/torneos/$id/': typeof AuthenticatedAdministracionTorneosIdIndexRoute
   '/administracion/usuarios/$userId/': typeof AuthenticatedAdministracionUsuariosUserIdIndexRoute
   '/administracion/usuarios/roles/': typeof AuthenticatedAdministracionUsuariosRolesIndexRoute
@@ -520,6 +528,7 @@ export interface FileRoutesByTo {
   '/administracion/usuarios/$userId/editar': typeof AuthenticatedAdministracionUsuariosUserIdEditarRoute
   '/administracion/usuarios/$userId/permisos': typeof AuthenticatedAdministracionUsuariosUserIdPermisosRoute
   '/administracion/usuarios/roles/$roleId': typeof AuthenticatedAdministracionUsuariosRolesRoleIdRoute
+  '/coordinacion/general/tareas/$taskId': typeof AuthenticatedCoordinacionGeneralTareasTaskIdRoute
   '/administracion/torneos/$id': typeof AuthenticatedAdministracionTorneosIdIndexRoute
   '/administracion/usuarios/$userId': typeof AuthenticatedAdministracionUsuariosUserIdIndexRoute
   '/administracion/usuarios/roles': typeof AuthenticatedAdministracionUsuariosRolesIndexRoute
@@ -583,6 +592,7 @@ export interface FileRoutesById {
   '/_authenticated/administracion/usuarios/$userId/editar': typeof AuthenticatedAdministracionUsuariosUserIdEditarRoute
   '/_authenticated/administracion/usuarios/$userId/permisos': typeof AuthenticatedAdministracionUsuariosUserIdPermisosRoute
   '/_authenticated/administracion/usuarios/roles/$roleId': typeof AuthenticatedAdministracionUsuariosRolesRoleIdRoute
+  '/_authenticated/coordinacion/general/tareas/$taskId': typeof AuthenticatedCoordinacionGeneralTareasTaskIdRoute
   '/_authenticated/administracion/torneos/$id/': typeof AuthenticatedAdministracionTorneosIdIndexRoute
   '/_authenticated/administracion/usuarios/$userId/': typeof AuthenticatedAdministracionUsuariosUserIdIndexRoute
   '/_authenticated/administracion/usuarios/roles/': typeof AuthenticatedAdministracionUsuariosRolesIndexRoute
@@ -646,6 +656,7 @@ export interface FileRouteTypes {
     | '/administracion/usuarios/$userId/editar'
     | '/administracion/usuarios/$userId/permisos'
     | '/administracion/usuarios/roles/$roleId'
+    | '/coordinacion/general/tareas/$taskId'
     | '/administracion/torneos/$id/'
     | '/administracion/usuarios/$userId/'
     | '/administracion/usuarios/roles/'
@@ -700,6 +711,7 @@ export interface FileRouteTypes {
     | '/administracion/usuarios/$userId/editar'
     | '/administracion/usuarios/$userId/permisos'
     | '/administracion/usuarios/roles/$roleId'
+    | '/coordinacion/general/tareas/$taskId'
     | '/administracion/torneos/$id'
     | '/administracion/usuarios/$userId'
     | '/administracion/usuarios/roles'
@@ -762,6 +774,7 @@ export interface FileRouteTypes {
     | '/_authenticated/administracion/usuarios/$userId/editar'
     | '/_authenticated/administracion/usuarios/$userId/permisos'
     | '/_authenticated/administracion/usuarios/roles/$roleId'
+    | '/_authenticated/coordinacion/general/tareas/$taskId'
     | '/_authenticated/administracion/torneos/$id/'
     | '/_authenticated/administracion/usuarios/$userId/'
     | '/_authenticated/administracion/usuarios/roles/'
@@ -1196,6 +1209,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCoordinacionGeneralTareasIndexRouteImport
       parentRoute: typeof AuthenticatedCoordinacionRoute
     }
+    '/_authenticated/coordinacion/general/tareas/$taskId': {
+      id: '/_authenticated/coordinacion/general/tareas/$taskId'
+      path: '/general/tareas/$taskId'
+      fullPath: '/coordinacion/general/tareas/$taskId'
+      preLoaderRoute: typeof AuthenticatedCoordinacionGeneralTareasTaskIdRouteImport
+      parentRoute: typeof AuthenticatedCoordinacionRoute
+    }
   }
 }
 
@@ -1336,6 +1356,7 @@ interface AuthenticatedCoordinacionRouteChildren {
   AuthenticatedCoordinacionIndexRoute: typeof AuthenticatedCoordinacionIndexRoute
   AuthenticatedCoordinacionAreaModuleRoute: typeof AuthenticatedCoordinacionAreaModuleRoute
   AuthenticatedCoordinacionAreaIndexRoute: typeof AuthenticatedCoordinacionAreaIndexRoute
+  AuthenticatedCoordinacionGeneralTareasTaskIdRoute: typeof AuthenticatedCoordinacionGeneralTareasTaskIdRoute
   AuthenticatedCoordinacionGeneralTareasIndexRoute: typeof AuthenticatedCoordinacionGeneralTareasIndexRoute
 }
 
@@ -1346,6 +1367,8 @@ const AuthenticatedCoordinacionRouteChildren: AuthenticatedCoordinacionRouteChil
       AuthenticatedCoordinacionAreaModuleRoute,
     AuthenticatedCoordinacionAreaIndexRoute:
       AuthenticatedCoordinacionAreaIndexRoute,
+    AuthenticatedCoordinacionGeneralTareasTaskIdRoute:
+      AuthenticatedCoordinacionGeneralTareasTaskIdRoute,
     AuthenticatedCoordinacionGeneralTareasIndexRoute:
       AuthenticatedCoordinacionGeneralTareasIndexRoute,
   }

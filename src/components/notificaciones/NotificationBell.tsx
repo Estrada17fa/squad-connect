@@ -143,7 +143,7 @@ export function NotificationPanel({
       return;
     }
     onOpenChange(false);
-    navigate({ to: target.to as any, search: target.search as any });
+    navigate({ to: target.to as any, search: (target.search ?? {}) as any });
   }
 
   return (

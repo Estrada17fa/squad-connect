@@ -1,5 +1,5 @@
 import * as React from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Plus, CalendarClock, MapPin, MessagesSquare, ClipboardList } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
@@ -38,6 +38,11 @@ export const Route = createFileRoute("/_authenticated/m/coordinacion_interna")({
     open: typeof search.open === "string" ? search.open : undefined,
     kind: search.kind === "junta" ? ("junta" as const) : search.kind === "tarea" ? ("tarea" as const) : undefined,
   }),
+  // Enlaces viejos a una tarea abren la ficha nueva.
+  beforeLoad: ({ search }) => {
+    if (search.open && search.kind !== "junta")
+      throw redirect({ to: "/coordinacion/general/tareas/$taskId", params: { taskId: search.open }, replace: true });
+  },
   head: () => ({
     meta: [
       { title: "Squad — Coordinación" },
