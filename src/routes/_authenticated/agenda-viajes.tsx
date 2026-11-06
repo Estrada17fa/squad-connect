@@ -1,5 +1,5 @@
 import * as React from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Plane, MapPin, Users } from "lucide-react";
 import { PageHeader } from "@/components/squad/PageHeader";
 import { ModuleTabs } from "@/components/squad/ModuleTabs";
@@ -16,6 +16,7 @@ import { DetailSheet, DetailBadge } from "@/components/squad/DetailSheet";
 import { TeamFilter, TeamBadge } from "@/components/squad/TeamFilter";
 
 export const Route = createFileRoute("/_authenticated/agenda-viajes")({
+  validateSearch: (s: Record<string, unknown>): { open?: string } => (typeof s.open === "string" ? { open: s.open } : {}),
   head: () => ({
     meta: [
       { title: "Squad — Viajes en agenda" },
@@ -48,6 +49,15 @@ function AgendaViajesPage() {
   const tripsQ = useTrips(canAccess ? clubId : null, teamFilter);
   const trips = tripsQ.data ?? [];
   const detail = trips.find((t) => t.id === detailId) ?? null;
+
+  // Enlace o aviso de viaje: /agenda-viajes?open=<tripId> abre ese viaje.
+  const { open: openParam } = Route.useSearch();
+  const navigate = useNavigate();
+  React.useEffect(() => {
+    if (!openParam || !trips.some((t) => t.id === openParam)) return;
+    setDetailId(openParam);
+    navigate({ to: "/agenda-viajes", search: {}, replace: true });
+  }, [openParam, trips, navigate]);
 
   const nowIso = new Date().toISOString();
   const upcoming = trips

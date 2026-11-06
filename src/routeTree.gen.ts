@@ -72,7 +72,11 @@ import { Route as AuthenticatedCoordinacionGeneralJuntasMeetingIdRouteImport } f
 import { Route as AuthenticatedCoordinacionGeneralJuntasNuevaRouteImport } from './routes/_authenticated/coordinacion.general.juntas.nueva'
 import { Route as AuthenticatedCoordinacionGeneralTareasIndexRouteImport } from './routes/_authenticated/coordinacion.general.tareas.index'
 import { Route as AuthenticatedCoordinacionGeneralTareasTaskIdRouteImport } from './routes/_authenticated/coordinacion.general.tareas.$taskId'
+import { Route as AuthenticatedCoordinacionGeneralViajesIndexRouteImport } from './routes/_authenticated/coordinacion.general.viajes.index'
+import { Route as AuthenticatedCoordinacionGeneralViajesTripIdRouteImport } from './routes/_authenticated/coordinacion.general.viajes.$tripId'
+import { Route as AuthenticatedCoordinacionGeneralViajesNuevoRouteImport } from './routes/_authenticated/coordinacion.general.viajes.nuevo'
 import { Route as AuthenticatedCoordinacionGeneralJuntasMeetingIdEditarRouteImport } from './routes/_authenticated/coordinacion.general.juntas.$meetingId_.editar'
+import { Route as AuthenticatedCoordinacionGeneralViajesTripIdEditarRouteImport } from './routes/_authenticated/coordinacion.general.viajes.$tripId_.editar'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -431,10 +435,34 @@ const AuthenticatedCoordinacionGeneralTareasTaskIdRoute =
     path: '/general/tareas/$taskId',
     getParentRoute: () => AuthenticatedCoordinacionRoute,
   } as any)
+const AuthenticatedCoordinacionGeneralViajesIndexRoute =
+  AuthenticatedCoordinacionGeneralViajesIndexRouteImport.update({
+    id: '/general/viajes/',
+    path: '/general/viajes/',
+    getParentRoute: () => AuthenticatedCoordinacionRoute,
+  } as any)
+const AuthenticatedCoordinacionGeneralViajesTripIdRoute =
+  AuthenticatedCoordinacionGeneralViajesTripIdRouteImport.update({
+    id: '/general/viajes/$tripId',
+    path: '/general/viajes/$tripId',
+    getParentRoute: () => AuthenticatedCoordinacionRoute,
+  } as any)
+const AuthenticatedCoordinacionGeneralViajesNuevoRoute =
+  AuthenticatedCoordinacionGeneralViajesNuevoRouteImport.update({
+    id: '/general/viajes/nuevo',
+    path: '/general/viajes/nuevo',
+    getParentRoute: () => AuthenticatedCoordinacionRoute,
+  } as any)
 const AuthenticatedCoordinacionGeneralJuntasMeetingIdEditarRoute =
   AuthenticatedCoordinacionGeneralJuntasMeetingIdEditarRouteImport.update({
     id: '/general/juntas/$meetingId_/editar',
     path: '/general/juntas/$meetingId/editar',
+    getParentRoute: () => AuthenticatedCoordinacionRoute,
+  } as any)
+const AuthenticatedCoordinacionGeneralViajesTripIdEditarRoute =
+  AuthenticatedCoordinacionGeneralViajesTripIdEditarRouteImport.update({
+    id: '/general/viajes/$tripId_/editar',
+    path: '/general/viajes/$tripId/editar',
     getParentRoute: () => AuthenticatedCoordinacionRoute,
   } as any)
 
@@ -497,11 +525,15 @@ export interface FileRoutesByFullPath {
   '/coordinacion/general/juntas/$meetingId': typeof AuthenticatedCoordinacionGeneralJuntasMeetingIdRoute
   '/coordinacion/general/juntas/nueva': typeof AuthenticatedCoordinacionGeneralJuntasNuevaRoute
   '/coordinacion/general/tareas/$taskId': typeof AuthenticatedCoordinacionGeneralTareasTaskIdRoute
+  '/coordinacion/general/viajes/$tripId': typeof AuthenticatedCoordinacionGeneralViajesTripIdRoute
+  '/coordinacion/general/viajes/nuevo': typeof AuthenticatedCoordinacionGeneralViajesNuevoRoute
   '/administracion/torneos/$id/': typeof AuthenticatedAdministracionTorneosIdIndexRoute
   '/administracion/usuarios/$userId/': typeof AuthenticatedAdministracionUsuariosUserIdIndexRoute
   '/administracion/usuarios/roles/': typeof AuthenticatedAdministracionUsuariosRolesIndexRoute
   '/coordinacion/general/tareas/': typeof AuthenticatedCoordinacionGeneralTareasIndexRoute
+  '/coordinacion/general/viajes/': typeof AuthenticatedCoordinacionGeneralViajesIndexRoute
   '/coordinacion/general/juntas/$meetingId/editar': typeof AuthenticatedCoordinacionGeneralJuntasMeetingIdEditarRoute
+  '/coordinacion/general/viajes/$tripId/editar': typeof AuthenticatedCoordinacionGeneralViajesTripIdEditarRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
@@ -555,11 +587,15 @@ export interface FileRoutesByTo {
   '/coordinacion/general/juntas/$meetingId': typeof AuthenticatedCoordinacionGeneralJuntasMeetingIdRoute
   '/coordinacion/general/juntas/nueva': typeof AuthenticatedCoordinacionGeneralJuntasNuevaRoute
   '/coordinacion/general/tareas/$taskId': typeof AuthenticatedCoordinacionGeneralTareasTaskIdRoute
+  '/coordinacion/general/viajes/$tripId': typeof AuthenticatedCoordinacionGeneralViajesTripIdRoute
+  '/coordinacion/general/viajes/nuevo': typeof AuthenticatedCoordinacionGeneralViajesNuevoRoute
   '/administracion/torneos/$id': typeof AuthenticatedAdministracionTorneosIdIndexRoute
   '/administracion/usuarios/$userId': typeof AuthenticatedAdministracionUsuariosUserIdIndexRoute
   '/administracion/usuarios/roles': typeof AuthenticatedAdministracionUsuariosRolesIndexRoute
   '/coordinacion/general/tareas': typeof AuthenticatedCoordinacionGeneralTareasIndexRoute
+  '/coordinacion/general/viajes': typeof AuthenticatedCoordinacionGeneralViajesIndexRoute
   '/coordinacion/general/juntas/$meetingId/editar': typeof AuthenticatedCoordinacionGeneralJuntasMeetingIdEditarRoute
+  '/coordinacion/general/viajes/$tripId/editar': typeof AuthenticatedCoordinacionGeneralViajesTripIdEditarRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -622,11 +658,15 @@ export interface FileRoutesById {
   '/_authenticated/coordinacion/general/juntas/$meetingId': typeof AuthenticatedCoordinacionGeneralJuntasMeetingIdRoute
   '/_authenticated/coordinacion/general/juntas/nueva': typeof AuthenticatedCoordinacionGeneralJuntasNuevaRoute
   '/_authenticated/coordinacion/general/tareas/$taskId': typeof AuthenticatedCoordinacionGeneralTareasTaskIdRoute
+  '/_authenticated/coordinacion/general/viajes/$tripId': typeof AuthenticatedCoordinacionGeneralViajesTripIdRoute
+  '/_authenticated/coordinacion/general/viajes/nuevo': typeof AuthenticatedCoordinacionGeneralViajesNuevoRoute
   '/_authenticated/administracion/torneos/$id/': typeof AuthenticatedAdministracionTorneosIdIndexRoute
   '/_authenticated/administracion/usuarios/$userId/': typeof AuthenticatedAdministracionUsuariosUserIdIndexRoute
   '/_authenticated/administracion/usuarios/roles/': typeof AuthenticatedAdministracionUsuariosRolesIndexRoute
   '/_authenticated/coordinacion/general/tareas/': typeof AuthenticatedCoordinacionGeneralTareasIndexRoute
+  '/_authenticated/coordinacion/general/viajes/': typeof AuthenticatedCoordinacionGeneralViajesIndexRoute
   '/_authenticated/coordinacion/general/juntas/$meetingId_/editar': typeof AuthenticatedCoordinacionGeneralJuntasMeetingIdEditarRoute
+  '/_authenticated/coordinacion/general/viajes/$tripId_/editar': typeof AuthenticatedCoordinacionGeneralViajesTripIdEditarRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -689,11 +729,15 @@ export interface FileRouteTypes {
     | '/coordinacion/general/juntas/$meetingId'
     | '/coordinacion/general/juntas/nueva'
     | '/coordinacion/general/tareas/$taskId'
+    | '/coordinacion/general/viajes/$tripId'
+    | '/coordinacion/general/viajes/nuevo'
     | '/administracion/torneos/$id/'
     | '/administracion/usuarios/$userId/'
     | '/administracion/usuarios/roles/'
     | '/coordinacion/general/tareas/'
+    | '/coordinacion/general/viajes/'
     | '/coordinacion/general/juntas/$meetingId/editar'
+    | '/coordinacion/general/viajes/$tripId/editar'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/auth'
@@ -747,11 +791,15 @@ export interface FileRouteTypes {
     | '/coordinacion/general/juntas/$meetingId'
     | '/coordinacion/general/juntas/nueva'
     | '/coordinacion/general/tareas/$taskId'
+    | '/coordinacion/general/viajes/$tripId'
+    | '/coordinacion/general/viajes/nuevo'
     | '/administracion/torneos/$id'
     | '/administracion/usuarios/$userId'
     | '/administracion/usuarios/roles'
     | '/coordinacion/general/tareas'
+    | '/coordinacion/general/viajes'
     | '/coordinacion/general/juntas/$meetingId/editar'
+    | '/coordinacion/general/viajes/$tripId/editar'
   id:
     | '__root__'
     | '/_authenticated'
@@ -813,11 +861,15 @@ export interface FileRouteTypes {
     | '/_authenticated/coordinacion/general/juntas/$meetingId'
     | '/_authenticated/coordinacion/general/juntas/nueva'
     | '/_authenticated/coordinacion/general/tareas/$taskId'
+    | '/_authenticated/coordinacion/general/viajes/$tripId'
+    | '/_authenticated/coordinacion/general/viajes/nuevo'
     | '/_authenticated/administracion/torneos/$id/'
     | '/_authenticated/administracion/usuarios/$userId/'
     | '/_authenticated/administracion/usuarios/roles/'
     | '/_authenticated/coordinacion/general/tareas/'
+    | '/_authenticated/coordinacion/general/viajes/'
     | '/_authenticated/coordinacion/general/juntas/$meetingId_/editar'
+    | '/_authenticated/coordinacion/general/viajes/$tripId_/editar'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1269,11 +1321,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCoordinacionGeneralTareasTaskIdRouteImport
       parentRoute: typeof AuthenticatedCoordinacionRoute
     }
+    '/_authenticated/coordinacion/general/viajes/': {
+      id: '/_authenticated/coordinacion/general/viajes/'
+      path: '/general/viajes'
+      fullPath: '/coordinacion/general/viajes/'
+      preLoaderRoute: typeof AuthenticatedCoordinacionGeneralViajesIndexRouteImport
+      parentRoute: typeof AuthenticatedCoordinacionRoute
+    }
+    '/_authenticated/coordinacion/general/viajes/$tripId': {
+      id: '/_authenticated/coordinacion/general/viajes/$tripId'
+      path: '/general/viajes/$tripId'
+      fullPath: '/coordinacion/general/viajes/$tripId'
+      preLoaderRoute: typeof AuthenticatedCoordinacionGeneralViajesTripIdRouteImport
+      parentRoute: typeof AuthenticatedCoordinacionRoute
+    }
+    '/_authenticated/coordinacion/general/viajes/nuevo': {
+      id: '/_authenticated/coordinacion/general/viajes/nuevo'
+      path: '/general/viajes/nuevo'
+      fullPath: '/coordinacion/general/viajes/nuevo'
+      preLoaderRoute: typeof AuthenticatedCoordinacionGeneralViajesNuevoRouteImport
+      parentRoute: typeof AuthenticatedCoordinacionRoute
+    }
     '/_authenticated/coordinacion/general/juntas/$meetingId_/editar': {
       id: '/_authenticated/coordinacion/general/juntas/$meetingId_/editar'
       path: '/general/juntas/$meetingId/editar'
       fullPath: '/coordinacion/general/juntas/$meetingId/editar'
       preLoaderRoute: typeof AuthenticatedCoordinacionGeneralJuntasMeetingIdEditarRouteImport
+      parentRoute: typeof AuthenticatedCoordinacionRoute
+    }
+    '/_authenticated/coordinacion/general/viajes/$tripId_/editar': {
+      id: '/_authenticated/coordinacion/general/viajes/$tripId_/editar'
+      path: '/general/viajes/$tripId/editar'
+      fullPath: '/coordinacion/general/viajes/$tripId/editar'
+      preLoaderRoute: typeof AuthenticatedCoordinacionGeneralViajesTripIdEditarRouteImport
       parentRoute: typeof AuthenticatedCoordinacionRoute
     }
   }
@@ -1419,8 +1499,12 @@ interface AuthenticatedCoordinacionRouteChildren {
   AuthenticatedCoordinacionGeneralJuntasMeetingIdRoute: typeof AuthenticatedCoordinacionGeneralJuntasMeetingIdRoute
   AuthenticatedCoordinacionGeneralJuntasNuevaRoute: typeof AuthenticatedCoordinacionGeneralJuntasNuevaRoute
   AuthenticatedCoordinacionGeneralTareasTaskIdRoute: typeof AuthenticatedCoordinacionGeneralTareasTaskIdRoute
+  AuthenticatedCoordinacionGeneralViajesTripIdRoute: typeof AuthenticatedCoordinacionGeneralViajesTripIdRoute
+  AuthenticatedCoordinacionGeneralViajesNuevoRoute: typeof AuthenticatedCoordinacionGeneralViajesNuevoRoute
   AuthenticatedCoordinacionGeneralTareasIndexRoute: typeof AuthenticatedCoordinacionGeneralTareasIndexRoute
+  AuthenticatedCoordinacionGeneralViajesIndexRoute: typeof AuthenticatedCoordinacionGeneralViajesIndexRoute
   AuthenticatedCoordinacionGeneralJuntasMeetingIdEditarRoute: typeof AuthenticatedCoordinacionGeneralJuntasMeetingIdEditarRoute
+  AuthenticatedCoordinacionGeneralViajesTripIdEditarRoute: typeof AuthenticatedCoordinacionGeneralViajesTripIdEditarRoute
 }
 
 const AuthenticatedCoordinacionRouteChildren: AuthenticatedCoordinacionRouteChildren =
@@ -1436,10 +1520,18 @@ const AuthenticatedCoordinacionRouteChildren: AuthenticatedCoordinacionRouteChil
       AuthenticatedCoordinacionGeneralJuntasNuevaRoute,
     AuthenticatedCoordinacionGeneralTareasTaskIdRoute:
       AuthenticatedCoordinacionGeneralTareasTaskIdRoute,
+    AuthenticatedCoordinacionGeneralViajesTripIdRoute:
+      AuthenticatedCoordinacionGeneralViajesTripIdRoute,
+    AuthenticatedCoordinacionGeneralViajesNuevoRoute:
+      AuthenticatedCoordinacionGeneralViajesNuevoRoute,
     AuthenticatedCoordinacionGeneralTareasIndexRoute:
       AuthenticatedCoordinacionGeneralTareasIndexRoute,
+    AuthenticatedCoordinacionGeneralViajesIndexRoute:
+      AuthenticatedCoordinacionGeneralViajesIndexRoute,
     AuthenticatedCoordinacionGeneralJuntasMeetingIdEditarRoute:
       AuthenticatedCoordinacionGeneralJuntasMeetingIdEditarRoute,
+    AuthenticatedCoordinacionGeneralViajesTripIdEditarRoute:
+      AuthenticatedCoordinacionGeneralViajesTripIdEditarRoute,
   }
 
 const AuthenticatedCoordinacionRouteWithChildren =

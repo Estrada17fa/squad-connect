@@ -55,10 +55,11 @@ export interface TripRow {
   updated_at: string;
   match_event: { id: string; title: string; starts_at: string; location: string | null } | null;
   travelers: TripTraveler[];
+  meeting_location_id?: string | null;
 }
 
 const SELECT =
-  "id, club_id, team_id, title, destination, match_event_id, departure_at, return_at, meeting_point, meeting_at, status, notes, created_by, created_at, updated_at, " +
+  "id, club_id, team_id, title, destination, match_event_id, departure_at, return_at, meeting_point, meeting_location_id, meeting_at, status, notes, created_by, created_at, updated_at, " +
   "match_event:calendar_events!trips_match_event_id_fkey(id, title, starts_at, location), " +
   "travelers:trip_travelers(id, trip_id, user_id, role_note, created_at, profile:profiles(id, full_name, email, avatar_url))";
 
