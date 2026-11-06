@@ -38,9 +38,11 @@ export const Route = createFileRoute("/_authenticated/m/coordinacion_interna")({
     open: typeof search.open === "string" ? search.open : undefined,
     kind: search.kind === "junta" ? ("junta" as const) : search.kind === "tarea" ? ("tarea" as const) : undefined,
   }),
-  // Enlaces viejos a una tarea abren la ficha nueva.
+  // Enlaces viejos a una tarea o junta abren la ficha nueva.
   beforeLoad: ({ search }) => {
-    if (search.open && search.kind !== "junta")
+    if (search.open && search.kind === "junta")
+      throw redirect({ to: "/coordinacion/general/juntas/$meetingId", params: { meetingId: search.open }, replace: true });
+    if (search.open)
       throw redirect({ to: "/coordinacion/general/tareas/$taskId", params: { taskId: search.open }, replace: true });
   },
   head: () => ({
