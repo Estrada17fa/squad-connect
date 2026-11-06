@@ -1,12 +1,13 @@
 import * as React from "react";
 import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router";
 import { COORD_AREAS, getArea, LAST_AREA_KEY } from "@/lib/coordAreas";
-import { AREA_HERO, AREA_PENDING, areaHasUrgent, MODULE_MOCK, MOCK_CATEGORY, QUICK_ACTIONS } from "@/lib/coordMockData";
+import { AREA_HERO, areaHasUrgent, MODULE_MOCK, MOCK_CATEGORY, QUICK_ACTIONS } from "@/lib/coordMockData";
 import { AreaSwitcher } from "@/components/coord/AreaSwitcher";
 import { CoordHeader } from "@/components/coord/CoordHeader";
 import { HeroCard } from "@/components/coord/HeroCard";
 import { PendingList, SectionTitle } from "@/components/coord/PendingList";
 import { ModuleTile } from "@/components/coord/ModuleTile";
+import { useAreaPending } from "@/components/coord/tareas/useGeneralPending";
 
 export const Route = createFileRoute("/_authenticated/coordinacion/$area/")({
   head: ({ params }) => {
@@ -29,6 +30,7 @@ function AreaHome() {
   const { area: areaKey } = Route.useParams();
   const navigate = useNavigate();
   const area = getArea(areaKey);
+  const pending = useAreaPending(area?.key ?? "general");
 
   React.useEffect(() => {
     if (area) window.localStorage.setItem(LAST_AREA_KEY, area.key);
@@ -51,13 +53,13 @@ function AreaHome() {
       <div key={area.key} className="coord-enter space-y-4 pt-2">
         <div className="grid gap-3 md:grid-cols-2 md:items-start md:gap-6">
           <HeroCard area={area} hero={AREA_HERO[area.key]} />
-          <PendingList area={area} items={AREA_PENDING[area.key]} />
+          <PendingList area={area} items={pending.items} />
         </div>
         <section>
           <SectionTitle>Módulos</SectionTitle>
           <div className="grid grid-cols-3 gap-x-3 gap-y-2 md:grid-cols-6">
             {area.modules.map((m) => (
-              <ModuleTile key={m.key} area={area} module={m} badge={MODULE_MOCK[m.key]?.badge} />
+              <ModuleTile key={m.key} area={area} module={m} badge={m.key === "tareas" && area.key === "general" ? pending.tasksBadge : MODULE_MOCK[m.key]?.badge} />
             ))}
           </div>
         </section>

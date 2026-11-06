@@ -37,10 +37,7 @@ export function PendingList({ area, items, all = false }: { area: CoordArea; ite
           const I = p.icon;
           return (
             <li key={p.text}>
-              <button
-                onClick={() => toast("Próximamente")}
-                className="coord-press flex w-full items-center gap-3 px-3 py-2.5 text-left outline-none hover:bg-muted/40 focus-visible:bg-muted/50"
-              >
+              <Row area={area} moduleKey={p.moduleKey}>
                 <span className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-full", area.bgSoft)}>
                   <I className={cn("h-[15px] w-[15px]", area.text)} />
                 </span>
@@ -52,11 +49,18 @@ export function PendingList({ area, items, all = false }: { area: CoordArea; ite
                   {p.value}
                 </span>
                 <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60" />
-              </button>
+              </Row>
             </li>
           );
         })}
       </ul>
     </section>
   );
+}
+
+const ROW = "coord-press flex w-full items-center gap-3 px-3 py-2.5 text-left outline-none hover:bg-muted/40 focus-visible:bg-muted/50";
+function Row({ area, moduleKey, children }: { area: CoordArea; moduleKey?: string; children: React.ReactNode }) {
+  if (moduleKey)
+    return <Link to="/coordinacion/$area/$module" params={{ area: area.key, module: moduleKey }} className={ROW}>{children}</Link>;
+  return <button onClick={() => toast("Próximamente")} className={ROW}>{children}</button>;
 }

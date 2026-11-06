@@ -49,6 +49,10 @@ export interface TaskRow {
   completed_at: string | null;
   created_at: string;
   assignees: AssigneeProfile[];
+  requires_evidence: boolean;
+  checklist_total: number;
+  checklist_done: number;
+  comment_count: number;
 }
 
 export interface MeetingRow {
@@ -80,7 +84,7 @@ export interface ChecklistItem {
 }
 
 const TASK_SELECT =
-  "id, club_id, team_id, title, description, due_at, priority, status, created_by, completed_at, created_at, team:teams(id, name, category), task_assignees(user_id, profile:profiles!task_assignees_user_id_profiles_fkey(id, full_name, email, avatar_url))";
+  "id, club_id, team_id, title, description, due_at, priority, status, created_by, completed_at, created_at, requires_evidence, task_checklist_items(done), task_comments(count), team:teams(id, name, category), task_assignees(user_id, profile:profiles!task_assignees_user_id_profiles_fkey(id, full_name, email, avatar_url))";
 
 const MEETING_SELECT =
   "id, club_id, team_id, title, starts_at, ends_at, status, started_at, ended_at_actual, location, location_id, agenda, notes, created_by, created_at, team:teams(id, name, category), meeting_attendees(user_id, attendance_status, profile:profiles!meeting_attendees_user_id_profiles_fkey(id, full_name, email, avatar_url))";
@@ -104,6 +108,10 @@ export const tasksQueryOptions = (clubId: string | null | undefined) =>
         ...t,
         team: t.team ?? null,
         assignees: (t.task_assignees ?? []).map((a: any) => a.profile).filter(Boolean),
+        requires_evidence: !!t.requires_evidence,
+        checklist_total: (t.task_checklist_items ?? []).length,
+        checklist_done: (t.task_checklist_items ?? []).filter((c: any) => c.done).length,
+        comment_count: t.task_comments?.[0]?.count ?? 0,
       })) as TaskRow[];
     },
   });

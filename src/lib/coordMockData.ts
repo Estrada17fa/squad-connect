@@ -19,7 +19,7 @@ export const AREA_HERO: Record<AreaKey, MockHero> = {
 };
 
 export type Urgency = "red" | "amber" | "gray";
-export interface MockPending { icon: LucideIcon; text: string; context: string; value: string; urgency: Urgency }
+export interface MockPending { icon: LucideIcon; text: string; context: string; value: string; urgency: Urgency; /** Módulo real al que lleva la fila. */ moduleKey?: string }
 export const AREA_PENDING: Record<AreaKey, MockPending[]> = {
   general: [
     { icon: ListChecks, text: "Tareas", context: "1 vence hoy", value: "4", urgency: "red" },

@@ -3726,6 +3726,47 @@ export type Database = {
           },
         ]
       }
+      task_comments: {
+        Row: {
+          body: string
+          created_at: string
+          edited_at: string | null
+          id: string
+          image_path: string | null
+          is_evidence: boolean
+          task_id: string
+          user_id: string
+        }
+        Insert: {
+          body?: string
+          created_at?: string
+          edited_at?: string | null
+          id?: string
+          image_path?: string | null
+          is_evidence?: boolean
+          task_id: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          edited_at?: string | null
+          id?: string
+          image_path?: string | null
+          is_evidence?: boolean
+          task_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_comments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           club_id: string
@@ -3736,6 +3777,7 @@ export type Database = {
           due_at: string | null
           id: string
           priority: Database["public"]["Enums"]["task_priority"]
+          requires_evidence: boolean
           status: Database["public"]["Enums"]["task_status"]
           team_id: string | null
           title: string
@@ -3750,6 +3792,7 @@ export type Database = {
           due_at?: string | null
           id?: string
           priority?: Database["public"]["Enums"]["task_priority"]
+          requires_evidence?: boolean
           status?: Database["public"]["Enums"]["task_status"]
           team_id?: string | null
           title: string
@@ -3764,6 +3807,7 @@ export type Database = {
           due_at?: string | null
           id?: string
           priority?: Database["public"]["Enums"]["task_priority"]
+          requires_evidence?: boolean
           status?: Database["public"]["Enums"]["task_status"]
           team_id?: string | null
           title?: string

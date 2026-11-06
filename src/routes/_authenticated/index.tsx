@@ -10,6 +10,7 @@ import { UpcomingList } from "@/components/home/UpcomingList";
 import { TournamentStandingBlock } from "@/components/home/TournamentStandingBlock";
 import { AnnouncementsBlock } from "@/components/home/AnnouncementsBlock";
 import { useClubTournamentSummary } from "@/hooks/useClubNextMatch";
+import { MyTasksBlock } from "@/components/home/MyTasksBlock";
 
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
@@ -65,6 +66,8 @@ function Home() {
   return (
     <div className="space-y-7">
       <GreetingBlock name={firstName} />
+
+      <MyTasksBlock clubId={clubId} userId={user.id} />
 
       {accessibleModules.length === 0 ? (
         <EmptyState
