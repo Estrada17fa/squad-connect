@@ -5,7 +5,7 @@ import { es } from "date-fns/locale";
 import { Plane, Users } from "lucide-react";
 import { TeamCrest } from "@/components/torneo/TeamCrest";
 import { cn } from "@/lib/utils";
-import { departureLabel, type Readiness } from "@/lib/viajes";
+import { departureLabel, tripDisplayStatus, TRIP_DISPLAY_LABEL, type Readiness, type TripDisplayStatus } from "@/lib/viajes";
 import type { TripRow } from "@/hooks/useTrips";
 import type { OurMatch } from "@/hooks/useMatchOps";
 import { initialsOf } from "@/lib/coordinacion";
@@ -93,6 +93,7 @@ export function TripListRow({ trip, match, teamName }: { trip: TripRow; match: O
         <span className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
           {teamName ? <span className="truncate">{teamName}</span> : null}
           <span className="inline-flex items-center gap-1"><Users className="h-3 w-3" />{trip.travelers.length}</span>
+          <TripStatusChip status={tripDisplayStatus(trip)} />
         </span>
       </span>
       <ReadinessRing percent={readiness.percent} />
@@ -155,4 +156,16 @@ export function SectionHead({ title, onAdd, addLabel, extra }: { title: string; 
       </div>
     </div>
   );
+}
+
+const STATUS_TONE: Record<TripDisplayStatus, string> = {
+  borrador: "bg-muted text-muted-foreground",
+  publicado: "bg-primary/15 text-primary",
+  en_curso: "bg-area-general-soft text-area-general",
+  finalizado: "bg-muted text-muted-foreground",
+};
+
+/** Etiqueta de estado: Borrador · Publicado · En curso · Finalizado. */
+export function TripStatusChip({ status, className }: { status: TripDisplayStatus; className?: string }) {
+  return <span className={cn("inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[11px] font-semibold", STATUS_TONE[status], className)}>{TRIP_DISPLAY_LABEL[status]}</span>;
 }
