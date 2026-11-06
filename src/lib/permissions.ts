@@ -95,7 +95,7 @@ export function canSeeModule(key: ModuleKey, level: PermissionLevel | undefined 
 
 /**
  * Acceso al MÓDULO de gestión de viajes (chip en Coordinación, `/m/viajes`):
- * requiere nivel global de lectura o superior. La consulta personal del viaje
+ * requiere Ver o Editar en alguna categoría (vista_jugador y Sin acceso no). La consulta personal del viaje
  * vive en la pestaña Viajes de Agenda y solo pide lectura.
  */
 export function canManageTripsModule(level: PermissionLevel | undefined | null): boolean {
