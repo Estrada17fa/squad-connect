@@ -100,7 +100,7 @@ export function PersonDetailSheet({
             </Button>
           ) : null}
           {canEditUsers ? (
-            <Button size="sm" variant="secondary" onClick={() => navigate({ to: "/m/usuarios" })}>
+            <Button size="sm" variant="secondary" onClick={() => navigate({ to: "/administracion/usuarios" })}>
               <ArrowUpRight className="mr-2 h-3.5 w-3.5" /> Editar en Usuarios
             </Button>
           ) : null}

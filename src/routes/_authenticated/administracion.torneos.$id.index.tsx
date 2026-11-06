@@ -90,7 +90,6 @@ function FichaTorneo() {
             <DropdownMenuContent align="end">
               <DropdownMenuItem onSelect={() => edit()}>Editar</DropdownMenuItem>
               {t.status === "en_curso" ? <DropdownMenuItem onSelect={() => setStatus("finalizado")}>Finalizar torneo</DropdownMenuItem> : <DropdownMenuItem onSelect={() => setStatus("en_curso")}>Reabrir torneo</DropdownMenuItem>}
-              <DropdownMenuItem asChild><Link to="/admin/torneo">Ver versión actual</Link></DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem className="text-destructive" onSelect={() => setConfirmDel(true)}>Eliminar</DropdownMenuItem>
             </DropdownMenuContent>

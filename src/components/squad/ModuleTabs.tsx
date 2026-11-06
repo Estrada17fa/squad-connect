@@ -56,7 +56,7 @@ export function ModuleTabs({ activeKey, hubKey, extraActiveKey }: ModuleTabsProp
         key: "admin-config",
         label: "Configuración del club",
         icon: Settings2,
-        to: "/admin/configuracion",
+        to: "/administracion/club",
         active: extraActiveKey === "admin-config",
       });
     }
@@ -65,7 +65,7 @@ export function ModuleTabs({ activeKey, hubKey, extraActiveKey }: ModuleTabsProp
         key: "admin-torneo",
         label: "Torneos",
         icon: Trophy,
-        to: "/admin/torneo",
+        to: "/administracion/torneos",
         active: extraActiveKey === "admin-torneo",
       });
     }

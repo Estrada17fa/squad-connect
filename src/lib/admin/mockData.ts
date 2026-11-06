@@ -24,12 +24,10 @@ export interface AdminModule {
   line: string;
   stat: string;
   icon: LucideIcon;
-  /** Pantalla actual para "Ver versión actual". */
-  legacy: string;
 }
 
 export const ADMIN_MODULES: AdminModule[] = [
-  { key: "usuarios", name: "Usuarios", line: "Miembros, roles y permisos", stat: "60 activos", icon: Users, legacy: "/m/usuarios" },
-  { key: "torneos", name: "Torneos", line: "Alta de competencias", stat: "1 en curso", icon: Trophy, legacy: "/admin/torneo" },
-  { key: "club", name: "Club", line: "Identidad, categorías y ubicaciones", stat: "2 categorías", icon: Building, legacy: "/admin/configuracion" },
+  { key: "usuarios", name: "Usuarios", line: "Miembros, roles y permisos", stat: "60 activos", icon: Users },
+  { key: "torneos", name: "Torneos", line: "Alta de competencias", stat: "1 en curso", icon: Trophy },
+  { key: "club", name: "Club", line: "Identidad, categorías y ubicaciones", stat: "2 categorías", icon: Building },
 ];
