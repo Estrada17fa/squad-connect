@@ -1,8 +1,7 @@
-import * as React from "react";
-import { createFileRoute, Link, Navigate, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { ChevronLeft } from "lucide-react";
 import { useApp } from "@/components/squad/AppLayout";
-import { TripFormDialog } from "@/components/viajes/TripFormDialog";
+import { TripWizard } from "@/components/coord/viajes/TripWizard";
 import { useTripsAccess } from "@/components/coord/viajes/useTripsModule";
 
 export const Route = createFileRoute("/_authenticated/coordinacion/general/viajes/nuevo")({
@@ -20,10 +19,8 @@ export const Route = createFileRoute("/_authenticated/coordinacion/general/viaje
 });
 
 function NuevoViajePage() {
-  const navigate = useNavigate();
   const { profile, user } = useApp();
   const { canCreate, editableTeams } = useTripsAccess();
-  const created = React.useRef(false);
   const clubId = profile?.club_id ?? null;
   if (!canCreate || !clubId) return <Navigate to="/coordinacion/general/viajes" replace />;
   return (
@@ -31,15 +28,7 @@ function NuevoViajePage() {
       <Link to="/coordinacion/general/viajes" className="coord-press -ml-2 inline-flex min-h-11 items-center gap-0.5 rounded-xl px-2 text-sm font-semibold">
         <ChevronLeft className="h-5 w-5" /> Viajes
       </Link>
-      <TripFormDialog
-        variant="page"
-        open
-        onOpenChange={(v) => { if (!v && !created.current) navigate({ to: "/coordinacion/general/viajes" }); }}
-        clubId={clubId}
-        teams={editableTeams}
-        userId={user.id}
-        onCreated={(tripId) => { created.current = true; navigate({ to: "/coordinacion/general/viajes/$tripId", params: { tripId }, replace: true }); }}
-      />
+      <TripWizard clubId={clubId} userId={user.id} teams={editableTeams} />
     </div>
   );
 }

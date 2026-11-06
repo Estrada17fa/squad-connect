@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeReadiness, departureLabel, splitTrips, tripLinkFor } from "./viajes";
+import { computeReadiness, departureLabel, isPlayerVisible, splitPlayerTrips, splitTrips, travelerGroup, tripDisplayStatus, tripLinkFor } from "./viajes";
 
 const t = (id: string) => ({ user_id: id });
 
@@ -49,9 +49,39 @@ describe("departureLabel / splitTrips", () => {
     expect(departureLabel(new Date(2026, 10, 7, 5, 15).toISOString(), null, now)).toBe("Sale mañana");
     expect(departureLabel(new Date(2026, 10, 9).toISOString(), null, now)).toBe("Sale en 3 días");
   });
-  it("un viaje que regresa hoy sigue en Próximos", () => {
-    const s = splitTrips([{ departure_at: new Date(2026, 10, 4).toISOString(), return_at: new Date(2026, 10, 6).toISOString() }], now);
+});
+
+describe("estados de viaje", () => {
+  const now = new Date(2026, 10, 6, 23, 30);
+  const d = (day: number) => new Date(2026, 10, day, 12).toISOString();
+  it("la fecha nunca saca a un viaje Publicado de Próximos del jugador", () => {
+    const s = splitPlayerTrips([{ status: "confirmado" as const, departure_at: d(1), return_at: d(3) }]);
     expect(s.upcoming).toHaveLength(1);
+  });
+  it("el jugador nunca ve Borradores", () => {
+    const s = splitPlayerTrips([{ status: "planeacion" as const, departure_at: d(7) }]);
+    expect(s.upcoming).toHaveLength(0);
+    expect(s.past).toHaveLength(0);
+    expect(isPlayerVisible({ status: "planeacion" })).toBe(false);
+  });
+  it("Finalizado pasa a Viajes anteriores", () => {
+    const s = splitPlayerTrips([{ status: "completado" as const, departure_at: d(1) }]);
+    expect(s.past).toHaveLength(1);
+  });
+  it("Coordinación: Borrador sigue en Próximos y solo Finalizado sale", () => {
+    const s = splitTrips([{ status: "planeacion" as const, departure_at: d(1) }, { status: "completado" as const, departure_at: d(2) }]);
+    expect(s.upcoming).toHaveLength(1);
+    expect(s.past).toHaveLength(1);
+  });
+  it("Publicado con regreso hoy se muestra En curso todo el día", () => {
+    expect(tripDisplayStatus({ status: "confirmado", departure_at: d(4), return_at: d(6) }, now)).toBe("en_curso");
+    expect(tripDisplayStatus({ status: "confirmado", departure_at: d(9), return_at: d(10) }, now)).toBe("publicado");
+    expect(tripDisplayStatus({ status: "planeacion", departure_at: d(4), return_at: d(6) }, now)).toBe("borrador");
+  });
+  it("rol Jugador va a Jugadores y todo lo demás a Staff", () => {
+    expect(travelerGroup("Jugador")).toBe("jugadores");
+    expect(travelerGroup("Staff")).toBe("staff");
+    expect(travelerGroup(null)).toBe("staff");
   });
 });
 

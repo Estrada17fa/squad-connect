@@ -8,10 +8,10 @@ import type { StatusVariant } from "@/components/squad/StatusBadge";
 export type TripStatus = "planeacion" | "confirmado" | "en_curso" | "completado";
 
 export const TRIP_STATUS_LABEL: Record<TripStatus, string> = {
-  planeacion: "En planeación",
-  confirmado: "Confirmado",
+  planeacion: "Borrador",
+  confirmado: "Publicado",
   en_curso: "En curso",
-  completado: "Completado",
+  completado: "Finalizado",
 };
 
 export const TRIP_STATUS_VARIANT: Record<TripStatus, StatusVariant> = {
@@ -206,12 +206,12 @@ export function useMyNextTrip(
         .select("trip:trips!inner(id, title, destination, departure_at, status, team_id, club_id)")
         .eq("user_id", userId);
       if (error) throw error;
-      const nowIso = new Date().toISOString();
+      // Sin filtrar por fecha: un viaje Publicado o En curso sigue visible hasta que se finaliza.
       const trips = (data ?? [])
         .map((r: any) => r.trip)
         .filter(
           (t: any) =>
-            t && t.team_id === teamId && t.club_id === clubId && t.departure_at >= nowIso && t.status !== "completado",
+            t && t.team_id === teamId && t.club_id === clubId && (t.status === "confirmado" || t.status === "en_curso"),
         )
         .sort((a: any, b: any) => a.departure_at.localeCompare(b.departure_at));
       return (trips[0] ?? null) as

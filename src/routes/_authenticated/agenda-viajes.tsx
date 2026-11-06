@@ -9,7 +9,9 @@ import { StandardCard } from "@/components/squad/StandardCard";
 import { useApp } from "@/components/squad/AppLayout";
 import { useTeamFilter } from "@/hooks/useTeamFilter";
 import { formatDateOnly } from "@/lib/calendar-utils";
-import { useTrips, TRIP_STATUS_LABEL, TRIP_STATUS_VARIANT } from "@/hooks/useTrips";
+import { useTrips, TRIP_STATUS_VARIANT } from "@/hooks/useTrips";
+import { isPlayerVisible, splitPlayerTrips, tripDisplayStatus, TRIP_DISPLAY_LABEL } from "@/lib/viajes";
+import { ChevronDown } from "lucide-react";
 import { MyTripView } from "@/components/viajes/MyTripView";
 import { DetailSheet, DetailBadge } from "@/components/squad/DetailSheet";
 
@@ -48,21 +50,45 @@ function AgendaViajesPage() {
 
   const tripsQ = useTrips(canAccess ? clubId : null, teamFilter);
   const trips = tripsQ.data ?? [];
-  const detail = trips.find((t) => t.id === detailId) ?? null;
+  const detail = trips.find((t) => t.id === detailId && isPlayerVisible(t)) ?? null;
 
   // Enlace o aviso de viaje: /agenda-viajes?open=<tripId> abre ese viaje.
   const { open: openParam } = Route.useSearch();
   const navigate = useNavigate();
   React.useEffect(() => {
-    if (!openParam || !trips.some((t) => t.id === openParam)) return;
+    if (!openParam || !trips.some((t) => t.id === openParam && isPlayerVisible(t))) return;
     setDetailId(openParam);
     navigate({ to: "/agenda-viajes", search: {}, replace: true });
   }, [openParam, trips, navigate]);
 
-  const nowIso = new Date().toISOString();
-  const upcoming = trips
-    .filter((t) => (t.return_at ?? t.departure_at) >= nowIso)
-    .sort((a, b) => a.departure_at.localeCompare(b.departure_at));
+  // Sin filtrar por fecha: solo el estado decide (Borradores nunca; Finalizados en "Viajes anteriores").
+  const { upcoming, past } = splitPlayerTrips(trips);
+  const [showPast, setShowPast] = React.useState(false);
+
+  const renderCard = (t: (typeof trips)[number]) => (
+            <StandardCard
+              key={t.id}
+              interactive
+              onClick={() => setDetailId(t.id)}
+              icon={Plane}
+              title={t.title}
+              subtitle={`${formatDateOnly(t.departure_at)}${t.return_at ? ` → ${formatDateOnly(t.return_at)}` : ""}`}
+              status={{ label: TRIP_DISPLAY_LABEL[tripDisplayStatus(t)], variant: TRIP_STATUS_VARIANT[t.status] }}
+            >
+              <span className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                <TeamBadge name={teamNames[t.team_id]} />
+                {t.destination ? (
+                  <span className="inline-flex items-center gap-1">
+                    <MapPin className="h-3.5 w-3.5" /> {t.destination}
+                  </span>
+                ) : null}
+                <span className="inline-flex items-center gap-1">
+                  <Users className="h-3.5 w-3.5" /> {t.travelers.length} convocado
+                  {t.travelers.length === 1 ? "" : "s"}
+                </span>
+              </span>
+            </StandardCard>
+);
 
   if (!canAccess) {
     return (
@@ -86,32 +112,19 @@ function AgendaViajesPage() {
         <EmptyState icon={Plane} title="Sin viajes próximos" message="No hay viajes programados por ahora." />
       ) : (
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-          {upcoming.map((t) => (
-            <StandardCard
-              key={t.id}
-              interactive
-              onClick={() => setDetailId(t.id)}
-              icon={Plane}
-              title={t.title}
-              subtitle={`${formatDateOnly(t.departure_at)}${t.return_at ? ` → ${formatDateOnly(t.return_at)}` : ""}`}
-              status={{ label: TRIP_STATUS_LABEL[t.status], variant: TRIP_STATUS_VARIANT[t.status] }}
-            >
-              <span className="flex flex-wrap items-center gap-x-4 gap-y-1">
-                <TeamBadge name={teamNames[t.team_id]} />
-                {t.destination ? (
-                  <span className="inline-flex items-center gap-1">
-                    <MapPin className="h-3.5 w-3.5" /> {t.destination}
-                  </span>
-                ) : null}
-                <span className="inline-flex items-center gap-1">
-                  <Users className="h-3.5 w-3.5" /> {t.travelers.length} convocado
-                  {t.travelers.length === 1 ? "" : "s"}
-                </span>
-              </span>
-            </StandardCard>
-          ))}
+          {upcoming.map(renderCard)}
         </div>
       )}
+
+      {past.length > 0 ? (
+        <section className="space-y-3">
+          <button type="button" onClick={() => setShowPast((v) => !v)} aria-expanded={showPast} className="flex w-full items-center justify-between rounded-xl px-1 py-2 text-sm font-semibold text-muted-foreground">
+            <span>Viajes anteriores · {past.length}</span>
+            <ChevronDown className={`h-4 w-4 transition-transform ${showPast ? "rotate-180" : ""}`} />
+          </button>
+          {showPast ? <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">{past.map(renderCard)}</div> : null}
+        </section>
+      ) : null}
 
       {/* En Agenda todos son pasajeros: misma vista (mi info + viaje completo). La gestión vive en Coordinación → Viajes. */}
       <DetailSheet
@@ -129,7 +142,7 @@ function AgendaViajesPage() {
           detail ? (
             <>
               <DetailBadge color="var(--event-viaje)" icon={Plane}>
-                {TRIP_STATUS_LABEL[detail.status]}
+                {TRIP_DISPLAY_LABEL[tripDisplayStatus(detail)]}
               </DetailBadge>
               {teamNames[detail.team_id] ? <DetailBadge>{teamNames[detail.team_id]}</DetailBadge> : null}
               {detail.destination ? <DetailBadge>{detail.destination}</DetailBadge> : null}

@@ -14,7 +14,7 @@ export const Route = createFileRoute("/_authenticated/coordinacion/general/viaje
   head: () => ({
     meta: [
       { title: "Viajes — Coordinación Squad" },
-      { name: "description", content: "Viajes del equipo: próximos y pasados, con la preparación de cada uno." },
+      { name: "description", content: "Viajes del equipo: próximos y finalizados, con la preparación de cada uno." },
       { property: "og:title", content: "Viajes — Coordinación Squad" },
       { property: "og:description", content: "Viajes del equipo con su preparación: vuelos, pases, hotel y transporte." },
       { property: "og:type", content: "website" },
@@ -28,7 +28,7 @@ function ViajesListPage() {
   const { teamOptions } = useApp();
   const { canManage, canCreate } = useTripsAccess();
   const { tripsQ, upcoming, past, matchFor } = useClubTrips(canManage);
-  const [when, setWhen] = React.useState<"proximos" | "pasados">("proximos");
+  const [when, setWhen] = React.useState<"proximos" | "finalizados">("proximos");
   const [search, setSearch] = React.useState<string | null>(null);
   const teamName = React.useMemo(() => new Map(teamOptions.map((t) => [t.id, t.name] as const)), [teamOptions]);
 
@@ -69,12 +69,12 @@ function ViajesListPage() {
 
       {next && !term ? <NextTripHero trip={next} match={matchFor(next)} /> : null}
 
-      <Segmented value={when} onChange={setWhen} items={[{ key: "proximos" as const, label: `Próximos · ${upcoming.length}` }, { key: "pasados" as const, label: `Pasados · ${past.length}` }]} />
+      <Segmented value={when} onChange={setWhen} items={[{ key: "proximos" as const, label: `Próximos · ${upcoming.length}` }, { key: "finalizados" as const, label: `Finalizados · ${past.length}` }]} />
 
       {tripsQ.isLoading ? (
         <div className="space-y-2">{[0, 1, 2].map((i) => <div key={i} className="h-16 animate-pulse rounded-2xl bg-card" />)}</div>
       ) : list.length === 0 ? (
-        <CoordEmptyState area={getArea("general")!} icon={Plane} text={when === "proximos" ? "Organiza el próximo viaje del equipo" : "Sin viajes pasados"} />
+        <CoordEmptyState area={getArea("general")!} icon={Plane} text={when === "proximos" ? "Organiza el próximo viaje del equipo" : "Sin viajes finalizados"} />
       ) : (
         <div className="divide-y divide-border/50 overflow-hidden rounded-2xl bg-card">
           {list.map((t) => <TripListRow key={t.id} trip={t} match={matchFor(t)} teamName={teamName.get(t.team_id)} />)}
