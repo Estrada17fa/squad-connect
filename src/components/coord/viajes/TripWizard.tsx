@@ -215,7 +215,7 @@ export function TripWizard({ clubId, userId, teams, trip }: { clubId: string; us
   );
 
   return (
-    <div className="coord-enter mx-auto max-w-2xl space-y-4 pb-28">
+    <div className="coord-enter mx-auto max-w-2xl space-y-4 pb-40">
       <div className="space-y-2">
         <h1 className="text-xl font-bold">{isEdit ? "Editar viaje" : "Nuevo viaje"}</h1>
         {!isEdit ? <StepProgress steps={STEPS} current={current} /> : editing !== null ? <p className="text-[11px] font-medium text-muted-foreground">{STEPS[editing]}</p> : null}
@@ -302,7 +302,7 @@ export function TripWizard({ clubId, userId, teams, trip }: { clubId: string; us
         </div>
       ) : null}
 
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border/60 bg-background/95 px-4 pb-[max(env(safe-area-inset-bottom),12px)] pt-3 backdrop-blur">
+      <div className="fixed inset-x-0 bottom-16 z-30 border-t border-border/50 bg-background/95 px-4 py-2 backdrop-blur md:bottom-0">
         <div className="mx-auto flex max-w-2xl gap-2">
           {isEdit ? (
             editing !== null ? (
