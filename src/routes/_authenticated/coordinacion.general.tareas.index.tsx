@@ -6,6 +6,7 @@ import { useApp } from "@/components/squad/AppLayout";
 import { useMeetings, useTasks, type TaskRow } from "@/hooks/useCoordinacion";
 import { splitMeetings } from "@/lib/juntas";
 import { MeetingListRow } from "@/components/coord/juntas/MeetingListRow";
+import { MeetingFormSheet } from "@/components/coord/juntas/MeetingFormSheet";
 import { AreaSwitcher } from "@/components/coord/AreaSwitcher";
 import { getArea } from "@/lib/coordAreas";
 import { WHEN_GROUPS, whenGroup, isRecentDone, isMine, sortTasks, type WhenGroup } from "@/lib/tareas";
@@ -16,7 +17,7 @@ import { useTaskAccess } from "@/components/coord/tareas/useTaskAccess";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/coordinacion/general/tareas/")({
-  validateSearch: (s: Record<string, unknown>): { tab?: "juntas" } => (s.tab === "juntas" ? { tab: "juntas" } : {}),
+  validateSearch: (s: Record<string, unknown>): { tab?: "juntas"; nueva?: 1 } => (s.tab === "juntas" ? { tab: "juntas", ...(String(s.nueva) === "1" ? { nueva: 1 as const } : {}) } : {}),
   head: () => ({
     meta: [
       { title: "Tareas y juntas — Coordinación Squad" },
@@ -41,7 +42,8 @@ function TareasPage() {
   const { userId, categories, canCreate, canAct } = useTaskAccess();
   const tasksQ = useTasks(clubId);
   const meetingsQ = useMeetings(clubId);
-  const { tab: tabParam } = Route.useSearch();
+  const { tab: tabParam, nueva } = Route.useSearch();
+  const [creatingMeeting, setCreatingMeeting] = React.useState(nueva === 1);
   const tab = tabParam === "juntas" ? "juntas" : "tareas";
   const [when, setWhen] = React.useState<"proximas" | "pasadas">("proximas");
 
@@ -96,7 +98,7 @@ function TareasPage() {
               {activeFilters ? <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-area-general" /> : null}
             </button>
             {canCreate ? (
-              <button aria-label={tab === "juntas" ? "Nueva junta" : "Nueva tarea"} onClick={() => (tab === "juntas" ? navigate({ to: "/coordinacion/general/juntas/nueva" }) : setCreating(true))} className="coord-press flex h-10 w-10 items-center justify-center rounded-xl">
+              <button aria-label={tab === "juntas" ? "Nueva junta" : "Nueva tarea"} onClick={() => (tab === "juntas" ? setCreatingMeeting(true) : setCreating(true))} className="coord-press flex h-10 w-10 items-center justify-center rounded-xl">
                 <Plus className="h-5 w-5" />
               </button>
             ) : null}
@@ -204,6 +206,10 @@ function TareasPage() {
           </div>
         </SheetContent>
       </Sheet>
+
+      {clubId && canCreate ? (
+        <MeetingFormSheet open={creatingMeeting} onOpenChange={setCreatingMeeting} clubId={clubId} userId={userId} categories={categories} />
+      ) : null}
 
       {clubId ? (
         <TaskFormSheet open={creating} onOpenChange={setCreating} clubId={clubId} userId={userId} categories={categories} />

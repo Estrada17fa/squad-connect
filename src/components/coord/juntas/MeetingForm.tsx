@@ -21,7 +21,7 @@ function combine(date: string, time: string) {
   return new Date(y, mo - 1, d, h, mi || 0);
 }
 
-export function MeetingForm({ clubId, userId, categories, meeting }: { clubId: string; userId: string; categories: CategoryOption[]; meeting?: MeetingRow | null }) {
+export function MeetingForm({ clubId, userId, categories, meeting, inSheet, onDone }: { clubId: string; userId: string; categories: CategoryOption[]; meeting?: MeetingRow | null; inSheet?: boolean; onDone?: () => void }) {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const staff = useClubStaff(clubId);
@@ -85,7 +85,8 @@ export function MeetingForm({ clubId, userId, categories, meeting }: { clubId: s
       toast.success(meeting ? "Junta actualizada" : "Junta creada");
       qc.invalidateQueries({ queryKey: ["coord-meetings", clubId] });
       qc.invalidateQueries({ queryKey: ["calendar-events"] });
-      navigate({ to: "/coordinacion/general/juntas/$meetingId", params: { meetingId: id! }, replace: true });
+      onDone?.();
+      navigate({ to: "/coordinacion/general/juntas/$meetingId", params: { meetingId: id! }, replace: !inSheet });
     } catch (err: any) {
       toast.error(err.message ?? "No se pudo guardar");
     } finally {
@@ -96,7 +97,7 @@ export function MeetingForm({ clubId, userId, categories, meeting }: { clubId: s
   const label = "text-xs font-semibold text-muted-foreground";
   const field = "h-11 w-full rounded-xl bg-card px-3 text-sm outline-none";
   return (
-    <div className="space-y-4 pb-28">
+    <div className={cn("space-y-4", !inSheet && "pb-28")}>
       <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Título de la junta" aria-label="Título" className="h-12 rounded-xl text-base" />
 
       <div className="space-y-2">
@@ -167,7 +168,7 @@ export function MeetingForm({ clubId, userId, categories, meeting }: { clubId: s
         </div>
       </div>
 
-      <div className="fixed inset-x-0 bottom-16 z-30 border-t border-border/50 bg-background/95 px-4 py-2 backdrop-blur md:bottom-0">
+      <div className={inSheet ? "" : "fixed inset-x-0 bottom-16 z-30 border-t border-border/50 bg-background/95 px-4 py-2 backdrop-blur md:bottom-0"}>
         <div className="mx-auto max-w-2xl">
           <button type="button" disabled={saving} onClick={save} className="coord-press flex min-h-12 w-full items-center justify-center rounded-xl bg-area-general text-sm font-bold text-background disabled:opacity-60">
             {saving ? "Guardando…" : meeting ? "Guardar cambios" : "Crear junta"}
