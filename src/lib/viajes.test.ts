@@ -54,3 +54,23 @@ describe("departureLabel / splitTrips", () => {
     expect(s.upcoming).toHaveLength(1);
   });
 });
+
+import { detectFlight, extractFromPageText, matchPerson } from "./boardingPassMatch";
+
+describe("detectFlight", () => {
+  const flights = [
+    { id: "ida", flight_code: "AM 1234", departs_at: new Date(2026, 9, 23, 7).toISOString() },
+    { id: "reg", flight_code: "AM 1235", departs_at: new Date(2026, 9, 25, 18).toISOString() },
+  ];
+  it("reconoce el vuelo por su código aunque venga con ceros", () => {
+    expect(detectFlight(extractFromPageText("Flight: AM01235\nLOPEZ PAYAN/LUIS FERNANDO", 1), flights)?.id).toBe("reg");
+  });
+  it("si no hay código, usa la fecha del vuelo", () => {
+    expect(detectFlight({ text: "SJD MEX 23OCT seat 12A", flightCode: null }, flights)?.id).toBe("ida");
+  });
+  it("sugiere a la persona aunque el nombre venga APELLIDO/NOMBRE", () => {
+    const ex = extractFromPageText("BOARDING PASS\nLOPEZ PAYAN/LUIS FERNANDO\nSeat 12A", 1);
+    const m = matchPerson(ex.nameGuess, [{ user_id: "u1", label: "Luis Fernando López Payán" }, { user_id: "u2", label: "Carlos Ruiz" }]);
+    expect(m.userId).toBe("u1");
+  });
+});

@@ -194,3 +194,72 @@ export async function splitPdfPage(file: File, pageIndex: number): Promise<Blob>
   const bytes = await out.save();
   return new Blob([bytes as unknown as BlobPart], { type: "application/pdf" });
 }
+
+const MONTHS = [
+  ["JAN", "ENE"], ["FEB"], ["MAR"], ["APR", "ABR"], ["MAY"], ["JUN"],
+  ["JUL"], ["AUG", "AGO"], ["SEP", "SEPT"], ["OCT"], ["NOV"], ["DEC", "DIC"],
+];
+
+/** "AM 1234" / "am1234" / "AM-01234" → "AM1234". */
+export function normalizeFlightCode(code: string | null | undefined) {
+  if (!code) return "";
+  const m = code.toUpperCase().replace(/[^A-Z0-9]/g, "").match(/^([A-Z0-9]{2})0*([0-9]{1,4})$/);
+  return m ? `${m[1]}${m[2]}` : code.toUpperCase().replace(/[^A-Z0-9]/g, "");
+}
+
+function dateTokens(iso: string) {
+  const d = new Date(iso);
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const toks = new Set<string>([`${dd}/${mm}`, `${d.getFullYear()}-${mm}-${dd}`, `${dd}-${mm}-${d.getFullYear()}`]);
+  for (const mon of MONTHS[d.getMonth()]!) {
+    toks.add(`${dd}${mon}`);
+    toks.add(`${d.getDate()}${mon}`);
+  }
+  return [...toks];
+}
+
+/**
+ * ¿A qué vuelo pertenece el pase? Primero por código de vuelo (en el texto o
+ * el detectado); si no, por la fecha del vuelo. Null si no hay una única opción.
+ */
+export function detectFlight<F extends { id: string; flight_code: string; departs_at: string }>(
+  extract: Pick<PageExtract, "text" | "flightCode">,
+  flights: F[],
+): F | null {
+  if (!flights.length) return null;
+  const compact = extract.text.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  const detected = normalizeFlightCode(extract.flightCode);
+  const byCode = flights.filter((f) => {
+    const c = normalizeFlightCode(f.flight_code);
+    if (!c) return false;
+    if (detected && detected === c) return true;
+    const [, air, num] = c.match(/^([A-Z0-9]{2})([0-9]+)$/) ?? [];
+    if (!air || !num) return compact.includes(c);
+    return new RegExp(`${air}0*${num}(?![0-9])`).test(compact);
+  });
+  if (byCode.length === 1) return byCode[0]!;
+  const spaced = extract.text.toUpperCase().replace(/\s+/g, "");
+  const byDate = flights.filter((f) => dateTokens(f.departs_at).some((tok) => spaced.includes(tok)));
+  if (byDate.length === 1) return byDate[0]!;
+  return null;
+}
+
+/** Miniatura (dataURL) de una página del PDF. */
+export async function renderPdfPageThumb(file: File, pageIndex: number, width = 120): Promise<string | null> {
+  try {
+    const pdfjs: any = await import("pdfjs-dist");
+    pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString();
+    const doc = await pdfjs.getDocument({ data: await file.arrayBuffer() }).promise;
+    const page = await doc.getPage(pageIndex + 1);
+    const base = page.getViewport({ scale: 1 });
+    const viewport = page.getViewport({ scale: width / base.width });
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.ceil(viewport.width);
+    canvas.height = Math.ceil(viewport.height);
+    await page.render({ canvasContext: canvas.getContext("2d")!, viewport, canvas }).promise;
+    return canvas.toDataURL("image/jpeg", 0.7);
+  } catch {
+    return null;
+  }
+}
