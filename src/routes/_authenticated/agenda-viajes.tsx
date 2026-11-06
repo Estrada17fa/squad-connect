@@ -9,8 +9,8 @@ import { StandardCard } from "@/components/squad/StandardCard";
 import { useApp } from "@/components/squad/AppLayout";
 import { useTeamFilter } from "@/hooks/useTeamFilter";
 import { formatDateOnly } from "@/lib/calendar-utils";
-import { useTrips, TRIP_STATUS_LABEL, TRIP_STATUS_VARIANT } from "@/hooks/useTrips";
-import { isPlayerVisible, splitPlayerTrips } from "@/lib/viajes";
+import { useTrips, TRIP_STATUS_VARIANT } from "@/hooks/useTrips";
+import { isPlayerVisible, splitPlayerTrips, tripDisplayStatus, TRIP_DISPLAY_LABEL } from "@/lib/viajes";
 import { ChevronDown } from "lucide-react";
 import { MyTripView } from "@/components/viajes/MyTripView";
 import { DetailSheet, DetailBadge } from "@/components/squad/DetailSheet";
@@ -73,7 +73,7 @@ function AgendaViajesPage() {
               icon={Plane}
               title={t.title}
               subtitle={`${formatDateOnly(t.departure_at)}${t.return_at ? ` → ${formatDateOnly(t.return_at)}` : ""}`}
-              status={{ label: TRIP_STATUS_LABEL[t.status], variant: TRIP_STATUS_VARIANT[t.status] }}
+              status={{ label: TRIP_DISPLAY_LABEL[tripDisplayStatus(t)], variant: TRIP_STATUS_VARIANT[t.status] }}
             >
               <span className="flex flex-wrap items-center gap-x-4 gap-y-1">
                 <TeamBadge name={teamNames[t.team_id]} />
@@ -142,7 +142,7 @@ function AgendaViajesPage() {
           detail ? (
             <>
               <DetailBadge color="var(--event-viaje)" icon={Plane}>
-                {TRIP_STATUS_LABEL[detail.status]}
+                {TRIP_DISPLAY_LABEL[tripDisplayStatus(detail)]}
               </DetailBadge>
               {teamNames[detail.team_id] ? <DetailBadge>{teamNames[detail.team_id]}</DetailBadge> : null}
               {detail.destination ? <DetailBadge>{detail.destination}</DetailBadge> : null}
