@@ -8,6 +8,7 @@ import { TripHeroCard, TripListRow } from "@/components/coord/viajes/parts";
 import { useClubTrips, useTripLogistics, useTripsAccess } from "@/components/coord/viajes/useTripsModule";
 import type { TripRow } from "@/hooks/useTrips";
 import { cn } from "@/lib/utils";
+import { getArea } from "@/lib/coordAreas";
 
 export const Route = createFileRoute("/_authenticated/coordinacion/general/viajes/")({
   head: () => ({
@@ -68,12 +69,12 @@ function ViajesListPage() {
 
       {next && !term ? <NextTripHero trip={next} match={matchFor(next)} /> : null}
 
-      <Segmented value={when} onChange={(v) => setWhen(v as typeof when)} options={[{ value: "proximos", label: `Próximos · ${upcoming.length}` }, { value: "pasados", label: `Pasados · ${past.length}` }]} />
+      <Segmented value={when} onChange={setWhen} items={[{ key: "proximos" as const, label: `Próximos · ${upcoming.length}` }, { key: "pasados" as const, label: `Pasados · ${past.length}` }]} />
 
       {tripsQ.isLoading ? (
         <div className="space-y-2">{[0, 1, 2].map((i) => <div key={i} className="h-16 animate-pulse rounded-2xl bg-card" />)}</div>
       ) : list.length === 0 ? (
-        <CoordEmptyState icon={Plane} title={when === "proximos" ? "Sin viajes próximos" : "Sin viajes pasados"} message={canCreate && when === "proximos" ? "Organiza el próximo viaje del equipo." : "Nada por aquí."} />
+        <CoordEmptyState area={getArea("general")!} icon={Plane} text={when === "proximos" ? "Organiza el próximo viaje del equipo" : "Sin viajes pasados"} />
       ) : (
         <div className="divide-y divide-border/50 overflow-hidden rounded-2xl bg-card">
           {list.map((t) => <TripListRow key={t.id} trip={t} match={matchFor(t)} teamName={teamName.get(t.team_id)} />)}
