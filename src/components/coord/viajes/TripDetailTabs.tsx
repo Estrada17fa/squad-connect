@@ -3,7 +3,6 @@ import { Link } from "@tanstack/react-router";
 import { Bus, CalendarClock, Check, Hotel, MapPin, Plane, Ticket, Trophy, UserPlus, Utensils, X } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { es } from "date-fns/locale";
 import type { TripRow } from "@/hooks/useTrips";
 import { addTraveler, removeTraveler } from "@/hooks/useTrips";
 import type { OurMatch } from "@/hooks/useMatchOps";
@@ -240,9 +239,8 @@ export function MatchLink({ match, trip }: { match: OurMatch | null; trip: TripR
       <CalendarClock className="h-3.5 w-3.5" />
       Partido {shortDate(trip.match_event.starts_at)} · {timeLabel(trip.match_event.starts_at)}
       {match?.id ? (
-        <Link to="/m/partidos" search={{ partido: match.id } as never} className="font-semibold text-primary">Ver ›</Link>
+        <Link to="/m/partidos" search={{ open: match.id }} className="font-semibold text-primary">Ver ›</Link>
       ) : null}
     </div>
   );
 }
-void format; void es;
