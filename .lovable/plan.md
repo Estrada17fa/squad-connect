@@ -58,3 +58,11 @@ Reutiliza la lógica actual de tareas (responsables, checklist, avisos de asigna
 - Fotos con URL firmada temporal; políticas de almacenamiento validan la tarea por la carpeta.
 - Aviso de comentario por trigger que llama a `notify_users` con el módulo `coordinacion_interna`; `notificationTargets` dirige esos avisos a la ficha nueva.
 - Nueva regla en `AGENTS.md` sobre la ubicación del módulo.
+
+## Ajustes aprobados
+- Al crear un comentario, el autor tiene que ser quien está conectado (regla en la base). Al editarlo no se puede cambiar el autor, la tarea ni la foto; solo el texto.
+- "Evidencia" solo se permite si el comentario trae foto (validación en la base); un comentario de solo texto no sirve para completar.
+- Al borrar desde la app un comentario con foto o una tarea con fotos, también se borran sus archivos de `task-evidence` antes de borrar la fila. En las pruebas se confirma que no quedan fotos huérfanas.
+
+## Solo informe (sin cambios)
+Hoy un responsable sin Editar puede modificar todas las columnas de la tarea (estado, título, descripción, fecha, prioridad, categoría, creador); la base solo exige que siga en su club. No puede agregar ni quitar responsables. No se cambia en este trabajo.
