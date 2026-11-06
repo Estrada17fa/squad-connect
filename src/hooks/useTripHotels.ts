@@ -16,6 +16,7 @@ export interface TripHotel {
   trip_id: string;
   name: string;
   address: string | null;
+  location_id?: string | null;
   check_in_at: string;
   check_out_at: string | null;
   phone: string | null;
@@ -39,7 +40,7 @@ export interface RoomInput {
 }
 
 const SELECT =
-  `id, trip_id, name, address, check_in_at, check_out_at, phone, notes, ` +
+  `id, trip_id, name, address, location_id, check_in_at, check_out_at, phone, notes, ` +
   `rooms:trip_rooms(id, hotel_id, room_label, notes, occupants:trip_room_occupants(id, user_id, profile:profiles(${MINI_PROFILE_SELECT})))`;
 
 export const tripHotelsKey = (tripId: string | null | undefined) => ["trip-hotels", tripId ?? "none"] as const;
