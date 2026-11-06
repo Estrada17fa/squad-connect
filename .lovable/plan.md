@@ -10,7 +10,7 @@ Sin cambios a la base de datos ni a las reglas. Agenda › Viajes (vista del jug
 - `/coordinacion/general/viajes/nuevo` crear (página completa, botón fijo abajo)
 - `/coordinacion/general/viajes/$tripId` ficha, con `?seccion=`
 - `/coordinacion/general/viajes/$tripId/editar` editar (misma página de crear)
-- `/m/viajes` y `/m/viajes?open=<id>` redirigen a la ruta nueva; los avisos de viajes abren la ficha nueva.
+- `/m/viajes`, `/m/viajes?open=<id>` y los avisos de viajes llevan a la ficha nueva de Coordinación SOLO si la persona puede gestionar viajes; si no (Jugador, vista_jugador o Sin acceso), abren Agenda › Viajes con ese viaje, como hoy.
 
 ## 2. Lista
 Encabezado "‹ General", "Viajes", lupa y "+". Tarjeta protagonista del próximo viaje (escudos del partido o destino, "Sale en N días · fecha", "Preparación N%", Abrir). Pestañas Próximos · Pasados; filas con escudo/avión, título, fechas, categoría, viajeros y anillo de preparación.
@@ -27,16 +27,16 @@ Botón en la ficha y en cada vuelo. Varios PDFs, PDF de muchas páginas, o JPG/P
 ## 6. Portada de General
 "Próximo viaje" y el mosaico de Viajes con datos reales (destino, "en N días", pendientes).
 
-## Pruebas (solo datos temporales, sin avisar a nadie real)
-1. Partido y viaje de prueba con 3 usuarios temporales: ida y regreso, hotel con 2 cuartos, un transporte, una comida.
+## Pruebas (solo datos temporales)
+1. Viaje de prueba sin partido (o con un partido de prueba fuera de cualquier torneo real) y 3 usuarios temporales: ida y regreso, hotel con 2 cuartos, un transporte, una comida. Nada aparece en la Agenda ni en la tabla de personas reales; ningún aviso a personas reales.
 2. Subir un PDF de 3 páginas + 1 imagen, corregir una sugerencia, guardar; queda "Todo listo".
 3. Abrir el viaje real solo para verlo.
-4. Staff temporal edita el viaje de prueba; Jugador temporal no ve el módulo.
-5. `/m/viajes?open=<id>` abre la ficha nueva.
-6. Borrar viaje, pases, archivos, partido y usuarios de prueba; sin errores de TypeScript.
+4. Staff temporal edita el viaje de prueba; Jugador temporal no ve el módulo y, al tocar un aviso de viaje, llega a su viaje y su pase en Agenda.
+5. `/m/viajes?open=<id>` abre la ficha nueva (gestor) o Agenda › Viajes (jugador).
+6. Borrar viaje, pases, archivos, partido de prueba (si lo hubo), avisos y usuarios; sin errores de TypeScript.
 Entrega: capturas en celular (375 × 667) de lista, ficha y Preparación, Viajeros, Vuelos, Hotel, revisión de pases y el viaje real.
 
 ## Detalles técnicos
-- UI nueva en `src/components/coord/viajes/*`, lógica de preparación en `src/lib/viajes.ts` (con pruebas: porcentaje y faltantes).
+- UI nueva en `src/components/coord/viajes/*`, lógica de preparación en `src/lib/viajes.ts` (con pruebas: porcentaje, faltantes y destino del aviso según permiso).
 - Reutiliza hooks `useTrip*`, formularios de `src/components/viajes/logistica/*` y `boardingPassMatch` (se añade lectura de imágenes como pase sin texto y detección de vuelo por código/fecha, sin cambiar las reglas de coincidencia de nombres).
-- Notificaciones de viajes pasan a la ruta nueva en `notificationTargets.ts`.
+- El destino de avisos de viajes en `notificationTargets.ts` y la redirección de `/m/viajes` deciden según `canManageTripsModule`.
