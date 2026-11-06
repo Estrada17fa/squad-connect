@@ -99,7 +99,7 @@ export function canSeeModule(key: ModuleKey, level: PermissionLevel | undefined 
  * vive en la pestaña Viajes de Agenda y solo pide lectura.
  */
 export function canManageTripsModule(level: PermissionLevel | undefined | null): boolean {
-  return LEVEL_RANK[normalizeLevel(level)] >= LEVEL_RANK.lector_global;
+  return LEVEL_RANK[normalizeLevel(level)] >= LEVEL_RANK.lector_categoria;
 }
 
 
