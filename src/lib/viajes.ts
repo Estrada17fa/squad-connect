@@ -147,15 +147,54 @@ export function inDaysShort(departureIso: string, now: Date = new Date()) {
   return "En curso";
 }
 
-export function isUpcomingTrip(t: { departure_at: string; return_at: string | null }, now: Date = new Date()) {
-  return daysUntil(t.return_at ?? t.departure_at, now) >= 0;
+/* ───────────── Estados ─────────────
+ * Guardado: planeacion (Borrador) · confirmado (Publicado) · en_curso · completado (Finalizado).
+ * Las fechas nunca ocultan un viaje: solo "Finalizar" lo saca de Próximos.
+ * "En curso" en pantalla se calcula (Publicado y hoy entre salida y regreso, día completo). */
+export type StoredTripStatus = "planeacion" | "confirmado" | "en_curso" | "completado";
+export type TripDisplayStatus = "borrador" | "publicado" | "en_curso" | "finalizado";
+export const TRIP_DISPLAY_LABEL: Record<TripDisplayStatus, string> = {
+  borrador: "Borrador",
+  publicado: "Publicado",
+  en_curso: "En curso",
+  finalizado: "Finalizado",
+};
+type StatusTrip = { status: StoredTripStatus; departure_at: string; return_at: string | null };
+
+export function tripDisplayStatus(t: StatusTrip, now: Date = new Date()): TripDisplayStatus {
+  if (t.status === "completado") return "finalizado";
+  if (t.status === "planeacion") return "borrador";
+  const started = daysUntil(t.departure_at, now) <= 0;
+  const notBack = daysUntil(t.return_at ?? t.departure_at, now) >= 0;
+  if (t.status === "en_curso" || (started && notBack)) return "en_curso";
+  return "publicado";
 }
 
-/** Próximos (por salida ascendente) y pasados (más recientes primero). */
-export function splitTrips<T extends { departure_at: string; return_at: string | null }>(trips: T[], now: Date = new Date()) {
-  const upcoming = trips.filter((t) => isUpcomingTrip(t, now)).sort((a, b) => a.departure_at.localeCompare(b.departure_at));
-  const past = trips.filter((t) => !isUpcomingTrip(t, now)).sort((a, b) => b.departure_at.localeCompare(a.departure_at));
+/** Los viajeros solo ven viajes Publicados, En curso o Finalizados (nunca Borradores). */
+export function isPlayerVisible(t: { status: StoredTripStatus }) {
+  return t.status !== "planeacion";
+}
+
+const byDepAsc = <T extends { departure_at: string }>(a: T, b: T) => a.departure_at.localeCompare(b.departure_at);
+const byDepDesc = <T extends { departure_at: string }>(a: T, b: T) => b.departure_at.localeCompare(a.departure_at);
+
+/** Vista del jugador: Próximos (Publicado/En curso, sin filtrar por fecha) y Viajes anteriores (Finalizados). */
+export function splitPlayerTrips<T extends { status: StoredTripStatus; departure_at: string }>(trips: T[]) {
+  const upcoming = trips.filter((t) => t.status === "confirmado" || t.status === "en_curso").sort(byDepAsc);
+  const past = trips.filter((t) => t.status === "completado").sort(byDepDesc);
   return { upcoming, past };
+}
+
+/** Coordinación: Próximos (Borrador, Publicado, En curso) y Finalizados. */
+export function splitTrips<T extends { status: StoredTripStatus; departure_at: string }>(trips: T[]) {
+  const upcoming = trips.filter((t) => t.status !== "completado").sort(byDepAsc);
+  const past = trips.filter((t) => t.status === "completado").sort(byDepDesc);
+  return { upcoming, past };
+}
+
+/** Grupo del viajero según su rol en la categoría del viaje: Jugador → jugadores; el resto → staff. */
+export function travelerGroup(roleName: string | null | undefined): "jugadores" | "staff" {
+  return (roleName ?? "").trim().toLowerCase() === "jugador" ? "jugadores" : "staff";
 }
 
 /**
