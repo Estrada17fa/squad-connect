@@ -32,6 +32,7 @@ const KIND_ICON: Record<ItineraryItem["kind"], React.ComponentType<{ className?:
 
 export function ResumenTab({ trip, lg, go }: TabProps) {
   const { readiness } = lg;
+  if (lg.loading) return <div className="space-y-3"><div className="h-24 animate-pulse rounded-2xl bg-card" /><div className="h-48 animate-pulse rounded-2xl bg-card" /></div>;
   const items = buildItinerary({ trip, flights: lg.flights, transports: lg.transports, hotels: lg.hotels, meals: lg.meals, mealLabel: (t) => MEAL_TYPE_LABEL[t as keyof typeof MEAL_TYPE_LABEL] ?? t });
   const byDay = new Map<string, ItineraryItem[]>();
   for (const it of items) {
