@@ -60,3 +60,11 @@ export function useTripLogistics(trip: TripRow | null | undefined) {
   const loading = flightsQ.isLoading || hotelsQ.isLoading || transportsQ.isLoading;
   return { flights, hotels, transports, meals, readiness, travelers, loading };
 }
+
+/** Próximo viaje con su preparación (portada de General). */
+export function useNextTrip(enabled: boolean) {
+  const { upcoming, matchFor, tripsQ } = useClubTrips(enabled);
+  const next = upcoming[0] ?? null;
+  const lg = useTripLogistics(next);
+  return { next, match: matchFor(next), readiness: lg.readiness, loading: tripsQ.isLoading };
+}
