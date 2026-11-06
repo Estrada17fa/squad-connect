@@ -58,7 +58,32 @@ interface Props {
   trip?: TripRow | null;
   /** Se llama con el id del viaje recién creado para abrir su detalle. */
   onCreated?: (tripId: string) => void;
+  /** "page": se muestra como página completa (Coordinación) con el botón fijo abajo. */
+  variant?: "sheet" | "page";
 }
+
+const PAGE_PARTS = {
+  Root: ({ children }: { open?: boolean; onOpenChange?: (v: boolean) => void; children: React.ReactNode }) => (
+    <div className="coord-enter mx-auto max-w-2xl space-y-4 pb-28">{children}</div>
+  ),
+  Header: ({ children }: { children: React.ReactNode }) => <div className="space-y-1">{children}</div>,
+  Title: ({ children }: { children: React.ReactNode }) => <h1 className="text-xl font-bold">{children}</h1>,
+  Description: ({ children }: { children: React.ReactNode }) => <p className="text-sm text-muted-foreground">{children}</p>,
+  Body: ({ children }: { children: React.ReactNode }) => <div className="space-y-5">{children}</div>,
+  Footer: ({ children }: { children: React.ReactNode }) => (
+    <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border/60 bg-background/95 px-4 pb-[max(env(safe-area-inset-bottom),12px)] pt-3 backdrop-blur">
+      <div className="mx-auto flex max-w-2xl gap-2 [&>button:last-child]:flex-1">{children}</div>
+    </div>
+  ),
+};
+const SHEET_PARTS = {
+  Root: EntitySheet as unknown as typeof PAGE_PARTS.Root,
+  Header: EntitySheetHeader as unknown as typeof PAGE_PARTS.Header,
+  Title: EntitySheetTitle as unknown as typeof PAGE_PARTS.Title,
+  Description: EntitySheetDescription as unknown as typeof PAGE_PARTS.Description,
+  Body: EntitySheetBody as unknown as typeof PAGE_PARTS.Body,
+  Footer: EntitySheetFooter as unknown as typeof PAGE_PARTS.Footer,
+};
 
 /* ------------------------------------------------------------------ */
 /* Utilidades de fecha (solo día, sin hora)                            */
@@ -235,7 +260,9 @@ export function TripFormDialog({
   userId,
   trip,
   onCreated,
+  variant = "sheet",
 }: Props) {
+  const W = variant === "page" ? PAGE_PARTS : SHEET_PARTS;
   const isEdit = !!trip;
   const qc = useQueryClient();
   const firstTeamId = teams[0]?.id ?? null;
@@ -398,17 +425,17 @@ export function TripFormDialog({
   const totalTravelers = fromMatch ? playerIds.size + staffIds.size : travelerIds.size;
 
   return (
-    <EntitySheet open={open} onOpenChange={onOpenChange}>
-      <EntitySheetHeader>
-        <EntitySheetTitle>{isEdit ? "Editar viaje" : "Nuevo viaje"}</EntitySheetTitle>
-        <EntitySheetDescription>
+    <W.Root open={open} onOpenChange={onOpenChange}>
+      <W.Header>
+        <W.Title>{isEdit ? "Editar viaje" : "Nuevo viaje"}</W.Title>
+        <W.Description>
           {step === "pick" && !isEdit
             ? "Elige el partido y el viaje se arma solo. La logística se agrega después en el detalle."
             : "Registra lo esencial. Transporte, vuelos, hoteles y equipaje se agregan después dentro del detalle."}
-        </EntitySheetDescription>
-      </EntitySheetHeader>
+        </W.Description>
+      </W.Header>
 
-      <EntitySheetBody>
+      <W.Body>
         {step === "pick" && !isEdit ? (
           <MatchPickList
             matches={upcoming}
@@ -729,9 +756,9 @@ export function TripFormDialog({
             </FormSection>
           </>
         )}
-      </EntitySheetBody>
+      </W.Body>
 
-      <EntitySheetFooter>
+      <W.Footer>
         {isEdit ? (
           <Button
             type="button"
@@ -756,7 +783,7 @@ export function TripFormDialog({
             {mutation.isPending ? "Guardando…" : isEdit ? "Guardar cambios" : "Crear viaje"}
           </Button>
         ) : null}
-      </EntitySheetFooter>
-    </EntitySheet>
+      </W.Footer>
+    </W.Root>
   );
 }
