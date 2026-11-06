@@ -68,6 +68,7 @@ import { Route as AuthenticatedAdministracionUsuariosUserIdEditarRouteImport } f
 import { Route as AuthenticatedAdministracionUsuariosUserIdPermisosRouteImport } from './routes/_authenticated/administracion.usuarios.$userId.permisos'
 import { Route as AuthenticatedAdministracionUsuariosRolesIndexRouteImport } from './routes/_authenticated/administracion.usuarios.roles.index'
 import { Route as AuthenticatedAdministracionUsuariosRolesRoleIdRouteImport } from './routes/_authenticated/administracion.usuarios.roles.$roleId'
+import { Route as AuthenticatedCoordinacionGeneralTareasIndexRouteImport } from './routes/_authenticated/coordinacion.general.tareas.index'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -402,6 +403,12 @@ const AuthenticatedAdministracionUsuariosRolesRoleIdRoute =
     path: '/roles/$roleId',
     getParentRoute: () => AuthenticatedAdministracionUsuariosRoute,
   } as any)
+const AuthenticatedCoordinacionGeneralTareasIndexRoute =
+  AuthenticatedCoordinacionGeneralTareasIndexRouteImport.update({
+    id: '/general/tareas/',
+    path: '/general/tareas/',
+    getParentRoute: () => AuthenticatedCoordinacionRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -462,6 +469,7 @@ export interface FileRoutesByFullPath {
   '/administracion/torneos/$id/': typeof AuthenticatedAdministracionTorneosIdIndexRoute
   '/administracion/usuarios/$userId/': typeof AuthenticatedAdministracionUsuariosUserIdIndexRoute
   '/administracion/usuarios/roles/': typeof AuthenticatedAdministracionUsuariosRolesIndexRoute
+  '/coordinacion/general/tareas/': typeof AuthenticatedCoordinacionGeneralTareasIndexRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
@@ -515,6 +523,7 @@ export interface FileRoutesByTo {
   '/administracion/torneos/$id': typeof AuthenticatedAdministracionTorneosIdIndexRoute
   '/administracion/usuarios/$userId': typeof AuthenticatedAdministracionUsuariosUserIdIndexRoute
   '/administracion/usuarios/roles': typeof AuthenticatedAdministracionUsuariosRolesIndexRoute
+  '/coordinacion/general/tareas': typeof AuthenticatedCoordinacionGeneralTareasIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -577,6 +586,7 @@ export interface FileRoutesById {
   '/_authenticated/administracion/torneos/$id/': typeof AuthenticatedAdministracionTorneosIdIndexRoute
   '/_authenticated/administracion/usuarios/$userId/': typeof AuthenticatedAdministracionUsuariosUserIdIndexRoute
   '/_authenticated/administracion/usuarios/roles/': typeof AuthenticatedAdministracionUsuariosRolesIndexRoute
+  '/_authenticated/coordinacion/general/tareas/': typeof AuthenticatedCoordinacionGeneralTareasIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -639,6 +649,7 @@ export interface FileRouteTypes {
     | '/administracion/torneos/$id/'
     | '/administracion/usuarios/$userId/'
     | '/administracion/usuarios/roles/'
+    | '/coordinacion/general/tareas/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/auth'
@@ -692,6 +703,7 @@ export interface FileRouteTypes {
     | '/administracion/torneos/$id'
     | '/administracion/usuarios/$userId'
     | '/administracion/usuarios/roles'
+    | '/coordinacion/general/tareas'
   id:
     | '__root__'
     | '/_authenticated'
@@ -753,6 +765,7 @@ export interface FileRouteTypes {
     | '/_authenticated/administracion/torneos/$id/'
     | '/_authenticated/administracion/usuarios/$userId/'
     | '/_authenticated/administracion/usuarios/roles/'
+    | '/_authenticated/coordinacion/general/tareas/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1176,6 +1189,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdministracionUsuariosRolesRoleIdRouteImport
       parentRoute: typeof AuthenticatedAdministracionUsuariosRoute
     }
+    '/_authenticated/coordinacion/general/tareas/': {
+      id: '/_authenticated/coordinacion/general/tareas/'
+      path: '/general/tareas'
+      fullPath: '/coordinacion/general/tareas/'
+      preLoaderRoute: typeof AuthenticatedCoordinacionGeneralTareasIndexRouteImport
+      parentRoute: typeof AuthenticatedCoordinacionRoute
+    }
   }
 }
 
@@ -1316,6 +1336,7 @@ interface AuthenticatedCoordinacionRouteChildren {
   AuthenticatedCoordinacionIndexRoute: typeof AuthenticatedCoordinacionIndexRoute
   AuthenticatedCoordinacionAreaModuleRoute: typeof AuthenticatedCoordinacionAreaModuleRoute
   AuthenticatedCoordinacionAreaIndexRoute: typeof AuthenticatedCoordinacionAreaIndexRoute
+  AuthenticatedCoordinacionGeneralTareasIndexRoute: typeof AuthenticatedCoordinacionGeneralTareasIndexRoute
 }
 
 const AuthenticatedCoordinacionRouteChildren: AuthenticatedCoordinacionRouteChildren =
@@ -1325,6 +1346,8 @@ const AuthenticatedCoordinacionRouteChildren: AuthenticatedCoordinacionRouteChil
       AuthenticatedCoordinacionAreaModuleRoute,
     AuthenticatedCoordinacionAreaIndexRoute:
       AuthenticatedCoordinacionAreaIndexRoute,
+    AuthenticatedCoordinacionGeneralTareasIndexRoute:
+      AuthenticatedCoordinacionGeneralTareasIndexRoute,
   }
 
 const AuthenticatedCoordinacionRouteWithChildren =
