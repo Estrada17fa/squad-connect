@@ -43,6 +43,13 @@
       "when": 1793987963837,
       "tag": "0005_task_comments_evidence",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793987985647,
+      "tag": "0006_fix_notify_task_comment_name",
+      "breakpoints": true
     }
   ]
 }
