@@ -64,6 +64,13 @@
       "when": 1794012369347,
       "tag": "0008_trip_traveler_notice_skip_draft",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794018685832,
+      "tag": "0009_boarding_pass_notify_from_app",
+      "breakpoints": true
     }
   ]
 }

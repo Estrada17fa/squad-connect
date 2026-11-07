@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Luggage, Plane } from "lucide-react";
+import { Luggage, Plane, Upload } from "lucide-react";
 import { formatDateTime } from "@/lib/calendar-utils";
 import { LEG_LABEL, personLabel, type MiniProfile, type TripLeg } from "@/lib/tripLogistics";
 import { type TripFlight } from "@/hooks/useTripFlights";
@@ -17,9 +17,11 @@ interface Props {
   allFlights: TripFlight[];
   travelers: AssignCandidate[];
   canEdit: boolean;
+  /** Abre la asignación de pases con tarjetas para ese vuelo. */
+  onUploadPasses?: (flightId: string) => void;
 }
 
-export function FlightsSection({ tripId, userId, leg, flights, allFlights, travelers, canEdit }: Props) {
+export function FlightsSection({ tripId, userId, leg, flights, allFlights, travelers, canEdit, onUploadPasses }: Props) {
   const [formOpen, setFormOpen] = React.useState(false);
   const [detailFor, setDetailFor] = React.useState<TripFlight | null>(null);
 
@@ -35,8 +37,8 @@ export function FlightsSection({ tripId, userId, leg, flights, allFlights, trave
         onAdd={() => setFormOpen(true)}
       >
         {flights.map((f) => (
+          <div key={f.id} className="space-y-1.5">
           <button
-            key={f.id}
             type="button"
             className="glass w-full space-y-2 p-3 text-left transition-colors hover:bg-white/[0.04]"
             onClick={() => setDetailFor(f)}
@@ -81,6 +83,12 @@ export function FlightsSection({ tripId, userId, leg, flights, allFlights, trave
               emptyLabel="Sin pasajeros asignados"
             />
           </button>
+          {canEdit && onUploadPasses ? (
+            <button type="button" onClick={() => onUploadPasses(f.id)} className="coord-press flex min-h-10 w-full items-center justify-center gap-1.5 rounded-xl bg-muted text-xs font-semibold">
+              <Upload className="h-3.5 w-3.5" /> Subir pases de este vuelo
+            </button>
+          ) : null}
+          </div>
         ))}
       </TimelineSection>
 

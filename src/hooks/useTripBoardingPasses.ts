@@ -2,6 +2,40 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { TRIP_DOCS_BUCKET } from "@/lib/tripLogistics";
 import { tripFlightsKey } from "./useTripFlights";
+import { notifyBoardingPasses } from "@/lib/trips.functions";
+
+/** Avisa (una vez por persona; nunca en Borrador). Un fallo del aviso no deshace la carga. */
+export async function sendPassNotices(tripId: string | null | undefined, userIds: (string | null | undefined)[]) {
+  const ids = [...new Set(userIds.filter((u): u is string => !!u))];
+  if (!tripId || !ids.length) return 0;
+  try {
+    const r = await notifyBoardingPasses({ data: { tripId, userIds: ids } });
+    return r.notified;
+  } catch (e) {
+    console.error("No se pudo enviar el aviso de pase", e);
+    return 0;
+  }
+}
+
+/** Sube un archivo y crea el pase. Devuelve id y ruta para poder deshacer. No avisa. */
+export async function insertBoardingPass(tripId: string, flightId: string, body: Blob, ext: string, input: BoardingPassInput) {
+  const path = `${tripId}/${flightId}/${crypto.randomUUID()}.${ext}`;
+  const { error: upErr } = await supabase.storage.from(TRIP_DOCS_BUCKET).upload(path, body, { upsert: false, contentType: body.type || undefined });
+  if (upErr) throw upErr;
+  const { data, error } = await supabase.from("trip_boarding_passes").insert({ flight_id: flightId, file_path: path, ...input }).select("id").single();
+  if (error) {
+    await supabase.storage.from(TRIP_DOCS_BUCKET).remove([path]);
+    throw error;
+  }
+  return { id: data.id as string, path };
+}
+
+/** Borra el pase y su archivo. */
+export async function deleteBoardingPass(id: string, filePath: string) {
+  const { error } = await supabase.from("trip_boarding_passes").delete().eq("id", id);
+  if (error) throw error;
+  await supabase.storage.from(TRIP_DOCS_BUCKET).remove([filePath]);
+}
 
 export interface BoardingPassInput {
   user_id: string | null;
@@ -35,7 +69,7 @@ export function useBoardingPassMutations(tripId: string | null | undefined) {
   const upload = useMutation({
     mutationFn: async ({ flightId, file, input }: { flightId: string; file: File; input: BoardingPassInput }) =>
       uploadOne(flightId, file, file.name.split(".").pop() ?? "pdf", input),
-    onSuccess: invalidate,
+    onSuccess: (_d, v) => { invalidate(); void sendPassNotices(tripId, [v.input.user_id]); },
   });
 
   /** Carga por lote: se usa al confirmar la auto-asignación desde un PDF. */
@@ -43,7 +77,7 @@ export function useBoardingPassMutations(tripId: string | null | undefined) {
     mutationFn: async ({ flightId, items }: { flightId: string; items: BoardingPassBatchItem[] }) => {
       for (const item of items) await uploadOne(flightId, item.blob, item.ext, item.input);
     },
-    onSuccess: invalidate,
+    onSuccess: (_d, v) => { invalidate(); void sendPassNotices(tripId, v.items.map((i) => i.input.user_id)); },
   });
 
   const update = useMutation({

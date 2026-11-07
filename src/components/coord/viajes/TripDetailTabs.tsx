@@ -20,7 +20,7 @@ import { MEAL_TYPE_LABEL } from "@/lib/tripLogistics";
 import { buildItinerary, type ItineraryItem, type TripSection } from "@/lib/viajes";
 import { cn } from "@/lib/utils";
 import { PersonAvatar, ReadinessRing, SectionHead, shortDate, timeLabel } from "./parts";
-import { BulkBoardingPassSheet } from "./BulkBoardingPassSheet";
+import { PassAssignFlow } from "./passes/PassAssignFlow";
 import type { useTripLogistics } from "./useTripsModule";
 
 type Logistics = ReturnType<typeof useTripLogistics>;
@@ -183,25 +183,25 @@ export function ViajerosTab({ trip, match, lg, editable }: TabProps) {
 }
 
 export function VuelosTab({ trip, lg, editable, userId }: TabProps) {
-  const [bulk, setBulk] = React.useState(false);
+  const [bulk, setBulk] = React.useState<{ flightId: string | null } | null>(null);
   const passes = lg.flights.reduce((n, f) => n + f.boarding_passes.length, 0);
   const expected = lg.flights.reduce((n, f) => n + f.passengers.length, 0);
   return (
     <div className="space-y-5">
       {lg.flights.length ? (
-        <button onClick={() => setBulk(true)} disabled={!editable} className="coord-press flex w-full items-center gap-3 rounded-2xl bg-area-general-soft p-3 text-left disabled:opacity-60">
+        <button onClick={() => setBulk({ flightId: null })} disabled={!editable} className="coord-press flex w-full items-center gap-3 rounded-2xl bg-area-general-soft p-3 text-left disabled:opacity-60">
           <Ticket className="h-5 w-5 text-area-general" />
           <span className="min-w-0 flex-1">
-            <span className="block text-sm font-semibold">Cargar pases</span>
+            <span className="block text-sm font-semibold">Subir pases</span>
             <span className="block text-xs text-muted-foreground">{passes} de {expected} pases cargados · PDF o fotos, varios a la vez</span>
           </span>
           <span className="text-muted-foreground">›</span>
         </button>
       ) : null}
       {(["ida", "regreso"] as const).map((leg) => (
-        <FlightsSection key={leg} tripId={trip.id} userId={userId} leg={leg} flights={lg.flights.filter((f) => f.leg === leg)} allFlights={lg.flights} travelers={lg.travelers} canEdit={editable} />
+        <FlightsSection key={leg} tripId={trip.id} userId={userId} leg={leg} flights={lg.flights.filter((f) => f.leg === leg)} allFlights={lg.flights} travelers={lg.travelers} canEdit={editable} onUploadPasses={(flightId) => setBulk({ flightId })} />
       ))}
-      <BulkBoardingPassSheet open={bulk} onOpenChange={setBulk} tripId={trip.id} flights={lg.flights} travelers={lg.travelers} />
+      {bulk ? <PassAssignFlow tripId={trip.id} flights={lg.flights} travelers={lg.travelers} initialFlightId={bulk.flightId} onClose={() => setBulk(null)} /> : null}
     </div>
   );
 }
