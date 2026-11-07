@@ -1,18 +1,6 @@
 import * as React from "react";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
-import {
-  EntitySheet,
-  EntitySheetBody,
-  EntitySheetDescription,
-  EntitySheetFooter,
-  EntitySheetHeader,
-  EntitySheetTitle,
-} from "@/components/squad/EntitySheet";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { DateTimeField, Field, MoreMenu, TextArea, TextField, TripSheet } from "@/components/coord/viajes/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { InventoryItemPicker } from "@/components/solicitudes/InventoryItemPicker";
 import type { InventoryCatalogItem } from "@/hooks/useInventory";
@@ -108,105 +96,36 @@ export function TripMaterialDialog({
     else create.mutate({ input, userId, teamId }, done);
   };
 
+  const del = () => loan && remove.mutate(loan.id, {
+    onSuccess: () => { toast.success("Material retirado del viaje"); onOpenChange(false); },
+    onError: (e: any) => toast.error(e.message ?? "No se pudo eliminar"),
+  });
+
   return (
-    <EntitySheet open={open} onOpenChange={onOpenChange} size="lg">
-      <EntitySheetHeader>
-        <EntitySheetTitle>{isEdit ? "Editar material" : "Material del inventario"}</EntitySheetTitle>
-        <EntitySheetDescription>
-          Al guardar se genera un préstamo del inventario del club y baja la disponibilidad.
-        </EntitySheetDescription>
-      </EntitySheetHeader>
-
-      <EntitySheetBody>
-        <div className="space-y-1.5">
-          <Label>Artículo *</Label>
-          <InventoryItemPicker
-            clubId={clubId}
-            itemId={itemId}
-            itemName={itemName}
-            onChange={(i) => {
-              setItem(i);
-              setItemId(i?.id ?? null);
-              setItemName(i?.name ?? "");
-            }}
-          />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label htmlFor="m-qty">Cantidad *</Label>
-          <Input id="m-qty" type="number" min={1} value={quantity} onChange={(e) => setQuantity(e.target.value)} />
-          {available != null ? (
-            <p className="text-xs text-muted-foreground">{available} disponibles ahora mismo.</p>
-          ) : null}
-          {isEdit && loan ? (
-            <p className="text-xs text-muted-foreground">
-              Devueltas {loan.returned_quantity} · pendientes {materialOutstanding(loan)}
-            </p>
-          ) : null}
-        </div>
-
-        <div className="space-y-1.5">
-          <Label>Responsable *</Label>
-          <Select value={responsible} onValueChange={setResponsible}>
-            <SelectTrigger>
-              <SelectValue placeholder="Elige un convocado" />
-            </SelectTrigger>
-            <SelectContent>
-              {travelers.map((t) => (
-                <SelectItem key={t.user_id} value={t.user_id}>
-                  {personLabel(t.profile)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {travelers.length === 0 ? (
-            <p className="text-xs text-muted-foreground">Agrega convocados al viaje para asignar responsables.</p>
-          ) : null}
-        </div>
-
-        <div className="space-y-1.5">
-          <Label htmlFor="m-ret">Devolución esperada</Label>
-          <Input id="m-ret" type="datetime-local" value={returnAt} onChange={(e) => setReturnAt(e.target.value)} />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label htmlFor="m-notes">Notas</Label>
-          <Textarea id="m-notes" rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />
-        </div>
-
-        {isEdit && loan ? (
-          <Button
-            type="button"
-            variant="ghost"
-            className="text-destructive hover:text-destructive"
-            onClick={() =>
-              remove.mutate(loan.id, {
-                onSuccess: () => {
-                  toast.success("Material retirado del viaje");
-                  onOpenChange(false);
-                },
-                onError: (e: any) => toast.error(e.message ?? "No se pudo eliminar"),
-              })
-            }
-          >
-            <Trash2 className="mr-2 h-4 w-4" /> Quitar del viaje
-          </Button>
-        ) : null}
-      </EntitySheetBody>
-
-      <EntitySheetFooter>
-        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-          Cancelar
-        </Button>
-        <Button
-          type="button"
-          className="glow-primary"
-          disabled={create.isPending || update.isPending}
-          onClick={submit}
-        >
-          {isEdit ? "Guardar cambios" : "Agregar material"}
-        </Button>
-      </EntitySheetFooter>
-    </EntitySheet>
+    <TripSheet open={open} onOpenChange={onOpenChange} title={isEdit ? "Editar material" : "Agregar material"}
+      menu={isEdit ? <MoreMenu onDelete={del} deleteLabel="Quitar del viaje" deleting={remove.isPending} /> : null}
+      primary={{ label: isEdit ? "Guardar cambios" : "Agregar material", onClick: submit, loading: create.isPending || update.isPending }}>
+      <div className="space-y-1.5">
+        <span className="block text-xs font-semibold text-muted-foreground">Artículo</span>
+        <InventoryItemPicker clubId={clubId} itemId={itemId} itemName={itemName}
+          onChange={(i) => { setItem(i); setItemId(i?.id ?? null); setItemName(i?.name ?? ""); }} />
+      </div>
+      <Field label={available != null ? `Cantidad · ${available} disponibles` : "Cantidad"}>
+        <TextField type="number" min={1} value={quantity} onChange={(e) => setQuantity(e.target.value)} />
+      </Field>
+      {isEdit && loan ? <p className="-mt-3 text-xs text-muted-foreground">Devueltas {loan.returned_quantity} · pendientes {materialOutstanding(loan)}</p> : null}
+      <div className="space-y-1.5">
+        <span className="block text-xs font-semibold text-muted-foreground">Responsable</span>
+        <Select value={responsible} onValueChange={setResponsible}>
+          <SelectTrigger className="h-11 rounded-xl border-0 bg-muted"><SelectValue placeholder="Elige un convocado" /></SelectTrigger>
+          <SelectContent>
+            {travelers.map((t) => <SelectItem key={t.user_id} value={t.user_id}>{personLabel(t.profile)}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        {travelers.length === 0 ? <p className="text-xs text-muted-foreground">Agrega convocados al viaje para asignar responsables.</p> : null}
+      </div>
+      <Field label="Devolución esperada"><DateTimeField value={returnAt} onChange={setReturnAt} clearable placeholder="Opcional" /></Field>
+      <Field label="Notas"><TextArea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} /></Field>
+    </TripSheet>
   );
 }
