@@ -108,13 +108,13 @@ export function MonthGrid({ month, days, items, selected, onSelect, onShift, onT
       <div className="grid grid-cols-7 text-center text-[11px] font-medium text-muted-foreground">
         {["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"].map((d) => <span key={d}>{d}</span>)}
       </div>
-      <div className="grid max-h-[45vh] grid-cols-7 gap-y-0.5" style={{ gridAutoRows: `minmax(0, calc((45vh - 1rem) / ${days.length / 7}))` }}>
+      <div className="grid grid-cols-7 gap-y-0.5" style={{ gridAutoRows: `min(2.75rem, calc((45vh - 3.5rem) / ${days.length / 7}))` }}>
         {days.map((d) => {
           const out = d.getMonth() !== month.getMonth();
           const isSel = sameDay(d, selected);
           return (
             <button key={d.toISOString()} type="button" onClick={() => onSelect(d)} aria-pressed={isSel} aria-label={longDay(d)} data-day={agendaDayKey(d)}
-              className={cn("flex flex-col items-center justify-center rounded-xl py-1", isSel ? "bg-foreground/10" : "active:bg-muted", out && "opacity-35")}>
+              className={cn("flex min-h-0 flex-col items-center justify-center rounded-xl", isSel ? "bg-foreground/10" : "active:bg-muted", out && "opacity-35")}>
               <span className={cn("text-sm font-semibold leading-none", sameDay(d, today) && "text-primary")}>{d.getDate()}</span>
               <Dots kinds={dayDots(items, d)} />
             </button>
