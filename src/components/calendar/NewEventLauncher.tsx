@@ -26,6 +26,8 @@ interface Props {
   defaultTeamId?: string | null;
   /** Día preseleccionado (vista Mes). */
   defaultDate?: Date;
+  /** "icon" = "+" pequeño para encabezado (temporal en Agenda). */
+  variant?: "button" | "icon";
 }
 
 type Kind = EventType;
@@ -38,7 +40,7 @@ type Kind = EventType;
  * calendario queda conectado con su ficha y su plan. Solo se ofrecen los
  * tipos donde la persona es editora en al menos un equipo.
  */
-export function NewEventLauncher({ clubId, userId, genericTeams, defaultTeamId, defaultDate }: Props) {
+export function NewEventLauncher({ clubId, userId, genericTeams, defaultTeamId, defaultDate, variant = "button" }: Props) {
   const trainingTeams = useEditableTeams("entrenamientos");
   const meetingTeams = useEditableTeams("coordinacion_interna");
   const tripTeams = useEditableTeams("viajes");
@@ -77,9 +79,15 @@ export function NewEventLauncher({ clubId, userId, genericTeams, defaultTeamId, 
 
   return (
     <>
-      <Button onClick={() => setChooserOpen(true)} className="w-full glow-primary">
-        <Plus className="mr-2 h-4 w-4" /> Nuevo evento
-      </Button>
+      {variant === "icon" ? (
+        <button type="button" aria-label="Nuevo evento" onClick={() => setChooserOpen(true)} className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <Plus className="h-6 w-6" />
+        </button>
+      ) : (
+        <Button onClick={() => setChooserOpen(true)} className="w-full glow-primary">
+          <Plus className="mr-2 h-4 w-4" /> Nuevo evento
+        </Button>
+      )}
 
       <EntitySheet open={chooserOpen} onOpenChange={setChooserOpen}>
         <EntitySheetHeader>

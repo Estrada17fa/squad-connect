@@ -104,3 +104,14 @@ describe("detectFlight", () => {
     expect(m.userId).toBe("u1");
   });
 });
+
+import { isAgendaVisible as _iav } from "./viajes";
+describe("isAgendaVisible", () => {
+  it("oculta viajes en Borrador", () => expect(_iav({ trip_id: "t", trip: { status: "planeacion" } })).toBe(false));
+  it("muestra viajes Publicados y Finalizados", () => {
+    expect(_iav({ trip_id: "t", trip: { status: "confirmado" } })).toBe(true);
+    expect(_iav({ trip_id: "t", trip: { status: "completado" } })).toBe(true);
+  });
+  it("oculta si no puede ver el viaje", () => expect(_iav({ trip_id: "t", trip: null })).toBe(false));
+  it("eventos sin viaje pasan", () => expect(_iav({ trip_id: null })).toBe(true));
+});

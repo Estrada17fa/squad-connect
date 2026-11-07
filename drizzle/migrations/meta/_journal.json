@@ -57,6 +57,13 @@
       "when": 1793995187868,
       "tag": "0007_tasks_location_meeting_attended",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794012369347,
+      "tag": "0008_trip_traveler_notice_skip_draft",
+      "breakpoints": true
     }
   ]
 }
