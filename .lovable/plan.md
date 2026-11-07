@@ -25,11 +25,12 @@
 - Cada asignación se guarda al momento con asiento/grupo/terminal.
 - Final: "24 de 24 asignados" o quién quedó sin pase y los saltados con "Asignar ahora".
 
-## Decisión necesaria: avisos del pase
-Hoy la base avisa "Tu pase de abordar está listo" **por cada pase** y **también en Borrador**. Para cumplir "uno por persona y nada en Borrador" hace falta un cambio pequeño en la base (aunque el documento dice no tocarla):
-- El aviso automático deja de enviarse en Borrador.
-- Al terminar las tarjetas, se envía un solo aviso por persona (sin repetir si recibe varios pases).
-Si prefieres no tocar la base, en Borrador seguirían llegando avisos. Lo haré con el cambio salvo que digas lo contrario.
+## Avisos del pase (aprobado)
+- La base deja de enviar el aviso de pase por su cuenta; todos los avisos "Tu pase de abordar está listo" salen desde la app, en un solo lugar.
+- Tarjetas: al salir de la asignación (desde el resumen o con "‹" a la mitad), un aviso por persona que recibió al menos un pase nuevo en esa sesión.
+- Carga suelta de un pase (pantallas actuales): el mismo envío, para esa persona.
+- En Borrador no se avisa nunca; el aviso de publicar ya los cubre.
+- Prueba: asignar 3 pases con tarjetas a un viajero de un viaje Publicado le llega UN solo aviso.
 
 ## Pruebas (solo datos temporales, borrados al final)
 Viaje de prueba con 4 usuarios temporales, ida y regreso, hotel con cuarto compartido, transporte y comida; subir un PDF de 3 páginas + 2 imágenes; asignar con toque, deslizando, otra persona, saltar y deshacer; entrar como viajero (pase, pase completo, itinerario, cuarto); viajero sin cuarto ni pase sin secciones vacías. Sin errores TypeScript. Capturas 375×667 de lista, viaje, pase completo, tarjetas (segura, revisar, buscar) y resumen.
@@ -37,4 +38,5 @@ Viaje de prueba con 4 usuarios temporales, ida y regreso, hotel con cuarto compa
 ## Detalles técnicos
 - Reutilizar `MyTripView`, `BoardingPassViewer`, `boardingPassMatch`, hooks de logística; nuevos componentes en `src/components/viajes/mine/*` y `src/components/coord/viajes/passes/*`; reglas puras (tramo por defecto, itinerario, orden de tarjetas) en `src/lib/viajes.ts` con tests.
 - pdfjs-dist (ya instalado) renderiza páginas a JPEG en el navegador antes de subir a almacenamiento.
-- Migración: `notify_boarding_pass` retorna sin avisar si el viaje está en `planeacion`; las tarjetas insertan pases y el aviso único se envía con `notify_users` desde una función de servidor al cerrar la sesión de asignación (el trigger se limita a cargas sueltas).
+- Opción elegida (la más simple y confiable): el trigger notify_boarding_pass no avisa nunca (se reemplaza por RETURN NEW, no se borra). Una función de servidor notifyBoardingPasses({ tripId, userIds }) verifica que quien llama pueda editar el viaje, que no esté en planeacion, quita duplicados y llama notify_users una vez por persona. La usan la salida de las tarjetas y las cargas sueltas existentes (BoardingPassesSheet, BoardingPassAutoMatchSheet, BulkBoardingPassSheet).
+- La sesión de tarjetas guarda en memoria las personas con pase nuevo (Deshacer las quita) y las envía al salir.
