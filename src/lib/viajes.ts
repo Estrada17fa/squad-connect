@@ -234,3 +234,13 @@ export function buildItinerary(input: {
   if (trip.match_event) out.push({ id: "partido", at: trip.match_event.starts_at, kind: "partido", title: trip.match_event.title, detail: trip.match_event.location });
   return out.sort((a, b) => a.at.localeCompare(b.at));
 }
+
+/**
+ * Agenda: un evento ligado a un viaje solo se muestra si el viaje está
+ * Publicado, En curso o Finalizado y la persona puede leer el viaje
+ * (trip = null cuando la RLS no lo deja ver). Los demás eventos pasan.
+ */
+export function isAgendaVisible(e: { trip_id?: string | null; trip?: { status: StoredTripStatus } | null }) {
+  if (!e.trip_id) return true;
+  return !!e.trip && isPlayerVisible(e.trip);
+}

@@ -2,6 +2,10 @@ import * as React from "react";
 import { queryOptions, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { EventType } from "@/lib/eventTypes";
+import { isAgendaVisible, type StoredTripStatus } from "@/lib/viajes";
+
+const EVENT_SELECT = "*, trip:trips!calendar_events_trip_id_fkey(status)";
+const visible = (rows: unknown[] | null) => ((rows ?? []) as CalendarEventRow[]).filter(isAgendaVisible);
 
 export interface CalendarEventRow {
   id: string;
@@ -18,6 +22,8 @@ export interface CalendarEventRow {
   /** Llaves de origen: el evento lo generó otro módulo. */
   meeting_id?: string | null;
   trip_id?: string | null;
+  /** Estado del viaje ligado (null si no se puede leer). */
+  trip?: { status: StoredTripStatus } | null;
   is_private?: boolean;
   created_by: string | null;
   created_at: string;
@@ -42,12 +48,12 @@ export const calendarEventsQueryOptions = (scope: CalendarScope) =>
     gcTime: 5 * 60_000,
     placeholderData: keepPreviousData,
     queryFn: async (): Promise<CalendarEventRow[]> => {
-      const q = supabase.from("calendar_events").select("*").order("starts_at", { ascending: true });
+      const q = supabase.from("calendar_events").select(EVENT_SELECT).order("starts_at", { ascending: true });
       if (scope.mode === "club") q.eq("club_id", scope.clubId!);
       else q.or(`team_id.eq.${scope.teamId},team_id.is.null`);
       const { data, error } = await q;
       if (error) throw error;
-      return (data ?? []) as CalendarEventRow[];
+      return visible(data);
     },
   });
 
@@ -120,13 +126,14 @@ export function useUpcomingEvents(clubId: string | null | undefined, limit = 5) 
     queryFn: async (): Promise<CalendarEventRow[]> => {
       const { data, error } = await supabase
         .from("calendar_events")
-        .select("*")
+        .select(EVENT_SELECT)
         .eq("club_id", clubId!)
         .gte("starts_at", new Date().toISOString())
         .order("starts_at", { ascending: true })
-        .limit(limit);
+        .limit(limit + 10);
       if (error) throw error;
-      return (data ?? []) as CalendarEventRow[];
+      return visible(data).slice(0, limit);
+      return visible(data);
     },
   });
 }
@@ -140,15 +147,14 @@ export function useNextEventOfType(clubId: string | null | undefined, type: Even
     queryFn: async (): Promise<CalendarEventRow | null> => {
       const { data, error } = await supabase
         .from("calendar_events")
-        .select("*")
+        .select(EVENT_SELECT)
         .eq("club_id", clubId!)
         .eq("event_type", type)
         .gte("starts_at", new Date().toISOString())
         .order("starts_at", { ascending: true })
-        .limit(1)
-        .maybeSingle();
+        .limit(10);
       if (error) throw error;
-      return (data ?? null) as CalendarEventRow | null;
+      return visible(data)[0] ?? null;
     },
   });
 }
