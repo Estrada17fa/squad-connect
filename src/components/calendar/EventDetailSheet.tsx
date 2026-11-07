@@ -9,7 +9,10 @@ import type { CalendarEventRow } from "@/hooks/useCalendarEvents";
 import type { TeamOption } from "@/hooks/useAccess";
 import { useSessionByEvent } from "@/hooks/useTraining";
 import { useTeamAccess } from "@/hooks/useTeamAccess";
-import { useMatchByEvent, useCallupStates, CALLUP_LABEL, useMatchLogistics } from "@/hooks/useMatchOps";
+import { useMatchByEvent, useMyMatchStatuses, CALLUP_LABEL, useMatchCallupList, useMatchLineups } from "@/hooks/useMatchOps";
+import { TripSheet } from "@/components/coord/viajes/form";
+import { Avatar, Pitch, PosTag, shortName, type PitchPlayer } from "@/components/coord/partidos/parts";
+import { lineupLabel } from "@/lib/partidos";
 import { meetingsQueryOptions } from "@/hooks/useCoordinacion";
 import { tripsQueryOptions } from "@/hooks/useTrips";
 import { EVENT_TYPE_MAP } from "@/lib/eventTypes";
@@ -61,8 +64,12 @@ export function EventDetailSheet({ open, onOpenChange, event, canEdit, clubId, u
   const session = sessionQ.data ?? null;
   const matchQ = useMatchByEvent(open && isMatch ? event!.id : null);
   const match = matchQ.data ?? null;
-  const callupStateQ = useCallupStates(open && isMatch && event ? [event.id] : []);
-  const logistics = (useMatchLogistics(match ? [match.id] : []).data ?? [])[0] ?? null;
+  const statusQ = useMyMatchStatuses(open && isMatch && event ? [event.id] : []);
+  const myStatus = event ? statusQ.data?.get(event.id) ?? null : null;
+  const [showList, setShowList] = React.useState<null | "lista" | "cancha">(null);
+  const canSeeList = myStatus?.state === "convocado";
+  const callupList = useMatchCallupList(canSeeList && showList ? myStatus!.match_id : null).data ?? [];
+  const lineupRows = useMatchLineups(canSeeList && showList === "cancha" && myStatus?.lineup_published ? [myStatus.match_id] : []).data ?? [];
   // Solo lectura de caché/consulta: el aviso en vivo ya lo tiene la pantalla que abre la hoja.
   const meetings = useQuery({ ...meetingsQueryOptions(clubId), enabled: open && !!event?.meeting_id && !!clubId }).data;
   const meeting = event?.meeting_id ? meetings?.find((m) => m.id === event.meeting_id) ?? null : null;
@@ -118,22 +125,30 @@ export function EventDetailSheet({ open, onOpenChange, event, canEdit, clubId, u
   const notes = event.description && !isMedical && !/^jornada \d+$/i.test(event.description.trim()) ? <SheetRow key="notes" icon={StickyNote} main={event.description} /> : null;
 
   if (isMatch) {
-    const st = callupStateQ.data?.get(event.id) ?? null;
+    const st = myStatus?.state ?? null;
     const mine = st === "convocado";
     const status = st ? CALLUP_LABEL[st] : "Convocatoria pendiente";
     header = <MatchHeader event={event} match={match} team={team} />;
+    const role = mine ? lineupLabel(myStatus?.lineup_role, myStatus?.lineup_slot, myStatus?.formation) : null;
     if (mine || isPlayerOnly) {
-      personal = logistics?.call_time_at && mine
-        ? <PersonalBlock label="Tu citación" main={hm(logistics.call_time_at)} sub={logistics.meeting_point} status={status} />
-        : <PersonalBlock label="Tu convocatoria" status={status} />;
+      personal = myStatus?.call_time_at && mine
+        ? <PersonalBlock label="Tu citación" main={hm(myStatus.call_time_at)} sub={[role, myStatus.meeting_point].filter(Boolean).join(" · ") || null} status={status} />
+        : <PersonalBlock label="Tu convocatoria" main={role} status={status} />;
     }
     if (place) rows.push(<PlaceRow key="p" place={place} />);
-    if (logistics?.kit) rows.push(<SheetRow key="k" icon={Shirt} main={logistics.kit} sub="Uniforme" />);
-    if (logistics?.logistics_notes) rows.push(<SheetRow key="ln" icon={StickyNote} main={logistics.logistics_notes} />);
+    if (mine && myStatus?.kit) rows.push(<SheetRow key="k" icon={Shirt} main={myStatus.kit} sub="Uniforme" />);
+    if (mine && myStatus?.notes) rows.push(<SheetRow key="ln" icon={StickyNote} main={myStatus.notes} />);
     else if (notes) rows.push(notes);
+    if (mine) rows.push(
+      <div key="cv" className="flex flex-wrap gap-2 px-1">
+        <button type="button" className={secondaryBtn} onClick={() => setShowList("lista")}><Users className="h-4 w-4" /> Ver convocados ({myStatus?.callup_count ?? 0})</button>
+        {myStatus?.lineup_published ? <button type="button" className={secondaryBtn} onClick={() => setShowList("cancha")}>Ver alineación</button> : null}
+      </div>,
+    );
+    const showTrip = !!matchTrip && (mine || (!isPlayerOnly && st !== "no_convocado"));
     actions = <>
       {place ? <DirectionsButton place={place} /> : null}
-      {matchTrip && (mine || !isPlayerOnly) ? <button type="button" className={place ? secondaryBtn : primaryBtn} onClick={() => navigate({ to: "/agenda-viajes", search: { open: matchTrip.id } as any })}><Plane className="h-4 w-4" /> Mi viaje</button> : null}
+      {showTrip ? <button type="button" className={place ? secondaryBtn : primaryBtn} onClick={() => navigate({ to: "/agenda-viajes", search: { open: matchTrip!.id } as any })}><Plane className="h-4 w-4" /> Mi viaje</button> : null}
     </>;
   } else if (event.trip_id) {
     const flights = tripExtra.data?.flights ?? [];
