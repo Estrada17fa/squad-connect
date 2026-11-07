@@ -71,6 +71,13 @@
       "when": 1794018685832,
       "tag": "0009_boarding_pass_notify_from_app",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794023952433,
+      "tag": "0010_partidos_visibles_por_categoria",
+      "breakpoints": true
     }
   ]
 }
