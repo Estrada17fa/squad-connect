@@ -12,6 +12,7 @@ import { useTeamAccess } from "@/hooks/useTeamAccess";
 import { useTrips } from "@/hooks/useTrips";
 import { useOurMatches, useMatchCallups, type OurMatch } from "@/hooks/useMatchOps";
 import { useMeetings } from "@/hooks/useCoordinacion";
+import { FlightPassViewer, type PassTarget } from "@/components/viajes/mine/PassViewer";
 import { EventDetailSheet } from "@/components/calendar/EventDetailSheet";
 import { AgendaHeader } from "@/components/agenda/AgendaHeader";
 import { MatchCard, SimpleCard, TripCard } from "@/components/agenda/AgendaCards";
@@ -57,6 +58,7 @@ function AgendaProximoPage() {
   const today = parseDayKey(todayKey)!;
   const fecha = parseDayKey(search.fecha) ?? today;
   const dia = parseDayKey(search.dia);
+  const [passTarget, setPassTarget] = React.useState<PassTarget | null>(null);
   const setSearch = (next: Partial<typeof search>) => navigate({ to: "/m/agenda", search: (prev: typeof search) => ({ ...prev, ...next }) as any });
   const [detailEvent, setDetailEvent] = React.useState<CalendarEventRow | null>(null);
 
@@ -178,7 +180,9 @@ function AgendaProximoPage() {
                     if (it.moment) {
                       const trip = tripById.get(it.trip_id!)!;
                       const hasPass = !!it.moment.flight && !!flightsQ.data?.passFlights.has(it.moment.flight.id);
-                      return <TripCard key={it.id} trip={trip} moment={it.moment} hasPass={hasPass} onOpen={() => open(e, it.moment!.leg)} />;
+                      return <TripCard key={it.id} trip={trip} moment={it.moment} hasPass={hasPass} onOpen={() => open(e, it.moment!.leg)}
+                        onPass={() => { const f = it.moment!.flight!; setPassTarget({ flightId: f.id, title: `${it.moment!.leg === "regreso" ? "Regreso" : "Ida"} · ${f.origin} → ${f.destination}`, date: f.departs_at }); }}
+                        onTrip={() => navigate({ to: "/agenda-viajes", search: { open: trip.id } as any })} />;
                     }
                     if (agendaKind(e) === "partido") {
                       const m = matchByEvent.get(e.id) ?? null;
@@ -293,6 +297,7 @@ function AgendaProximoPage() {
         teamName={(id) => (id ? teamNames[id] ?? null : "Todo el club")}
         tripLeg={detailLeg}
       />
+      {passTarget ? <FlightPassViewer target={passTarget} userId={user.id} onClose={() => setPassTarget(null)} /> : null}
     </div>
   );
 }

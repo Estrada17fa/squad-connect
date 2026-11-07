@@ -1,4 +1,5 @@
 import * as React from "react";
+import { tripDayLabel } from "@/lib/misViajes";
 import { Link } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -110,7 +111,7 @@ export function TripHeroCard({ trip, match, readiness }: { trip: TripRow; match:
         <TripCrest match={match} size="lg" />
         <div className="min-w-0 flex-1">
           <div className="truncate text-lg font-bold leading-snug">{trip.title}</div>
-          <div className="text-[13px] text-muted-foreground">{departureLabel(trip.departure_at, trip.return_at)} · {shortDate(trip.departure_at)}</div>
+          <div className="text-[13px] text-muted-foreground">{tripDayLabel(trip)} · {shortDate(trip.departure_at)}</div>
         </div>
       </div>
       <div className="mt-3 flex items-center justify-between gap-3">

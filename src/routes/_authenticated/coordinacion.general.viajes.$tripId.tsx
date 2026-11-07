@@ -1,4 +1,5 @@
 import * as React from "react";
+import { tripDayLabel } from "@/lib/misViajes";
 import { createFileRoute, Link, Navigate, useNavigate } from "@tanstack/react-router";
 import { ChevronLeft, MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
@@ -136,7 +137,7 @@ function ViajeDetailPage() {
         <TripMatchup trip={trip} match={match} />
         <h1 className="text-xl font-bold leading-tight">{trip.title}</h1>
         <p className="text-sm text-muted-foreground">{tripDates(trip)}{team ? ` · ${team}` : ""}</p>
-        <div className="flex justify-center"><span className="rounded-full bg-area-general-soft px-3 py-1 text-xs font-semibold text-area-general">{departureLabel(trip.departure_at, trip.return_at)}</span></div>
+        <div className="flex justify-center"><span className="rounded-full bg-area-general-soft px-3 py-1 text-xs font-semibold text-area-general">{tripDayLabel(trip)}</span></div>
         <MatchLink trip={trip} match={match} />
       </section>
 
