@@ -9,7 +9,7 @@ import type { CalendarEventRow } from "@/hooks/useCalendarEvents";
 import type { TeamOption } from "@/hooks/useAccess";
 import { useSessionByEvent } from "@/hooks/useTraining";
 import { useTeamAccess } from "@/hooks/useTeamAccess";
-import { useMatchByEvent, useMatchCallups, useMatchLogistics } from "@/hooks/useMatchOps";
+import { useMatchByEvent, useCallupStates, CALLUP_LABEL, useMatchLogistics } from "@/hooks/useMatchOps";
 import { meetingsQueryOptions } from "@/hooks/useCoordinacion";
 import { tripsQueryOptions } from "@/hooks/useTrips";
 import { EVENT_TYPE_MAP } from "@/lib/eventTypes";
@@ -61,7 +61,7 @@ export function EventDetailSheet({ open, onOpenChange, event, canEdit, clubId, u
   const session = sessionQ.data ?? null;
   const matchQ = useMatchByEvent(open && isMatch ? event!.id : null);
   const match = matchQ.data ?? null;
-  const callupsQ = useMatchCallups(match ? [match.id] : []);
+  const callupStateQ = useCallupStates(open && isMatch && event ? [event.id] : []);
   const logistics = (useMatchLogistics(match ? [match.id] : []).data ?? [])[0] ?? null;
   // Solo lectura de caché/consulta: el aviso en vivo ya lo tiene la pantalla que abre la hoja.
   const meetings = useQuery({ ...meetingsQueryOptions(clubId), enabled: open && !!event?.meeting_id && !!clubId }).data;
@@ -118,9 +118,9 @@ export function EventDetailSheet({ open, onOpenChange, event, canEdit, clubId, u
   const notes = event.description && !isMedical && !/^jornada \d+$/i.test(event.description.trim()) ? <SheetRow key="notes" icon={StickyNote} main={event.description} /> : null;
 
   if (isMatch) {
-    const callups = callupsQ.data ?? [];
-    const mine = callups.some((c) => c.user_id === userId);
-    const status = callups.length === 0 ? "Convocatoria pendiente" : mine ? "Convocado" : "No convocado";
+    const st = callupStateQ.data?.get(event.id) ?? null;
+    const mine = st === "convocado";
+    const status = st ? CALLUP_LABEL[st] : "Convocatoria pendiente";
     header = <MatchHeader event={event} match={match} team={team} />;
     if (mine || isPlayerOnly) {
       personal = logistics?.call_time_at && mine
@@ -133,7 +133,7 @@ export function EventDetailSheet({ open, onOpenChange, event, canEdit, clubId, u
     else if (notes) rows.push(notes);
     actions = <>
       {place ? <DirectionsButton place={place} /> : null}
-      {matchTrip ? <button type="button" className={place ? secondaryBtn : primaryBtn} onClick={() => navigate({ to: "/agenda-viajes", search: { open: matchTrip.id } as any })}><Plane className="h-4 w-4" /> Mi viaje</button> : null}
+      {matchTrip && (mine || !isPlayerOnly) ? <button type="button" className={place ? secondaryBtn : primaryBtn} onClick={() => navigate({ to: "/agenda-viajes", search: { open: matchTrip.id } as any })}><Plane className="h-4 w-4" /> Mi viaje</button> : null}
     </>;
   } else if (event.trip_id) {
     const flights = tripExtra.data?.flights ?? [];

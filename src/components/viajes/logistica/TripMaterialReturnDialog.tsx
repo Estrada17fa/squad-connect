@@ -1,16 +1,7 @@
 import * as React from "react";
 import { toast } from "sonner";
 import { RotateCcw } from "lucide-react";
-import {
-  EntitySheet,
-  EntitySheetBody,
-  EntitySheetDescription,
-  EntitySheetFooter,
-  EntitySheetHeader,
-  EntitySheetTitle,
-} from "@/components/squad/EntitySheet";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { TextField, TripSheet } from "@/components/coord/viajes/form";
 import { personLabel } from "@/lib/tripLogistics";
 import {
   materialOutstanding,
@@ -64,15 +55,8 @@ export function TripMaterialReturnDialog({ open, onOpenChange, tripId, clubId, l
   };
 
   return (
-    <EntitySheet open={open} onOpenChange={onOpenChange} size="lg">
-      <EntitySheetHeader>
-        <EntitySheetTitle>Devolver material del viaje</EntitySheetTitle>
-        <EntitySheetDescription>
-          Registra el regreso total o parcial; lo devuelto vuelve a estar disponible en el inventario.
-        </EntitySheetDescription>
-      </EntitySheetHeader>
-
-      <EntitySheetBody>
+    <TripSheet open={open} onOpenChange={onOpenChange} title="Devolver material"
+      primary={pendientes.length > 0 ? { label: "Devolver todo", onClick: returnAll, loading: registerReturn.isPending } : null}>
         {pendientes.length === 0 ? (
           <p className="text-sm text-muted-foreground">Todo el material del viaje ya fue devuelto.</p>
         ) : (
@@ -80,7 +64,7 @@ export function TripMaterialReturnDialog({ open, onOpenChange, tripId, clubId, l
             {pendientes.map((l) => {
               const pending = materialOutstanding(l);
               return (
-                <div key={l.id} className="glass space-y-2 p-3">
+                <div key={l.id} className="space-y-2 rounded-[16px] bg-card p-3">
                   <div>
                     <p className="text-sm font-medium text-foreground">
                       {l.item?.name ?? "Material"} <span className="text-muted-foreground">×{l.quantity}</span>
@@ -90,7 +74,7 @@ export function TripMaterialReturnDialog({ open, onOpenChange, tripId, clubId, l
                     </p>
                   </div>
                   <div className="flex gap-2">
-                    <Input
+                    <TextField
                       type="number"
                       min={1}
                       max={pending}
@@ -98,34 +82,20 @@ export function TripMaterialReturnDialog({ open, onOpenChange, tripId, clubId, l
                       onChange={(e) => setQty((p) => ({ ...p, [l.id]: e.target.value }))}
                       className="w-24"
                     />
-                    <Button
+                    <button
                       type="button"
-                      size="sm"
-                      variant="outline"
-                      className="flex-1"
+                      className="flex h-11 flex-1 items-center justify-center rounded-xl bg-muted text-sm font-semibold disabled:opacity-50"
                       disabled={registerReturn.isPending}
                       onClick={() => submitOne(l)}
                     >
                       <RotateCcw className="mr-1.5 h-4 w-4" /> Registrar
-                    </Button>
+                    </button>
                   </div>
                 </div>
               );
             })}
           </>
         )}
-      </EntitySheetBody>
-
-      <EntitySheetFooter>
-        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-          Cerrar
-        </Button>
-        {pendientes.length > 0 ? (
-          <Button type="button" className="glow-primary" disabled={registerReturn.isPending} onClick={returnAll}>
-            Devolver todo
-          </Button>
-        ) : null}
-      </EntitySheetFooter>
-    </EntitySheet>
+    </TripSheet>
   );
 }

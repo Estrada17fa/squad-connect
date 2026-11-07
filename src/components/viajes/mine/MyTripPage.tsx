@@ -9,9 +9,10 @@ import type { OurMatch } from "@/hooks/useMatchOps";
 import { useTripFlights, type TripFlight } from "@/hooks/useTripFlights";
 import { useTripTransports } from "@/hooks/useTripTransports";
 import { useTripHotels } from "@/hooks/useTripHotels";
+import { useLocations } from "@/hooks/useLocations";
 import { useTripMeals } from "@/hooks/useTripMeals";
 import { MEAL_TYPE_LABEL } from "@/lib/tripLogistics";
-import { defaultLeg, myItinerary, nextItemId, tripDayLabel, type Leg, type MyItem } from "@/lib/misViajes";
+import { defaultLeg, isTappable, myItinerary, nextItemId, tripDayLabel, type Leg, type MyItem } from "@/lib/misViajes";
 import { PersonAvatar, TripMatchup, timeLabel, tripDates } from "@/components/coord/viajes/parts";
 import { PassViewer } from "./PassViewer";
 import { cn } from "@/lib/utils";
@@ -23,7 +24,6 @@ function itemIcon(it: MyItem) {
   if (it.kind === "cita") return MapPin;
   if (it.kind === "vuelo") return Plane;
   if (it.kind === "transporte") return it.transportType === "bus" ? Bus : Car;
-  if (it.kind === "hotel") return BedDouble;
   if (it.kind === "comida") return Utensils;
   return Trophy;
 }
@@ -107,6 +107,13 @@ export function MyTripPage({ trip, match, userId, onBack }: { trip: TripRow; mat
   const hotels = useTripHotels(trip.id).data ?? [];
   const meals = useTripMeals(trip.id).data ?? [];
   const contact = useContact(trip).data;
+  const locations = useLocations(trip.club_id).data ?? [];
+  const directionsFor = (it: MyItem): string | null => {
+    if (!isTappable(it)) return null;
+    const loc = it.locationId ? locations.find((l) => l.id === it.locationId) : null;
+    if (loc) return loc.latitude != null && loc.longitude != null ? `${loc.latitude},${loc.longitude}` : loc.address || loc.name;
+    return it.address?.trim() || null;
+  };
 
   const hasBoth = flights.some((f) => f.leg === "ida") && flights.some((f) => f.leg === "regreso");
   const [leg, setLeg] = React.useState<Leg | null>(null);
@@ -116,7 +123,7 @@ export function MyTripPage({ trip, match, userId, onBack }: { trip: TripRow; mat
   const openPass = (paths: string[], f: TripFlight) => setPass({ paths, title: `${f.leg === "regreso" ? "Regreso" : "Ida"} · ${f.origin} → ${f.destination}`, date: f.departs_at });
 
   const items = React.useMemo(() => {
-    const all = myItinerary({ userId, trip, flights, transports, hotels, meals, mealLabel: (t) => MEAL_TYPE_LABEL[t as keyof typeof MEAL_TYPE_LABEL] ?? t });
+    const all = myItinerary({ userId, trip, flights, transports, meals, mealLabel: (t) => MEAL_TYPE_LABEL[t as keyof typeof MEAL_TYPE_LABEL] ?? t });
     if (!hasBoth) return all;
     // Con Ida · Regreso: el itinerario muestra el tramo elegido (corte en el primer vuelo de regreso).
     const cut = flights.filter((f) => f.leg === "regreso").map((f) => f.departs_at).sort()[0]!;
@@ -128,7 +135,7 @@ export function MyTripPage({ trip, match, userId, onBack }: { trip: TripRow; mat
       if (tl) return tl === activeLeg;
       return activeLeg === "ida" ? i < idx : i >= idx;
     });
-  }, [userId, trip, flights, transports, hotels, meals, hasBoth, activeLeg]);
+  }, [userId, trip, flights, transports, meals, hasBoth, activeLeg]);
   const nextId = nextItemId(items);
   const now = new Date();
 
@@ -200,7 +207,7 @@ export function MyTripPage({ trip, match, userId, onBack }: { trip: TripRow; mat
                     );
                     return (
                       <li key={it.id}>
-                        {it.place ? <a href={mapsUrl(it.place)} target="_blank" rel="noopener noreferrer" aria-label={`Cómo llegar: ${it.title}`} className="block">{body}</a> : body}
+                        {directionsFor(it) ? <a href={mapsUrl(directionsFor(it)!)} target="_blank" rel="noopener noreferrer" aria-label={`Cómo llegar: ${it.title}`} className="block">{body}</a> : body}
                       </li>
                     );
                   })}

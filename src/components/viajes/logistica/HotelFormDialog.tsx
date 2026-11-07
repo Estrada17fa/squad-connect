@@ -1,19 +1,7 @@
 import * as React from "react";
 import { LocationPicker } from "@/components/calendar/LocationPicker";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
-import {
-  EntitySheet,
-  EntitySheetBody,
-  EntitySheetDescription,
-  EntitySheetFooter,
-  EntitySheetHeader,
-  EntitySheetTitle,
-} from "@/components/squad/EntitySheet";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { DateTimeField, Field, FormSection, MoreMenu, TextArea, TextField, TripSheet } from "@/components/coord/viajes/form";
 import { toLocalInputValue, fromLocalInputValue } from "@/lib/calendar-utils";
 import { useHotelMutations, type HotelInput, type TripHotel } from "@/hooks/useTripHotels";
 
@@ -76,83 +64,27 @@ export function HotelFormDialog({ open, onOpenChange, tripId, clubId, userId, ho
     );
   };
 
+  const del = () => {
+    if (!hotel) return;
+    removeHotel.mutate(hotel.id, {
+      onSuccess: () => { toast.success("Hotel eliminado"); onOpenChange(false); },
+      onError: (e: any) => toast.error(e.message ?? "No se pudo eliminar"),
+    });
+  };
+
   return (
-    <EntitySheet open={open} onOpenChange={onOpenChange} size="lg">
-      <EntitySheetHeader>
-        <EntitySheetTitle>{isEdit ? "Editar hotel" : "Nuevo hotel"}</EntitySheetTitle>
-        <EntitySheetDescription>Hospedaje del viaje. La rooming list se arma por cuartos.</EntitySheetDescription>
-      </EntitySheetHeader>
-
-      <EntitySheetBody>
-        <div className="space-y-1.5">
-          <Label htmlFor="h-name">Nombre *</Label>
-          <Input id="h-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Hotel Centro" />
-        </div>
-
-        <div className="space-y-1.5">
-          <LocationPicker
-            id="h-address"
-            label="Dirección"
-            placeholder="Busca el hotel o su dirección…"
-            clubId={clubId}
-            userId={userId}
-            value={address}
-            onChange={setAddress}
-            locationId={locationId}
-            onLocationIdChange={setLocationId}
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="h-in">Entrada *</Label>
-            <Input id="h-in" type="datetime-local" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="h-out">Salida</Label>
-            <Input id="h-out" type="datetime-local" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} />
-          </div>
-        </div>
-
-        <div className="space-y-1.5">
-          <Label htmlFor="h-phone">Teléfono</Label>
-          <Input id="h-phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label htmlFor="h-notes">Notas</Label>
-          <Textarea id="h-notes" rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />
-        </div>
-
-        {isEdit ? (
-          <Button
-            type="button"
-            variant="ghost"
-            className="text-destructive hover:text-destructive"
-            onClick={() => {
-              if (!hotel) return;
-              removeHotel.mutate(hotel.id, {
-                onSuccess: () => {
-                  toast.success("Hotel eliminado");
-                  onOpenChange(false);
-                },
-                onError: (e: any) => toast.error(e.message ?? "No se pudo eliminar"),
-              });
-            }}
-          >
-            <Trash2 className="mr-2 h-4 w-4" /> Eliminar hotel
-          </Button>
-        ) : null}
-      </EntitySheetBody>
-
-      <EntitySheetFooter>
-        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-          Cancelar
-        </Button>
-        <Button type="button" className="glow-primary" disabled={saveHotel.isPending} onClick={submit}>
-          {isEdit ? "Guardar cambios" : "Agregar hotel"}
-        </Button>
-      </EntitySheetFooter>
-    </EntitySheet>
+    <TripSheet open={open} onOpenChange={onOpenChange} title={isEdit ? "Editar hotel" : "Nuevo hotel"}
+      menu={isEdit ? <MoreMenu onDelete={del} deleteLabel="Eliminar hotel" confirmTitle={`¿Eliminar ${hotel?.name}?`} confirmDescription="Se borrarán sus cuartos y la rooming list." deleting={removeHotel.isPending} /> : null}
+      primary={{ label: isEdit ? "Guardar cambios" : "Agregar hotel", onClick: submit, loading: saveHotel.isPending }}>
+      <Field label="Nombre"><TextField value={name} onChange={(e) => setName(e.target.value)} placeholder="Hotel Centro" /></Field>
+      <LocationPicker id="h-address" label="Dirección" placeholder="Busca el hotel o su dirección…" clubId={clubId} userId={userId}
+        value={address} onChange={setAddress} locationId={locationId} onLocationIdChange={setLocationId} />
+      <FormSection>
+        <Field label="Entrada"><DateTimeField value={checkIn} onChange={setCheckIn} /></Field>
+        <Field label="Salida"><DateTimeField value={checkOut} onChange={setCheckOut} clearable placeholder="Opcional" /></Field>
+      </FormSection>
+      <Field label="Teléfono"><TextField value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" /></Field>
+      <Field label="Notas"><TextArea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} /></Field>
+    </TripSheet>
   );
 }

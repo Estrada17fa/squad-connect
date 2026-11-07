@@ -10,7 +10,7 @@ import { calendarRangeQueryOptions, useCalendarLive, useCalendarMonths, useCalen
 import { useEditableTeams } from "@/hooks/useEditableTeams";
 import { useTeamAccess } from "@/hooks/useTeamAccess";
 import { useTrips } from "@/hooks/useTrips";
-import { useOurMatches, useMatchCallups, type OurMatch } from "@/hooks/useMatchOps";
+import { useOurMatches, useCallupStates, CALLUP_LABEL, type OurMatch } from "@/hooks/useMatchOps";
 import { useMeetings } from "@/hooks/useCoordinacion";
 import { FlightPassViewer, type PassTarget } from "@/components/viajes/mine/PassViewer";
 import { EventDetailSheet } from "@/components/calendar/EventDetailSheet";
@@ -146,12 +146,11 @@ function AgendaProximoPage() {
   const shiftWeek = (n: number) => setSearch({ fecha: agendaDayKey(addDays(week.from, 7 * n)), dia: undefined });
   const shiftMonth = (n: number) => setSearch({ fecha: agendaDayKey(addMonthsTo(fecha, n)), dia: undefined });
 
-  const matchIds = React.useMemo(() => (isPlayerOnly ? [...matchByEvent.values()].map((m) => m.id) : []), [isPlayerOnly, matchByEvent]);
-  const callupsQ = useMatchCallups(matchIds);
-  const callupFor = (m: OurMatch | null) => {
-    if (!m || !isPlayerOnly || !callupsQ.data) return null;
-    const rows = callupsQ.data.filter((c) => c.match_id === m.id);
-    return rows.length === 0 ? "Convocatoria pendiente" : rows.some((c) => c.user_id === user.id) ? "Convocado" : "No convocado";
+  const matchEventIds = React.useMemo(() => (isPlayerOnly ? [...matchByEvent.keys()] : []), [isPlayerOnly, matchByEvent]);
+  const callupStatesQ = useCallupStates(matchEventIds);
+  const callupFor = (eventId: string) => {
+    const st = isPlayerOnly ? callupStatesQ.data?.get(eventId) : undefined;
+    return st ? CALLUP_LABEL[st] : null;
   };
 
   const [detailLeg, setDetailLeg] = React.useState<"ida" | "regreso" | undefined>(undefined);
@@ -186,7 +185,7 @@ function AgendaProximoPage() {
                     }
                     if (agendaKind(e) === "partido") {
                       const m = matchByEvent.get(e.id) ?? null;
-                      return <MatchCard key={it.id} event={e} match={m} callup={callupFor(m)} onOpen={() => open(e)} />;
+                      return <MatchCard key={it.id} event={e} match={m} callup={callupFor(e.id)} onOpen={() => open(e)} />;
                     }
                     const meeting = e.meeting_id ? meetingById.get(e.meeting_id) : null;
                     const mine = meeting?.attendees.find((a) => a.user_id === user.id);

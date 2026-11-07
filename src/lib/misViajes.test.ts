@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { defaultLeg, myItinerary, nextItemId, orderPassCards, sessionNoticeTargets, similarPeople, tripDayLabel, personDeparture, personReturn } from "./misViajes";
+import { defaultLeg, isTappable, myItinerary, nextItemId, orderPassCards, sessionNoticeTargets, similarPeople, tripDayLabel, personDeparture, personReturn } from "./misViajes";
 
 describe("defaultLeg", () => {
   const f = [{ leg: "ida", departs_at: "2026-11-07T10:00:00Z", arrives_at: "2026-11-07T12:00:00Z" }, { leg: "regreso", departs_at: "2026-11-09T10:00:00Z" }];
@@ -41,10 +41,21 @@ describe("myItinerary", () => {
       { id: "b", flight_code: "AM2", airline: null, origin: "SJD", destination: "MEX", departs_at: "2026-11-07T07:00:00Z", passengers: [{ user_id: "u2" }] },
     ],
     transports: [{ id: "t", label: "Autobús", transport_type: "bus", pickup_location: "MEX", destination: "Hotel", departs_at: "2026-11-07T09:00:00Z", passengers: [{ user_id: "u2" }] }],
-    hotels: [{ id: "h", name: "Hotel", address: null, check_in_at: "2026-11-07T10:00:00Z", check_out_at: null, rooms: [{ occupants: [{ user_id: "u1" }] }] }],
     meals: [],
   });
-  it("solo lo de la persona, en orden", () => expect(items.map((i) => i.id)).toEqual(["cita", "f-a", "hi-h"]));
+  it("solo lo de la persona, en orden", () => expect(items.map((i) => i.id)).toEqual(["cita", "f-a"]));
+  const all = myItinerary({
+    userId: "u1",
+    trip: { meeting_at: null, meeting_point: null, match_event: null },
+    flights: [],
+    transports: [{ id: "x", label: "Van", transport_type: "van", pickup_location: "Hotel", destination: "Estadio", departs_at: "2026-11-07T09:00:00Z", passengers: [] }],
+    meals: [{ id: "c", meal_type: "comida", scheduled_at: "2026-11-07T12:00:00Z", location: "Hotel" }],
+  });
+  it("transporte sin pasajeros asignados aplica a todos", () => expect(all.map((i) => i.id)).toContain("t-x"));
+  it("comida sin pasajeros aplica a todos", () => expect(all.map((i) => i.id)).toContain("m-c"));
+  it("sin check-in ni check-out del hotel", () => expect(all.some((i) => i.id.startsWith("h"))).toBe(false));
+  it("sin lugar del catálogo ni dirección no se puede tocar", () => expect(isTappable(all.find((i) => i.id === "m-c")!)).toBe(false));
+  it("con lugar del catálogo sí se puede tocar", () => expect(isTappable({ locationId: "L1", address: null })).toBe(true));
   it("siguiente por suceder", () => expect(nextItemId(items, new Date("2026-11-07T05:00:00Z"))).toBe("f-a"));
 });
 

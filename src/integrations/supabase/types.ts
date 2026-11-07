@@ -5714,6 +5714,7 @@ export type Database = {
         }
         Returns: string
       }
+      match_callup_state: { Args: { _event_id: string }; Returns: string }
       match_club_id: { Args: { _match_id: string }; Returns: string }
       match_notify_label: { Args: { _match_id: string }; Returns: string }
       match_team_id: { Args: { _match_id: string }; Returns: string }
