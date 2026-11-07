@@ -112,7 +112,8 @@ export function EventDetailSheet({ open, onOpenChange, event, canEdit, clubId, u
   let personal: React.ReactNode = null;
   const rows: React.ReactNode[] = [];
   let actions: React.ReactNode = null;
-  const notes = event.description && !isMedical ? <SheetRow key="notes" icon={StickyNote} main={event.description} /> : null;
+  // Descripciones autogeneradas ("Jornada 11") ya están en el encabezado.
+  const notes = event.description && !isMedical && !/^jornada \d+$/i.test(event.description.trim()) ? <SheetRow key="notes" icon={StickyNote} main={event.description} /> : null;
 
   if (isMatch) {
     const callups = callupsQ.data ?? [];
