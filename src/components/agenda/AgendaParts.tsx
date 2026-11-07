@@ -8,7 +8,7 @@ import type { OurMatch, OurMatchTeam } from "@/hooks/useMatchOps";
 import type { CalendarEventRow } from "@/hooks/useCalendarEvents";
 import { EVENT_TYPE_MAP } from "@/lib/eventTypes";
 import { agendaKind, rowTime } from "@/lib/agenda";
-import { formatRelativeDayLabel, formatTime } from "@/lib/calendar-utils";
+import { clubTimeZone, formatRelativeDayLabel, formatTime } from "@/lib/calendar-utils";
 import { cn } from "@/lib/utils";
 
 const short = (t: OurMatchTeam | null) => t?.short_name || t?.name || "Por definir";
@@ -122,7 +122,7 @@ export function AgendaRow({
   rsvp?: { status: string; onRespond: (s: "confirmado" | "rechazado") => void } | null;
   onClick: () => void;
 }) {
-  const t = rowTime(event);
+  const t = rowTime(event, clubTimeZone);
   const Icon = EVENT_TYPE_MAP[agendaKind(event) === "viaje" ? "viaje" : event.event_type]?.icon ?? MapPin;
   return (
     <div className="border-b border-border/40 last:border-b-0">

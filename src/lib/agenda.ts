@@ -78,12 +78,10 @@ export function pickHero<T extends Ev>(events: T[], myTripEventIds: Set<string> 
   return trip ?? future[0] ?? null;
 }
 
-/** Hora para la fila: { time:"5:15", ampm:"am" } o null si es todo el día. */
-export function rowTime(e: { starts_at: string; event_type: string; trip_id?: string | null }) {
+/** Hora para la fila (zona del club): { time:"5:15", ampm:"am" } o null si es todo el día. */
+export function rowTime(e: { starts_at: string; event_type: string; trip_id?: string | null }, timeZone?: string) {
   if (agendaKind(e) === "viaje") return null;
-  const d = new Date(e.starts_at);
-  let h = d.getHours();
-  const ampm = h < 12 ? "am" : "pm";
-  h = h % 12 || 12;
-  return { time: `${h}:${String(d.getMinutes()).padStart(2, "0")}`, ampm };
+  const parts = new Intl.DateTimeFormat("en-US", { timeZone, hour: "numeric", minute: "2-digit", hour12: true }).formatToParts(new Date(e.starts_at));
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
+  return { time: `${get("hour")}:${get("minute")}`, ampm: get("dayPeriod").toLowerCase() };
 }
