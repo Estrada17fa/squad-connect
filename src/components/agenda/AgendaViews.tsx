@@ -10,9 +10,9 @@ const dayNumFmt = new Intl.DateTimeFormat("es-MX", { weekday: "long", day: "nume
 const monthFmt = new Intl.DateTimeFormat("es-MX", { month: "long", year: "numeric" });
 const shortFmt = new Intl.DateTimeFormat("es-MX", { weekday: "short", day: "numeric", month: "short" });
 export const cap = (x: string) => x.charAt(0).toUpperCase() + x.slice(1);
-export const longDay = (d: Date) => cap(longDayFmt.format(d));
+export const longDay = (d: Date) => cap(longDayFmt.format(d).replace(",", ""));
 export const monthTitle = (d: Date) => cap(monthFmt.format(d));
-export const dayTitle = (d: Date) => cap(dayNumFmt.format(d));
+export const dayTitle = (d: Date) => cap(dayNumFmt.format(d).replace(",", ""));
 export const shortDay = (d: Date) => cap(shortFmt.format(d).replace(/\./g, ""));
 
 type DotItem = { event_type: string; trip_id?: string | null; starts_at: string };
