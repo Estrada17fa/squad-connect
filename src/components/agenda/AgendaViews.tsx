@@ -11,7 +11,7 @@ const monthFmt = new Intl.DateTimeFormat("es-MX", { month: "long", year: "numeri
 const shortFmt = new Intl.DateTimeFormat("es-MX", { weekday: "short", day: "numeric", month: "short" });
 export const cap = (x: string) => x.charAt(0).toUpperCase() + x.slice(1);
 export const longDay = (d: Date) => cap(longDayFmt.format(d).replace(",", ""));
-export const monthTitle = (d: Date) => cap(monthFmt.format(d));
+export const monthTitle = (d: Date) => cap(monthFmt.format(d).replace(" de ", " "));
 export const dayTitle = (d: Date) => cap(dayNumFmt.format(d).replace(",", ""));
 export const shortDay = (d: Date) => cap(shortFmt.format(d).replace(/\./g, ""));
 
