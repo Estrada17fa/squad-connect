@@ -11,7 +11,7 @@ import { useSessionByEvent } from "@/hooks/useTraining";
 import { useTeamAccess } from "@/hooks/useTeamAccess";
 import { useMatchByEvent, useMyMatchStatuses, CALLUP_LABEL, useMatchCallupList, useMatchLineups } from "@/hooks/useMatchOps";
 import { TripSheet } from "@/components/coord/viajes/form";
-import { Avatar, Pitch, PosTag, shortName, type PitchPlayer } from "@/components/coord/partidos/parts";
+import { Avatar as PAvatar, Pitch, PosTag, shortName, type PitchPlayer } from "@/components/coord/partidos/parts";
 import { lineupLabel } from "@/lib/partidos";
 import { meetingsQueryOptions } from "@/hooks/useCoordinacion";
 import { tripsQueryOptions } from "@/hooks/useTrips";
@@ -103,7 +103,7 @@ export function EventDetailSheet({ open, onOpenChange, event, canEdit, clubId, u
   const { canEditTeam } = useTeamAccess("entrenamientos");
   const [planForm, setPlanForm] = React.useState<null | "new" | "edit">(null);
   const [editing, setEditing] = React.useState(false);
-  React.useEffect(() => { if (!open) { setPlanForm(null); setEditing(false); } }, [open]);
+  React.useEffect(() => { if (!open) { setPlanForm(null); setEditing(false); setShowList(null); } }, [open]);
 
   const place = useSheetPlace(
     isMatch ? match?.location_id ?? event?.location_id : meeting ? meeting.location_id ?? event?.location_id : event?.location_id,
@@ -216,6 +216,31 @@ export function EventDetailSheet({ open, onOpenChange, event, canEdit, clubId, u
         {personal}
         {rows.length ? <SheetRows>{rows}</SheetRows> : null}
       </EventSheet>
+      <TripSheet open={!!showList} onOpenChange={(v) => !v && setShowList(null)} title={showList === "cancha" ? `Alineación${myStatus?.formation ? ` · ${myStatus.formation}` : ""}` : `Convocados (${callupList.length || myStatus?.callup_count || 0})`}>
+        {showList === "cancha" ? (
+          <div className="space-y-4 px-4 pb-6">
+            <Pitch formation={myStatus?.formation ?? null}
+              assigned={Object.fromEntries(lineupRows.filter((r) => r.role === "titular" && r.slot).map((r) => [r.slot!, r.user_id]))}
+              players={new Map<string, PitchPlayer>(callupList.map((c) => [c.user_id, { user_id: c.user_id, name: c.full_name, avatar_url: c.avatar_url, number: c.jersey_number }]))} />
+            <div>
+              <h3 className="mb-2 text-sm font-semibold">Suplentes</h3>
+              <div className="flex flex-wrap gap-3">{callupList.filter((c) => !lineupRows.some((r) => r.user_id === c.user_id && r.role === "titular")).map((c) => (
+                <div key={c.user_id} className="flex w-14 flex-col items-center gap-1 text-center"><PAvatar name={c.full_name} url={c.avatar_url} number={c.jersey_number} /><span className="w-full truncate text-[10px] font-semibold">{shortName(c.full_name).split(" ")[0]}</span></div>
+              ))}</div>
+            </div>
+          </div>
+        ) : (
+          <div className="divide-y divide-border/50 px-4 pb-6">
+            {callupList.map((c) => (
+              <div key={c.user_id} className="flex items-center gap-3 py-2.5">
+                <PAvatar name={c.full_name} url={c.avatar_url} number={c.jersey_number} />
+                <span className="min-w-0 flex-1 truncate text-sm font-semibold">{shortName(c.full_name)}</span>
+                <PosTag position={c.player_position} />
+              </div>
+            ))}
+          </div>
+        )}
+      </TripSheet>
       {passTarget ? <FlightPassViewer target={passTarget} userId={userId} onClose={() => setPassTarget(null)} /> : null}
       {editing && clubId ? <EventFormDialog open onOpenChange={(v) => !v && setEditing(false)} clubId={clubId} teams={teams} userId={userId} event={event} /> : null}
       {planForm && clubId ? (
