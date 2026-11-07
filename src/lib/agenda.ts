@@ -85,3 +85,47 @@ export function rowTime(e: { starts_at: string; event_type: string; trip_id?: st
   const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
   return { time: `${get("hour")}:${get("minute")}`, ampm: get("dayPeriod").toLowerCase() };
 }
+
+/* ---------- Tira de la semana ---------- */
+
+/** Lunes (00:00 local) de la semana de `d`. */
+export function weekStart(d: Date): Date {
+  const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const dow = (x.getDay() + 6) % 7;
+  x.setDate(x.getDate() - dow);
+  return x;
+}
+
+/** Los 7 días (lunes a domingo) a partir de `start`. */
+export function weekDays(start: Date): Date[] {
+  return Array.from({ length: 7 }, (_, i) => new Date(start.getFullYear(), start.getMonth(), start.getDate() + i));
+}
+
+export const sameDay = (a: Date, b: Date) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+export const agendaDayKey = dayKey;
+
+/** Puntos del día: partido primero (verde), luego el resto (gris); máximo 3. */
+export function dayDots(events: { event_type: string; trip_id?: string | null; starts_at: string }[], day: Date): ("partido" | "otro")[] {
+  const kinds = events.filter((e) => sameDay(new Date(e.starts_at), day)).map((e) => (agendaKind(e) === "partido" ? "partido" as const : "otro" as const));
+  kinds.sort((a, b) => (a === b ? 0 : a === "partido" ? -1 : 1));
+  return kinds.slice(0, 3);
+}
+
+/* ---------- Momentos clave de un viaje ---------- */
+
+export interface MomentFlight { id: string; leg: "ida" | "regreso"; origin: string; destination: string; departs_at: string; arrives_at: string | null; flight_code: string }
+export interface TripMoment { key: string; leg: "ida" | "regreso"; at: string; flight: MomentFlight | null }
+
+/**
+ * Salida (o vuelo de ida, el primero) y regreso (o vuelo de regreso, el primero).
+ * Sin regreso (ni vuelo ni fecha) solo hay tarjeta de salida.
+ */
+export function tripMoments(trip: { id: string; departure_at: string; return_at: string | null }, flights: MomentFlight[]): TripMoment[] {
+  const first = (leg: "ida" | "regreso") => flights.filter((f) => f.leg === leg).sort((a, b) => a.departs_at.localeCompare(b.departs_at))[0] ?? null;
+  const ida = first("ida");
+  const vuelta = first("regreso");
+  const out: TripMoment[] = [{ key: `${trip.id}:ida`, leg: "ida", at: ida?.departs_at ?? trip.departure_at, flight: ida }];
+  const backAt = vuelta?.departs_at ?? trip.return_at;
+  if (backAt) out.push({ key: `${trip.id}:regreso`, leg: "regreso", at: backAt, flight: vuelta });
+  return out;
+}
