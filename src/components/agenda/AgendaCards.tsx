@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 
 const mapsUrl = (q: string) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
 const short = (t: OurMatchTeam | null) => t?.short_name || t?.name || "Por definir";
-function useCrestTeam(t: OurMatchTeam | null) {
+export function useCrestTeam(t: OurMatchTeam | null) {
   const { data: url } = useCrestUrl(t?.crest_path);
   return { shortName: short(t), src: url ?? null, own: !!t?.is_our_team && !t?.crest_path };
 }
