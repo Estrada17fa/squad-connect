@@ -133,7 +133,6 @@ export function useUpcomingEvents(clubId: string | null | undefined, limit = 5) 
         .limit(limit + 10);
       if (error) throw error;
       return visible(data).slice(0, limit);
-      return visible(data);
     },
   });
 }
