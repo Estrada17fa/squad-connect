@@ -1,6 +1,6 @@
 import * as React from "react";
 import { toast } from "sonner";
-import { Briefcase, Check, Luggage, Ban } from "lucide-react";
+import { Briefcase, Luggage, Ban } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { personInitials, personLabel, type MiniProfile } from "@/lib/tripLogistics";
@@ -74,91 +74,45 @@ export function FlightLuggageSection({ tripId, flight, canEdit }: Props) {
     );
   }
 
+  const short = (pr: MiniProfile | null | undefined) => { const n = personLabel(pr).split(" "); return n.length > 1 ? `${n[0]} ${n[1]}` : n[0]; };
   return (
     <div className="space-y-2">
-      <p className="text-xs text-muted-foreground">
-        {checkedCount} documenta{checkedCount === 1 ? "" : "n"} · {carryCount} con maleta de mano · {noneCount} sin
-        equipaje
+      <p className="text-sm font-medium">
+        {checkedCount} documentada{checkedCount === 1 ? "" : "s"} · {carryCount} de mano{noneCount ? ` · ${noneCount} sin equipaje` : ""}
       </p>
-
-      <ul className="space-y-1">
+      <ul className="divide-y divide-border/40 overflow-hidden rounded-[16px] bg-card">
         {people.map((p) => {
           const f = flagsOf(p.user_id);
           const none = f.captured && !f.checked_bag && !f.carry_on;
           return (
-            <li key={p.user_id} className="glass flex items-center gap-3 p-2.5">
-              <Avatar className="h-8 w-8">
+            <li key={p.user_id} className="flex items-center gap-3 px-3 py-2">
+              <Avatar className="h-8 w-8 shrink-0">
                 <AvatarImage src={p.profile?.avatar_url ?? undefined} alt="" />
                 <AvatarFallback className="text-xs">{personInitials(p.profile)}</AvatarFallback>
               </Avatar>
-              <span className="min-w-0 flex-1 truncate text-sm text-foreground">{personLabel(p.profile)}</span>
-
-              <div className="flex shrink-0 flex-wrap justify-end gap-1.5">
-                <LuggageChip
-                  active={f.checked_bag}
-                  canEdit={canEdit}
-                  icon={Luggage}
-                  label="Documentada"
-                  onClick={() => toggle(p.user_id, "checked_bag")}
-                />
-                <LuggageChip
-                  active={f.carry_on}
-                  canEdit={canEdit}
-                  icon={Briefcase}
-                  label="Mano"
-                  onClick={() => toggle(p.user_id, "carry_on")}
-                />
-                <LuggageChip
-                  active={none}
-                  canEdit={canEdit}
-                  icon={Ban}
-                  label="Sin equipaje"
-                  onClick={() => setNone(p.user_id, none)}
-                />
+              <span className="min-w-0 flex-1 truncate text-sm">{short(p.profile)}</span>
+              <div className="flex shrink-0 gap-1">
+                <LuggageIcon active={f.checked_bag} canEdit={canEdit} icon={Luggage} label="Documentada" onClick={() => toggle(p.user_id, "checked_bag")} />
+                <LuggageIcon active={f.carry_on} canEdit={canEdit} icon={Briefcase} label="De mano" onClick={() => toggle(p.user_id, "carry_on")} />
+                <LuggageIcon active={none} canEdit={canEdit} icon={Ban} label="Sin equipaje" onClick={() => setNone(p.user_id, none)} />
               </div>
-
             </li>
           );
         })}
       </ul>
+      <p className="flex flex-wrap gap-x-3 text-[11px] text-muted-foreground">
+        <span className="inline-flex items-center gap-1"><Luggage className="h-3 w-3" /> Documentada</span>
+        <span className="inline-flex items-center gap-1"><Briefcase className="h-3 w-3" /> Mano</span>
+        <span className="inline-flex items-center gap-1"><Ban className="h-3 w-3" /> Sin equipaje</span>
+      </p>
     </div>
   );
 }
 
-function LuggageChip({
-  active,
-  canEdit,
-  icon: Icon,
-  label,
-  onClick,
-}: {
-  active: boolean;
-  canEdit: boolean;
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  onClick: () => void;
+function LuggageIcon({ active, canEdit, icon: Icon, label, onClick }: {
+  active: boolean; canEdit: boolean; icon: React.ComponentType<{ className?: string }>; label: string; onClick: () => void;
 }) {
-  const className = cn(
-    "flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] transition-colors",
-    active ? "border-primary/60 bg-primary/15 text-primary" : "border-border/60 text-muted-foreground",
-    canEdit ? "hover:bg-white/5" : "",
-  );
-
-  const content = (
-    <>
-      <Icon className="h-3.5 w-3.5" />
-      {label}
-      {active ? <Check className="h-3 w-3" /> : null}
-    </>
-  );
-
-  if (!canEdit) {
-    return active ? <span className={className}>{content}</span> : null;
-  }
-
-  return (
-    <button type="button" className={className} onClick={onClick} aria-pressed={active}>
-      {content}
-    </button>
-  );
+  const cls = cn("flex h-9 w-9 items-center justify-center rounded-full transition-colors", active ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground/60");
+  if (!canEdit) return <span className={cls} aria-label={`${label}${active ? " · sí" : ""}`}><Icon className="h-4 w-4" /></span>;
+  return <button type="button" className={cls} onClick={onClick} aria-pressed={active} aria-label={label}><Icon className="h-4 w-4" /></button>;
 }

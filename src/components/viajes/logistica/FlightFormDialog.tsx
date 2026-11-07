@@ -1,21 +1,9 @@
 import * as React from "react";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
-import {
-  EntitySheet,
-  EntitySheetBody,
-  EntitySheetDescription,
-  EntitySheetFooter,
-  EntitySheetHeader,
-  EntitySheetTitle,
-} from "@/components/squad/EntitySheet";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { toLocalInputValue, fromLocalInputValue } from "@/lib/calendar-utils";
 import { LEG_LABEL, type TripLeg } from "@/lib/tripLogistics";
 import { useFlightMutations, type FlightInput, type TripFlight } from "@/hooks/useTripFlights";
+import { DateTimeField, Field, FormError, FormSection, MoreMenu, SegmentedField, TextArea, TextField, TripSheet } from "@/components/coord/viajes/form";
 
 interface Props {
   open: boolean;
@@ -25,6 +13,8 @@ interface Props {
   flight?: TripFlight | null;
   defaultLeg?: TripLeg;
 }
+
+const LEGS: { key: TripLeg; label: string }[] = [{ key: "ida", label: LEG_LABEL.ida }, { key: "regreso", label: LEG_LABEL.regreso }];
 
 export function FlightFormDialog({ open, onOpenChange, tripId, userId, flight, defaultLeg = "ida" }: Props) {
   const isEdit = !!flight;
@@ -67,9 +57,7 @@ export function FlightFormDialog({ open, onOpenChange, tripId, userId, flight, d
     if (!code.trim()) return fail("El número de vuelo es obligatorio");
     if (!departsAt) return fail("La fecha y hora de salida son obligatorias");
     if (!origin.trim() || !destination.trim()) return fail("Origen y destino son obligatorios");
-    if (arrivesAt && new Date(arrivesAt) < new Date(departsAt)) {
-      return fail("La llegada no puede ser antes de la salida");
-    }
+    if (arrivesAt && new Date(arrivesAt) < new Date(departsAt)) return fail("La llegada no puede ser antes de la salida");
     const input: FlightInput = {
       leg,
       flight_code: code.trim(),
@@ -94,118 +82,37 @@ export function FlightFormDialog({ open, onOpenChange, tripId, userId, flight, d
     );
   };
 
+  const del = () => {
+    if (!flight) return;
+    remove.mutate(flight.id, {
+      onSuccess: () => { toast.success("Vuelo eliminado"); onOpenChange(false); },
+      onError: (e: any) => toast.error(e.message ?? "No se pudo eliminar"),
+    });
+  };
+
   return (
-    <EntitySheet open={open} onOpenChange={onOpenChange} size="lg">
-      <EntitySheetHeader>
-        <EntitySheetTitle>{isEdit ? "Editar vuelo" : "Nuevo vuelo"}</EntitySheetTitle>
-        <EntitySheetDescription>Datos del vuelo para el itinerario del viaje.</EntitySheetDescription>
-      </EntitySheetHeader>
-
-      <EntitySheetBody>
-        {error ? (
-          <p className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-            {error}
-          </p>
-        ) : null}
-
-        <div className="space-y-1.5">
-          <Label>Tramo</Label>
-          <div className="flex h-10 items-center rounded-md border border-input bg-muted/30 px-3 text-sm text-foreground">
-            {LEG_LABEL[leg]}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            El vuelo pertenece a la pestaña desde la que lo estás gestionando.
-          </p>
-        </div>
-
-
+    <TripSheet open={open} onOpenChange={onOpenChange} title={isEdit ? "Editar vuelo" : "Nuevo vuelo"}
+      menu={isEdit ? <MoreMenu onDelete={del} deleteLabel="Eliminar vuelo" confirmTitle={`¿Eliminar el vuelo ${flight?.flight_code}?`} confirmDescription="Se borrarán sus pasajeros, equipaje y pases de abordar." deleting={remove.isPending} /> : null}
+      primary={{ label: isEdit ? "Guardar cambios" : "Agregar vuelo", onClick: submit, loading: save.isPending }}>
+      <FormError>{error}</FormError>
+      <Field label="Tramo"><SegmentedField items={LEGS} value={leg} onChange={setLeg} /></Field>
+      <FormSection>
         <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="f-code">Vuelo *</Label>
-            <Input id="f-code" value={code} onChange={(e) => setCode(e.target.value)} placeholder="AM 123" />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="f-airline">Aerolínea</Label>
-            <Input id="f-airline" value={airline} onChange={(e) => setAirline(e.target.value)} placeholder="Aeroméxico" />
-          </div>
+          <Field label="Vuelo"><TextField value={code} onChange={(e) => setCode(e.target.value)} placeholder="AM 123" /></Field>
+          <Field label="Aerolínea"><TextField value={airline} onChange={(e) => setAirline(e.target.value)} placeholder="Aeroméxico" /></Field>
+          <Field label="Origen"><TextField value={origin} onChange={(e) => setOrigin(e.target.value)} placeholder="SJD" /></Field>
+          <Field label="Destino"><TextField value={destination} onChange={(e) => setDestination(e.target.value)} placeholder="MEX" /></Field>
         </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="f-origin">Origen *</Label>
-            <Input id="f-origin" value={origin} onChange={(e) => setOrigin(e.target.value)} placeholder="SJD" />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="f-dest">Destino *</Label>
-            <Input id="f-dest" value={destination} onChange={(e) => setDestination(e.target.value)} placeholder="MEX" />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="f-dep">Sale *</Label>
-            <Input id="f-dep" type="datetime-local" value={departsAt} onChange={(e) => setDepartsAt(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="f-arr">Llega</Label>
-            <Input id="f-arr" type="datetime-local" value={arrivesAt} onChange={(e) => setArrivesAt(e.target.value)} />
-          </div>
-        </div>
-
-        <div className="space-y-1.5">
-          <Label htmlFor="f-gate">Puerta / sala</Label>
-          <Input id="f-gate" value={gate} onChange={(e) => setGate(e.target.value)} placeholder="B7" />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label htmlFor="f-baggage">Instrucción de equipaje</Label>
-          <Textarea
-            id="f-baggage"
-            rows={2}
-            value={baggage}
-            onChange={(e) => setBaggage(e.target.value)}
-            placeholder="Todos con 1 maleta de mano. Las maletas del equipo se documentan en recepción del aeropuerto."
-          />
-          <p className="text-xs text-muted-foreground">
-            Se muestra a todos los pasajeros de este vuelo.
-          </p>
-        </div>
-
-        <div className="space-y-1.5">
-          <Label htmlFor="f-notes">Notas</Label>
-          <Textarea id="f-notes" rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />
-        </div>
-
-
-        {isEdit ? (
-          <Button
-            type="button"
-            variant="ghost"
-            className="text-destructive hover:text-destructive"
-            onClick={() => {
-              if (!flight) return;
-              remove.mutate(flight.id, {
-                onSuccess: () => {
-                  toast.success("Vuelo eliminado");
-                  onOpenChange(false);
-                },
-                onError: (e: any) => toast.error(e.message ?? "No se pudo eliminar"),
-              });
-            }}
-          >
-            <Trash2 className="mr-2 h-4 w-4" /> Eliminar vuelo
-          </Button>
-        ) : null}
-      </EntitySheetBody>
-
-      <EntitySheetFooter>
-        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-          Cancelar
-        </Button>
-        <Button type="button" className="glow-primary" disabled={save.isPending} onClick={submit}>
-          {save.isPending ? "Guardando…" : isEdit ? "Guardar cambios" : "Agregar vuelo"}
-        </Button>
-      </EntitySheetFooter>
-    </EntitySheet>
+      </FormSection>
+      <FormSection>
+        <Field label="Sale"><DateTimeField value={departsAt} onChange={setDepartsAt} /></Field>
+        <Field label="Llega"><DateTimeField value={arrivesAt} onChange={setArrivesAt} clearable placeholder="Opcional" /></Field>
+        <Field label="Puerta o sala"><TextField value={gate} onChange={(e) => setGate(e.target.value)} placeholder="B7" /></Field>
+      </FormSection>
+      <FormSection>
+        <Field label="Instrucción de equipaje"><TextArea rows={2} value={baggage} onChange={(e) => setBaggage(e.target.value)} placeholder="1 maleta de mano por persona" /></Field>
+        <Field label="Notas"><TextArea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} /></Field>
+      </FormSection>
+    </TripSheet>
   );
 }
