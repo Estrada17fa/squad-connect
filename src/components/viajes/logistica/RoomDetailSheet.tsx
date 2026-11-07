@@ -1,21 +1,13 @@
 import * as React from "react";
 import { toast } from "sonner";
-import { BedDouble, Pencil, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  EntitySheet,
-  EntitySheetBody,
-  EntitySheetFooter,
-  EntitySheetHeader,
-  EntitySheetTitle,
-} from "@/components/squad/EntitySheet";
-import { DetailSection } from "@/components/squad/DetailSheet";
-import type { MiniProfile } from "@/lib/tripLogistics";
+import { BedDouble, StickyNote, Users } from "lucide-react";
+import { DetailHero, MoreMenu, TripSheet } from "@/components/coord/viajes/form";
+import { SheetRow, SheetRows } from "@/components/agenda/EventSheet";
+import { PersonAvatar } from "@/components/coord/viajes/parts";
+import { personLabel, type MiniProfile } from "@/lib/tripLogistics";
 import { useHotelMutations, type TripHotel, type TripRoom } from "@/hooks/useTripHotels";
-import { PersonChips } from "./PersonChips";
 import { RoomFormDialog } from "./RoomFormDialog";
 import { PassengerAssignDialog, type AssignCandidate } from "./PassengerAssignDialog";
-import { DeleteAction } from "./DeleteAction";
 import { useTripRefresh } from "@/hooks/useTripChannel";
 
 interface Props {
@@ -46,66 +38,29 @@ export function RoomDetailSheet({ open, onOpenChange, hotel, room, tripId, trave
     [allRooms, current?.id],
   );
 
-  if (!current || !hotel) {
-    return <EntitySheet open={open} onOpenChange={onOpenChange}><EntitySheetHeader><EntitySheetTitle>Cuarto</EntitySheetTitle></EntitySheetHeader><EntitySheetBody /></EntitySheet>;
-  }
+  if (!current || !hotel) return null;
 
   return (
     <>
-      <EntitySheet open={open} onOpenChange={onOpenChange} size="md">
-        <EntitySheetHeader>
-          <EntitySheetTitle className="flex items-center gap-2">
-            <BedDouble className="h-4 w-4 text-primary" /> Cuarto {current.room_label}
-          </EntitySheetTitle>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {canEdit ? (
-              <>
-                <Button size="sm" variant="secondary" onClick={() => setEditOpen(true)}>
-                  <Pencil className="mr-2 h-3.5 w-3.5" /> Editar
-                </Button>
-                <DeleteAction
-                  label="Eliminar cuarto"
-                  title={`¿Eliminar el cuarto ${current.room_label}?`}
-                  description="Se quitarán sus ocupantes."
-                  successMessage="Cuarto eliminado"
-                  loading={removeRoom.isPending}
-                  onDelete={() => removeRoom.mutateAsync(current.id)}
-                  onDeleted={() => {
-                    refresh();
-                    onOpenChange(false);
-                  }}
-                />
-              </>
-            ) : null}
+      <TripSheet open={open} onOpenChange={onOpenChange} title="Cuarto"
+        menu={canEdit ? <MoreMenu onEdit={() => setEditOpen(true)} deleteLabel="Eliminar cuarto" confirmTitle={`¿Eliminar el cuarto ${current.room_label}?`} confirmDescription="Se quitarán sus ocupantes." deleting={removeRoom.isPending}
+          onDelete={() => removeRoom.mutateAsync(current.id).then(() => { toast.success("Cuarto eliminado"); refresh(); onOpenChange(false); }).catch((e: any) => toast.error(e.message ?? "No se pudo eliminar"))} /> : null}>
+        <DetailHero icon={BedDouble} title={`Cuarto ${current.room_label}`} sub={hotel.name} />
+        {current.notes ? <SheetRows><SheetRow icon={StickyNote} main={current.notes} /></SheetRows> : null}
+        <section className="space-y-2">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold">Ocupantes</h3>
+            {canEdit ? <button type="button" onClick={() => setOccupantsOpen(true)} className="inline-flex items-center gap-1 text-xs font-semibold text-primary"><Users className="h-3.5 w-3.5" /> Asignar</button> : null}
           </div>
-        </EntitySheetHeader>
-
-        <EntitySheetBody>
-          {current.notes ? (
-            <DetailSection title="Notas">
-              <p className="text-sm text-muted-foreground">{current.notes}</p>
-            </DetailSection>
-          ) : null}
-
-          <DetailSection title="Ocupantes">
-            <PersonChips
-              people={current.occupants.map((o) => ({ id: o.id, profile: o.profile as MiniProfile | null }))}
-              emptyLabel="Cuarto sin ocupantes"
-            />
-            {canEdit ? (
-              <Button type="button" size="sm" variant="outline" onClick={() => setOccupantsOpen(true)}>
-                <Users className="mr-1.5 h-4 w-4" /> Asignar ocupantes
-              </Button>
-            ) : null}
-          </DetailSection>
-        </EntitySheetBody>
-
-        <EntitySheetFooter>
-          <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-            Cerrar
-          </Button>
-        </EntitySheetFooter>
-      </EntitySheet>
+          {current.occupants.length ? (
+            <ul className="divide-y divide-border/40 overflow-hidden rounded-[16px] bg-card">
+              {current.occupants.map((o) => (
+                <li key={o.id} className="flex items-center gap-3 px-3 py-2.5"><PersonAvatar p={o.profile as MiniProfile | null} /><span className="truncate text-sm">{personLabel(o.profile as MiniProfile | null)}</span></li>
+              ))}
+            </ul>
+          ) : <p className="text-sm text-muted-foreground">Cuarto sin ocupantes.</p>}
+        </section>
+      </TripSheet>
 
       {canEdit ? (
         <RoomFormDialog open={editOpen} onOpenChange={setEditOpen} tripId={tripId} hotelId={hotel.id} room={current} />
