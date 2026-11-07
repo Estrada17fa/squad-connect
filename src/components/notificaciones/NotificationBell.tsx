@@ -1,3 +1,4 @@
+import { useApp } from "@/components/squad/app-context";
 import * as React from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Bell, BellOff, CheckCheck, Megaphone, type LucideIcon } from "lucide-react";
@@ -128,6 +129,7 @@ export function NotificationPanel({
   api: NotificationsApi;
 }) {
   const navigate = useNavigate();
+  const { canViewModule } = useApp();
   const { items, unread, read, isLoading, markRead, markAllRead, unreadCount } = api;
   const [tab, setTab] = React.useState<"nuevas" | "todas">("nuevas");
 
@@ -138,7 +140,9 @@ export function NotificationPanel({
       toast.info("Esta notificación ya no tiene un elemento asociado.");
       return;
     }
-    if (!canOpenModule(target.module)) {
+    // Viajes: los viajeros (vista personal) lo ven en Agenda › Mis viajes aunque no gestionen el módulo.
+    const tripTraveler = target.module === "viajes" && canViewModule("viajes");
+    if (!canOpenModule(target.module) && !tripTraveler) {
       toast.info("Ya no tienes acceso a este módulo.");
       return;
     }
