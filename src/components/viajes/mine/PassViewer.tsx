@@ -140,7 +140,8 @@ export function PassViewer({ paths, title, date, onClose }: { paths: string[]; t
 /** Abre el visor directo para un vuelo (busca los pases de la persona). */
 export function FlightPassViewer({ target, userId, onClose }: { target: PassTarget; userId: string; onClose: () => void }) {
   const q = useMyFlightPasses(target.flightId, userId);
-  if (q.isLoading) return null;
-  if (!q.data?.length) { onClose(); return null; }
+  const empty = !q.isLoading && !q.data?.length;
+  React.useEffect(() => { if (empty) onClose(); }, [empty, onClose]);
+  if (q.isLoading || !q.data?.length) return null;
   return <PassViewer paths={q.data} title={target.title} date={target.date} onClose={onClose} />;
 }
