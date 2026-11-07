@@ -9,8 +9,8 @@ import type { TeamOption } from "@/hooks/useAccess";
 import { useSessionByEvent } from "@/hooks/useTraining";
 import { useTeamAccess } from "@/hooks/useTeamAccess";
 import { useMatchByEvent, useMatchCallups, useMatchLogistics } from "@/hooks/useMatchOps";
-import { useMeetings } from "@/hooks/useCoordinacion";
-import { useTrips } from "@/hooks/useTrips";
+import { meetingsQueryOptions } from "@/hooks/useCoordinacion";
+import { tripsQueryOptions } from "@/hooks/useTrips";
 import { EVENT_TYPE_MAP } from "@/lib/eventTypes";
 import { agendaKind, rowTime, tripMoments } from "@/lib/agenda";
 import { getClubTimeZone } from "@/lib/calendar-utils";
@@ -59,9 +59,10 @@ export function EventDetailSheet({ open, onOpenChange, event, canEdit, clubId, u
   const match = matchQ.data ?? null;
   const callupsQ = useMatchCallups(match ? [match.id] : []);
   const logistics = (useMatchLogistics(match ? [match.id] : []).data ?? [])[0] ?? null;
-  const meetings = useMeetings(open && event?.meeting_id ? clubId : null).data;
+  // Solo lectura de caché/consulta: el aviso en vivo ya lo tiene la pantalla que abre la hoja.
+  const meetings = useQuery({ ...meetingsQueryOptions(clubId), enabled: open && !!event?.meeting_id && !!clubId }).data;
   const meeting = event?.meeting_id ? meetings?.find((m) => m.id === event.meeting_id) ?? null : null;
-  const trips = useTrips(open ? clubId : null, null).data;
+  const trips = useQuery({ ...tripsQueryOptions(clubId, null), enabled: open && !!clubId }).data;
   const trip = event?.trip_id ? trips?.find((t) => t.id === event.trip_id) ?? null : null;
   const matchTrip = isMatch && event ? trips?.find((t) => t.match_event_id === event.id && isPlayerVisible(t) && t.travelers.some((x) => x.user_id === userId)) ?? null : null;
 
