@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ClipboardList, Clock, ListChecks, Lock, MapPin, Plane, Shirt, StickyNote, Target, Ticket, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useApp } from "@/components/squad/AppLayout";
 import type { CalendarEventRow } from "@/hooks/useCalendarEvents";
 import type { TeamOption } from "@/hooks/useAccess";
 import { useSessionByEvent } from "@/hooks/useTraining";
@@ -36,7 +37,7 @@ interface Props {
 
 const tz = () => getClubTimeZone();
 const hm = (iso: string) => { const t = rowTime({ starts_at: iso, event_type: "evento" }, tz())!; return `${t.time} ${t.ampm}`; };
-const dayShort = (iso: string) => new Intl.DateTimeFormat("es-MX", { timeZone: tz(), weekday: "short", day: "numeric", month: "short" }).format(new Date(iso)).replace(/\./g, "").replace(/^./, (c) => c.toUpperCase());
+const dayShort = (iso: string) => new Intl.DateTimeFormat("es-MX", { timeZone: tz(), weekday: "short", day: "numeric", month: "short" }).format(new Date(iso)).replace(/\./g, "").replace(" de ", " ").replace(/^./, (c) => c.toUpperCase());
 const dayLong = (iso: string) => new Intl.DateTimeFormat("es-MX", { timeZone: tz(), weekday: "long", day: "numeric", month: "long" }).format(new Date(iso)).replace(",", "").replace(/^./, (c) => c.toUpperCase());
 const when = (e: { starts_at: string; ends_at: string | null }) => `${dayShort(e.starts_at)} · ${hm(e.starts_at)}${e.ends_at ? ` – ${hm(e.ends_at)}` : ""}`;
 
@@ -47,6 +48,7 @@ const when = (e: { starts_at: string; ends_at: string | null }) => `${dayShort(e
  */
 export function EventDetailSheet({ open, onOpenChange, event, canEdit, clubId, userId, teams, teamName, tripLeg }: Props) {
   const navigate = useNavigate();
+  const { isPlayerOnly } = useApp();
   const qc = useQueryClient();
   const kind = event ? agendaKind(event) : "evento";
   const isMedical = event?.event_type === "medico";
@@ -117,7 +119,7 @@ export function EventDetailSheet({ open, onOpenChange, event, canEdit, clubId, u
     const mine = callups.some((c) => c.user_id === userId);
     const status = callups.length === 0 ? "Convocatoria pendiente" : mine ? "Convocado" : "No convocado";
     header = <MatchHeader event={event} match={match} team={team} />;
-    if (callups.length === 0 || mine || teams.length === 0) {
+    if (mine || isPlayerOnly) {
       personal = logistics?.call_time_at && mine
         ? <PersonalBlock label="Tu citación" main={hm(logistics.call_time_at)} sub={logistics.meeting_point} status={status} />
         : <PersonalBlock label="Tu convocatoria" status={status} />;
