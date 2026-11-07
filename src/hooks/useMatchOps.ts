@@ -61,6 +61,9 @@ export interface MatchLogisticsRow {
   kit: string | null;
   logistics_notes: string | null;
   post_match_notes: string | null;
+  callup_published_at: string | null;
+  lineup_published_at: string | null;
+  formation: string | null;
 }
 
 /* ------------------------------------------------------------------ */
@@ -264,12 +267,15 @@ export interface SaveLogisticsInput {
   matchId: string;
   clubId: string;
   createdBy: string;
-  call_time_at: string | null;
-  meeting_location_id: string | null;
-  meeting_point: string | null;
-  kit: string | null;
-  logistics_notes: string | null;
-  post_match_notes: string | null;
+  call_time_at?: string | null;
+  meeting_location_id?: string | null;
+  meeting_point?: string | null;
+  kit?: string | null;
+  logistics_notes?: string | null;
+  post_match_notes?: string | null;
+  callup_published_at?: string | null;
+  lineup_published_at?: string | null;
+  formation?: string | null;
 }
 
 export function useSaveMatchLogistics() {
@@ -354,24 +360,99 @@ export const CALLUP_LABEL: Record<CallupState, string> = {
   no_convocado: "No convocado",
 };
 
-/**
- * Estado de convocatoria del usuario por evento de partido, sin leer la lista
- * de convocados (un jugador no convocado no puede verla).
- */
-export function useCallupStates(eventIds: string[]) {
-  const key = React.useMemo(() => [...eventIds].sort().join(","), [eventIds]);
+/** Lo que la persona que consulta puede saber de un partido (get_my_match_status). */
+export interface MyMatchStatus {
+  state: CallupState;
+  match_id: string;
+  call_time_at?: string | null;
+  meeting_location_id?: string | null;
+  meeting_point?: string | null;
+  kit?: string | null;
+  notes?: string | null;
+  callup_count?: number;
+  lineup_published?: boolean;
+  formation?: string | null;
+  lineup_role?: "titular" | "suplente" | null;
+  lineup_slot?: string | null;
+}
+
+/** Estado por id (evento de calendario o partido). Nunca lee las tablas de convocatoria. */
+export function useMyMatchStatuses(ids: string[]) {
+  const key = React.useMemo(() => [...ids].sort().join(","), [ids]);
   return useQuery({
-    queryKey: ["match-callups", "state", key],
-    enabled: eventIds.length > 0,
+    queryKey: ["match-callups", "my-status", key],
+    enabled: ids.length > 0,
     staleTime: 30_000,
     queryFn: async () => {
-      const out = new Map<string, CallupState>();
-      await Promise.all(eventIds.map(async (id) => {
-        const { data, error } = await (supabase.rpc as any)("match_callup_state", { _event_id: id });
+      const out = new Map<string, MyMatchStatus>();
+      await Promise.all(ids.map(async (id) => {
+        const { data, error } = await (supabase.rpc as any)("get_my_match_status", { _match_id: id });
         if (error) throw error;
-        if (data) out.set(id, data as CallupState);
+        if (data) out.set(id, data as MyMatchStatus);
       }));
       return out;
     },
+  });
+}
+
+/** Compatibilidad: solo el estado. */
+export function useCallupStates(eventIds: string[]) {
+  const q = useMyMatchStatuses(eventIds);
+  const data = React.useMemo(() => {
+    if (!q.data) return undefined;
+    const m = new Map<string, CallupState>();
+    for (const [k, v] of q.data) m.set(k, v.state);
+    return m;
+  }, [q.data]);
+  return { ...q, data };
+}
+
+export interface CallupListRow { user_id: string; full_name: string | null; avatar_url: string | null; player_position: string | null; jersey_number: number | null }
+
+/** Lista de convocados (staff, o convocados con la convocatoria publicada). */
+export function useMatchCallupList(matchId: string | null | undefined) {
+  return useQuery({
+    queryKey: ["match-callups", "list", matchId ?? "none"],
+    enabled: !!matchId,
+    queryFn: async (): Promise<CallupListRow[]> => {
+      const { data, error } = await (supabase.rpc as any)("get_match_callup_list", { _match_id: matchId });
+      if (error) throw error;
+      return (data ?? []) as CallupListRow[];
+    },
+  });
+}
+
+export interface LineupRow { id: string; match_id: string; user_id: string; role: "titular" | "suplente"; slot: string | null; order_index: number }
+
+export function useMatchLineups(matchIds: string[]) {
+  const key = React.useMemo(() => [...matchIds].sort().join(","), [matchIds]);
+  return useQuery({
+    queryKey: ["match-lineups", key],
+    enabled: matchIds.length > 0,
+    queryFn: async (): Promise<LineupRow[]> => {
+      const { data, error } = await db.from("match_lineups").select("id, match_id, user_id, role, slot, order_index").in("match_id", matchIds);
+      if (error) throw error;
+      return (data ?? []) as LineupRow[];
+    },
+  });
+}
+
+/** Reemplaza la alineación: titulares por puesto; el resto de convocados, suplentes. */
+export function useSaveLineup() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ matchId, clubId, assigned, subs }: { matchId: string; clubId: string; assigned: Record<string, string>; subs: string[] }) => {
+      const { error: dErr } = await db.from("match_lineups").delete().eq("match_id", matchId);
+      if (dErr) throw dErr;
+      const rows = [
+        ...Object.entries(assigned).map(([slot, user_id], i) => ({ match_id: matchId, club_id: clubId, user_id, role: "titular", slot, order_index: i })),
+        ...subs.map((user_id, i) => ({ match_id: matchId, club_id: clubId, user_id, role: "suplente", slot: null, order_index: 100 + i })),
+      ];
+      if (rows.length) {
+        const { error } = await db.from("match_lineups").insert(rows);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["match-lineups"] }),
   });
 }
