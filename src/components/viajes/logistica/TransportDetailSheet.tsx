@@ -1,24 +1,15 @@
 import * as React from "react";
 import { toast } from "sonner";
-import { Bus, Pencil, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  EntitySheet,
-  EntitySheetBody,
-  EntitySheetDescription,
-  EntitySheetFooter,
-  EntitySheetHeader,
-  EntitySheetTitle,
-} from "@/components/squad/EntitySheet";
-import { DetailField, DetailGrid, DetailSection } from "@/components/squad/DetailSheet";
+import { Bus, Clock, Flag, MapPin, StickyNote, Users } from "lucide-react";
+import { DetailHero, MoreMenu, TripSheet } from "@/components/coord/viajes/form";
+import { SheetRow, SheetRows } from "@/components/agenda/EventSheet";
+import { LocationCard } from "@/components/location/LocationCard";
+import { PersonAvatar } from "@/components/coord/viajes/parts";
 import { formatDateTime } from "@/lib/calendar-utils";
-import { LocationDisplay } from "@/components/calendar/LocationDisplay";
-import { LEG_LABEL, TRANSPORT_TYPE_LABEL, type MiniProfile } from "@/lib/tripLogistics";
+import { LEG_LABEL, TRANSPORT_TYPE_LABEL, personLabel, type MiniProfile } from "@/lib/tripLogistics";
 import { useTransportMutations, type TripTransport } from "@/hooks/useTripTransports";
-import { PersonChips } from "./PersonChips";
 import { TransportFormDialog } from "./TransportFormDialog";
 import { PassengerAssignDialog, type AssignCandidate } from "./PassengerAssignDialog";
-import { DeleteAction } from "./DeleteAction";
 import { useTripRefresh } from "@/hooks/useTripChannel";
 
 interface Props {
@@ -62,86 +53,34 @@ export function TransportDetailSheet({ open, onOpenChange, transport, allTranspo
     return map;
   }, [allTransports, current?.id, current?.leg]);
 
-  if (!current) {
-    return <EntitySheet open={open} onOpenChange={onOpenChange}><EntitySheetHeader><EntitySheetTitle>Transporte</EntitySheetTitle></EntitySheetHeader><EntitySheetBody /></EntitySheet>;
-  }
+  if (!current) return null;
+  const name = current.label ?? TRANSPORT_TYPE_LABEL[current.transport_type];
 
   return (
     <>
-      <EntitySheet open={open} onOpenChange={onOpenChange} size="lg">
-        <EntitySheetHeader>
-          <EntitySheetTitle className="flex items-center gap-2">
-            <Bus className="h-4 w-4 text-primary" /> {current.label ?? TRANSPORT_TYPE_LABEL[current.transport_type]}
-          </EntitySheetTitle>
-          <EntitySheetDescription>
-            {LEG_LABEL[current.leg]} · {current.pickup_location} → {current.destination}
-          </EntitySheetDescription>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {canEdit ? (
-              <>
-                <Button size="sm" variant="secondary" onClick={() => setEditOpen(true)}>
-                  <Pencil className="mr-2 h-3.5 w-3.5" /> Editar
-                </Button>
-                <DeleteAction
-                  label="Eliminar transporte"
-                  title="¿Eliminar este transporte?"
-                  description="Se borrarán también sus pasajeros asignados."
-                  successMessage="Transporte eliminado"
-                  loading={remove.isPending}
-                  onDelete={() => remove.mutateAsync(current.id)}
-                  onDeleted={() => {
-                    refresh();
-                    onOpenChange(false);
-                  }}
-                />
-              </>
-            ) : null}
+      <TripSheet open={open} onOpenChange={onOpenChange} title="Transporte"
+        menu={canEdit ? <MoreMenu onEdit={() => setEditOpen(true)} deleteLabel="Eliminar transporte" confirmTitle="¿Eliminar este transporte?" confirmDescription="Se borrarán también sus pasajeros asignados." deleting={remove.isPending}
+          onDelete={() => remove.mutateAsync(current.id).then(() => { toast.success("Transporte eliminado"); refresh(); onOpenChange(false); }).catch((e: any) => toast.error(e.message ?? "No se pudo eliminar"))} /> : null}>
+        <DetailHero icon={Bus} title={name} sub={`${LEG_LABEL[current.leg]} · ${TRANSPORT_TYPE_LABEL[current.transport_type]}`} />
+        <SheetRows>
+          <SheetRow icon={Clock} main={formatDateTime(current.departs_at)} sub="Salida" />
+          {!current.pickup_location_id ? <SheetRow icon={MapPin} main={current.pickup_location} sub="Punto de encuentro" /> : null}
+          <SheetRow icon={Flag} main={current.destination} sub="Destino" />
+          {current.notes ? <SheetRow icon={StickyNote} main={current.notes} /> : null}
+        </SheetRows>
+        {current.pickup_location_id ? <LocationCard locationId={current.pickup_location_id} /> : null}
+        <section className="space-y-2">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold">{current.passengers.length ? `${current.passengers.length} pasajeros` : "Pasajeros"}</h3>
+            {canEdit ? <button type="button" onClick={() => setPassengersOpen(true)} className="inline-flex items-center gap-1 text-xs font-semibold text-primary"><Users className="h-3.5 w-3.5" /> Asignar</button> : null}
           </div>
-        </EntitySheetHeader>
-
-        <EntitySheetBody>
-          <DetailSection>
-            <DetailGrid>
-              <DetailField label="Tipo">{TRANSPORT_TYPE_LABEL[current.transport_type]}</DetailField>
-              <DetailField label="Sale">{formatDateTime(current.departs_at)}</DetailField>
-              <DetailField label="Destino">{current.destination}</DetailField>
-              <DetailField label="Pasajeros">{current.passengers.length}</DetailField>
-            </DetailGrid>
-          </DetailSection>
-
-          <DetailSection title="Punto de encuentro">
-            <LocationDisplay
-              clubId={clubId}
-              locationId={current.pickup_location_id}
-              text={current.pickup_location}
-            />
-          </DetailSection>
-
-          {current.notes ? (
-            <DetailSection title="Notas">
-              <p className="text-sm text-muted-foreground">{current.notes}</p>
-            </DetailSection>
-          ) : null}
-
-          <DetailSection title="Pasajeros">
-            <PersonChips
-              people={current.passengers.map((p) => ({ id: p.id, profile: p.profile as MiniProfile | null }))}
-              emptyLabel="Sin pasajeros asignados"
-            />
-            {canEdit ? (
-              <Button type="button" size="sm" variant="outline" onClick={() => setPassengersOpen(true)}>
-                <Users className="mr-1.5 h-4 w-4" /> Asignar pasajeros
-              </Button>
-            ) : null}
-          </DetailSection>
-        </EntitySheetBody>
-
-        <EntitySheetFooter>
-          <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-            Cerrar
-          </Button>
-        </EntitySheetFooter>
-      </EntitySheet>
+          {current.passengers.length ? (
+            <ul className="divide-y divide-border/40 overflow-hidden rounded-[16px] bg-card">
+              {current.passengers.map((p) => <li key={p.id} className="flex items-center gap-3 px-3 py-2.5"><PersonAvatar p={p.profile as MiniProfile | null} /><span className="truncate text-sm">{personLabel(p.profile as MiniProfile | null)}</span></li>)}
+            </ul>
+          ) : <p className="text-sm text-muted-foreground">Sin pasajeros asignados: aplica a todos los viajeros.</p>}
+        </section>
+      </TripSheet>
 
       {canEdit ? (
         <TransportFormDialog open={editOpen} onOpenChange={setEditOpen} tripId={tripId} clubId={clubId} userId={userId} transport={current} defaultLeg={current.leg} />
