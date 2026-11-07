@@ -78,6 +78,13 @@
       "when": 1794023952433,
       "tag": "0010_partidos_visibles_por_categoria",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1794023986113,
+      "tag": "0011_callups_no_visibles_para_no_convocados",
+      "breakpoints": true
     }
   ]
 }
