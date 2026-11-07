@@ -60,38 +60,45 @@ export function tripDayLabel(
   return "Regresó";
 }
 
-export type MyItemKind = "cita" | "vuelo" | "transporte" | "hotel" | "comida" | "partido";
-export interface MyItem { id: string; at: string; kind: MyItemKind; title: string; detail: string | null; place: string | null; transportType?: string }
+export type MyItemKind = "cita" | "vuelo" | "transporte" | "comida" | "partido";
+/** `locationId` = lugar del catálogo; `address` = dirección escrita. Sin ninguno, el elemento no se puede tocar. */
+export interface MyItem { id: string; at: string; kind: MyItemKind; title: string; detail: string | null; locationId: string | null; address: string | null; transportType?: string }
 
-/** Itinerario de UNA persona: solo lo que le toca, en orden de hora. */
+/** Le toca a la persona: sin pasajeros asignados aplica a todos; con pasajeros, solo a ellos. */
+export const appliesTo = (passengers: { user_id: string }[] | null | undefined, userId: string) =>
+  !passengers || passengers.length === 0 || passengers.some((p) => p.user_id === userId);
+
+export const isTappable = (it: Pick<MyItem, "locationId" | "address">) => !!it.locationId || !!it.address?.trim();
+
+/**
+ * Itinerario de UNA persona, en orden de hora. Vuelos: solo si es pasajera.
+ * Transportes: todos si no tienen pasajeros, si no solo los suyos. Comidas: aplican a todos.
+ * El hotel no entra (sus horas son referencia del staff; se ve en "Mi cuarto").
+ */
 export function myItinerary(input: {
   userId: string;
-  trip: { meeting_at: string | null; meeting_point: string | null; match_event: { title: string; starts_at: string; location: string | null } | null };
+  trip: { meeting_at: string | null; meeting_point: string | null; meeting_location_id?: string | null; match_event: { title: string; starts_at: string; location: string | null } | null };
   flights: { id: string; flight_code: string; airline: string | null; origin: string; destination: string; departs_at: string; passengers: { user_id: string }[] }[];
-  transports: { id: string; label: string | null; transport_type: string; pickup_location: string; destination: string; departs_at: string; passengers: { user_id: string }[] }[];
-  hotels: { id: string; name: string; address: string | null; check_in_at: string; check_out_at: string | null; rooms: { occupants: { user_id: string }[] }[] }[];
-  meals: { id: string; meal_type: string; scheduled_at: string; location: string | null }[];
+  transports: { id: string; label: string | null; transport_type: string; pickup_location: string; pickup_location_id?: string | null; destination: string; departs_at: string; passengers?: { user_id: string }[] }[];
+  meals: { id: string; meal_type: string; scheduled_at: string; location: string | null; passengers?: { user_id: string }[] }[];
   mealLabel?: (t: string) => string;
 }): MyItem[] {
   const { userId, trip } = input;
   const out: MyItem[] = [];
-  if (trip.meeting_at) out.push({ id: "cita", at: trip.meeting_at, kind: "cita", title: "Reunión del viaje", detail: trip.meeting_point, place: trip.meeting_point });
+  if (trip.meeting_at) out.push({ id: "cita", at: trip.meeting_at, kind: "cita", title: "Reunión del viaje", detail: trip.meeting_point, locationId: trip.meeting_location_id ?? null, address: null });
   for (const f of input.flights) {
     if (!f.passengers.some((p) => p.user_id === userId)) continue;
-    out.push({ id: `f-${f.id}`, at: f.departs_at, kind: "vuelo", title: `Vuelo ${f.flight_code}${f.airline ? ` · ${f.airline}` : ""}`, detail: `${f.origin} → ${f.destination}`, place: null });
+    out.push({ id: `f-${f.id}`, at: f.departs_at, kind: "vuelo", title: `Vuelo ${f.flight_code}${f.airline ? ` · ${f.airline}` : ""}`, detail: `${f.origin} → ${f.destination}`, locationId: null, address: null });
   }
   for (const t of input.transports) {
-    if (!t.passengers.some((p) => p.user_id === userId)) continue;
-    out.push({ id: `t-${t.id}`, at: t.departs_at, kind: "transporte", title: t.label || "Transporte", detail: `${t.pickup_location} → ${t.destination}`, place: t.pickup_location, transportType: t.transport_type });
+    if (!appliesTo(t.passengers, userId)) continue;
+    out.push({ id: `t-${t.id}`, at: t.departs_at, kind: "transporte", title: t.label || "Transporte", detail: `${t.pickup_location} → ${t.destination}`, locationId: t.pickup_location_id ?? null, address: null, transportType: t.transport_type });
   }
-  for (const h of input.hotels) {
-    if (!h.rooms.some((r) => r.occupants.some((o) => o.user_id === userId))) continue;
-    const place = h.address || h.name;
-    out.push({ id: `hi-${h.id}`, at: h.check_in_at, kind: "hotel", title: `Check-in · ${h.name}`, detail: h.address, place });
-    if (h.check_out_at) out.push({ id: `ho-${h.id}`, at: h.check_out_at, kind: "hotel", title: `Check-out · ${h.name}`, detail: h.address, place });
+  for (const m of input.meals) {
+    if (!appliesTo(m.passengers, userId)) continue;
+    out.push({ id: `m-${m.id}`, at: m.scheduled_at, kind: "comida", title: input.mealLabel?.(m.meal_type) ?? m.meal_type, detail: m.location, locationId: null, address: null });
   }
-  for (const m of input.meals) out.push({ id: `m-${m.id}`, at: m.scheduled_at, kind: "comida", title: input.mealLabel?.(m.meal_type) ?? m.meal_type, detail: m.location, place: m.location });
-  if (trip.match_event) out.push({ id: "partido", at: trip.match_event.starts_at, kind: "partido", title: trip.match_event.title, detail: trip.match_event.location, place: trip.match_event.location });
+  if (trip.match_event) out.push({ id: "partido", at: trip.match_event.starts_at, kind: "partido", title: trip.match_event.title, detail: trip.match_event.location, locationId: null, address: trip.match_event.location });
   return out.sort((a, b) => a.at.localeCompare(b.at));
 }
 
