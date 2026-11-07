@@ -18,6 +18,8 @@ import {
 } from "@/hooks/useMatchOps";
 import { MatchOpsCard } from "@/components/partidos/MatchOpsCard";
 import { MatchOpsSheet } from "@/components/partidos/MatchOpsSheet";
+import { Navigate } from "@tanstack/react-router";
+import { usePartidosAccess } from "@/components/coord/partidos/parts";
 
 export const Route = createFileRoute("/_authenticated/m/partidos")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -110,6 +112,14 @@ function PartidosPage() {
 
   const open = allMatches.find((m) => m.id === openId) ?? null;
   const loading = matchesQ.isLoading || callupsQ.isLoading;
+  const { canManage: isMatchStaff } = usePartidosAccess();
+
+  // Staff (Ver o Editar en Partidos) usa la ficha nueva de Coordinación; jugadores siguen aquí.
+  if (isMatchStaff) {
+    return openParam
+      ? <Navigate to="/coordinacion/tecnica/partidos/$matchId" params={{ matchId: openParam }} search={{ seccion: undefined }} replace />
+      : <Navigate to="/coordinacion/tecnica/partidos" replace />;
+  }
 
   if (!canAccess) {
     return (
