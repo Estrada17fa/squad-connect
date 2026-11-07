@@ -129,3 +129,67 @@ export function tripMoments(trip: { id: string; departure_at: string; return_at:
   if (backAt) out.push({ key: `${trip.id}:regreso`, leg: "regreso", at: backAt, flight: vuelta });
   return out;
 }
+
+/* ---------- Vistas Semana / Mes / Lista ---------- */
+
+export type AgendaView = "semana" | "mes" | "lista";
+
+export const addDays = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+export const monthStart = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1);
+export const addMonthsTo = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth() + n, 1);
+
+/** "AAAA-MM-DD" → fecha local; null si no es válida. */
+export function parseDayKey(s: string | null | undefined): Date | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s ?? "");
+  if (!m) return null;
+  const d = new Date(+m[1], +m[2] - 1, +m[3]);
+  return d.getMonth() === +m[2] - 1 && d.getFullYear() > 1900 && d.getFullYear() < 2200 ? d : null;
+}
+
+/** Rango [from, to) de la semana (lunes a lunes) que contiene `d`. */
+export function weekRange(d: Date) {
+  const from = weekStart(d);
+  return { from, to: addDays(from, 7) };
+}
+
+const shortMonth = (d: Date) => new Intl.DateTimeFormat("es-MX", { month: "short" }).format(d).replace(".", "");
+
+/** "2 – 8 nov 2026" o "30 nov – 6 dic 2026". */
+export function weekLabel(start: Date) {
+  const end = addDays(start, 6);
+  if (start.getMonth() === end.getMonth()) return `${start.getDate()} – ${end.getDate()} ${shortMonth(end)} ${end.getFullYear()}`;
+  const y = start.getFullYear() === end.getFullYear() ? "" : ` ${start.getFullYear()}`;
+  return `${start.getDate()} ${shortMonth(start)}${y} – ${end.getDate()} ${shortMonth(end)} ${end.getFullYear()}`;
+}
+
+/** Días de la cuadrícula del mes (lunes a domingo, semanas completas) y su rango [from, to). */
+export function monthGridDays(d: Date) {
+  const first = monthStart(d);
+  const from = weekStart(first);
+  const last = new Date(first.getFullYear(), first.getMonth() + 1, 0);
+  const to = addDays(weekStart(last), 7);
+  const days: Date[] = [];
+  for (let x = from; x < to; x = addDays(x, 1)) days.push(x);
+  return { from, to, days };
+}
+
+/** Agrupa por mes y por día (orden ascendente o descendente). */
+export function groupByMonthDay<T extends { starts_at: string }>(items: T[], desc = false) {
+  const sorted = [...items].sort((a, b) => (desc ? b.starts_at.localeCompare(a.starts_at) : a.starts_at.localeCompare(b.starts_at)));
+  const months: { month: Date; days: { date: Date; events: T[] }[] }[] = [];
+  for (const it of sorted) {
+    const at = new Date(it.starts_at);
+    const m = monthStart(at);
+    const day = new Date(at.getFullYear(), at.getMonth(), at.getDate());
+    let mg = months[months.length - 1];
+    if (!mg || mg.month.getTime() !== m.getTime()) months.push((mg = { month: m, days: [] }));
+    let dg = mg.days[mg.days.length - 1];
+    if (!dg || !sameDay(dg.date, day)) mg.days.push((dg = { date: day, events: [] }));
+    dg.events.push(it);
+  }
+  return months;
+}
+
+/** Elementos dentro de [from, to). */
+export const inRange = <T extends { starts_at: string }>(items: T[], from: Date, to: Date) =>
+  items.filter((i) => { const t = new Date(i.starts_at); return t >= from && t < to; });

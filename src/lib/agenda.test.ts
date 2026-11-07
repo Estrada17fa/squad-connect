@@ -56,3 +56,26 @@ describe("momentos del viaje", () => {
     expect(tripMoments({ ...trip, return_at: null }, [])).toHaveLength(1);
   });
 });
+
+import { weekRange, weekLabel, monthGridDays, groupByMonthDay, parseDayKey } from "./agenda";
+describe("vistas de agenda", () => {
+  it("semana de lunes a lunes", () => {
+    const { from, to } = weekRange(new Date(2026, 10, 8));
+    expect([from.getDate(), to.getDate()]).toEqual([2, 9]);
+  });
+  it("rango de semana", () => {
+    expect(weekLabel(new Date(2026, 10, 2))).toBe("2 – 8 nov 2026");
+    expect(weekLabel(new Date(2026, 10, 30))).toBe("30 nov – 6 dic 2026");
+  });
+  it("cuadrícula de noviembre 2026 incluye días vecinos", () => {
+    const g = monthGridDays(new Date(2026, 10, 15));
+    expect(g.from.getDate()).toBe(26);
+    expect(g.days.length % 7).toBe(0);
+    expect(g.days[g.days.length - 1].getDate()).toBe(6);
+  });
+  it("agrupa por mes y día", () => {
+    const g = groupByMonthDay([{ starts_at: new Date(2026, 11, 1, 10).toISOString() }, { starts_at: new Date(2026, 10, 8, 10).toISOString() }, { starts_at: new Date(2026, 10, 8, 12).toISOString() }]);
+    expect(g.map((m) => m.days.map((d) => d.events.length))).toEqual([[2], [1]]);
+  });
+  it("fecha inválida", () => { expect(parseDayKey("2026-02-31")).toBeNull(); expect(parseDayKey("x")).toBeNull(); });
+});
