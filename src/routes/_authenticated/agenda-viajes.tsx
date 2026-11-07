@@ -1,8 +1,7 @@
 import * as React from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Plane, MapPin, Users } from "lucide-react";
-import { PageHeader } from "@/components/squad/PageHeader";
-import { ModuleTabs } from "@/components/squad/ModuleTabs";
+import { AgendaHeader } from "@/components/agenda/AgendaHeader";
 import { EmptyState } from "@/components/squad/EmptyState";
 import { CardGridSkeleton } from "@/components/squad/LoadingState";
 import { StandardCard } from "@/components/squad/StandardCard";
@@ -15,7 +14,7 @@ import { ChevronDown } from "lucide-react";
 import { MyTripView } from "@/components/viajes/MyTripView";
 import { DetailSheet, DetailBadge } from "@/components/squad/DetailSheet";
 
-import { TeamFilter, TeamBadge } from "@/components/squad/TeamFilter";
+import { TeamBadge } from "@/components/squad/TeamFilter";
 
 export const Route = createFileRoute("/_authenticated/agenda-viajes")({
   validateSearch: (s: Record<string, unknown>): { open?: string } => (typeof s.open === "string" ? { open: s.open } : {}),
@@ -93,8 +92,7 @@ function AgendaViajesPage() {
   if (!canAccess) {
     return (
       <div className="space-y-6">
-        <PageHeader hideTitle title="Viajes" subtitle="Consulta de viajes" />
-        <ModuleTabs hubKey="agenda" extraActiveKey="agenda-viajes" />
+        <AgendaHeader tab="viajes" category={teamFilter} onCategory={setTeamFilter} showFilter={false} />
         <EmptyState icon={Plane} title="Sin acceso" message="Tu rol actual no tiene permisos para ver viajes." />
       </div>
     );
@@ -102,9 +100,7 @@ function AgendaViajesPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader hideTitle title="Viajes" subtitle="Consulta de viajes" />
-      <ModuleTabs hubKey="agenda" extraActiveKey="agenda-viajes" />
-      <TeamFilter teams={teamOptions} value={teamFilter} onChange={setTeamFilter} />
+      <AgendaHeader tab="viajes" category={teamFilter} onCategory={setTeamFilter} showFilter={false} />
 
       {tripsQ.isLoading ? (
         <CardGridSkeleton />

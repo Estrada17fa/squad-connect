@@ -1,21 +1,19 @@
 import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { PageHeader } from "@/components/squad/PageHeader";
+import { AgendaHeader } from "@/components/agenda/AgendaHeader";
+import { filterAgenda, type AgendaKind } from "@/lib/agenda";
 import { EmptyState } from "@/components/squad/EmptyState";
 import { Button } from "@/components/ui/button";
 import { useApp } from "@/components/squad/AppLayout";
 import { useTeamFilter } from "@/hooks/useTeamFilter";
 import { useCalendarEvents, type CalendarEventRow } from "@/hooks/useCalendarEvents";
-import { EVENT_TYPES, EVENT_TYPE_MAP, type EventType } from "@/lib/eventTypes";
+import { EVENT_TYPES, EVENT_TYPE_MAP } from "@/lib/eventTypes";
 import { addMonths, formatRelativeDayLabel, formatDayLabel, isSameDay, monthGrid, monthLabel, startOfDay, weekdayLabels } from "@/lib/calendar-utils";
 import { useClubPrefs } from "@/hooks/useClubPrefs";
-import { NewEventLauncher } from "@/components/calendar/NewEventLauncher";
 import { EventCard } from "@/components/calendar/EventCard";
 import { EventDetailSheet } from "@/components/calendar/EventDetailSheet";
-import { ModuleTabs } from "@/components/squad/ModuleTabs";
 import { cn } from "@/lib/utils";
-import { TeamFilter } from "@/components/squad/TeamFilter";
 import { useEditableTeams } from "@/hooks/useEditableTeams";
 import { useTeamAccess } from "@/hooks/useTeamAccess";
 
@@ -38,16 +36,14 @@ function MesModulePage() {
   const [selectedDay, setSelectedDay] = React.useState<Date | null>(null);
   const [detailEvent, setDetailEvent] = React.useState<CalendarEventRow | null>(null);
   const [teamFilter, setTeamFilter] = useTeamFilter();
-  const [typeFilter, setTypeFilter] = React.useState<EventType | null>(null);
+  const [kinds, setKinds] = React.useState<AgendaKind[]>([]);
   const clubId = profile?.club_id ?? null;
 
   const { data: allEvents } = useCalendarEvents({ mode: "club", clubId });
   const events = React.useMemo(
     () =>
-      (allEvents ?? [])
-        .filter((e) => !teamFilter || e.team_id === teamFilter)
-        .filter((e) => !typeFilter || e.event_type === typeFilter),
-    [allEvents, teamFilter, typeFilter],
+      filterAgenda(allEvents ?? [], teamOptions.map((t) => t.id).filter(Boolean) as string[], teamFilter, kinds),
+    [allEvents, teamOptions, teamFilter, kinds],
   );
 
   const eventsByDay = React.useMemo(() => {
@@ -70,17 +66,7 @@ function MesModulePage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader hideTitle title="Mes" subtitle="Todos tus equipos" />
-      <ModuleTabs activeKey="mes" />
-      <TeamFilter teams={teamOptions} value={teamFilter} onChange={setTeamFilter} />
-
-      <NewEventLauncher
-        clubId={clubId}
-        userId={user.id}
-        genericTeams={editableTeams}
-        defaultTeamId={teamFilter}
-        defaultDate={selectedDay ?? undefined}
-      />
+      <AgendaHeader tab="mes" category={teamFilter} onCategory={setTeamFilter} kinds={kinds} onKinds={setKinds} defaultDate={selectedDay ?? undefined} />
 
       <div className="glass p-4">
         <div className="mb-3 flex items-center justify-between">
@@ -142,21 +128,11 @@ function MesModulePage() {
 
         <div className="mt-4 flex flex-wrap gap-2 border-t border-border/60 pt-3 text-xs">
           {EVENT_TYPES.map((t) => {
-            const active = typeFilter === t.key;
             return (
-              <button
-                key={t.key}
-                type="button"
-                onClick={() => setTypeFilter(active ? null : t.key)}
-                className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 transition-colors",
-                  active ? "border-transparent text-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
-                )}
-                style={active ? { backgroundColor: `${t.cssVar}1f` } : undefined}
-              >
+              <span key={t.key} className="inline-flex items-center gap-1.5 px-2.5 py-1 text-muted-foreground">
                 <span className="h-2 w-2 rounded-full" style={{ backgroundColor: t.cssVar }} />
                 {t.label}
-              </button>
+              </span>
             );
           })}
         </div>
