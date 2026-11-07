@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Link } from "@tanstack/react-router";
-import { Check, ChevronDown, SlidersHorizontal } from "lucide-react";
+import { CalendarDays, Check, ChevronDown, SlidersHorizontal } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { EntitySheet, EntitySheetBody, EntitySheetHeader, EntitySheetTitle } from "@/components/squad/EntitySheet";
 import { Button } from "@/components/ui/button";
@@ -13,8 +13,7 @@ import { cn } from "@/lib/utils";
 export type AgendaTab = "proximo" | "mes" | "viajes";
 
 const TABS: { key: AgendaTab; label: string; to: string; params?: Record<string, string> }[] = [
-  { key: "proximo", label: "Próximo", to: "/m/$module", params: { module: "agenda" } },
-  { key: "mes", label: "Mes", to: "/m/$module", params: { module: "mes" } },
+  { key: "proximo", label: "Agenda", to: "/m/$module", params: { module: "agenda" } },
   { key: "viajes", label: "Mis viajes", to: "/agenda-viajes" },
 ];
 
@@ -84,6 +83,9 @@ export function AgendaHeader({
               {active ? <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary" /> : null}
             </button>
           ) : null}
+          <Link to={"/m/$module" as any} params={{ module: "mes" } as any} aria-label="Ver mes" className={cn("flex h-10 w-10 items-center justify-center rounded-full hover:bg-muted", tab === "mes" && "text-primary")}>
+            <CalendarDays className="h-5 w-5" />
+          </Link>
           <NewEventLauncher variant="icon" clubId={profile?.club_id ?? null} userId={user.id} genericTeams={editableTeams} defaultTeamId={category} defaultDate={defaultDate} />
         </div>
       </div>
