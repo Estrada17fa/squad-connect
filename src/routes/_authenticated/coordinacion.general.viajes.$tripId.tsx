@@ -13,7 +13,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { setTripStatus } from "@/lib/trips.functions";
-import { departureLabel, isTripSection, tripDisplayStatus, TRIP_SECTIONS, type TripSection } from "@/lib/viajes";
+import { isTripSection, tripDisplayStatus, TRIP_SECTIONS, type TripSection } from "@/lib/viajes";
 import { ScrollTabs, TripMatchup, TripStatusChip, tripDates } from "@/components/coord/viajes/parts";
 import { useClubTrips, useTripLogistics, useTripsAccess } from "@/components/coord/viajes/useTripsModule";
 import { ComidasTab, DocumentosTab, EquipajeTab, HotelTab, MatchLink, ResumenTab, TransporteTab, ViajerosTab, VuelosTab } from "@/components/coord/viajes/TripDetailTabs";

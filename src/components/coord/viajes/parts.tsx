@@ -6,7 +6,7 @@ import { es } from "date-fns/locale";
 import { Plane, Users } from "lucide-react";
 import { TeamCrest } from "@/components/torneo/TeamCrest";
 import { cn } from "@/lib/utils";
-import { departureLabel, tripDisplayStatus, TRIP_DISPLAY_LABEL, type Readiness, type TripDisplayStatus } from "@/lib/viajes";
+import { tripDisplayStatus, TRIP_DISPLAY_LABEL, type Readiness, type TripDisplayStatus } from "@/lib/viajes";
 import type { TripRow } from "@/hooks/useTrips";
 import type { OurMatch } from "@/hooks/useMatchOps";
 import { initialsOf } from "@/lib/coordinacion";
