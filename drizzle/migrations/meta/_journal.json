@@ -85,6 +85,13 @@
       "when": 1794023986113,
       "tag": "0011_callups_no_visibles_para_no_convocados",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1794027422126,
+      "tag": "0012_partidos_publicacion_alineacion",
+      "breakpoints": true
     }
   ]
 }
