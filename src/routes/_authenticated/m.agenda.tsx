@@ -152,7 +152,6 @@ function AgendaProximoPage() {
     return rows.length === 0 ? "Convocatoria pendiente" : rows.some((c) => c.user_id === user.id) ? "Convocado" : "No convocado";
   };
 
-  const openTrip = (id: string) => navigate({ to: "/agenda-viajes", search: { open: id } });
   const [detailLeg, setDetailLeg] = React.useState<"ida" | "regreso" | undefined>(undefined);
   const open = (e: CalendarEventRow, leg?: "ida" | "regreso") => { setDetailLeg(leg); setDetailEvent(e); };
 
