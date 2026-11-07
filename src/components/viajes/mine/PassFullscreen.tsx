@@ -7,7 +7,7 @@ import { PdfCanvas } from "@/components/viajes/BoardingPassViewer";
 const isImage = (p: string) => /\.(jpe?g|png|webp|heic|gif)$/i.test(p);
 
 /** Imagen con zoom de dos dedos (y doble toque) y arrastre cuando está ampliada. */
-function ZoomImage({ src, alt }: { src: string; alt: string }) {
+export function ZoomImage({ src, alt }: { src: string; alt: string }) {
   const [t, setT] = React.useState({ s: 1, x: 0, y: 0 });
   const g = React.useRef<{ d: number; s: number; px: number; py: number; x: number; y: number } | null>(null);
   const dist = (e: React.TouchEvent) => Math.hypot(e.touches[0]!.clientX - e.touches[1]!.clientX, e.touches[0]!.clientY - e.touches[1]!.clientY);
