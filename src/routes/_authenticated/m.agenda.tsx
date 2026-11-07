@@ -1,194 +1,191 @@
 import * as React from "react";
-import { createFileRoute } from "@tanstack/react-router";
-import { PageHeader } from "@/components/squad/PageHeader";
-import { EmptyState } from "@/components/squad/EmptyState";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { AgendaSkeleton } from "@/components/squad/LoadingState";
-import { ModuleTabs } from "@/components/squad/ModuleTabs";
 import { useApp } from "@/components/squad/AppLayout";
 import { useTeamFilter } from "@/hooks/useTeamFilter";
 import { useCalendarEvents, type CalendarEventRow } from "@/hooks/useCalendarEvents";
-import { EVENT_TYPES, EVENT_TYPE_MAP, type EventType } from "@/lib/eventTypes";
-import { formatDayLabel, formatRelativeDayLabel, startOfDay } from "@/lib/calendar-utils";
 import { useEditableTeams } from "@/hooks/useEditableTeams";
 import { useTeamAccess } from "@/hooks/useTeamAccess";
-import { NewEventLauncher } from "@/components/calendar/NewEventLauncher";
+import { useTrips } from "@/hooks/useTrips";
+import { useOurMatches, useMatchCallups, type OurMatch } from "@/hooks/useMatchOps";
+import { useMeetings } from "@/hooks/useCoordinacion";
 import { EventDetailSheet } from "@/components/calendar/EventDetailSheet";
-import { TeamFilter } from "@/components/squad/TeamFilter";
-import { EventCard } from "@/components/calendar/EventCard";
+import { AgendaHeader } from "@/components/agenda/AgendaHeader";
+import { AgendaHero, AgendaRow, shortDay } from "@/components/agenda/AgendaParts";
+import { agendaKind, filterAgenda, groupByDay, hasMoreAfter, pickHero, type AgendaKind } from "@/lib/agenda";
+import { buildEventContext } from "@/lib/eventContext";
+import { formatRelativeDayLabel } from "@/lib/calendar-utils";
+import { isPlayerVisible } from "@/lib/viajes";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/m/agenda")({
   head: () => ({
     meta: [
       { title: "Squad — Agenda" },
-      { name: "description", content: "Próximos eventos: partidos, entrenamientos, viajes, juntas y citas." },
+      { name: "description", content: "Lo próximo para ti: partidos, entrenamientos, viajes, juntas y eventos." },
       { property: "og:title", content: "Squad — Agenda" },
-      {
-        property: "og:description",
-        content: "Tu agenda unificada: cada evento visible según el permiso de su módulo de origen.",
-      },
+      { property: "og:description", content: "Tu agenda: el evento más importante que viene y los próximos días." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: AgendaModulePage,
+  component: AgendaProximoPage,
 });
 
-function AgendaModulePage() {
-  const { user, profile, teamOptions } = useApp();
+const dayFmt = new Intl.DateTimeFormat("es-MX", { weekday: "short", day: "numeric", month: "short" });
+
+function AgendaProximoPage() {
+  const { user, profile, teamOptions, isPlayerOnly } = useApp();
+  const clubId = profile?.club_id ?? null;
+  const navigate = useNavigate();
+  const qc = useQueryClient();
   const editableTeams = useEditableTeams("agenda");
   const { canEditRecord } = useTeamAccess("agenda");
-
+  const [category, setCategory] = useTeamFilter();
+  const [kinds, setKinds] = React.useState<AgendaKind[]>([]);
+  const [days, setDays] = React.useState(14);
   const [detailEvent, setDetailEvent] = React.useState<CalendarEventRow | null>(null);
-  const [teamFilter, setTeamFilter] = useTeamFilter();
-  const [typeFilter, setTypeFilter] = React.useState<EventType | null>(null);
-  const clubId = profile?.club_id ?? null;
 
-  const teamNames = React.useMemo(() => {
-    const m: Record<string, string> = {};
-    for (const t of teamOptions) if (t.id) m[t.id] = t.name;
-    return m;
-  }, [teamOptions]);
-
-  // La RLS limita las filas al permiso del módulo de origen de cada evento.
   const { data: events, isLoading } = useCalendarEvents({ mode: "club", clubId });
+  const tripsQ = useTrips(clubId, null);
+  const matchesQ = useOurMatches(clubId);
+  const meetingsQ = useMeetings(clubId);
 
-  /** Tipos realmente presentes, para no mostrar chips vacíos. */
-  const presentTypes = React.useMemo(() => {
-    const set = new Set<EventType>();
-    for (const e of events ?? []) set.add(e.event_type);
-    return EVENT_TYPES.filter((t) => set.has(t.key));
-  }, [events]);
+  const myTeamIds = React.useMemo(() => teamOptions.map((t) => t.id).filter(Boolean) as string[], [teamOptions]);
+  const teamNames = React.useMemo(() => Object.fromEntries(teamOptions.filter((t) => t.id).map((t) => [t.id as string, t.name])), [teamOptions]);
 
-  // La lista solo muestra la semana en curso: de hoy a 7 días adelante.
-  // La vista de Mes sigue completa.
-  const upcoming = React.useMemo(() => {
-    const from = startOfDay(new Date());
-    const to = new Date(from);
-    to.setDate(to.getDate() + 8); // fin del día +7
-    return (events ?? [])
-      .filter((e) => {
-        const at = new Date(e.starts_at);
-        return at >= from && at < to;
-      })
-      .filter((e) => !teamFilter || e.team_id === teamFilter)
-      .filter((e) => !typeFilter || e.event_type === typeFilter);
-  }, [events, teamFilter, typeFilter]);
+  const tripById = React.useMemo(() => new Map((tripsQ.data ?? []).map((t) => [t.id, t])), [tripsQ.data]);
+  const matchByEvent = React.useMemo(() => {
+    const m = new Map<string, OurMatch>();
+    for (const x of matchesQ.data ?? []) if (x.calendar_event_id) m.set(x.calendar_event_id, x);
+    return m;
+  }, [matchesQ.data]);
+  const meetingById = React.useMemo(() => new Map((meetingsQ.data ?? []).map((m) => [m.id, m])), [meetingsQ.data]);
 
-  /** Agrupado por día para una lista escaneable. */
-  const days = React.useMemo(() => {
-    const map = new Map<string, CalendarEventRow[]>();
-    for (const e of upcoming) {
-      const key = startOfDay(new Date(e.starts_at)).toISOString();
-      const arr = map.get(key) ?? [];
-      arr.push(e);
-      map.set(key, arr);
+  const isMyTrip = React.useCallback(
+    (tripId: string | null | undefined) => {
+      const t = tripId ? tripById.get(tripId) : null;
+      return !!t && isPlayerVisible(t) && t.travelers.some((x) => x.user_id === user.id);
+    },
+    [tripById, user.id],
+  );
+
+  const visible = React.useMemo(() => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    // Viajes en curso siguen visibles hasta su regreso.
+    const future = (events ?? []).filter((e) => new Date(e.ends_at ?? e.starts_at) >= today || new Date(e.starts_at) >= today);
+    return filterAgenda(future, myTeamIds, category, kinds);
+  }, [events, myTeamIds, category, kinds]);
+
+  const hero = React.useMemo(() => pickHero(visible, (e) => isMyTrip(e.trip_id)), [visible, isMyTrip]);
+  const groups = React.useMemo(() => groupByDay(visible, days), [visible, days]);
+  const more = hasMoreAfter(visible, days);
+
+  const heroMatch = hero && agendaKind(hero) === "partido" ? matchByEvent.get(hero.id) ?? null : null;
+  const callupsQ = useMatchCallups(heroMatch && isPlayerOnly ? [heroMatch.id] : []);
+  const callup = !heroMatch || !isPlayerOnly || !callupsQ.data
+    ? null
+    : callupsQ.data.length === 0
+      ? ("Convocatoria pendiente" as const)
+      : callupsQ.data.some((c) => c.user_id === user.id)
+        ? ("Convocado" as const)
+        : ("No convocado" as const);
+  const heroMyTrip = heroMatch
+    ? (tripsQ.data ?? []).find((t) => t.match_event_id === hero!.id && isMyTrip(t.id)) ?? null
+    : null;
+  const heroTrip = hero?.trip_id ? tripById.get(hero.trip_id) ?? null : null;
+
+  const openTrip = (id: string) => navigate({ to: "/agenda-viajes", search: { open: id } });
+  const open = (e: CalendarEventRow) => {
+    if (e.trip_id) return openTrip(e.trip_id);
+    if (e.meeting_id) return navigate({ to: "/coordinacion/general/juntas/$meetingId", params: { meetingId: e.meeting_id } });
+    setDetailEvent(e);
+  };
+
+  async function respond(meetingId: string, status: "confirmado" | "rechazado") {
+    const { error } = await supabase.from("meeting_attendees").update({ attendance_status: status }).eq("meeting_id", meetingId).eq("user_id", user.id);
+    if (error) return toast.error(error.message);
+    toast.success(status === "confirmado" ? "Confirmaste tu asistencia" : "Avisaste que no asistirás");
+    qc.invalidateQueries({ queryKey: ["coord-meetings", clubId] });
+  }
+
+  const contextFor = (e: CalendarEventRow): string | null => {
+    const trip = e.trip_id ? tripById.get(e.trip_id) : null;
+    if (trip) {
+      const back = trip.return_at ? `regresa ${dayFmt.format(new Date(trip.return_at)).replace(/\./g, "")}` : null;
+      return [trip.meeting_point ? `Salida de ${trip.meeting_point}` : trip.destination, back].filter(Boolean).join(" · ") || null;
     }
-    return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
-  }, [upcoming]);
+    const m = matchByEvent.get(e.id);
+    if (m) return [m.matchday ? `Jornada ${m.matchday}` : null, m.venue || e.location].filter(Boolean).join(" · ") || null;
+    return buildEventContext(e);
+  };
 
   return (
-    <div className="space-y-6">
-      <PageHeader hideTitle title="Agenda" subtitle="Todos tus equipos" />
-      <ModuleTabs activeKey="agenda" />
-      <TeamFilter teams={teamOptions} value={teamFilter} onChange={setTeamFilter} />
+    <div className="space-y-5">
+      <AgendaHeader tab="proximo" category={category} onCategory={setCategory} kinds={kinds} onKinds={setKinds} />
 
-      {presentTypes.length > 1 ? (
-        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
-          <button
-            type="button"
-            onClick={() => setTypeFilter(null)}
-            className={cn(
-              "shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
-              typeFilter === null
-                ? "border-primary/60 bg-primary/10 text-primary"
-                : "border-border/60 text-muted-foreground hover:text-foreground",
-            )}
-          >
-            Todos
-          </button>
-          {presentTypes.map((t) => {
-            const active = typeFilter === t.key;
-            return (
-              <button
-                key={t.key}
-                type="button"
-                onClick={() => setTypeFilter(active ? null : t.key)}
-                className={cn(
-                  "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
-                  active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
-                )}
-                style={{
-                  borderColor: active ? t.cssVar : undefined,
-                  backgroundColor: active ? `${t.cssVar}1f` : undefined,
-                }}
-              >
-                <t.icon className="h-3.5 w-3.5" style={{ color: t.cssVar }} />
-                {t.label}
-              </button>
-            );
-          })}
-        </div>
-      ) : null}
+      {isLoading && !events ? (
+        <AgendaSkeleton count={4} />
+      ) : (
+        <>
+          {hero ? (
+            <AgendaHero
+              event={hero}
+              match={heroMatch}
+              callup={callup}
+              myTrip={heroMyTrip}
+              trip={heroTrip && isMyTrip(heroTrip.id) ? heroTrip : null}
+              onOpen={() => open(hero)}
+              onOpenTrip={openTrip}
+            />
+          ) : null}
 
-      <NewEventLauncher
-        clubId={clubId}
-        userId={user.id}
-        genericTeams={editableTeams}
-        defaultTeamId={teamFilter}
-      />
-
-
-      <div className="space-y-6">
-        {isLoading && !events ? (
-          <AgendaSkeleton count={4} />
-        ) : days.length === 0 ? (
-          <EmptyState
-            title="Sin eventos esta semana"
-            message={
-              typeFilter || teamFilter
-                ? "No hay eventos en los próximos 7 días con estos filtros."
-                : "No hay nada agendado en los próximos 7 días. Revisa el Mes para ver más adelante."
-            }
-          />
-        ) : (
-          days.map(([dayIso, dayEvents]) => {
-            const day = new Date(dayIso);
-            const rel = formatRelativeDayLabel(day);
-            const highlight = rel === "HOY" || rel === "MAÑANA";
-            return (
-              <section key={dayIso} className="space-y-2.5">
-                <div className="flex items-center gap-3">
-                  <h2
-                    className={cn(
-                      "font-display text-xs font-bold uppercase tracking-[0.14em]",
-                      highlight ? "text-primary" : "text-muted-foreground",
-                    )}
-                  >
-                    {rel}
+          {groups.length === 0 ? (
+            <p className="py-10 text-center text-sm text-muted-foreground">Nada en tu agenda esta semana</p>
+          ) : (
+            groups.map((g) => {
+              const rel = formatRelativeDayLabel(g.date);
+              const near = rel === "HOY" || rel === "MAÑANA";
+              return (
+                <section key={g.date.toISOString()} className="space-y-1.5">
+                  <h2 className="flex items-baseline gap-2 px-1 text-xs">
+                    <span className={cn("font-bold", near ? "text-primary" : "text-foreground")}>
+                      {rel === "HOY" ? "Hoy" : rel === "MAÑANA" ? "Mañana" : shortDay(g.date)}
+                    </span>
+                    {near ? <span className="text-muted-foreground">{shortDay(g.date)}</span> : null}
                   </h2>
-                  <span className="truncate text-[11px] capitalize text-muted-foreground/70">
-                    {formatDayLabel(day)}
-                  </span>
+                  <div className="overflow-hidden rounded-2xl bg-card">
+                    {g.events.map((e) => {
+                      const meeting = e.meeting_id ? meetingById.get(e.meeting_id) : null;
+                      const mine = meeting?.attendees.find((a) => a.user_id === user.id);
+                      return (
+                        <AgendaRow
+                          key={e.id}
+                          event={e}
+                          context={contextFor(e)}
+                          match={matchByEvent.get(e.id) ?? null}
+                          rsvp={meeting && mine && new Date(e.starts_at) > new Date() ? { status: mine.attendance_status, onRespond: (s) => respond(meeting.id, s) } : null}
+                          onClick={() => open(e)}
+                        />
+                      );
+                    })}
+                  </div>
+                </section>
+              );
+            })
+          )}
 
-
-                  <span className="h-px flex-1 bg-white/5" />
-                  <span className="shrink-0 rounded-full bg-white/[0.06] px-2 py-0.5 text-[11px] text-muted-foreground">
-                    {dayEvents.length}
-                  </span>
-                </div>
-                {dayEvents.map((e, i) => (
-                  <EventCard
-                    key={e.id}
-                    event={e}
-                    index={i}
-                    teamLabel={e.team_id ? teamNames[e.team_id] : "Todo el club"}
-                    onClick={() => setDetailEvent(e)}
-                  />
-                ))}
-              </section>
-            );
-          })
-        )}
-      </div>
+          {more ? (
+            <button type="button" onClick={() => setDays((d) => d + 14)} className="w-full py-3 text-sm font-semibold text-primary">
+              Ver más
+            </button>
+          ) : null}
+        </>
+      )}
 
       <EventDetailSheet
         open={!!detailEvent}
