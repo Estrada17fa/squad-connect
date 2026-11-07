@@ -2,7 +2,7 @@ import * as React from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { BedDouble, Bus, ClipboardList, Clock, ListChecks, Lock, MapPin, Plane, Shirt, StickyNote, Target, Ticket, Users } from "lucide-react";
+import { ClipboardList, Clock, ListChecks, Lock, MapPin, Plane, Shirt, StickyNote, Target, Ticket, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { CalendarEventRow } from "@/hooks/useCalendarEvents";
 import type { TeamOption } from "@/hooks/useAccess";
@@ -99,7 +99,7 @@ export function EventDetailSheet({ open, onOpenChange, event, canEdit, clubId, u
   );
 
   if (!event) return null;
-  const def = EVENT_TYPE_MAP[event.event_type] ?? EVENT_TYPE_MAP.otro;
+  const def = EVENT_TYPE_MAP[event.event_type];
   const team = teamName?.(event.team_id) ?? null;
   const editableGeneric = canEdit && !isMedical && !isMatch && !event.trip_id && !event.meeting_id && !!clubId;
   const canEditPlan = isTraining && !!clubId && canEditTeam(event.team_id);

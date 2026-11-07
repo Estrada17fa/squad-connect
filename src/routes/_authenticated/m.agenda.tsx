@@ -153,11 +153,8 @@ function AgendaProximoPage() {
   };
 
   const openTrip = (id: string) => navigate({ to: "/agenda-viajes", search: { open: id } });
-  const open = (e: CalendarEventRow) => {
-    if (e.trip_id) return openTrip(e.trip_id);
-    if (e.meeting_id) return navigate({ to: "/coordinacion/general/juntas/$meetingId", params: { meetingId: e.meeting_id } });
-    setDetailEvent(e);
-  };
+  const [detailLeg, setDetailLeg] = React.useState<"ida" | "regreso" | undefined>(undefined);
+  const open = (e: CalendarEventRow, leg?: "ida" | "regreso") => { setDetailLeg(leg); setDetailEvent(e); };
 
   async function respond(meetingId: string, status: "confirmado" | "rechazado") {
     const { error } = await supabase.from("meeting_attendees").update({ attendance_status: status }).eq("meeting_id", meetingId).eq("user_id", user.id);
@@ -182,7 +179,7 @@ function AgendaProximoPage() {
                     if (it.moment) {
                       const trip = tripById.get(it.trip_id!)!;
                       const hasPass = !!it.moment.flight && !!flightsQ.data?.passFlights.has(it.moment.flight.id);
-                      return <TripCard key={it.id} trip={trip} moment={it.moment} hasPass={hasPass} onOpen={() => openTrip(trip.id)} />;
+                      return <TripCard key={it.id} trip={trip} moment={it.moment} hasPass={hasPass} onOpen={() => open(e, it.moment!.leg)} />;
                     }
                     if (agendaKind(e) === "partido") {
                       const m = matchByEvent.get(e.id) ?? null;
@@ -295,6 +292,7 @@ function AgendaProximoPage() {
         userId={user.id}
         teams={editableTeams}
         teamName={(id) => (id ? teamNames[id] ?? null : "Todo el club")}
+        tripLeg={detailLeg}
       />
     </div>
   );
