@@ -20,7 +20,7 @@ function isImage(path: string) {
  * El visor nativo del navegador móvil no incrusta PDFs (muestra una caja gris
  * con el nombre del archivo), así que lo renderizamos nosotros con pdfjs.
  */
-function PdfCanvas({ url, onFail }: { url: string; onFail?: () => void }) {
+export function PdfCanvas({ url, onFail }: { url: string; onFail?: () => void }) {
   const hostRef = React.useRef<HTMLDivElement | null>(null);
   const [state, setState] = React.useState<"loading" | "ready" | "error">("loading");
   const [attempt, setAttempt] = React.useState(0);
