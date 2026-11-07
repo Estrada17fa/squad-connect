@@ -1,10 +1,12 @@
 import * as React from "react";
-import { Luggage, Plane, Upload } from "lucide-react";
+import { Check, Luggage, Plane, Upload, Users } from "lucide-react";
 import { formatDateTime } from "@/lib/calendar-utils";
 import { LEG_LABEL, personLabel, type MiniProfile, type TripLeg } from "@/lib/tripLogistics";
 import { type TripFlight } from "@/hooks/useTripFlights";
 import { TimelineSection } from "./TimelineSection";
-import { PersonChips } from "./PersonChips";
+import { TripSheet } from "@/components/coord/viajes/form";
+import { PersonAvatar } from "@/components/coord/viajes/parts";
+import { cn } from "@/lib/utils";
 import { FlightFormDialog } from "./FlightFormDialog";
 import { FlightDetailSheet } from "./FlightDetailSheet";
 import { type AssignCandidate } from "./PassengerAssignDialog";
@@ -24,6 +26,8 @@ interface Props {
 export function FlightsSection({ tripId, userId, leg, flights, allFlights, travelers, canEdit, onUploadPasses }: Props) {
   const [formOpen, setFormOpen] = React.useState(false);
   const [detailFor, setDetailFor] = React.useState<TripFlight | null>(null);
+  const [listFor, setListFor] = React.useState<TripFlight | null>(null);
+  const listed = listFor ? allFlights.find((x) => x.id === listFor.id) ?? listFor : null;
 
   return (
     <>
@@ -56,12 +60,6 @@ export function FlightsSection({ tripId, userId, leg, flights, allFlights, trave
                 Sale {formatDateTime(f.departs_at)}
                 {f.arrives_at ? ` · Llega ${formatDateTime(f.arrives_at)}` : ""}
               </p>
-              <p className="text-xs text-primary">
-                {f.passengers.length} pasajero{f.passengers.length === 1 ? "" : "s"}
-                {f.passengers.length > 0
-                  ? ` · ${f.passengers.filter((p) => f.boarding_passes.some((bp) => bp.user_id === p.user_id)).length} con pase`
-                  : ""}
-              </p>
             </div>
 
             {f.baggage_handlers.filter((h) => h.checked_bag).length > 0 ? (
@@ -78,11 +76,13 @@ export function FlightsSection({ tripId, userId, leg, flights, allFlights, trave
             ) : null}
 
 
-            <PersonChips
-              people={f.passengers.map((p) => ({ id: p.id, profile: p.profile as MiniProfile | null }))}
-              emptyLabel="Sin pasajeros asignados"
-            />
+            <FlightFaces flight={f} />
           </button>
+          {f.passengers.length ? (
+            <button type="button" onClick={() => setListFor(f)} className="coord-press flex min-h-10 w-full items-center justify-center gap-1.5 rounded-xl bg-muted text-xs font-semibold">
+              <Users className="h-3.5 w-3.5" /> Ver pasajeros
+            </button>
+          ) : null}
           {canEdit && onUploadPasses ? (
             <button type="button" onClick={() => onUploadPasses(f.id)} className="coord-press flex min-h-10 w-full items-center justify-center gap-1.5 rounded-xl bg-muted text-xs font-semibold">
               <Upload className="h-3.5 w-3.5" /> Subir pases de este vuelo
@@ -96,6 +96,25 @@ export function FlightsSection({ tripId, userId, leg, flights, allFlights, trave
         <FlightFormDialog open={formOpen} onOpenChange={setFormOpen} tripId={tripId} userId={userId} flight={null} defaultLeg={leg} />
       ) : null}
 
+      <TripSheet open={!!listed} onOpenChange={(v) => !v && setListFor(null)} title={listed ? `Pasajeros · ${listed.flight_code}` : "Pasajeros"}>
+        {listed ? (
+          <ul className="divide-y divide-border/40 overflow-hidden rounded-[16px] bg-card">
+            {[...listed.passengers].sort((a, b) => personLabel(a.profile).localeCompare(personLabel(b.profile), "es")).map((p) => {
+              const has = listed.boarding_passes.some((bp) => bp.user_id === p.user_id);
+              return (
+                <li key={p.id} className="flex items-center gap-3 px-3 py-2.5">
+                  <PersonAvatar p={p.profile as MiniProfile | null} />
+                  <span className="min-w-0 flex-1 truncate text-sm">{personLabel(p.profile)}</span>
+                  <span className={cn("inline-flex shrink-0 items-center gap-1 text-xs font-semibold", has ? "text-primary" : "text-muted-foreground")}>
+                    {has ? <><Check className="h-3.5 w-3.5" /> Con pase</> : "Sin pase"}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        ) : null}
+      </TripSheet>
+
       <FlightDetailSheet
         open={!!detailFor}
         onOpenChange={(v) => !v && setDetailFor(null)}
@@ -107,5 +126,21 @@ export function FlightsSection({ tripId, userId, leg, flights, allFlights, trave
         canEdit={canEdit}
       />
     </>
+  );
+}
+
+/** Hasta 6 caras + "+N" y el conteo de pases. */
+function FlightFaces({ flight: f }: { flight: TripFlight }) {
+  if (!f.passengers.length) return <p className="text-xs text-muted-foreground">Sin pasajeros asignados</p>;
+  const withPass = f.passengers.filter((p) => f.boarding_passes.some((bp) => bp.user_id === p.user_id)).length;
+  const extra = f.passengers.length - 6;
+  return (
+    <div className="flex items-center gap-3">
+      <div className="flex -space-x-2">
+        {f.passengers.slice(0, 6).map((p) => <PersonAvatar key={p.id} p={p.profile as MiniProfile | null} className="ring-2 ring-card" />)}
+        {extra > 0 ? <span className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-[11px] font-semibold ring-2 ring-card">+{extra}</span> : null}
+      </div>
+      <span className="text-xs text-muted-foreground">{f.passengers.length} pasajero{f.passengers.length === 1 ? "" : "s"} · {withPass} con pase</span>
+    </div>
   );
 }
