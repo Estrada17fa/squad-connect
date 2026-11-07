@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Link } from "@tanstack/react-router";
-import { CalendarDays, Check, ChevronDown, SlidersHorizontal } from "lucide-react";
+import { CalendarDays, Check, ChevronDown, Plane, SlidersHorizontal } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { EntitySheet, EntitySheetBody, EntitySheetHeader, EntitySheetTitle } from "@/components/squad/EntitySheet";
 import { Button } from "@/components/ui/button";
@@ -12,9 +12,9 @@ import { cn } from "@/lib/utils";
 
 export type AgendaTab = "proximo" | "mes" | "viajes";
 
-const TABS: { key: AgendaTab; label: string; to: string; params?: Record<string, string> }[] = [
-  { key: "proximo", label: "Agenda", to: "/m/$module", params: { module: "agenda" } },
-  { key: "viajes", label: "Mis viajes", to: "/agenda-viajes" },
+const TABS: { key: AgendaTab; label: string; to: string; icon: typeof Plane }[] = [
+  { key: "proximo", label: "Agenda", to: "/m/agenda", icon: CalendarDays },
+  { key: "viajes", label: "Mis viajes", to: "/agenda-viajes", icon: Plane },
 ];
 
 /**
@@ -83,9 +83,6 @@ export function AgendaHeader({
               {active ? <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary" /> : null}
             </button>
           ) : null}
-          <Link to={"/m/$module" as any} params={{ module: "mes" } as any} aria-label="Ver mes" className={cn("flex h-10 w-10 items-center justify-center rounded-full hover:bg-muted", tab === "mes" && "text-primary")}>
-            <CalendarDays className="h-5 w-5" />
-          </Link>
           <NewEventLauncher variant="icon" clubId={profile?.club_id ?? null} userId={user.id} genericTeams={editableTeams} defaultTeamId={category} defaultDate={defaultDate} />
         </div>
       </div>
@@ -95,12 +92,12 @@ export function AgendaHeader({
           <Link
             key={t.key}
             to={t.to as any}
-            params={t.params as any}
             className={cn(
-              "-mb-px border-b-2 pb-2 text-sm font-semibold transition-colors",
+              "-mb-px inline-flex items-center gap-1.5 border-b-2 pb-2 text-sm font-semibold transition-colors",
               tab === t.key ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
             )}
           >
+            <t.icon className="h-4 w-4" />
             {t.label}
           </Link>
         ))}
