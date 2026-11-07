@@ -170,7 +170,7 @@ export function MyTripPage({ trip, match, userId, onBack }: { trip: TripRow; mat
 
       {legFlights.length ? (
         <div className="space-y-3">
-          {legFlights.map((f) => <PassTicket key={f.id} flight={f} userId={userId} onOpen={setPassPaths} />)}
+          {legFlights.map((f) => <PassTicket key={f.id} flight={f} userId={userId} onOpen={openPass} />)}
         </div>
       ) : null}
 
