@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AgendaSkeleton } from "@/components/squad/LoadingState";
 import { useApp } from "@/components/squad/AppLayout";
 import { useTeamFilter } from "@/hooks/useTeamFilter";
-import { useCalendarEvents, type CalendarEventRow } from "@/hooks/useCalendarEvents";
+import { calendarRangeQueryOptions, useCalendarLive, useCalendarMonths, useCalendarRange, useNextEventAfter, type CalendarEventRow } from "@/hooks/useCalendarEvents";
 import { useEditableTeams } from "@/hooks/useEditableTeams";
 import { useTeamAccess } from "@/hooks/useTeamAccess";
 import { useTrips } from "@/hooks/useTrips";
@@ -15,10 +15,9 @@ import { useMeetings } from "@/hooks/useCoordinacion";
 import { EventDetailSheet } from "@/components/calendar/EventDetailSheet";
 import { AgendaHeader } from "@/components/agenda/AgendaHeader";
 import { MatchCard, SimpleCard, TripCard } from "@/components/agenda/AgendaCards";
-import { WeekStrip } from "@/components/agenda/WeekStrip";
-import { agendaDayKey, agendaKind, filterAgenda, groupByDay, hasMoreAfter, tripMoments, type AgendaKind, type TripMoment } from "@/lib/agenda";
+import { LoadMore, MonthGrid, PastToggle, ViewSwitch, WeekStrip, dayTitle, longDay, monthTitle, shortDay } from "@/components/agenda/AgendaViews";
+import { addDays, addMonthsTo, agendaDayKey, agendaKind, filterAgenda, groupByMonthDay, inRange, monthGridDays, monthStart, parseDayKey, sameDay, tripMoments, weekRange, type AgendaKind, type AgendaView, type TripMoment } from "@/lib/agenda";
 import { buildEventContext } from "@/lib/eventContext";
-import { formatRelativeDayLabel } from "@/lib/calendar-utils";
 import { isPlayerVisible } from "@/lib/viajes";
 
 export const Route = createFileRoute("/_authenticated/m/agenda")({
@@ -32,11 +31,15 @@ export const Route = createFileRoute("/_authenticated/m/agenda")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
+  validateSearch: (s: Record<string, unknown>): { vista?: string; fecha?: string; dia?: string; pasados?: boolean } => ({
+    vista: typeof s.vista === "string" ? s.vista : undefined,
+    fecha: typeof s.fecha === "string" ? s.fecha : undefined,
+    dia: typeof s.dia === "string" ? s.dia : undefined,
+    pasados: s.pasados === true || s.pasados === "true" ? true : undefined,
+  }),
   component: AgendaProximoPage,
 });
 
-const longDay = new Intl.DateTimeFormat("es-MX", { weekday: "long", day: "numeric" });
-const cap = (x: string) => x.charAt(0).toUpperCase() + x.slice(1);
 const dayFmt = new Intl.DateTimeFormat("es-MX", { weekday: "short", day: "numeric", month: "short" });
 
 function AgendaProximoPage() {
@@ -48,10 +51,34 @@ function AgendaProximoPage() {
   const { canEditRecord } = useTeamAccess("agenda");
   const [category, setCategory] = useTeamFilter();
   const [kinds, setKinds] = React.useState<AgendaKind[]>([]);
-  const [days, setDays] = React.useState(14);
+  const search = Route.useSearch();
+  const view: AgendaView = search.vista === "mes" || search.vista === "lista" ? search.vista : "semana";
+  const todayKey = agendaDayKey(new Date());
+  const today = parseDayKey(todayKey)!;
+  const fecha = parseDayKey(search.fecha) ?? today;
+  const dia = parseDayKey(search.dia);
+  const setSearch = (next: Partial<typeof search>) => navigate({ to: "/m/agenda", search: (prev: typeof search) => ({ ...prev, ...next }) as any });
   const [detailEvent, setDetailEvent] = React.useState<CalendarEventRow | null>(null);
 
-  const { data: events, isLoading } = useCalendarEvents({ mode: "club", clubId });
+  useCalendarLive(clubId);
+  const week = weekRange(fecha);
+  const grid = monthGridDays(fecha);
+  const range = view === "mes" ? grid : week;
+  const rangeQ = useCalendarRange(view === "lista" ? null : clubId, range.from, range.to);
+  // Semana: precarga la anterior y la siguiente.
+  React.useEffect(() => {
+    if (view !== "semana" || !clubId) return;
+    for (const n of [-7, 7]) qc.prefetchQuery(calendarRangeQueryOptions(clubId, addDays(week.from, n), addDays(week.to, n)));
+  }, [view, clubId, week.from.getTime()]); // eslint-disable-line react-hooks/exhaustive-deps
+  const fwdQ = useCalendarMonths(view === "lista" ? clubId : null, today, "forward");
+  const backQ = useCalendarMonths(view === "lista" && search.pasados ? clubId : null, today, "back");
+  const events = React.useMemo(() => {
+    if (view !== "lista") return rangeQ.data;
+    if (!fwdQ.data) return undefined;
+    const all = [...fwdQ.data.pages.flat(), ...(backQ.data?.pages.flat() ?? [])];
+    return [...new Map(all.map((e) => [e.id, e])).values()];
+  }, [view, rangeQ.data, fwdQ.data, backQ.data]);
+  const isLoading = view === "lista" ? fwdQ.isLoading : rangeQ.isLoading;
   const tripsQ = useTrips(clubId, null);
   const matchesQ = useOurMatches(clubId);
   const meetingsQ = useMeetings(clubId);
@@ -75,13 +102,7 @@ function AgendaProximoPage() {
     [tripById, user.id],
   );
 
-  const visible = React.useMemo(() => {
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    // Viajes en curso siguen visibles hasta su regreso.
-    const future = (events ?? []).filter((e) => new Date(e.ends_at ?? e.starts_at) >= today || new Date(e.starts_at) >= today);
-    return filterAgenda(future, myTeamIds, category, kinds);
-  }, [events, myTeamIds, category, kinds]);
+  const visible = React.useMemo(() => filterAgenda(events ?? [], myTeamIds, category, kinds), [events, myTeamIds, category, kinds]);
 
   const myTripIds = React.useMemo(() => [...new Set(visible.map((e) => e.trip_id).filter((id): id is string => !!id && isMyTrip(id)))], [visible, isMyTrip]);
   const flightsQ = useQuery({
@@ -115,14 +136,13 @@ function AgendaProximoPage() {
     return out;
   }, [visible, isMyTrip, tripById, flightsQ.data]);
 
-  const groups = React.useMemo(() => groupByDay(items, days), [items, days]);
-  const more = hasMoreAfter(items, days);
-  const [selected, setSelected] = React.useState<Date | null>(null);
-  const goTo = (d: Date) => {
-    setSelected(d);
-    const target = groups.find((g) => g.date >= new Date(d.getFullYear(), d.getMonth(), d.getDate()));
-    if (target) document.getElementById(`dia-${agendaDayKey(target.date)}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
+  const weekAll = !dia || dia < week.from || dia >= week.to;
+  const weekItems = inRange(items, week.from, week.to);
+  const monthSel = view === "mes" ? (dia && dia >= grid.from && dia < grid.to ? dia : sameDay(monthStart(fecha), monthStart(today)) ? today : monthStart(fecha)) : null;
+  const nextQ = useNextEventAfter(clubId, week.to, view === "semana" && !rangeQ.isLoading && weekItems.length === 0);
+  const nextItem = React.useMemo(() => filterAgenda(nextQ.data ?? [], myTeamIds, category, kinds)[0] ?? null, [nextQ.data, myTeamIds, category, kinds]);
+  const shiftWeek = (n: number) => setSearch({ fecha: agendaDayKey(addDays(week.from, 7 * n)), dia: undefined });
+  const shiftMonth = (n: number) => setSearch({ fecha: agendaDayKey(addMonthsTo(fecha, n)), dia: undefined });
 
   const matchIds = React.useMemo(() => (isPlayerOnly ? [...matchByEvent.values()].map((m) => m.id) : []), [isPlayerOnly, matchByEvent]);
   const callupsQ = useMatchCallups(matchIds);
@@ -157,26 +177,7 @@ function AgendaProximoPage() {
     return buildEventContext(e);
   };
 
-  return (
-    <div className="space-y-5">
-      <AgendaHeader tab="proximo" category={category} onCategory={setCategory} kinds={kinds} onKinds={setKinds} />
-
-      {isLoading && !events ? (
-        <AgendaSkeleton count={4} />
-      ) : (
-        <>
-          <WeekStrip events={items} selected={selected} onSelect={goTo} />
-
-          {groups.length === 0 ? (
-            <p className="py-10 text-center text-sm text-muted-foreground">Nada en tu agenda estos días</p>
-          ) : (
-            groups.map((g) => {
-              const rel = formatRelativeDayLabel(g.date);
-              const extra = rel === "HOY" ? " · Hoy" : rel === "MAÑANA" ? " · Mañana" : "";
-              return (
-                <section key={g.date.toISOString()} id={`dia-${agendaDayKey(g.date)}`} className="scroll-mt-4 space-y-2">
-                  <h2 className="px-1 text-xs font-semibold text-muted-foreground">{cap(longDay.format(g.date))}{extra}</h2>
-                  {g.events.map((it) => {
+  const renderItem = (it: Item) => {
                     const e = it.event;
                     if (it.moment) {
                       const trip = tripById.get(it.trip_id!)!;
@@ -198,17 +199,91 @@ function AgendaProximoPage() {
                         onOpen={() => open(e)}
                       />
                     );
-                  })}
-                </section>
-              );
-            })
-          )}
+  };
 
-          {more ? (
-            <button type="button" onClick={() => setDays((d) => d + 14)} className="w-full py-3 text-sm font-semibold text-primary">
-              Ver más
-            </button>
-          ) : null}
+  const DayBlock = ({ date, list, title }: { date: Date; list: Item[]; title?: string }) => (
+    <section id={`dia-${agendaDayKey(date)}`} className="space-y-2">
+      <h2 className="px-1 text-xs font-semibold text-muted-foreground">{title ?? longDay(date)}{sameDay(date, today) ? " · Hoy" : sameDay(date, addDays(today, 1)) ? " · Mañana" : ""}</h2>
+      {list.map(renderItem)}
+    </section>
+  );
+  const byDay = (list: Item[]) => groupByMonthDay(list).flatMap((m) => m.days);
+  const empty = (t: string) => <p className="py-8 text-center text-sm text-muted-foreground">{t}</p>;
+  const fwdPages = fwdQ.data?.pages.length ?? 0;
+  const backPages = backQ.data?.pages.length ?? 0;
+
+  return (
+    <div className="space-y-4">
+      <AgendaHeader tab="proximo" category={category} onCategory={setCategory} kinds={kinds} onKinds={setKinds} defaultDate={dia ?? undefined} />
+      <ViewSwitch value={view} onChange={(v) => setSearch({ vista: v, fecha: undefined, dia: undefined })} />
+
+      {view === "semana" ? (
+        <>
+          <WeekStrip start={week.from} items={weekItems} selected={weekAll ? null : dia}
+            onSelect={(d) => setSearch({ dia: !weekAll && dia && sameDay(d, dia) ? undefined : agendaDayKey(d) })}
+            onShift={shiftWeek} onToday={() => setSearch({ fecha: undefined, dia: undefined })} />
+          {isLoading && !events ? <AgendaSkeleton count={3} /> : weekAll ? (
+            weekItems.length === 0 ? (
+              <div className="py-8 text-center">
+                <p className="text-sm font-semibold">Semana libre</p>
+                {nextItem ? (
+                  <button type="button" className="mt-1 text-sm font-semibold text-primary" onClick={() => setSearch({ fecha: agendaDayKey(new Date(nextItem.starts_at)), dia: undefined })}>
+                    Próximo: {shortDay(new Date(nextItem.starts_at))} ›
+                  </button>
+                ) : null}
+              </div>
+            ) : byDay(weekItems).map((g) => <DayBlock key={g.date.toISOString()} date={g.date} list={g.events} />)
+          ) : (
+            <>
+              <button type="button" onClick={() => setSearch({ dia: undefined })} className="text-xs font-semibold text-primary">‹ Toda la semana</button>
+              {(() => {
+                const list = inRange(items, dia!, addDays(dia!, 1));
+                return list.length ? <DayBlock date={dia!} list={list} /> : <><h2 className="px-1 text-xs font-semibold text-muted-foreground">{longDay(dia!)}</h2>{empty("Sin eventos este día")}</>;
+              })()}
+            </>
+          )}
+        </>
+      ) : view === "mes" ? (
+        <>
+          <MonthGrid month={monthStart(fecha)} days={grid.days} items={inRange(items, grid.from, grid.to)} selected={monthSel!}
+            onSelect={(d) => setSearch({ dia: agendaDayKey(d), ...(d.getMonth() !== fecha.getMonth() ? { fecha: agendaDayKey(monthStart(d)) } : {}) })}
+            onShift={shiftMonth} onToday={() => setSearch({ fecha: undefined, dia: undefined })} />
+          {isLoading && !events ? <AgendaSkeleton count={2} /> : (() => {
+            const list = inRange(items, monthSel!, addDays(monthSel!, 1));
+            return list.length ? <DayBlock date={monthSel!} list={list} /> : <><h2 className="px-1 text-xs font-semibold text-muted-foreground">{longDay(monthSel!)}</h2>{empty("Sin eventos este día")}</>;
+          })()}
+        </>
+      ) : (
+        <>
+          <PastToggle on={!!search.pasados} onChange={(v) => setSearch({ pasados: v || undefined })} />
+          {isLoading && !events ? <AgendaSkeleton count={4} /> : (
+            <>
+              {(() => {
+                const future = items.filter((i) => new Date(i.starts_at) >= today);
+                const months = groupByMonthDay(future);
+                return months.length === 0 && !fwdQ.hasNextPage ? empty("Sin eventos próximos") : months.map((m) => (
+                  <div key={m.month.toISOString()} className="space-y-4">
+                    <h2 className="px-1 pt-2 text-base font-bold">{monthTitle(m.month)}</h2>
+                    {m.days.map((g) => <DayBlock key={g.date.toISOString()} date={g.date} list={g.events} title={dayTitle(g.date)} />)}
+                  </div>
+                ));
+              })()}
+              {fwdQ.hasNextPage ? <LoadMore key={`f${fwdPages}`} active={!fwdQ.isFetchingNextPage} onHit={() => fwdQ.fetchNextPage()} /> : null}
+              {fwdQ.isFetchingNextPage ? <AgendaSkeleton count={1} /> : null}
+              {search.pasados && !fwdQ.hasNextPage ? (
+                <div className="space-y-4 border-t border-border/60 pt-4">
+                  <h2 className="px-1 text-base font-bold">Anteriores</h2>
+                  {groupByMonthDay(items.filter((i) => new Date(i.starts_at) < today), true).map((m) => (
+                    <div key={m.month.toISOString()} className="space-y-4">
+                      <h3 className="px-1 text-sm font-bold text-muted-foreground">{monthTitle(m.month)}</h3>
+                      {m.days.map((g) => <DayBlock key={g.date.toISOString()} date={g.date} list={g.events} title={dayTitle(g.date)} />)}
+                    </div>
+                  ))}
+                  {backQ.hasNextPage ? <LoadMore key={`b${backPages}`} active={!backQ.isFetchingNextPage} onHit={() => backQ.fetchNextPage()} /> : null}
+                </div>
+              ) : null}
+            </>
+          )}
         </>
       )}
 
