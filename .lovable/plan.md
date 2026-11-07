@@ -40,3 +40,9 @@ Sin cambios a la base ni a las reglas. Se reutilizan las consultas actuales de A
 - `useCalendarEvents`, `useUpcomingEvents`, `useNextEventOfType`: select `*, trip:trips(status)` y filtro común `isAgendaVisible(event)` en `src/lib/viajes.ts` (usa isPlayerVisible/tripDisplayStatus), con tests.
 - Nuevos componentes en `src/components/agenda/*` (AgendaHeader, CategoryPicker, TypeFilterSheet, HeroCard, DayGroup, AgendaRow); reusa MatchupHeader, TeamCrest, NewEventLauncher, EventDetailSheet, RSVP de juntas.
 - Las rutas `/m/agenda`, `/m/mes`, `/agenda-viajes` comparten el encabezado; categorías desde get_my_access (memberships).
+
+## 5) Avisos de viaje (único cambio en la base)
+- Se ajusta la función que envía "Fuiste convocado al viaje": no avisa si el viaje está en Borrador.
+- Al publicar se avisa a todos una sola vez (ya existe); si ya está publicado y se agrega a alguien, a esa persona sí se le avisa.
+- Orizaba (en Borrador): ya se enviaron 24 avisos a 24 personas, ninguno leído aún. No se borran sin tu permiso.
+- Prueba: agregar viajero temporal a borrador = sin aviso; publicar = un aviso; agregar tras publicar = aviso.
