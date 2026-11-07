@@ -9,6 +9,8 @@ export interface PageExtract {
   nameGuess: string | null;
   seat: string | null;
   flightCode: string | null;
+  group?: string | null;
+  terminal?: string | null;
   hasText: boolean;
 }
 
@@ -134,7 +136,9 @@ export function extractFromPageText(text: string, page: number): PageExtract {
 
   if (nameGuess) nameGuess = nameGuess.replace(/\s{2,}/g, " ").slice(0, 60).trim();
 
-  return { page, text: clean, nameGuess, seat, flightCode, hasText };
+  const group = clean.match(/\b(?:group|grupo|zona|zone)\s*[:#]?\s*([A-Z0-9]{1,2})\b/i)?.[1]?.toUpperCase() ?? null;
+  const terminal = clean.match(/\b(?:terminal|term)\s*[:#.]?\s*([A-Z0-9]{1,2})\b/i)?.[1]?.toUpperCase() ?? null;
+  return { page, text: clean, nameGuess, seat, flightCode, group, terminal, hasText };
 }
 
 /** Elige la mejor persona para un nombre detectado. */
@@ -259,6 +263,44 @@ export async function renderPdfPageThumb(file: File, pageIndex: number, width = 
     canvas.height = Math.ceil(viewport.height);
     await page.render({ canvasContext: canvas.getContext("2d")!, viewport, canvas }).promise;
     return canvas.toDataURL("image/jpeg", 0.7);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Lee un PDF y convierte cada página en imagen JPEG (para que se vea en
+ * cualquier celular), junto con el texto extraído. Null si no se puede abrir.
+ */
+export async function pdfToPassImages(file: File, onPage?: (done: number, total: number) => void): Promise<{ extract: PageExtract; blob: Blob }[] | null> {
+  try {
+    const pdfjs: any = await import("pdfjs-dist");
+    pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString();
+    const doc = await pdfjs.getDocument({ data: await file.arrayBuffer() }).promise;
+    const out: { extract: PageExtract; blob: Blob }[] = [];
+    for (let i = 1; i <= doc.numPages; i++) {
+      const page = await doc.getPage(i);
+      let text = "";
+      try {
+        const content = await page.getTextContent();
+        text = content.items.map((it: any) => (typeof it.str === "string" ? it.str : "")).join("\n");
+      } catch { text = ""; }
+      const base = page.getViewport({ scale: 1 });
+      const scale = Math.min(3, 1400 / base.width);
+      const viewport = page.getViewport({ scale });
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.ceil(viewport.width);
+      canvas.height = Math.ceil(viewport.height);
+      const ctx = canvas.getContext("2d")!;
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      await page.render({ canvasContext: ctx, viewport, canvas }).promise;
+      const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/jpeg", 0.88));
+      if (!blob) throw new Error("render");
+      out.push({ extract: extractFromPageText(text, i), blob });
+      onPage?.(i, doc.numPages);
+    }
+    return out;
   } catch {
     return null;
   }
