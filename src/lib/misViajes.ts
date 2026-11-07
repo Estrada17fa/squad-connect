@@ -60,9 +60,6 @@ export function tripDayLabel(
   return "Regresó";
 }
 
-/** @deprecated usa tripDayLabel. */
-export const tripTimeLabel = (trip: Parameters<typeof tripDayLabel>[0], now = new Date()) => tripDayLabel(trip, {}, now);
-
 export type MyItemKind = "cita" | "vuelo" | "transporte" | "hotel" | "comida" | "partido";
 export interface MyItem { id: string; at: string; kind: MyItemKind; title: string; detail: string | null; place: string | null; transportType?: string }
 

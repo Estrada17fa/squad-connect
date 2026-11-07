@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { defaultLeg, myItinerary, nextItemId, orderPassCards, sessionNoticeTargets, similarPeople, tripTimeLabel } from "./misViajes";
+import { defaultLeg, myItinerary, nextItemId, orderPassCards, sessionNoticeTargets, similarPeople, tripDayLabel, personDeparture, personReturn } from "./misViajes";
 
 describe("defaultLeg", () => {
   const f = [{ leg: "ida", departs_at: "2026-11-07T10:00:00Z", arrives_at: "2026-11-07T12:00:00Z" }, { leg: "regreso", departs_at: "2026-11-09T10:00:00Z" }];
@@ -8,12 +8,28 @@ describe("defaultLeg", () => {
   it("Solo regreso", () => expect(defaultLeg([f[1]!], new Date("2026-11-01"))).toBe("regreso"));
 });
 
-describe("tripTimeLabel", () => {
-  const t = (iso: string) => iso.slice(11, 16);
+describe("tripDayLabel (solo el día, nunca la hora)", () => {
   const now = new Date(2026, 10, 6, 12, 0);
-  it("Sale mañana", () => expect(tripTimeLabel({ status: "confirmado", departure_at: new Date(2026, 10, 7, 5, 15).toISOString(), return_at: null }, now, () => "5:15 am")).toBe("Sale mañana 5:15 am"));
-  it("En curso", () => expect(tripTimeLabel({ status: "confirmado", departure_at: new Date(2026, 10, 5).toISOString(), return_at: new Date(2026, 10, 8).toISOString() }, now, t)).toBe("En curso"));
-  it("Regresa hoy", () => expect(tripTimeLabel({ status: "confirmado", departure_at: new Date(2026, 10, 5).toISOString(), return_at: new Date(2026, 10, 6, 20).toISOString() }, now, t)).toBe("Regresa hoy"));
+  const iso = (d: number, h = 12, m = 0) => new Date(2026, 10, d, h, m).toISOString();
+  it("Sale mañana sin hora aunque haya reunión 9:30", () => expect(tripDayLabel({ status: "confirmado", departure_at: iso(7), return_at: null, meeting_at: iso(7, 9, 30) }, {}, now)).toBe("Sale mañana"));
+  it("Sale mañana sin reunión ni vuelos", () => expect(tripDayLabel({ status: "confirmado", departure_at: iso(7), return_at: null }, {}, now)).toBe("Sale mañana"));
+  it("Sale el sáb 7 cuando faltan días", () => expect(tripDayLabel({ status: "confirmado", departure_at: iso(7), return_at: null }, {}, new Date(2026, 10, 4))).toBe("Sale el sáb 7"));
+  it("Regresa el lun 9", () => expect(tripDayLabel({ status: "en_curso", departure_at: iso(5), return_at: iso(9) }, {}, now)).toBe("Regresa el lun 9"));
+  it("En curso sin regreso", () => expect(tripDayLabel({ status: "en_curso", departure_at: iso(5), return_at: null }, {}, now)).toBe("En curso"));
+  it("Regresa hoy", () => expect(tripDayLabel({ status: "confirmado", departure_at: iso(5), return_at: iso(6, 20) }, {}, now)).toBe("Regresa hoy"));
+  it("Finalizado", () => expect(tripDayLabel({ status: "completado", departure_at: iso(1), return_at: iso(2) }, {}, now)).toBe("Finalizado"));
+});
+
+describe("personDeparture / personReturn", () => {
+  const trip = { departure_at: new Date(2026, 10, 8).toISOString(), return_at: new Date(2026, 10, 10).toISOString(), meeting_at: null };
+  const flights = [
+    { leg: "ida", departs_at: new Date(2026, 10, 7, 6).toISOString(), passengers: [{ user_id: "u1" }] },
+    { leg: "ida", departs_at: new Date(2026, 10, 6, 6).toISOString(), passengers: [{ user_id: "u2" }] },
+    { leg: "regreso", departs_at: new Date(2026, 10, 11, 6).toISOString(), passengers: [{ user_id: "u1" }] },
+  ];
+  it("usa el primer vuelo de esa persona", () => expect(personDeparture(trip, { userId: "u1", flights }).getDate()).toBe(7));
+  it("usa su último regreso", () => expect(personReturn(trip, { userId: "u1", flights })?.getDate()).toBe(11));
+  it("sin vuelos usa el viaje", () => expect(personDeparture(trip).getDate()).toBe(8));
 });
 
 describe("myItinerary", () => {

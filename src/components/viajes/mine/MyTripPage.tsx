@@ -11,7 +11,7 @@ import { useTripTransports } from "@/hooks/useTripTransports";
 import { useTripHotels } from "@/hooks/useTripHotels";
 import { useTripMeals } from "@/hooks/useTripMeals";
 import { MEAL_TYPE_LABEL } from "@/lib/tripLogistics";
-import { defaultLeg, myItinerary, nextItemId, tripTimeLabel, type Leg, type MyItem } from "@/lib/misViajes";
+import { defaultLeg, myItinerary, nextItemId, tripDayLabel, type Leg, type MyItem } from "@/lib/misViajes";
 import { PersonAvatar, TripMatchup, timeLabel, tripDates } from "@/components/coord/viajes/parts";
 import { PassFullscreen } from "./PassFullscreen";
 import { cn } from "@/lib/utils";
@@ -154,7 +154,7 @@ export function MyTripPage({ trip, match, userId, onBack }: { trip: TripRow; mat
         <TripMatchup trip={trip} match={match} />
         <h1 className="text-xl font-bold">{trip.title}</h1>
         <p className="text-sm text-muted-foreground">{tripDates(trip)}</p>
-        <span className="inline-flex rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold text-primary">{tripTimeLabel(trip)}</span>
+        <span className="inline-flex rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold text-primary">{tripDayLabel(trip)}</span>
       </header>
 
       {hasBoth ? (
