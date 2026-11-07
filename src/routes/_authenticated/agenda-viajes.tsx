@@ -112,7 +112,7 @@ function AgendaViajesPage() {
         <EmptyState icon={Plane} title="No tienes viajes próximos" message="Cuando te convoquen a un viaje aparecerá aquí." />
       ) : (
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-          {upcoming.map((t) => <TripCard key={t.id} trip={t} match={matchFor(t)} onOpen={() => go(t.id)} />)}
+          {upcoming.map((t) => <TripCard key={t.id} trip={t} match={matchFor(t)} pass={passFor(t.id)} onOpen={() => go(t.id)} onPass={() => { const f = passFor(t.id); if (f) openPass(f); }} />)}
         </div>
       )}
       {past.length ? (
@@ -136,6 +136,7 @@ function AgendaViajesPage() {
           ) : null}
         </section>
       ) : null}
+      {passTarget ? <FlightPassViewer target={passTarget} userId={user.id} onClose={() => setPassTarget(null)} /> : null}
     </div>
   );
 }
