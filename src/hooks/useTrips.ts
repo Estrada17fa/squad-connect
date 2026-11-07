@@ -89,6 +89,8 @@ export const tripsQueryOptions = (clubId: string | null | undefined, teamId: str
 export function useTrips(clubId: string | null | undefined, teamId: string | null | undefined) {
   const qc = useQueryClient();
   const query = useQuery(tripsQueryOptions(clubId, teamId));
+  // Sufijo único: varias pantallas pueden observar los mismos viajes a la vez.
+  const uid = React.useId();
 
   React.useEffect(() => {
     if (!clubId) return;
@@ -96,14 +98,14 @@ export function useTrips(clubId: string | null | undefined, teamId: string | nul
       qc.invalidateQueries({ queryKey: ["trips", clubId, teamId ?? "all"] });
     };
     const channel = supabase
-      .channel(`trips-${clubId}-${teamId ?? "all"}`)
+      .channel(`trips-${clubId}-${teamId ?? "all"}-${uid}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "trips" }, invalidate)
       .on("postgres_changes", { event: "*", schema: "public", table: "trip_travelers" }, invalidate)
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [clubId, teamId, qc]);
+  }, [clubId, teamId, qc, uid]);
 
   return query;
 }
