@@ -7,7 +7,7 @@ export type CrestSize = "sm" | "md" | "lg";
 const SIZE: Record<CrestSize, string> = {
   sm: "h-6 w-6 text-[9px]",
   md: "h-9 w-9 text-[11px]",
-  lg: "h-12 w-12 text-sm",
+  lg: "h-14 w-14 text-sm",
 };
 
 export interface CrestTeam {
@@ -25,7 +25,7 @@ const initialsOf = (name: string) => {
   return (w[0] ?? "?").slice(0, 2).toUpperCase();
 };
 
-/** Escudo circular; si no hay imagen o falla, muestra iniciales. Nunca imagen rota. */
+/** Escudo completo en caja cuadrada (sin fondo ni borde); si no hay imagen o falla, muestra iniciales. Nunca imagen rota. */
 export function TeamCrest({ team, size = "md", className }: { team: CrestTeam; size?: CrestSize; className?: string }) {
   if (team.own) return <OwnCrest team={team} size={size} className={className} />;
   return <CrestView src={team.src} name={team.shortName} size={size} className={className} />;
@@ -45,13 +45,14 @@ function CrestView({ src, name, size, className }: { src?: string | null; name: 
   return (
     <span
       className={cn(
-        "inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted font-bold text-muted-foreground",
+        "inline-flex shrink-0 items-center justify-center font-bold text-muted-foreground",
+        !showImg && "overflow-hidden rounded-full bg-muted",
         SIZE[size],
         className,
       )}
     >
       {showImg ? (
-        <img src={src!} alt={name} onError={() => setFailed(true)} className="h-full w-full object-contain p-0.5" />
+        <img src={src!} alt={name} onError={() => setFailed(true)} className="h-full w-full object-contain" />
       ) : (
         <span aria-label={name}>{initialsOf(name)}</span>
       )}
