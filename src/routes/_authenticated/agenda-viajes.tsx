@@ -8,7 +8,7 @@ import { useApp } from "@/components/squad/AppLayout";
 import { useTrips, type TripRow } from "@/hooks/useTrips";
 import { useOurMatches, type OurMatch } from "@/hooks/useMatchOps";
 import { isPlayerVisible, splitPlayerTrips } from "@/lib/viajes";
-import { tripTimeLabel } from "@/lib/misViajes";
+import { tripDayLabel } from "@/lib/misViajes";
 import { TripMatchup, tripDates } from "@/components/coord/viajes/parts";
 import { MyTripPage } from "@/components/viajes/mine/MyTripPage";
 
@@ -35,7 +35,7 @@ function TripCard({ trip, match, onOpen }: { trip: TripRow; match: OurMatch | nu
         <div className="text-base font-bold">{trip.title}</div>
         <div className="text-xs text-muted-foreground">{tripDates(trip)}</div>
       </div>
-      <span className="inline-flex rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold text-primary">{tripTimeLabel(trip)}</span>
+      <span className="inline-flex rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold text-primary">{tripDayLabel(trip)}</span>
     </button>
   );
 }

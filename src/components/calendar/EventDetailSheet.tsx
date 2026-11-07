@@ -18,6 +18,7 @@ import { getClubTimeZone } from "@/lib/calendar-utils";
 import { isPlayerVisible } from "@/lib/viajes";
 import { TeamCrest } from "@/components/match/TeamCrest";
 import { useCrestTeam } from "@/components/agenda/AgendaCards";
+import { FlightPassViewer, type PassTarget } from "@/components/viajes/mine/PassViewer";
 import { DirectionsButton, EventSheet, PersonalBlock, PlaceRow, SheetRow, SheetRows, primaryBtn, secondaryBtn, useSheetPlace } from "@/components/agenda/EventSheet";
 import { SessionFormDialog } from "@/components/entrenamientos/SessionFormDialog";
 import { EventFormDialog } from "./EventFormDialog";
@@ -48,6 +49,7 @@ const when = (e: { starts_at: string; ends_at: string | null }) => `${dayShort(e
  */
 export function EventDetailSheet({ open, onOpenChange, event, canEdit, clubId, userId, teams, teamName, tripLeg }: Props) {
   const navigate = useNavigate();
+  const [passTarget, setPassTarget] = React.useState<PassTarget | null>(null);
   const { isPlayerOnly } = useApp();
   const qc = useQueryClient();
   const kind = event ? agendaKind(event) : "evento";
@@ -146,12 +148,13 @@ export function EventDetailSheet({ open, onOpenChange, event, canEdit, clubId, u
         sub={[x.room?.mates.length ? `Con ${x.room.mates.join(", ")}` : null, tr ? `${tr.label || "Transporte"} · ${hm(tr.departs_at)}` : null].filter(Boolean).join(" · ") || null} />;
     }
     if (trip?.meeting_at || trip?.meeting_point) rows.push(<SheetRow key="m" icon={Clock} main={trip.meeting_at ? `${dayShort(trip.meeting_at)} · ${hm(trip.meeting_at)}` : "Reunión"} sub={trip.meeting_point ? `Reunión en ${trip.meeting_point}` : "Reunión"} />);
-    if (moment?.flight) rows.push(<SheetRow key="f" icon={Plane} main={`Vuelo ${moment.flight.flight_code}`} sub="Horario y ruta arriba" />);
     const hasPass = !!moment?.flight && !!x?.passFlights.has(moment.flight.id);
     const go = () => trip && navigate({ to: "/agenda-viajes", search: { open: trip.id } as any });
     actions = <>
-      {hasPass ? <button type="button" className={primaryBtn} onClick={go}><Ticket className="h-4 w-4" /> Mi pase</button> : null}
-      <button type="button" className={hasPass ? secondaryBtn : primaryBtn} onClick={go}>Ver viaje completo</button>
+      {hasPass && moment?.flight
+        ? <button type="button" className={primaryBtn} onClick={() => setPassTarget({ flightId: moment.flight!.id, title: `${moment.leg === "regreso" ? "Regreso" : "Ida"} · ${moment.flight!.origin} → ${moment.flight!.destination}`, date: moment.flight!.departs_at })}><Ticket className="h-4 w-4" /> Mi pase</button>
+        : <button type="button" className={primaryBtn} onClick={go}><Plane className="h-4 w-4" /> Mi viaje</button>}
+      {hasPass ? <button type="button" className={secondaryBtn} onClick={go}>Ver viaje completo</button> : null}
     </>;
   } else if (event.meeting_id) {
     header = <IconHeader icon={Users} title={meeting?.title ?? event.title} sub={when(meeting ?? event)} />;
@@ -198,6 +201,7 @@ export function EventDetailSheet({ open, onOpenChange, event, canEdit, clubId, u
         {personal}
         {rows.length ? <SheetRows>{rows}</SheetRows> : null}
       </EventSheet>
+      {passTarget ? <FlightPassViewer target={passTarget} userId={userId} onClose={() => setPassTarget(null)} /> : null}
       {editing && clubId ? <EventFormDialog open onOpenChange={(v) => !v && setEditing(false)} clubId={clubId} teams={teams} userId={userId} event={event} /> : null}
       {planForm && clubId ? (
         <SessionFormDialog open onOpenChange={(v) => !v && setPlanForm(null)} clubId={clubId} userId={userId} teams={teams} defaultTeamId={event.team_id} defaultEventId={event.id} session={planForm === "edit" ? session : null} />
@@ -257,7 +261,7 @@ function TripHeader({ title, moment, origin, destination, leg }: { title: string
       <p className="text-center text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">{leg === "ida" ? "Viaje · Ida" : "Viaje · Regreso"}</p>
       <p className="mt-1 text-center text-sm font-semibold">{title}</p>
       <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-2 rounded-[16px] bg-card px-4 py-3">
-        <div><p className="truncate text-2xl font-bold">{from}</p>{moment ? <p className="text-xs text-muted-foreground">{hm(f?.departs_at ?? moment.at)}</p> : null}</div>
+        <div><p className="truncate text-2xl font-bold">{from}</p>{f ? <p className="text-xs text-muted-foreground">{hm(f.departs_at)}</p> : null}</div>
         <Plane className="h-5 w-5 text-muted-foreground" />
         <div className="text-right"><p className="truncate text-2xl font-bold">{to}</p>{f?.arrives_at ? <p className="text-xs text-muted-foreground">{hm(f.arrives_at)}</p> : null}</div>
       </div>

@@ -11,9 +11,9 @@ import { useTripTransports } from "@/hooks/useTripTransports";
 import { useTripHotels } from "@/hooks/useTripHotels";
 import { useTripMeals } from "@/hooks/useTripMeals";
 import { MEAL_TYPE_LABEL } from "@/lib/tripLogistics";
-import { defaultLeg, myItinerary, nextItemId, tripTimeLabel, type Leg, type MyItem } from "@/lib/misViajes";
+import { defaultLeg, myItinerary, nextItemId, tripDayLabel, type Leg, type MyItem } from "@/lib/misViajes";
 import { PersonAvatar, TripMatchup, timeLabel, tripDates } from "@/components/coord/viajes/parts";
-import { PassFullscreen } from "./PassFullscreen";
+import { PassViewer } from "./PassViewer";
 import { cn } from "@/lib/utils";
 
 const mapsUrl = (q: string) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
@@ -29,7 +29,7 @@ function itemIcon(it: MyItem) {
 }
 
 /** Boleto "MI PASE" de un vuelo. */
-function PassTicket({ flight, userId, onOpen }: { flight: TripFlight; userId: string; onOpen: (paths: string[]) => void }) {
+function PassTicket({ flight, userId, onOpen }: { flight: TripFlight; userId: string; onOpen: (paths: string[], flight: TripFlight) => void }) {
   const mine = flight.boarding_passes.filter((p) => p.user_id === userId);
   const p = mine[0];
   const facts = [
@@ -39,7 +39,7 @@ function PassTicket({ flight, userId, onOpen }: { flight: TripFlight; userId: st
     ["Puerta", flight.gate],
   ].filter((x): x is [string, string] => !!x[1]);
   return (
-    <section aria-label="Mi pase" className="overflow-hidden rounded-3xl bg-card">
+    <section aria-label="Mi pase" className={cn("overflow-hidden rounded-3xl bg-card", p && "cursor-pointer")} onClick={p ? () => onOpen(mine.map((x) => x.file_path), flight) : undefined}>
       <div className="space-y-4 p-4">
         <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wide">
           <span className="text-primary">Mi pase{flight.airline ? ` · ${flight.airline}` : ""}</span>
@@ -74,7 +74,7 @@ function PassTicket({ flight, userId, onOpen }: { flight: TripFlight; userId: st
           </div>
         ) : null}
         {p ? (
-          <button onClick={() => onOpen(mine.map((x) => x.file_path))} className="coord-press h-12 w-full rounded-2xl bg-primary text-sm font-semibold text-primary-foreground">Ver pase completo</button>
+          <button onClick={(e) => { e.stopPropagation(); onOpen(mine.map((x) => x.file_path), flight); }} className="coord-press h-12 w-full rounded-2xl bg-primary text-sm font-semibold text-primary-foreground">Ver pase completo</button>
         ) : (
           <p className="rounded-2xl bg-muted px-3 py-3 text-center text-sm text-muted-foreground">Tu pase aún no está cargado</p>
         )}
@@ -112,7 +112,8 @@ export function MyTripPage({ trip, match, userId, onBack }: { trip: TripRow; mat
   const [leg, setLeg] = React.useState<Leg | null>(null);
   const activeLeg: Leg = leg ?? defaultLeg(flights);
   const legFlights = flights.filter((f) => (hasBoth ? f.leg === activeLeg : true));
-  const [passPaths, setPassPaths] = React.useState<string[] | null>(null);
+  const [pass, setPass] = React.useState<{ paths: string[]; title: string; date: string } | null>(null);
+  const openPass = (paths: string[], f: TripFlight) => setPass({ paths, title: `${f.leg === "regreso" ? "Regreso" : "Ida"} · ${f.origin} → ${f.destination}`, date: f.departs_at });
 
   const items = React.useMemo(() => {
     const all = myItinerary({ userId, trip, flights, transports, hotels, meals, mealLabel: (t) => MEAL_TYPE_LABEL[t as keyof typeof MEAL_TYPE_LABEL] ?? t });
@@ -154,7 +155,7 @@ export function MyTripPage({ trip, match, userId, onBack }: { trip: TripRow; mat
         <TripMatchup trip={trip} match={match} />
         <h1 className="text-xl font-bold">{trip.title}</h1>
         <p className="text-sm text-muted-foreground">{tripDates(trip)}</p>
-        <span className="inline-flex rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold text-primary">{tripTimeLabel(trip)}</span>
+        <span className="inline-flex rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold text-primary">{tripDayLabel(trip, { userId, flights, transports })}</span>
       </header>
 
       {hasBoth ? (
@@ -169,7 +170,7 @@ export function MyTripPage({ trip, match, userId, onBack }: { trip: TripRow; mat
 
       {legFlights.length ? (
         <div className="space-y-3">
-          {legFlights.map((f) => <PassTicket key={f.id} flight={f} userId={userId} onOpen={setPassPaths} />)}
+          {legFlights.map((f) => <PassTicket key={f.id} flight={f} userId={userId} onOpen={openPass} />)}
         </div>
       ) : null}
 
@@ -251,7 +252,7 @@ export function MyTripPage({ trip, match, userId, onBack }: { trip: TripRow; mat
         </section>
       ) : null}
 
-      {passPaths ? <PassFullscreen paths={passPaths} title="Mi pase" onClose={() => setPassPaths(null)} /> : null}
+      {pass ? <PassViewer paths={pass.paths} title={pass.title} date={pass.date} onClose={() => setPass(null)} /> : null}
     </div>
   );
 }

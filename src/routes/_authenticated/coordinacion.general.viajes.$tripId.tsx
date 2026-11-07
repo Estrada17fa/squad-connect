@@ -1,4 +1,5 @@
 import * as React from "react";
+import { tripDayLabel } from "@/lib/misViajes";
 import { createFileRoute, Link, Navigate, useNavigate } from "@tanstack/react-router";
 import { ChevronLeft, MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
@@ -12,7 +13,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { setTripStatus } from "@/lib/trips.functions";
-import { departureLabel, isTripSection, tripDisplayStatus, TRIP_SECTIONS, type TripSection } from "@/lib/viajes";
+import { isTripSection, tripDisplayStatus, TRIP_SECTIONS, type TripSection } from "@/lib/viajes";
 import { ScrollTabs, TripMatchup, TripStatusChip, tripDates } from "@/components/coord/viajes/parts";
 import { useClubTrips, useTripLogistics, useTripsAccess } from "@/components/coord/viajes/useTripsModule";
 import { ComidasTab, DocumentosTab, EquipajeTab, HotelTab, MatchLink, ResumenTab, TransporteTab, ViajerosTab, VuelosTab } from "@/components/coord/viajes/TripDetailTabs";
@@ -136,7 +137,7 @@ function ViajeDetailPage() {
         <TripMatchup trip={trip} match={match} />
         <h1 className="text-xl font-bold leading-tight">{trip.title}</h1>
         <p className="text-sm text-muted-foreground">{tripDates(trip)}{team ? ` · ${team}` : ""}</p>
-        <div className="flex justify-center"><span className="rounded-full bg-area-general-soft px-3 py-1 text-xs font-semibold text-area-general">{departureLabel(trip.departure_at, trip.return_at)}</span></div>
+        <div className="flex justify-center"><span className="rounded-full bg-area-general-soft px-3 py-1 text-xs font-semibold text-area-general">{tripDayLabel(trip)}</span></div>
         <MatchLink trip={trip} match={match} />
       </section>
 

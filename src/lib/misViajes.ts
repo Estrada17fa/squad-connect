@@ -15,24 +15,49 @@ export function defaultLeg(flights: { leg: string; departs_at: string; arrives_a
 
 const sameDay = (a: Date, b: Date) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 
-/** Etiqueta corta de tiempo para la tarjeta de un viaje. */
-export function tripTimeLabel(
-  trip: { status: string; departure_at: string; return_at: string | null; meeting_at?: string | null },
+const startDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+const dayDiff = (d: Date, now: Date) => Math.round((startDay(d) - startDay(now)) / 86_400_000);
+const shortDay = (d: Date) => `${d.toLocaleDateString("es-MX", { weekday: "short" }).replace(".", "")} ${d.getDate()}`;
+
+type PersonLegs = {
+  userId?: string | null;
+  flights?: { leg: string; departs_at: string; passengers?: { user_id: string }[] }[];
+  transports?: { leg?: string | null; departs_at: string; passengers?: { user_id: string }[] }[];
+};
+const mineOnly = <T extends { passengers?: { user_id: string }[] }>(xs: T[] | undefined, userId?: string | null) =>
+  (xs ?? []).filter((x) => !userId || !x.passengers || x.passengers.some((p) => p.user_id === userId));
+
+/** Día de salida de UNA persona: lo más temprano entre la reunión y su primer vuelo/transporte de ida; si no, el día del viaje. Solo la fecha. */
+export function personDeparture(trip: { departure_at: string; meeting_at?: string | null }, legs: PersonLegs = {}): Date {
+  const c = [trip.meeting_at, ...mineOnly(legs.flights, legs.userId).filter((f) => f.leg === "ida").map((f) => f.departs_at), ...mineOnly(legs.transports, legs.userId).filter((t) => (t.leg ?? "ida") === "ida").map((t) => t.departs_at)].filter((x): x is string => !!x).sort();
+  return new Date(c[0] ?? trip.departure_at);
+}
+
+/** Día de regreso de UNA persona: su último vuelo/transporte de regreso; si no, el regreso del viaje. Solo la fecha. */
+export function personReturn(trip: { return_at: string | null }, legs: PersonLegs = {}): Date | null {
+  const c = [...mineOnly(legs.flights, legs.userId).filter((f) => f.leg === "regreso").map((f) => f.departs_at), ...mineOnly(legs.transports, legs.userId).filter((t) => t.leg === "regreso").map((t) => t.departs_at)].sort();
+  const last = c.at(-1) ?? trip.return_at;
+  return last ? new Date(last) : null;
+}
+
+/** Etiqueta del viaje SOLO con el día, nunca la hora: "Sale hoy", "Sale mañana", "Sale el sáb 7", "En curso", "Regresa hoy", "Regresa el lun 9", "Regresó", "Finalizado". */
+export function tripDayLabel(
+  trip: { status?: string; departure_at: string; return_at: string | null; meeting_at?: string | null },
+  legs: PersonLegs = {},
   now = new Date(),
-  time: (iso: string) => string = (iso) => new Date(iso).toLocaleTimeString("es-MX", { hour: "numeric", minute: "2-digit" }),
 ): string {
   if (trip.status === "completado") return "Finalizado";
-  const dep = new Date(trip.meeting_at || trip.departure_at);
-  const ret = trip.return_at ? new Date(trip.return_at) : null;
-  if (dep > now) {
-    const tomorrow = new Date(now); tomorrow.setDate(now.getDate() + 1);
-    if (sameDay(dep, now)) return `Sale hoy ${time(dep.toISOString())}`;
-    if (sameDay(dep, tomorrow)) return `Sale mañana ${time(dep.toISOString())}`;
-    const days = Math.ceil((dep.getTime() - now.getTime()) / 86_400_000);
-    return `Sale en ${days} días`;
-  }
-  if (ret && sameDay(ret, now)) return "Regresa hoy";
-  return "En curso";
+  const dep = personDeparture(trip, legs);
+  const ret = personReturn(trip, legs);
+  const d = dayDiff(dep, now);
+  if (d === 0) return "Sale hoy";
+  if (d === 1) return "Sale mañana";
+  if (d > 1) return `Sale el ${shortDay(dep)}`;
+  if (!ret) return "En curso";
+  const r = dayDiff(ret, now);
+  if (r === 0) return "Regresa hoy";
+  if (r > 0) return `Regresa el ${shortDay(ret)}`;
+  return "Regresó";
 }
 
 export type MyItemKind = "cita" | "vuelo" | "transporte" | "hotel" | "comida" | "partido";

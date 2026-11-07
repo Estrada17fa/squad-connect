@@ -138,9 +138,9 @@ export function SimpleCard({ event, context, rsvp, onOpen }: {
 
 /* ---------- Viaje (pase de abordar) ---------- */
 
-export function TripCard({ trip, moment, hasPass, onOpen }: {
+export function TripCard({ trip, moment, hasPass, onOpen, onPass, onTrip }: {
   trip: { title: string; destination: string | null; meeting_point: string | null; meeting_at: string | null };
-  moment: TripMoment; hasPass: boolean; onOpen: () => void;
+  moment: TripMoment; hasPass: boolean; onOpen: () => void; onPass: () => void; onTrip: () => void;
 }) {
   const f = moment.flight;
   const ida = moment.leg === "ida";
@@ -153,7 +153,7 @@ export function TripCard({ trip, moment, hasPass, onOpen }: {
       side={f?.flight_code ?? null}
       onOpen={onOpen}
       footer={meet}
-      action={<button type="button" onClick={onOpen} className={pill}><Ticket className="h-3.5 w-3.5" /> {hasPass ? "Mi pase" : "Mi viaje"}</button>}
+      action={<button type="button" onClick={(e) => { e.stopPropagation(); (hasPass ? onPass : onTrip)(); }} className={pill}><Ticket className="h-3.5 w-3.5" /> {hasPass ? "Mi pase" : "Mi viaje"}</button>}
     >
       {f ? (
         <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3">
@@ -173,7 +173,7 @@ export function TripCard({ trip, moment, hasPass, onOpen }: {
       ) : (
         <div className="flex items-center justify-between gap-3">
           <p className="min-w-0 truncate font-semibold">{from} → {to}</p>
-          <BigTime iso={moment.at} />
+          {ida && trip.meeting_at ? <BigTime iso={trip.meeting_at} /> : null}
         </div>
       )}
     </Card>

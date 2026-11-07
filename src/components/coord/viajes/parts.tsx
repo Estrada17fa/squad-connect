@@ -1,11 +1,12 @@
 import * as React from "react";
+import { tripDayLabel } from "@/lib/misViajes";
 import { Link } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Plane, Users } from "lucide-react";
 import { TeamCrest } from "@/components/torneo/TeamCrest";
 import { cn } from "@/lib/utils";
-import { departureLabel, tripDisplayStatus, TRIP_DISPLAY_LABEL, type Readiness, type TripDisplayStatus } from "@/lib/viajes";
+import { tripDisplayStatus, TRIP_DISPLAY_LABEL, type Readiness, type TripDisplayStatus } from "@/lib/viajes";
 import type { TripRow } from "@/hooks/useTrips";
 import type { OurMatch } from "@/hooks/useMatchOps";
 import { initialsOf } from "@/lib/coordinacion";
@@ -110,7 +111,7 @@ export function TripHeroCard({ trip, match, readiness }: { trip: TripRow; match:
         <TripCrest match={match} size="lg" />
         <div className="min-w-0 flex-1">
           <div className="truncate text-lg font-bold leading-snug">{trip.title}</div>
-          <div className="text-[13px] text-muted-foreground">{departureLabel(trip.departure_at, trip.return_at)} · {shortDate(trip.departure_at)}</div>
+          <div className="text-[13px] text-muted-foreground">{tripDayLabel(trip)} · {shortDate(trip.departure_at)}</div>
         </div>
       </div>
       <div className="mt-3 flex items-center justify-between gap-3">
