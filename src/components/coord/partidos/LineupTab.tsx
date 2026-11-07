@@ -53,7 +53,7 @@ export function LineupTab({ match, logistics, canEdit, userId, prevMatchId }: {
   const slotLabel = formationSlots(f).find((s) => s.key === slot)?.label ?? "";
 
   return (
-    <div className="space-y-4 pb-28">
+    <div className="space-y-4 pb-36">
       <StateTag published={published} at={logistics?.lineup_published_at} />
       <div className="flex gap-1 overflow-x-auto">
         {FORMATIONS.map((x) => (

@@ -75,7 +75,7 @@ export function CallupTab({ match, logistics, canEdit, userId, prevMatchId }: {
   const d = callupDiff(current.map((c) => c.user_id), ids);
 
   return (
-    <div className="space-y-4 pb-28">
+    <div className="space-y-4 pb-36">
       <StateTag published={published} at={logistics?.callup_published_at} />
 
       <div className="flex items-center gap-2 rounded-xl bg-muted px-3">

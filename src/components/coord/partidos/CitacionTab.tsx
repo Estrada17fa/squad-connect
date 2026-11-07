@@ -44,7 +44,7 @@ export function CitacionTab({ match, logistics, canEdit, userId }: { match: OurM
   }
 
   return (
-    <div className="space-y-5 pb-28">
+    <div className="space-y-5 pb-36">
       <p className="text-xs text-muted-foreground">{logistics?.callup_published_at ? "Los convocados ven esta citación." : "Los convocados la verán cuando publiques la convocatoria."}</p>
       <label className="block space-y-1.5"><span className="text-xs font-semibold text-muted-foreground">Hora de citación</span>
         {canEdit ? <DateTimeField value={v.time} onChange={(time) => setV({ ...v, time })} clearable /> : <div className={field}>{v.time || "Sin hora"}</div>}

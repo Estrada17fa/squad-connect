@@ -67,7 +67,7 @@ export function ResultTab({ match, logistics, canEdit, userId }: { match: OurMat
   const rows = [...callups.map((c) => ({ id: c.user_id, name: shortName(c.full_name), c })), { id: OWN_GOAL, name: "Autogol del rival", c: null }];
 
   return (
-    <div className="space-y-5 pb-28">
+    <div className="space-y-5 pb-36">
       <div className="grid grid-cols-2 gap-3 rounded-2xl bg-card p-4">
         {[{ t: home, v: hg, set: setHg }, { t: away, v: ag, set: setAg }].map((x, i) => (
           <div key={i} className="flex flex-col items-center gap-2">

@@ -122,7 +122,7 @@ export function Pitch({ formation, assigned, players, onSlot, selected }: {
 
 export function BottomBar({ children }: { children: React.ReactNode }) {
   return (
-    <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border/50 bg-background/95 px-4 pb-[max(env(safe-area-inset-bottom),12px)] pt-3 backdrop-blur md:left-auto md:right-auto">
+    <div className="fixed inset-x-0 bottom-16 z-30 border-t border-border/50 bg-background/95 px-4 py-2 backdrop-blur md:bottom-0">
       <div className="mx-auto flex max-w-4xl items-center gap-3">{children}</div>
     </div>
   );
