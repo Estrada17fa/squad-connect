@@ -133,7 +133,7 @@ export function EventDetailSheet({ open, onOpenChange, event, canEdit, clubId, u
     if (mine || isPlayerOnly) {
       personal = myStatus?.call_time_at && mine
         ? <PersonalBlock label="Tu citación" main={hm(myStatus.call_time_at)} sub={[role, myStatus.meeting_point].filter(Boolean).join(" · ") || null} status={status} />
-        : <PersonalBlock label="Tu convocatoria" main={role} status={status} />;
+        : <PersonalBlock label="Tu convocatoria" main={role} status={status} muted={myStatus?.state !== "convocado"} />;
     }
     if (place) rows.push(<PlaceRow key="p" place={place} />);
     if (mine && myStatus?.kit) rows.push(<SheetRow key="k" icon={Shirt} main={myStatus.kit} sub="Uniforme" />);
