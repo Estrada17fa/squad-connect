@@ -1,6 +1,9 @@
 import * as React from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ChevronDown, ChevronRight, Plane } from "lucide-react";
+import { ChevronDown, ChevronRight, Plane, Ticket } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { FlightPassViewer, type PassTarget } from "@/components/viajes/mine/PassViewer";
 import { AgendaHeader } from "@/components/agenda/AgendaHeader";
 import { EmptyState } from "@/components/squad/EmptyState";
 import { CardGridSkeleton } from "@/components/squad/LoadingState";
@@ -27,16 +30,25 @@ export const Route = createFileRoute("/_authenticated/agenda-viajes")({
   component: AgendaViajesPage,
 });
 
-function TripCard({ trip, match, onOpen }: { trip: TripRow; match: OurMatch | null; onOpen: () => void }) {
+type PassFlight = { id: string; trip_id: string; leg: string | null; origin: string | null; destination: string | null; departs_at: string; arrives_at: string | null };
+const pill = "coord-press inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-3.5 py-2 text-xs font-semibold text-primary";
+
+function TripCard({ trip, match, pass, onOpen, onPass }: { trip: TripRow; match: OurMatch | null; pass: PassFlight | null; onOpen: () => void; onPass: () => void }) {
   return (
-    <button onClick={onOpen} className="coord-press w-full space-y-3 rounded-3xl bg-card p-4 text-center">
-      <TripMatchup trip={trip} match={match} />
-      <div className="space-y-1">
-        <div className="text-base font-bold">{trip.title}</div>
-        <div className="text-xs text-muted-foreground">{tripDates(trip)}</div>
+    <article className="w-full space-y-3 rounded-3xl bg-card p-4 text-center">
+      <button type="button" onClick={onOpen} className="coord-press block w-full space-y-3">
+        <TripMatchup trip={trip} match={match} />
+        <div className="space-y-1">
+          <div className="text-base font-bold">{trip.title}</div>
+          <div className="text-xs text-muted-foreground">{tripDates(trip)}</div>
+        </div>
+        <span className="inline-flex rounded-full bg-muted px-3 py-1 text-xs font-semibold text-foreground">{tripDayLabel(trip)}</span>
+      </button>
+      <div className="flex justify-center gap-2">
+        {pass ? <button type="button" onClick={onPass} className={pill}><Ticket className="h-3.5 w-3.5" /> Mi pase</button> : null}
+        <button type="button" onClick={onOpen} className={pill}>Ver viaje <ChevronRight className="h-3.5 w-3.5" /></button>
       </div>
-      <span className="inline-flex rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold text-primary">{tripDayLabel(trip)}</span>
-    </button>
+    </article>
   );
 }
 
@@ -54,6 +66,27 @@ function AgendaViajesPage() {
   const mine = (tripsQ.data ?? []).filter((t) => isPlayerVisible(t) && t.travelers.some((x) => x.user_id === user.id));
   const { upcoming, past } = splitPlayerTrips(mine);
   const [showPast, setShowPast] = React.useState(false);
+  const [passTarget, setPassTarget] = React.useState<PassTarget | null>(null);
+  const upIds = upcoming.map((t) => t.id);
+  const passQ = useQuery({
+    queryKey: ["mis-viajes-passes", upIds.join(","), user.id],
+    enabled: upIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("trip_flights").select("id, trip_id, leg, origin, destination, departs_at, arrives_at").in("trip_id", upIds).order("departs_at");
+      if (error) throw error;
+      const ids = (data ?? []).map((f) => f.id);
+      const { data: passes } = ids.length ? await supabase.from("trip_boarding_passes").select("flight_id").in("flight_id", ids).eq("user_id", user.id) : { data: [] as { flight_id: string }[] };
+      const has = new Set((passes ?? []).map((p) => p.flight_id));
+      return (data ?? []).filter((f) => has.has(f.id)) as PassFlight[];
+    },
+  });
+  /** Próximo vuelo con pase (o el último si ya salieron todos). */
+  const passFor = (tripId: string): PassFlight | null => {
+    const fs = (passQ.data ?? []).filter((f) => f.trip_id === tripId);
+    const now = Date.now();
+    return fs.find((f) => new Date(f.arrives_at ?? f.departs_at).getTime() >= now) ?? fs[fs.length - 1] ?? null;
+  };
+  const openPass = (f: PassFlight) => setPassTarget({ flightId: f.id, title: `${f.leg === "regreso" ? "Regreso" : "Ida"} · ${f.origin ?? ""} → ${f.destination ?? ""}`, date: f.departs_at });
   const detail = open ? mine.find((t) => t.id === open) ?? null : null;
   const go = (id?: string) => navigate({ to: "/agenda-viajes", search: id ? { open: id } : {} });
 
