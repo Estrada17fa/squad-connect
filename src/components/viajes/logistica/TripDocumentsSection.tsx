@@ -3,18 +3,8 @@ import { toast } from "sonner";
 import { FileText, Plus } from "lucide-react";
 import { DeleteAction } from "./DeleteAction";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  EntitySheet,
-  EntitySheetBody,
-  EntitySheetDescription,
-  EntitySheetFooter,
-  EntitySheetHeader,
-  EntitySheetTitle,
-} from "@/components/squad/EntitySheet";
+import { Field, TextArea, TextField, TripSheet } from "@/components/coord/viajes/form";
 import { DOCUMENT_CATEGORIES, CATEGORY_LABEL, type DocumentCategory } from "@/hooks/useDocuments";
 import {
   openTripDocument,
@@ -138,60 +128,25 @@ function TripDocumentDialog({
   };
 
   return (
-    <EntitySheet open={open} onOpenChange={onOpenChange} size="lg">
-      <EntitySheetHeader>
-        <EntitySheetTitle>Documento del viaje</EntitySheetTitle>
-        <EntitySheetDescription>
-          También aparecerá en el módulo Documentos, etiquetado con este viaje.
-        </EntitySheetDescription>
-      </EntitySheetHeader>
-
-      <EntitySheetBody>
-        <div className="space-y-1.5">
-          <Label htmlFor="d-title">Título *</Label>
-          <Input
-            id="d-title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Lista de buena fe"
-          />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label>Categoría</Label>
-          <Select value={category} onValueChange={(v) => setCategory(v as DocumentCategory)}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {DOCUMENT_CATEGORIES.map((c) => (
-                <SelectItem key={c.value} value={c.value}>
-                  {c.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-1.5">
-          <Label htmlFor="d-file">Archivo *</Label>
-          <Input id="d-file" type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label htmlFor="d-desc">Descripción</Label>
-          <Textarea id="d-desc" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
-        </div>
-      </EntitySheetBody>
-
-      <EntitySheetFooter>
-        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-          Cancelar
-        </Button>
-        <Button type="button" className="glow-primary" disabled={upload.isPending} onClick={submit}>
-          Subir
-        </Button>
-      </EntitySheetFooter>
-    </EntitySheet>
+    <TripSheet open={open} onOpenChange={onOpenChange} title="Subir documento"
+      primary={{ label: "Subir", onClick: submit, loading: upload.isPending, loadingLabel: "Subiendo…" }}>
+      <Field label="Título"><TextField value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Lista de buena fe" /></Field>
+      <div className="space-y-1.5">
+        <span className="block text-xs font-semibold text-muted-foreground">Categoría</span>
+        <Select value={category} onValueChange={(v) => setCategory(v as DocumentCategory)}>
+          <SelectTrigger className="h-11 rounded-xl border-0 bg-muted"><SelectValue /></SelectTrigger>
+          <SelectContent>{DOCUMENT_CATEGORIES.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-1.5">
+        <span className="block text-xs font-semibold text-muted-foreground">Archivo</span>
+        <label className="flex h-11 cursor-pointer items-center gap-2 rounded-xl bg-muted px-3 text-sm">
+          <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <span className={file ? "truncate" : "truncate text-muted-foreground"}>{file ? file.name : "Elegir archivo"}</span>
+          <input type="file" className="sr-only" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+        </label>
+      </div>
+      <Field label="Descripción"><TextArea rows={2} value={description} onChange={(e) => setDescription(e.target.value)} /></Field>
+    </TripSheet>
   );
 }
