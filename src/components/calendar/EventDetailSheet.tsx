@@ -9,7 +9,7 @@ import type { CalendarEventRow } from "@/hooks/useCalendarEvents";
 import type { TeamOption } from "@/hooks/useAccess";
 import { useSessionByEvent } from "@/hooks/useTraining";
 import { useTeamAccess } from "@/hooks/useTeamAccess";
-import { useMatchByEvent, useMatchCallups, useMatchLogistics } from "@/hooks/useMatchOps";
+import { useMatchByEvent, useCallupStates, CALLUP_LABEL, useMatchLogistics } from "@/hooks/useMatchOps";
 import { meetingsQueryOptions } from "@/hooks/useCoordinacion";
 import { tripsQueryOptions } from "@/hooks/useTrips";
 import { EVENT_TYPE_MAP } from "@/lib/eventTypes";
