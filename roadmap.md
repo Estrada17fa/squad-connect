@@ -8,3 +8,4 @@
 - [x] Viajes: estados Borrador/Publicado/En curso/Finalizado y vista del jugador sin filtro por fecha
 - [x] Viajes: formulario en 4 pasos y edición por sección
 - [ ] Viajes: aviso "Fuiste convocado" y evento de Agenda salen al crear el Borrador (regla de la base) — espera decisión de Emilio
+- [x] Agenda: cada vista consulta su propio rango de fechas
