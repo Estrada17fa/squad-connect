@@ -1,5 +1,5 @@
 import * as React from "react";
-import { MapPin, Navigation, Plane, Ticket, Users } from "lucide-react";
+import { ChevronRight, MapPin, Navigation, Plane, Ticket, Users } from "lucide-react";
 import { TeamCrest } from "@/components/match/TeamCrest";
 import { useCrestUrl } from "@/hooks/useTournaments";
 import type { OurMatch, OurMatchTeam } from "@/hooks/useMatchOps";
@@ -153,7 +153,7 @@ export function TripCard({ trip, moment, hasPass, onOpen, onPass, onTrip }: {
       side={f?.flight_code ?? null}
       onOpen={onOpen}
       footer={meet}
-      action={<button type="button" onClick={(e) => { e.stopPropagation(); (hasPass ? onPass : onTrip)(); }} className={pill}><Ticket className="h-3.5 w-3.5" /> {hasPass ? "Mi pase" : "Mi viaje"}</button>}
+      action={<div className="flex shrink-0 gap-1.5">{hasPass ? <button type="button" onClick={(e) => { e.stopPropagation(); onPass(); }} className={pill}><Ticket className="h-3.5 w-3.5" /> Mi pase</button> : null}<button type="button" onClick={(e) => { e.stopPropagation(); onTrip(); }} className={pill}>Ver viaje <ChevronRight className="h-3.5 w-3.5" /></button></div>}
     >
       {f ? (
         <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3">
