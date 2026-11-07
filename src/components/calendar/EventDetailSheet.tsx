@@ -146,7 +146,7 @@ export function EventDetailSheet({ open, onOpenChange, event, canEdit, clubId, u
         sub={[x.room?.mates.length ? `Con ${x.room.mates.join(", ")}` : null, tr ? `${tr.label || "Transporte"} · ${hm(tr.departs_at)}` : null].filter(Boolean).join(" · ") || null} />;
     }
     if (trip?.meeting_at || trip?.meeting_point) rows.push(<SheetRow key="m" icon={Clock} main={trip.meeting_at ? `${dayShort(trip.meeting_at)} · ${hm(trip.meeting_at)}` : "Reunión"} sub={trip.meeting_point ? `Reunión en ${trip.meeting_point}` : "Reunión"} />);
-    if (moment?.flight) rows.push(<SheetRow key="f" icon={Plane} main={`${moment.flight.flight_code} · ${moment.flight.origin} → ${moment.flight.destination}`} sub={`Sale ${hm(moment.flight.departs_at)}${moment.flight.arrives_at ? ` · llega ${hm(moment.flight.arrives_at)}` : ""}`} />);
+    if (moment?.flight) rows.push(<SheetRow key="f" icon={Plane} main={`Vuelo ${moment.flight.flight_code}`} sub="Horario y ruta arriba" />);
     const hasPass = !!moment?.flight && !!x?.passFlights.has(moment.flight.id);
     const go = () => trip && navigate({ to: "/agenda-viajes", search: { open: trip.id } as any });
     actions = <>
