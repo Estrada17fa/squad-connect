@@ -1,16 +1,7 @@
 import * as React from "react";
 import { Check, Search, Users } from "lucide-react";
-import {
-  EntitySheet,
-  EntitySheetBody,
-  EntitySheetDescription,
-  EntitySheetFooter,
-  EntitySheetHeader,
-  EntitySheetTitle,
-} from "@/components/squad/EntitySheet";
+import { TextField, TripSheet } from "@/components/coord/viajes/form";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { personInitials, personLabel, type MiniProfile } from "@/lib/tripLogistics";
 
@@ -92,15 +83,9 @@ export function PassengerAssignDialog({
     });
 
   return (
-    <EntitySheet open={open} onOpenChange={onOpenChange} size="lg">
-      <EntitySheetHeader>
-        <EntitySheetTitle>{title}</EntitySheetTitle>
-        <EntitySheetDescription>
-          {description ?? "Solo aparecen las personas convocadas al viaje."}
-        </EntitySheetDescription>
-      </EntitySheetHeader>
-
-      <EntitySheetBody>
+    <TripSheet open={open} onOpenChange={onOpenChange} title={title}
+      primary={{ label: "Guardar asignación", onClick: () => onSave([...selected]), loading: saving, disabled: candidates.length === 0 }}>
+      {description ? <p className="text-sm text-muted-foreground">{description}</p> : null}
         {candidates.length === 0 ? (
           <div className="glass flex flex-col items-center gap-2 p-6 text-center">
             <Users className="h-6 w-6 text-primary" />
@@ -113,20 +98,15 @@ export function PassengerAssignDialog({
           <>
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="Buscar convocado…"
-                className="pl-9"
-              />
+              <TextField value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar convocado…" className="pl-9" />
             </div>
 
             {importSources.length ? (
               <div className="flex flex-wrap gap-2">
                 {importSources.map((s) => (
-                  <Button key={s.label} type="button" size="sm" variant="outline" onClick={() => importFrom(s)}>
+                  <button key={s.label} type="button" onClick={() => importFrom(s)} className="min-h-9 rounded-full bg-muted px-3 text-xs font-semibold">
                     Importar de {s.label}
-                  </Button>
+                  </button>
                 ))}
               </div>
             ) : null}
@@ -144,8 +124,8 @@ export function PassengerAssignDialog({
                       type="button"
                       onClick={() => toggle(c.user_id)}
                       className={cn(
-                        "flex w-full items-center gap-3 rounded-xl border px-3 py-2 text-left transition-colors",
-                        active ? "border-primary/60 bg-primary/10" : "border-border/60 hover:bg-white/5",
+                        "flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors",
+                        active ? "bg-primary/10" : "bg-card",
                       )}
                     >
                       <Avatar className="h-8 w-8">
@@ -173,21 +153,6 @@ export function PassengerAssignDialog({
             </ul>
           </>
         )}
-      </EntitySheetBody>
-
-      <EntitySheetFooter>
-        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-          Cancelar
-        </Button>
-        <Button
-          type="button"
-          className="glow-primary"
-          disabled={saving || candidates.length === 0}
-          onClick={() => onSave([...selected])}
-        >
-          Guardar asignación
-        </Button>
-      </EntitySheetFooter>
-    </EntitySheet>
+    </TripSheet>
   );
 }
