@@ -1,5 +1,5 @@
 import * as React from "react";
-import { queryOptions, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { queryOptions, useQuery, useQueryClient, useInfiniteQuery, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { EventType } from "@/lib/eventTypes";
 import { isAgendaVisible, type StoredTripStatus } from "@/lib/viajes";
@@ -156,4 +156,91 @@ export function useNextEventOfType(clubId: string | null | undefined, type: Even
       return visible(data)[0] ?? null;
     },
   });
+}
+
+/* ---------- Consultas por rango (Agenda) ---------- */
+
+/** Eventos del club que tocan [from, to): empiezan dentro o siguen en curso. */
+async function fetchRange(clubId: string, from: Date, to: Date): Promise<CalendarEventRow[]> {
+  const f = from.toISOString();
+  const { data, error } = await supabase
+    .from("calendar_events")
+    .select(EVENT_SELECT)
+    .eq("club_id", clubId)
+    .lt("starts_at", to.toISOString())
+    .or(`starts_at.gte.${f},ends_at.gte.${f}`)
+    .order("starts_at", { ascending: true });
+  if (error) throw error;
+  return visible(data);
+}
+
+export const calendarRangeQueryOptions = (clubId: string | null, from: Date, to: Date) =>
+  queryOptions({
+    queryKey: ["calendar-events", "club", clubId ?? "none", "range", from.toISOString(), to.toISOString()] as const,
+    enabled: !!clubId,
+    staleTime: 30_000,
+    placeholderData: keepPreviousData,
+    queryFn: () => fetchRange(clubId!, from, to),
+  });
+
+export function useCalendarRange(clubId: string | null, from: Date, to: Date) {
+  return useQuery(calendarRangeQueryOptions(clubId, from, to));
+}
+
+/** Páginas mensuales: hacia adelante desde `anchor` o hacia atrás hasta `anchor`. */
+export function useCalendarMonths(clubId: string | null, anchor: Date, dir: "forward" | "back", enabled = true) {
+  return useInfiniteQuery({
+    queryKey: ["calendar-events", "club", clubId ?? "none", "months", dir, anchor.toISOString()] as const,
+    enabled: !!clubId && enabled,
+    staleTime: 30_000,
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) => {
+      const n = pageParam as number;
+      const m0 = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
+      if (dir === "forward") {
+        const from = n === 0 ? anchor : new Date(m0.getFullYear(), m0.getMonth() + n, 1);
+        return fetchRange(clubId!, from, new Date(m0.getFullYear(), m0.getMonth() + n + 1, 1)).then((rows) =>
+          rows.filter((r) => new Date(r.starts_at) >= from || n === 0),
+        );
+      }
+      const from = new Date(m0.getFullYear(), m0.getMonth() - n, 1);
+      const to = n === 0 ? anchor : new Date(m0.getFullYear(), m0.getMonth() - n + 1, 1);
+      return fetchRange(clubId!, from, to).then((rows) => rows.filter((r) => new Date(r.starts_at) >= from && new Date(r.starts_at) < to));
+    },
+    // Se detiene tras 12 meses seguidos sin eventos.
+    getNextPageParam: (last, pages, lastParam) => {
+      const tail = pages.slice(-12);
+      return tail.length === 12 && tail.every((p) => p.length === 0) ? undefined : (lastParam as number) + 1;
+    },
+  });
+}
+
+/** Próximo evento visible a partir de `from` (para "Semana libre"). */
+export function useNextEventAfter(clubId: string | null, from: Date, enabled: boolean) {
+  return useQuery({
+    queryKey: ["calendar-events", "club", clubId ?? "none", "next", from.toISOString()] as const,
+    enabled: !!clubId && enabled,
+    staleTime: 30_000,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("calendar_events").select(EVENT_SELECT).eq("club_id", clubId!).gte("starts_at", from.toISOString()).order("starts_at").limit(20);
+      if (error) throw error;
+      return visible(data);
+    },
+  });
+}
+
+/** Avisos en vivo para todas las consultas por rango del club. */
+export function useCalendarLive(clubId: string | null) {
+  const qc = useQueryClient();
+  const uid = React.useId();
+  React.useEffect(() => {
+    if (!clubId) return;
+    const ch = supabase
+      .channel(`calendar-range-${clubId}-${uid}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "calendar_events", filter: `club_id=eq.${clubId}` }, () =>
+        qc.invalidateQueries({ queryKey: ["calendar-events", "club", clubId] }),
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [clubId, qc, uid]);
 }
