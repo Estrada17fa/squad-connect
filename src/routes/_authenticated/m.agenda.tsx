@@ -210,7 +210,6 @@ function AgendaProximoPage() {
   const byDay = (list: Item[]) => groupByMonthDay(list).flatMap((m) => m.days);
   const empty = (t: string) => <p className="py-8 text-center text-sm text-muted-foreground">{t}</p>;
   const fwdPages = fwdQ.data?.pages.length ?? 0;
-  const backPages = backQ.data?.pages.length ?? 0;
 
   return (
     <div className="space-y-4">
@@ -258,6 +257,18 @@ function AgendaProximoPage() {
           <PastToggle on={!!search.pasados} onChange={(v) => setSearch({ pasados: v || undefined })} />
           {isLoading && !events ? <AgendaSkeleton count={4} /> : (
             <>
+              {search.pasados ? (
+                <div className="space-y-4 border-b border-border/60 pb-4">
+                  <h2 className="px-1 text-base font-bold">Anteriores</h2>
+                  {groupByMonthDay(items.filter((i) => new Date(i.starts_at) < today), true).map((m) => (
+                    <div key={m.month.toISOString()} className="space-y-4">
+                      <h3 className="px-1 text-sm font-bold text-muted-foreground">{monthTitle(m.month)}</h3>
+                      {m.days.map((g) => <DayBlock key={g.date.toISOString()} date={g.date} list={g.events} title={dayTitle(g.date)} />)}
+                    </div>
+                  ))}
+                  {backQ.isFetching && !backQ.data ? <AgendaSkeleton count={1} /> : backQ.hasNextPage ? <button type="button" disabled={backQ.isFetchingNextPage} onClick={() => backQ.fetchNextPage()} className="w-full py-2 text-sm font-semibold text-primary">{backQ.isFetchingNextPage ? "Cargando…" : "Cargar mes anterior"}</button> : null}
+                </div>
+              ) : null}
               {(() => {
                 const future = items.filter((i) => new Date(i.starts_at) >= today);
                 const months = groupByMonthDay(future);
@@ -270,18 +281,6 @@ function AgendaProximoPage() {
               })()}
               {fwdQ.hasNextPage ? <LoadMore key={`f${fwdPages}`} active={!fwdQ.isFetchingNextPage} onHit={() => fwdQ.fetchNextPage()} /> : null}
               {fwdQ.isFetchingNextPage ? <AgendaSkeleton count={1} /> : null}
-              {search.pasados && !fwdQ.hasNextPage ? (
-                <div className="space-y-4 border-t border-border/60 pt-4">
-                  <h2 className="px-1 text-base font-bold">Anteriores</h2>
-                  {groupByMonthDay(items.filter((i) => new Date(i.starts_at) < today), true).map((m) => (
-                    <div key={m.month.toISOString()} className="space-y-4">
-                      <h3 className="px-1 text-sm font-bold text-muted-foreground">{monthTitle(m.month)}</h3>
-                      {m.days.map((g) => <DayBlock key={g.date.toISOString()} date={g.date} list={g.events} title={dayTitle(g.date)} />)}
-                    </div>
-                  ))}
-                  {backQ.hasNextPage ? <LoadMore key={`b${backPages}`} active={!backQ.isFetchingNextPage} onHit={() => backQ.fetchNextPage()} /> : null}
-                </div>
-              ) : null}
             </>
           )}
         </>
