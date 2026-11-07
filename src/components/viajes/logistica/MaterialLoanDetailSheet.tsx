@@ -1,20 +1,13 @@
 import * as React from "react";
-import { Package, Pencil } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  EntitySheet,
-  EntitySheetBody,
-  EntitySheetFooter,
-  EntitySheetHeader,
-  EntitySheetTitle,
-} from "@/components/squad/EntitySheet";
-import { DetailField, DetailGrid, DetailSection } from "@/components/squad/DetailSheet";
+import { CalendarClock, StickyNote, User, Package } from "lucide-react";
+import { toast } from "sonner";
+import { DetailHero, MoreMenu, TripSheet } from "@/components/coord/viajes/form";
+import { SheetRow, SheetRows } from "@/components/agenda/EventSheet";
 import { categoryIcon } from "@/lib/inventory";
 import { formatDateTime } from "@/lib/calendar-utils";
 import { personLabel, type MiniProfile } from "@/lib/tripLogistics";
 import { materialOutstanding, type TripMaterialLoan } from "@/hooks/useTripMaterial";
 import { TripMaterialDialog } from "./TripMaterialDialog";
-import { DeleteAction } from "./DeleteAction";
 import { useTripMaterialMutations } from "@/hooks/useTripMaterial";
 import { useTripRefresh } from "@/hooks/useTripChannel";
 
@@ -48,71 +41,23 @@ export function MaterialLoanDetailSheet({
   const { remove } = useTripMaterialMutations(tripId, clubId);
   const refresh = useTripRefresh(tripId);
 
-  if (!loan) {
-    return <EntitySheet open={open} onOpenChange={onOpenChange}><EntitySheetHeader><EntitySheetTitle>Material</EntitySheetTitle></EntitySheetHeader><EntitySheetBody /></EntitySheet>;
-  }
+  if (!loan) return null;
 
   const Icon = categoryIcon(loan.item?.category);
   const pending = materialOutstanding(loan);
 
   return (
     <>
-      <EntitySheet open={open} onOpenChange={onOpenChange} size="md">
-        <EntitySheetHeader>
-          <EntitySheetTitle className="flex items-center gap-2">
-            <Icon className="h-4 w-4 text-primary" /> {loan.item?.name ?? "Material"}
-            <span className="text-muted-foreground"> ×{loan.quantity}</span>
-          </EntitySheetTitle>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {canEdit ? (
-              <>
-                <Button size="sm" variant="secondary" onClick={() => setEditOpen(true)}>
-                  <Pencil className="mr-2 h-3.5 w-3.5" /> Editar
-                </Button>
-                <DeleteAction
-                  label="Quitar del viaje"
-                  title="¿Quitar este material del viaje?"
-                  description="Se elimina el préstamo y el material vuelve a estar disponible."
-                  successMessage="Material eliminado del viaje"
-                  loading={remove.isPending}
-                  onDelete={() => remove.mutateAsync(loan.id)}
-                  onDeleted={() => {
-                    refresh();
-                    onOpenChange(false);
-                  }}
-                />
-              </>
-            ) : null}
-          </div>
-        </EntitySheetHeader>
-
-        <EntitySheetBody>
-          <DetailSection>
-            <DetailGrid>
-              <DetailField label="Lleva">{personLabel(loan.borrower)}</DetailField>
-              <DetailField label="Pendiente">{pending === 0 ? "Devuelto por completo" : `${pending}`}</DetailField>
-              <DetailField label="Devolución esperada">
-                {loan.expected_return_at ? formatDateTime(loan.expected_return_at) : "—"}
-              </DetailField>
-              <DetailField label="Devolución real">
-                {loan.returned_at ? formatDateTime(loan.returned_at) : "Pendiente"}
-              </DetailField>
-            </DetailGrid>
-          </DetailSection>
-
-          {loan.notes ? (
-            <DetailSection title="Notas">
-              <p className="text-sm text-muted-foreground">{loan.notes}</p>
-            </DetailSection>
-          ) : null}
-        </EntitySheetBody>
-
-        <EntitySheetFooter>
-          <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-            Cerrar
-          </Button>
-        </EntitySheetFooter>
-      </EntitySheet>
+      <TripSheet open={open} onOpenChange={onOpenChange} title="Material"
+        menu={canEdit ? <MoreMenu onEdit={() => setEditOpen(true)} deleteLabel="Quitar del viaje" confirmTitle="¿Quitar este material del viaje?" confirmDescription="Se elimina el préstamo y el material vuelve a estar disponible." deleting={remove.isPending}
+          onDelete={() => remove.mutateAsync(loan.id).then(() => { toast.success("Material eliminado del viaje"); refresh(); onOpenChange(false); }).catch((e: any) => toast.error(e.message ?? "No se pudo quitar"))} /> : null}>
+        <DetailHero icon={Icon} title={`${loan.item?.name ?? "Material"} ×${loan.quantity}`} sub={pending === 0 ? "Devuelto por completo" : `${pending} pendiente${pending === 1 ? "" : "s"} de devolver`} />
+        <SheetRows>
+          <SheetRow icon={User} main={personLabel(loan.borrower)} sub="Lo lleva" />
+          <SheetRow icon={CalendarClock} main={loan.expected_return_at ? formatDateTime(loan.expected_return_at) : "Sin fecha"} sub={loan.returned_at ? `Devuelto ${formatDateTime(loan.returned_at)}` : "Devolución esperada"} />
+          {loan.notes ? <SheetRow icon={StickyNote} main={loan.notes} /> : null}
+        </SheetRows>
+      </TripSheet>
 
       {canEdit ? (
         <TripMaterialDialog
