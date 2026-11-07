@@ -346,3 +346,32 @@ export function useMatchByEvent(eventId: string | null | undefined) {
     },
   });
 }
+
+export type CallupState = "pendiente" | "convocado" | "no_convocado";
+export const CALLUP_LABEL: Record<CallupState, string> = {
+  pendiente: "Convocatoria pendiente",
+  convocado: "Convocado",
+  no_convocado: "No convocado",
+};
+
+/**
+ * Estado de convocatoria del usuario por evento de partido, sin leer la lista
+ * de convocados (un jugador no convocado no puede verla).
+ */
+export function useCallupStates(eventIds: string[]) {
+  const key = React.useMemo(() => [...eventIds].sort().join(","), [eventIds]);
+  return useQuery({
+    queryKey: ["match-callups", "state", key],
+    enabled: eventIds.length > 0,
+    staleTime: 30_000,
+    queryFn: async () => {
+      const out = new Map<string, CallupState>();
+      await Promise.all(eventIds.map(async (id) => {
+        const { data, error } = await (supabase.rpc as any)("match_callup_state", { _event_id: id });
+        if (error) throw error;
+        if (data) out.set(id, data as CallupState);
+      }));
+      return out;
+    },
+  });
+}
