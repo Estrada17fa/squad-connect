@@ -60,7 +60,7 @@ export function FlightDetailSheet({ open, onOpenChange, flight, allFlights, trip
         <SheetRows>
           <button type="button" className={rowBtn} onClick={() => canEdit && setPassengersOpen(true)} disabled={!canEdit}>
             <Users className="h-[18px] w-[18px] shrink-0 text-muted-foreground" />
-            <span className="min-w-0 flex-1"><span className="block text-sm font-medium">{current.passengers.length} pasajeros</span><span className="block text-xs text-muted-foreground">{canEdit ? "Asignar pasajeros" : "En este vuelo"}</span></span>
+            <span className="min-w-0 flex-1"><span className="block text-sm font-medium">{current.passengers.length} {current.passengers.length === 1 ? "pasajero" : "pasajeros"}</span><span className="block text-xs text-muted-foreground">{canEdit ? "Asignar pasajeros" : "En este vuelo"}</span></span>
             {canEdit ? <ChevronRight className="h-4 w-4 text-muted-foreground" /> : null}
           </button>
           <button type="button" className={rowBtn} onClick={() => setPassesOpen(true)}>
