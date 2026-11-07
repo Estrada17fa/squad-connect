@@ -152,7 +152,7 @@ export function EventDetailSheet({ open, onOpenChange, event, canEdit, clubId, u
   } else if (event.meeting_id) {
     header = <IconHeader icon={Users} title={meeting?.title ?? event.title} sub={when(meeting ?? event)} />;
     const mine = meeting?.attendees.find((a) => a.user_id === userId);
-    const label: Record<string, string> = { confirmado: "Asistirás", rechazado: "No asistirás", pendiente: "Sin responder" };
+    const label: Record<string, string> = { confirmado: "Asistirás", rechazado: "No asistirás", invitado: "Sin responder" };
     if (mine) personal = <PersonalBlock label="Tu respuesta" status={label[mine.attendance_status] ?? "Sin responder"} />;
     if (place) rows.push(<PlaceRow key="p" place={place} />);
     const points = (meeting?.agenda ?? "").split("\n").map((l) => l.replace(/^[☐☑]\s*/, "").trim()).filter(Boolean);
@@ -173,7 +173,7 @@ export function EventDetailSheet({ open, onOpenChange, event, canEdit, clubId, u
     const future = new Date(event.starts_at) > new Date();
     const openMeeting = () => navigate({ to: "/coordinacion/general/juntas/$meetingId", params: { meetingId: event.meeting_id! } });
     actions = mine && future
-      ? mine.attendance_status === "pendiente"
+      ? mine.attendance_status === "invitado"
         ? <><button type="button" className={primaryBtn} onClick={() => respond("confirmado")}>Asistiré</button><button type="button" className={secondaryBtn} onClick={() => respond("rechazado")}>No asistiré</button></>
         : <><button type="button" className={primaryBtn} onClick={() => respond(mine.attendance_status === "confirmado" ? "rechazado" : "confirmado")}>Cambiar respuesta</button><button type="button" className={secondaryBtn} onClick={openMeeting}>Abrir junta</button></>
       : <button type="button" className={primaryBtn} onClick={openMeeting}>Abrir junta</button>;
