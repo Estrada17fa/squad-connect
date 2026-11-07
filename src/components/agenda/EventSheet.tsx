@@ -50,15 +50,15 @@ export function SheetRow({ icon: Icon, main, sub, children }: { icon: typeof Map
   );
 }
 
-export function PersonalBlock({ label, main, sub, status }: { label: string; main?: React.ReactNode; sub?: React.ReactNode; status?: React.ReactNode }) {
+export function PersonalBlock({ label, main, sub, status, muted }: { label: string; main?: React.ReactNode; sub?: React.ReactNode; status?: React.ReactNode; muted?: boolean }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-[16px] bg-primary/10 px-4 py-3">
+    <div className={`flex items-center justify-between gap-3 rounded-[16px] ${muted ? "bg-muted" : "bg-primary/10"} px-4 py-3`}>
       <div className="min-w-0">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-primary">{label}</p>
+        <p className={`text-[11px] font-semibold uppercase tracking-[0.1em] ${muted ? "text-muted-foreground" : "text-primary"}`}>{label}</p>
         {main ? <p className="mt-0.5 text-sm font-semibold">{main}</p> : null}
         {sub ? <p className="text-xs text-muted-foreground">{sub}</p> : null}
       </div>
-      {status ? <span className="shrink-0 text-sm font-semibold text-primary">{status}</span> : null}
+      {status ? <span className={`shrink-0 text-sm font-semibold ${muted ? "text-muted-foreground" : "text-primary"}`}>{status}</span> : null}
     </div>
   );
 }
