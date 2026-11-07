@@ -37,3 +37,12 @@ Cambia solo el diseño; los formularios funcionan igual. Aplica a editar viaje, 
 - Migración: en la política SELECT de calendar_events (y en can_view_event_new), la rama 'partido' también permite verlo con can_view_module(uid,'partidos',team_id) cuando el nivel es vista_jugador. match_callups y match_logistics no cambian.
 - Itinerario: la lógica de pasajeros va en src/lib/misViajes.ts, con pruebas nuevas.
 - Componentes: src/components/coord/viajes/*, reutilizando LocationCard y el selector de fecha/hora existente.
+
+## Ajuste: estado del jugador en partidos
+Aplica en la tarjeta de la Agenda y en la hoja del partido:
+- Si el partido aún no tiene convocados: "Convocatoria pendiente" (gris).
+- Si ya hay convocados y él está: "Convocado" (verde), con su citación.
+- Si ya hay convocados y él no está: "No convocado" (gris), sin citación ni botón "Mi viaje".
+- Un jugador no convocado no puede ver la lista de convocados ni la logística. Lo confirmo con un jugador temporal.
+
+Técnico: las reglas de match_callups y match_logistics no cambian. Se agrega una función de solo lectura, match_callup_state(match_id), que regresa pendiente / convocado / no_convocado para quien la llama, sin mostrar la lista.
