@@ -1396,14 +1396,68 @@ export type Database = {
           },
         ]
       }
+      match_lineups: {
+        Row: {
+          club_id: string
+          created_at: string
+          id: string
+          match_id: string
+          order_index: number
+          role: string
+          slot: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          club_id: string
+          created_at?: string
+          id?: string
+          match_id: string
+          order_index?: number
+          role: string
+          slot?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          club_id?: string
+          created_at?: string
+          id?: string
+          match_id?: string
+          order_index?: number
+          role?: string
+          slot?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_lineups_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_lineups_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       match_logistics: {
         Row: {
           call_time_at: string | null
+          callup_published_at: string | null
           club_id: string
           created_at: string
           created_by: string | null
+          formation: string | null
           id: string
           kit: string | null
+          lineup_published_at: string | null
           logistics_notes: string | null
           match_id: string
           meeting_location_id: string | null
@@ -1413,11 +1467,14 @@ export type Database = {
         }
         Insert: {
           call_time_at?: string | null
+          callup_published_at?: string | null
           club_id: string
           created_at?: string
           created_by?: string | null
+          formation?: string | null
           id?: string
           kit?: string | null
+          lineup_published_at?: string | null
           logistics_notes?: string | null
           match_id: string
           meeting_location_id?: string | null
@@ -1427,11 +1484,14 @@ export type Database = {
         }
         Update: {
           call_time_at?: string | null
+          callup_published_at?: string | null
           club_id?: string
           created_at?: string
           created_by?: string | null
+          formation?: string | null
           id?: string
           kit?: string | null
+          lineup_published_at?: string | null
           logistics_notes?: string | null
           match_id?: string
           meeting_location_id?: string | null
@@ -5631,7 +5691,18 @@ export type Database = {
           team_name: string
         }[]
       }
+      get_match_callup_list: {
+        Args: { _match_id: string }
+        Returns: {
+          avatar_url: string
+          full_name: string
+          jersey_number: number
+          player_position: string
+          user_id: string
+        }[]
+      }
       get_my_access: { Args: { p_club_id: string }; Returns: Json }
+      get_my_match_status: { Args: { _match_id: string }; Returns: Json }
       get_user_club_id: { Args: { _user_id: string }; Returns: string }
       has_club_access: {
         Args: { _club_id: string; _user_id: string }
@@ -5689,6 +5760,14 @@ export type Database = {
         Args: { _event_id: string; _user_id: string }
         Returns: boolean
       }
+      is_match_callup: {
+        Args: { _match_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_match_staff: {
+        Args: { _match_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_meeting_attendee: {
         Args: { _meeting_id: string; _user_id: string }
         Returns: boolean
@@ -5714,9 +5793,13 @@ export type Database = {
         }
         Returns: string
       }
+      match_call_label: { Args: { _match_id: string }; Returns: string }
+      match_callup_published: { Args: { _match_id: string }; Returns: boolean }
       match_callup_state: { Args: { _event_id: string }; Returns: string }
       match_club_id: { Args: { _match_id: string }; Returns: string }
+      match_lineup_published: { Args: { _match_id: string }; Returns: boolean }
       match_notify_label: { Args: { _match_id: string }; Returns: string }
+      match_rival_name: { Args: { _match_id: string }; Returns: string }
       match_team_id: { Args: { _match_id: string }; Returns: string }
       max_permission_any_team: {
         Args: { _module_key: string; _user_id: string }
