@@ -1,6 +1,6 @@
 import * as React from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AgendaSkeleton } from "@/components/squad/LoadingState";
@@ -14,12 +14,12 @@ import { useOurMatches, useMatchCallups, type OurMatch } from "@/hooks/useMatchO
 import { useMeetings } from "@/hooks/useCoordinacion";
 import { EventDetailSheet } from "@/components/calendar/EventDetailSheet";
 import { AgendaHeader } from "@/components/agenda/AgendaHeader";
-import { AgendaHero, AgendaRow, shortDay } from "@/components/agenda/AgendaParts";
-import { agendaKind, filterAgenda, groupByDay, hasMoreAfter, pickHero, type AgendaKind } from "@/lib/agenda";
+import { MatchCard, SimpleCard, TripCard } from "@/components/agenda/AgendaCards";
+import { WeekStrip } from "@/components/agenda/WeekStrip";
+import { agendaDayKey, agendaKind, filterAgenda, groupByDay, hasMoreAfter, tripMoments, type AgendaKind, type TripMoment } from "@/lib/agenda";
 import { buildEventContext } from "@/lib/eventContext";
 import { formatRelativeDayLabel } from "@/lib/calendar-utils";
 import { isPlayerVisible } from "@/lib/viajes";
-import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/m/agenda")({
   head: () => ({
@@ -35,6 +35,8 @@ export const Route = createFileRoute("/_authenticated/m/agenda")({
   component: AgendaProximoPage,
 });
 
+const longDay = new Intl.DateTimeFormat("es-MX", { weekday: "long", day: "numeric" });
+const cap = (x: string) => x.charAt(0).toUpperCase() + x.slice(1);
 const dayFmt = new Intl.DateTimeFormat("es-MX", { weekday: "short", day: "numeric", month: "short" });
 
 function AgendaProximoPage() {
@@ -81,23 +83,54 @@ function AgendaProximoPage() {
     return filterAgenda(future, myTeamIds, category, kinds);
   }, [events, myTeamIds, category, kinds]);
 
-  const hero = React.useMemo(() => pickHero(visible, (e) => isMyTrip(e.trip_id)), [visible, isMyTrip]);
-  const groups = React.useMemo(() => groupByDay(visible, days), [visible, days]);
-  const more = hasMoreAfter(visible, days);
+  const myTripIds = React.useMemo(() => [...new Set(visible.map((e) => e.trip_id).filter((id): id is string => !!id && isMyTrip(id)))], [visible, isMyTrip]);
+  const flightsQ = useQuery({
+    queryKey: ["agenda-trip-flights", myTripIds.join(","), user.id],
+    enabled: myTripIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("trip_flights").select("id, trip_id, leg, origin, destination, departs_at, arrives_at, flight_code").in("trip_id", myTripIds);
+      if (error) throw error;
+      const ids = (data ?? []).map((f) => f.id);
+      const { data: passes } = ids.length
+        ? await supabase.from("trip_boarding_passes").select("flight_id").in("flight_id", ids).eq("user_id", user.id)
+        : { data: [] as { flight_id: string }[] };
+      return { flights: data ?? [], passFlights: new Set((passes ?? []).map((p) => p.flight_id)) };
+    },
+  });
 
-  const heroMatch = hero && agendaKind(hero) === "partido" ? matchByEvent.get(hero.id) ?? null : null;
-  const callupsQ = useMatchCallups(heroMatch && isPlayerOnly ? [heroMatch.id] : []);
-  const callup = !heroMatch || !isPlayerOnly || !callupsQ.data
-    ? null
-    : callupsQ.data.length === 0
-      ? ("Convocatoria pendiente" as const)
-      : callupsQ.data.some((c) => c.user_id === user.id)
-        ? ("Convocado" as const)
-        : ("No convocado" as const);
-  const heroMyTrip = heroMatch
-    ? (tripsQ.data ?? []).find((t) => t.match_event_id === hero!.id && isMyTrip(t.id)) ?? null
-    : null;
-  const heroTrip = hero?.trip_id ? tripById.get(hero.trip_id) ?? null : null;
+  /** Lista final: los eventos de viaje se convierten en sus momentos (ida/regreso). */
+  type Item = { id: string; starts_at: string; event_type: string; team_id: string | null; trip_id?: string | null; event: CalendarEventRow; moment?: TripMoment };
+  const items = React.useMemo(() => {
+    const out: Item[] = [];
+    const seenTrips = new Set<string>();
+    for (const e of visible) {
+      if (e.trip_id) {
+        if (!isMyTrip(e.trip_id) || seenTrips.has(e.trip_id)) continue;
+        seenTrips.add(e.trip_id);
+        const trip = tripById.get(e.trip_id)!;
+        const fl = (flightsQ.data?.flights ?? []).filter((f) => f.trip_id === trip.id);
+        for (const m of tripMoments(trip, fl)) out.push({ id: m.key, starts_at: m.at, event_type: "viaje", team_id: e.team_id, trip_id: e.trip_id, event: e, moment: m });
+      } else out.push({ id: e.id, starts_at: e.starts_at, event_type: e.event_type, team_id: e.team_id, event: e });
+    }
+    return out;
+  }, [visible, isMyTrip, tripById, flightsQ.data]);
+
+  const groups = React.useMemo(() => groupByDay(items, days), [items, days]);
+  const more = hasMoreAfter(items, days);
+  const [selected, setSelected] = React.useState<Date | null>(null);
+  const goTo = (d: Date) => {
+    setSelected(d);
+    const target = groups.find((g) => g.date >= new Date(d.getFullYear(), d.getMonth(), d.getDate()));
+    if (target) document.getElementById(`dia-${agendaDayKey(target.date)}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const matchIds = React.useMemo(() => (isPlayerOnly ? [...matchByEvent.values()].map((m) => m.id) : []), [isPlayerOnly, matchByEvent]);
+  const callupsQ = useMatchCallups(matchIds);
+  const callupFor = (m: OurMatch | null) => {
+    if (!m || !isPlayerOnly || !callupsQ.data) return null;
+    const rows = callupsQ.data.filter((c) => c.match_id === m.id);
+    return rows.length === 0 ? "Convocatoria pendiente" : rows.some((c) => c.user_id === user.id) ? "Convocado" : "No convocado";
+  };
 
   const openTrip = (id: string) => navigate({ to: "/agenda-viajes", search: { open: id } });
   const open = (e: CalendarEventRow) => {
@@ -132,48 +165,40 @@ function AgendaProximoPage() {
         <AgendaSkeleton count={4} />
       ) : (
         <>
-          {hero ? (
-            <AgendaHero
-              event={hero}
-              match={heroMatch}
-              callup={callup}
-              myTrip={heroMyTrip}
-              trip={heroTrip && isMyTrip(heroTrip.id) ? heroTrip : null}
-              onOpen={() => open(hero)}
-              onOpenTrip={openTrip}
-            />
-          ) : null}
+          <WeekStrip events={items} selected={selected} onSelect={goTo} />
 
           {groups.length === 0 ? (
-            <p className="py-10 text-center text-sm text-muted-foreground">Nada en tu agenda esta semana</p>
+            <p className="py-10 text-center text-sm text-muted-foreground">Nada en tu agenda estos días</p>
           ) : (
             groups.map((g) => {
               const rel = formatRelativeDayLabel(g.date);
-              const near = rel === "HOY" || rel === "MAÑANA";
+              const extra = rel === "HOY" ? " · Hoy" : rel === "MAÑANA" ? " · Mañana" : "";
               return (
-                <section key={g.date.toISOString()} className="space-y-1.5">
-                  <h2 className="flex items-baseline gap-2 px-1 text-xs">
-                    <span className={cn("font-bold", near ? "text-primary" : "text-foreground")}>
-                      {rel === "HOY" ? "Hoy" : rel === "MAÑANA" ? "Mañana" : shortDay(g.date)}
-                    </span>
-                    {near ? <span className="text-muted-foreground">{shortDay(g.date)}</span> : null}
-                  </h2>
-                  <div className="overflow-hidden rounded-2xl bg-card">
-                    {g.events.map((e) => {
-                      const meeting = e.meeting_id ? meetingById.get(e.meeting_id) : null;
-                      const mine = meeting?.attendees.find((a) => a.user_id === user.id);
-                      return (
-                        <AgendaRow
-                          key={e.id}
-                          event={e}
-                          context={contextFor(e)}
-                          match={matchByEvent.get(e.id) ?? null}
-                          rsvp={meeting && mine && new Date(e.starts_at) > new Date() ? { status: mine.attendance_status, onRespond: (s) => respond(meeting.id, s) } : null}
-                          onClick={() => open(e)}
-                        />
-                      );
-                    })}
-                  </div>
+                <section key={g.date.toISOString()} id={`dia-${agendaDayKey(g.date)}`} className="scroll-mt-4 space-y-2">
+                  <h2 className="px-1 text-xs font-semibold text-muted-foreground">{cap(longDay.format(g.date))}{extra}</h2>
+                  {g.events.map((it) => {
+                    const e = it.event;
+                    if (it.moment) {
+                      const trip = tripById.get(it.trip_id!)!;
+                      const hasPass = !!it.moment.flight && !!flightsQ.data?.passFlights.has(it.moment.flight.id);
+                      return <TripCard key={it.id} trip={trip} moment={it.moment} hasPass={hasPass} onOpen={() => openTrip(trip.id)} />;
+                    }
+                    if (agendaKind(e) === "partido") {
+                      const m = matchByEvent.get(e.id) ?? null;
+                      return <MatchCard key={it.id} event={e} match={m} callup={callupFor(m)} onOpen={() => open(e)} />;
+                    }
+                    const meeting = e.meeting_id ? meetingById.get(e.meeting_id) : null;
+                    const mine = meeting?.attendees.find((a) => a.user_id === user.id);
+                    return (
+                      <SimpleCard
+                        key={it.id}
+                        event={e}
+                        context={contextFor(e)}
+                        rsvp={meeting && mine && new Date(e.starts_at) > new Date() ? { status: mine.attendance_status, onRespond: (s) => respond(meeting.id, s) } : null}
+                        onOpen={() => open(e)}
+                      />
+                    );
+                  })}
                 </section>
               );
             })

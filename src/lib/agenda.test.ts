@@ -26,3 +26,33 @@ describe("groupByDay", () => {
   it("solo 14 días", () => expect(groupByDay([ev("a", "junta", null, 7), ev("b", "junta", null, 25)], 14, now).length).toBe(1));
   it("evento ligado a viaje es tipo viaje", () => expect(agendaKind({ event_type: "evento_especial", trip_id: "t" })).toBe("viaje"));
 });
+
+import { weekStart, weekDays, dayDots, tripMoments } from "./agenda";
+
+describe("tira de la semana", () => {
+  it("la semana empieza en lunes y tiene 7 días", () => {
+    const s = weekStart(new Date(2026, 10, 7)); // sábado 7 nov
+    expect(s.getDate()).toBe(2);
+    expect(weekDays(s).map((d) => d.getDate())).toEqual([2, 3, 4, 5, 6, 7, 8]);
+  });
+  it("máximo 3 puntos y el partido va primero", () => {
+    const at = new Date(2026, 10, 7, 10).toISOString();
+    const evs = ["junta", "entrenamiento", "partido", "otro"].map((t) => ({ event_type: t, starts_at: at }));
+    expect(dayDots(evs, new Date(2026, 10, 7))).toEqual(["partido", "otro", "otro"]);
+  });
+});
+
+describe("momentos del viaje", () => {
+  const trip = { id: "t", departure_at: "2026-11-08T12:00:00Z", return_at: "2026-11-10T12:00:00Z" };
+  it("sin vuelos: salida y regreso del viaje", () => {
+    expect(tripMoments(trip, []).map((m) => m.at)).toEqual([trip.departure_at, trip.return_at]);
+  });
+  it("con vuelos: usa el primer vuelo de cada tramo", () => {
+    const f = (id: string, leg: "ida" | "regreso", at: string) => ({ id, leg, origin: "SJD", destination: "MEX", departs_at: at, arrives_at: null, flight_code: "AM1" });
+    const m = tripMoments(trip, [f("b", "ida", "2026-11-08T15:00:00Z"), f("a", "ida", "2026-11-08T09:00:00Z"), f("c", "regreso", "2026-11-10T18:00:00Z")]);
+    expect(m.map((x) => x.flight?.id)).toEqual(["a", "c"]);
+  });
+  it("sin regreso: solo la salida", () => {
+    expect(tripMoments({ ...trip, return_at: null }, [])).toHaveLength(1);
+  });
+});
