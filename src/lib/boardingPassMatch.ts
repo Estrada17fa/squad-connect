@@ -124,7 +124,7 @@ function looksLikeName(line: string) {
 export function guessName(text: string): string | null {
   const lines = text.split(/\n+/).map((l) => l.trim()).filter(Boolean);
   const slash = (l: string) => {
-    const m = l.match(/^([A-ZÁÉÍÓÚÑ' -]{2,30})\s*\/\s*([A-ZÁÉÍÓÚÑ' -]{2,30})(?:\s+(?:MR|MRS|MS|SR|SRA))?$/i);
+    const m = l.match(/^([A-ZÁÉÍÓÚÑ' -]{2,30})\s*\/\s*([A-ZÁÉÍÓÚÑ' -]{2,30}?)(?:\s+(?:MR|MRS|MS|SR|SRA))?$/i);
     return m ? `${m[2]!.trim()} ${m[1]!.trim()}` : null;
   };
   for (let i = 0; i < lines.length; i++) {
