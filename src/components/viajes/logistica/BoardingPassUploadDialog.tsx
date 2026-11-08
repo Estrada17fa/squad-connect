@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { personLabel, type MiniProfile } from "@/lib/tripLogistics";
 import type { TripFlight } from "@/hooks/useTripFlights";
 import { useBoardingPassMutations } from "@/hooks/useTripBoardingPasses";
+import { pdfToPassImages } from "@/lib/boardingPassMatch";
 
 const NONE = "__none__";
 
@@ -92,7 +93,17 @@ export function BoardingPassUploadDialog({ open, onOpenChange, tripId, flight, d
             id="bp-file"
             type="file"
             accept="application/pdf,image/*"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            onChange={async (e) => {
+              const f = e.target.files?.[0] ?? null;
+              setFile(f);
+              if (!f || !(f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf"))) return;
+              const pages = await pdfToPassImages(f);
+              const x = pages?.[0]?.extract;
+              if (!x) return;
+              if (x.seat) setSeat((v) => v || x.seat!);
+              if (x.group) setGroup((v) => v || x.group!);
+              if (x.terminal) setTerminal((v) => v || x.terminal!);
+            }}
           />
         </div>
 
