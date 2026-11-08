@@ -3,9 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { TRIP_DOCS_BUCKET } from "@/lib/tripLogistics";
 import { tripFlightsKey } from "./useTripFlights";
 import { notifyBoardingPasses } from "@/lib/trips.functions";
-import { pdfToPassImages } from "@/lib/boardingPassMatch";
 
-const isPdf = (f: File) => f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf");
 
 /** Avisa (una vez por persona; nunca en Borrador). Un fallo del aviso no deshace la carga. */
 export async function sendPassNotices(tripId: string | null | undefined, userIds: (string | null | undefined)[]) {

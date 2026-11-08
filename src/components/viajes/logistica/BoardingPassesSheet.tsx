@@ -61,7 +61,7 @@ export function BoardingPassesSheet({ open, onOpenChange, tripId, flight, canEdi
             {flight.flight_code} · {flight.origin} → {flight.destination}
           </EntitySheetDescription>
           {total ? (
-            <p className={cn("mt-1 text-sm font-semibold", missing ? "text-warning" : "text-primary")}>
+            <p className={cn("mt-1 text-sm font-semibold", missing ? "text-status-pending-foreground" : "text-primary")}>
               {withPass} de {total} con pase{missing ? ` · Faltan ${missing}` : ""}
             </p>
           ) : null}
