@@ -107,7 +107,43 @@ export function nameScore(detected: string, person: string) {
 
 const SEAT_RE = /\b(?:seat|asiento)\s*[:#]?\s*([0-9]{1,3}\s?[A-K])\b/i;
 const FLIGHT_RE = /\b(?:flight|vuelo)\s*[:#]?\s*([A-Z]{1,3}\s?[0-9]{1,4})\b/i;
-const NAME_LABEL_RE = /(?:passenger(?:\s*name)?|nombre(?:\s*del?\s*pasajero)?|name)\s*[:#]?\s*([^\n]{3,60})/i;
+const NAME_LABEL_RE = /^(?:passenger(?:\s*name)?|nombre(?:\s*del?\s*pasajero)?|pasajero|name)\s*[:#]?\s*(.*)$/i;
+const NAME_LINE_RE = /^[A-Za-zÁÉÍÓÚÑÜáéíóúñü' .-]{3,60}$/;
+const NOT_NAME = /\b(pase|abordar|boarding|terminal|vuelo|flight|tarifa|equipaje|asiento|grupo|puerta|reserva|fecha|servicios|contactanos|aeropuerto|cierre|inicio|salida)\b/;
+
+/** ¿Parece un nombre de persona? 2–6 palabras, solo letras. */
+function looksLikeName(line: string) {
+  if (!NAME_LINE_RE.test(line)) return false;
+  const n = normalizeName(line);
+  if (NOT_NAME.test(n)) return false;
+  const words = n.split(" ").filter((w) => w.length > 1);
+  return words.length >= 2 && words.length <= 6;
+}
+
+/** Nombre del pasajero: etiqueta, formato Volaris (tras la clave de reserva o antes de "SEC."), APELLIDO/NOMBRE o línea en mayúsculas. */
+export function guessName(text: string): string | null {
+  const lines = text.split(/\n+/).map((l) => l.trim()).filter(Boolean);
+  const slash = (l: string) => {
+    const m = l.match(/^([A-ZÁÉÍÓÚÑ' -]{2,30})\s*\/\s*([A-ZÁÉÍÓÚÑ' -]{2,30})(?:\s+(?:MR|MRS|MS|SR|SRA))?$/i);
+    return m ? `${m[2]!.trim()} ${m[1]!.trim()}` : null;
+  };
+  for (let i = 0; i < lines.length; i++) {
+    const m = lines[i]!.match(NAME_LABEL_RE);
+    if (!m) continue;
+    const same = m[1]!.trim();
+    const cand = same || lines[i + 1] || "";
+    const s = slash(cand);
+    if (s) return s;
+    if (looksLikeName(cand)) return cand;
+  }
+  // Volaris: "Reserva" → clave (6 caracteres) → nombre.
+  const r = lines.findIndex((l) => /^(reserva|reservation|clave de reserva|booking)$/i.test(l));
+  if (r >= 0 && /^[A-Z0-9]{5,7}$/.test(lines[r + 1] ?? "") && looksLikeName(lines[r + 2] ?? "")) return lines[r + 2]!;
+  const sec = lines.findIndex((l) => /^(sec\.?|secuencia|seq\.?)$/i.test(l));
+  if (sec > 0 && looksLikeName(lines[sec - 1]!)) return lines[sec - 1]!;
+  for (const l of lines) { const s = slash(l); if (s) return s; }
+  return lines.find((l) => /^[A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ' ]{5,40}$/.test(l) && looksLikeName(l)) ?? null;
+}
 
 /** Intenta sacar nombre, asiento y vuelo del texto de una página. */
 export function extractFromPageText(text: string, page: number): PageExtract {
@@ -116,24 +152,8 @@ export function extractFromPageText(text: string, page: number): PageExtract {
   const seat = clean.match(SEAT_RE)?.[1]?.replace(/\s+/g, "") ?? null;
   const flightCode = clean.match(FLIGHT_RE)?.[1]?.replace(/\s+/g, "") ?? null;
 
-  let nameGuess: string | null = clean.match(NAME_LABEL_RE)?.[1]?.trim() ?? null;
-
-  if (!nameGuess) {
-    // Sin etiqueta: buscamos una línea tipo "APELLIDO/NOMBRE" o en mayúsculas.
-    const lines = clean
-      .split(/\n+/)
-      .map((l) => l.trim())
-      .filter(Boolean);
-    const slash = lines.find((l) => /^[A-ZÁÉÍÓÚÑ' ]{2,30}\/[A-ZÁÉÍÓÚÑ' ]{2,30}$/.test(l));
-    if (slash) {
-      const [last, first] = slash.split("/");
-      nameGuess = `${first?.trim() ?? ""} ${last?.trim() ?? ""}`.trim();
-    } else {
-      nameGuess =
-        lines.find((l) => /^[A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ' ]{5,40}$/.test(l) && tokens(l).length >= 2) ?? null;
-    }
-  }
-
+  const nameGuess0 = guessName(clean);
+  let nameGuess: string | null = nameGuess0;
   if (nameGuess) nameGuess = nameGuess.replace(/\s{2,}/g, " ").slice(0, 60).trim();
 
   const group = clean.match(/\b(?:group|grupo|zona|zone)\s*[:#]?\s*([A-Z0-9]{1,2})\b/i)?.[1]?.toUpperCase() ?? null;
