@@ -54,50 +54,10 @@ export interface BoardingPassBatchItem {
   input: BoardingPassInput;
 }
 
-/** Alta, edición, borrado y descarga de pases de abordar (bucket privado). */
+/** Edición, borrado y descarga de pases de abordar (bucket privado). */
 export function useBoardingPassMutations(tripId: string | null | undefined) {
   const qc = useQueryClient();
   const invalidate = () => qc.invalidateQueries({ queryKey: tripFlightsKey(tripId) });
-
-  const uploadOne = async (flightId: string, body: Blob, ext: string, input: BoardingPassInput) => {
-    const path = `${tripId}/${flightId}/${crypto.randomUUID()}.${ext}`;
-    const { error: upErr } = await supabase.storage.from(TRIP_DOCS_BUCKET).upload(path, body, { upsert: false, contentType: body.type || undefined });
-    if (upErr) throw upErr;
-    const { error } = await supabase
-      .from("trip_boarding_passes")
-      .insert({ flight_id: flightId, file_path: path, ...input });
-    if (error) {
-      await supabase.storage.from(TRIP_DOCS_BUCKET).remove([path]);
-      throw error;
-    }
-  };
-
-  const upload = useMutation({
-    // Igual que la carga múltiple: un PDF se guarda como imágenes JPEG (una por página)
-    // para que cualquier celular lo muestre, y se toman asiento/grupo/terminal del pase.
-    mutationFn: async ({ flightId, file, input }: { flightId: string; file: File; input: BoardingPassInput }) => {
-      if (!isPdf(file)) return uploadOne(flightId, file, (file.name.split(".").pop() ?? "jpg").toLowerCase(), input);
-      const pages = await pdfToPassImages(file);
-      if (!pages?.length) throw new Error("No se pudo leer el PDF del pase");
-      for (const { extract, blob } of pages) {
-        await uploadOne(flightId, blob, "jpg", {
-          ...input,
-          seat: input.seat ?? extract.seat ?? null,
-          boarding_group: input.boarding_group ?? extract.group ?? null,
-          terminal: input.terminal ?? extract.terminal ?? null,
-        });
-      }
-    },
-    onSuccess: (_d, v) => { invalidate(); void sendPassNotices(tripId, [v.input.user_id]); },
-  });
-
-  /** Carga por lote: se usa al confirmar la auto-asignación desde un PDF. */
-  const uploadBatch = useMutation({
-    mutationFn: async ({ flightId, items }: { flightId: string; items: BoardingPassBatchItem[] }) => {
-      for (const item of items) await uploadOne(flightId, item.blob, item.ext, item.input);
-    },
-    onSuccess: (_d, v) => { invalidate(); void sendPassNotices(tripId, v.items.map((i) => i.input.user_id)); },
-  });
 
   const update = useMutation({
     mutationFn: async ({ id, input }: { id: string; input: Partial<BoardingPassInput> }) => {
@@ -116,7 +76,7 @@ export function useBoardingPassMutations(tripId: string | null | undefined) {
     onSuccess: invalidate,
   });
 
-  return { upload, uploadBatch, update, remove, invalidate };
+  return { update, remove, invalidate };
 }
 
 /** URL temporal para ver/descargar un pase de abordar. */
