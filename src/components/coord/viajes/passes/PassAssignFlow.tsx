@@ -14,6 +14,9 @@ import { ConfirmDialog } from "@/components/squad/ConfirmDialog";
 import { ZoomImage } from "@/components/viajes/mine/PassFullscreen";
 import { cn } from "@/lib/utils";
 
+/** "Luis Carlos Parra Galvez" → "Luis Parra". */
+const shortName = (full: string) => { const w = full.trim().split(/\s+/); return w.length >= 3 ? `${w[0]} ${w[w.length - 2]}` : full; };
+
 interface Card {
   key: string;
   blob: Blob;
@@ -36,11 +39,13 @@ const CONF: Record<MatchConfidence, string> = { alta: "Coincidencia segura", med
  * Asignación de pases con tarjetas, un pase a la vez. Cada asignación se guarda
  * al momento; el aviso (uno por persona, nunca en Borrador) sale al salir.
  */
-export function PassAssignFlow({ tripId, flights, travelers, initialFlightId, onClose }: {
+export function PassAssignFlow({ tripId, flights, travelers, initialFlightId, forUserId, onClose }: {
   tripId: string;
   flights: TripFlight[];
   travelers: AssignCandidate[];
   initialFlightId?: string | null;
+  /** Subida para una persona: cada tarjeta la sugiere (un toque para confirmar). */
+  forUserId?: string | null;
   onClose: () => void;
 }) {
   const qc = useQueryClient();
@@ -53,7 +58,6 @@ export function PassAssignFlow({ tripId, flights, travelers, initialFlightId, on
   const [history, setHistory] = React.useState<Done[]>([]);
   const [busy, setBusy] = React.useState(false);
   const [zoom, setZoom] = React.useState(false);
-  const [searchOpen, setSearchOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
   const [replace, setReplace] = React.useState<Person | null>(null);
   const [drag, setDrag] = React.useState(0);
@@ -87,7 +91,7 @@ export function PassAssignFlow({ tripId, flights, travelers, initialFlightId, on
       const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
       if (!isPdf) {
         const flightId = initialFlightId ?? (flights.length === 1 ? flights[0]!.id : "");
-        out.push({ key: crypto.randomUUID(), blob: file, ext: (file.name.split(".").pop() ?? "jpg").toLowerCase(), url: URL.createObjectURL(file), nameGuess: null, seat: null, group: null, terminal: null, flightId, suggestedUserId: null, confidence: "ninguna" });
+        out.push({ key: crypto.randomUUID(), blob: file, ext: (file.name.split(".").pop() ?? "jpg").toLowerCase(), url: URL.createObjectURL(file), nameGuess: null, seat: null, group: null, terminal: null, flightId, suggestedUserId: forUserId ?? null, confidence: forUserId ? "alta" : "ninguna" });
         setProgress({ done: ++done, total });
         continue;
       }
@@ -100,7 +104,7 @@ export function PassAssignFlow({ tripId, flights, travelers, initialFlightId, on
       for (const { extract, blob } of pages) {
         const f = (initialFlightId ? flights.find((x) => x.id === initialFlightId) : null) ?? detectFlight(extract, flights) ?? (flights.length === 1 ? flights[0]! : null);
         const m = f ? matchPerson(extract.nameGuess, peopleFor(f.id).filter((p) => !taken(f.id).has(p.user_id))) : { userId: null, confidence: "ninguna" as const };
-        out.push({ key: crypto.randomUUID(), blob, ext: "jpg", url: URL.createObjectURL(blob), nameGuess: extract.nameGuess, seat: extract.seat, group: extract.group ?? null, terminal: extract.terminal ?? null, flightId: f?.id ?? "", suggestedUserId: m.userId, confidence: m.confidence });
+        out.push({ key: crypto.randomUUID(), blob, ext: "jpg", url: URL.createObjectURL(blob), nameGuess: extract.nameGuess, seat: extract.seat, group: extract.group ?? null, terminal: extract.terminal ?? null, flightId: f?.id ?? "", suggestedUserId: forUserId ?? m.userId, confidence: forUserId ? "alta" : m.confidence });
       }
     }
     if (inputRef.current) inputRef.current.value = "";
@@ -120,7 +124,11 @@ export function PassAssignFlow({ tripId, flights, travelers, initialFlightId, on
   const people = current?.flightId ? peopleFor(current.flightId) : [];
   const takenNow = current?.flightId ? taken(current.flightId) : new Set<string>();
   const suggestion = current?.suggestedUserId && !takenNow.has(current.suggestedUserId) ? people.find((p) => p.user_id === current.suggestedUserId) ?? null : null;
-  const others = current ? similarPeople(current.nameGuess, people, new Set([...takenNow, ...(suggestion ? [suggestion.user_id] : [])])) : [];
+  const q = query.trim().toLowerCase();
+  const others = current
+    ? similarPeople(current.nameGuess, [...people].sort((a, b) => a.label.localeCompare(b.label, "es")), new Set([...takenNow, ...(suggestion ? [suggestion.user_id] : [])]), Infinity)
+        .filter((p) => !q || p.label.toLowerCase().includes(q))
+    : [];
 
   const setFlight = (flightId: string) => {
     if (!current) return;
@@ -143,7 +151,7 @@ export function PassAssignFlow({ tripId, flights, travelers, initialFlightId, on
       const r = await insertBoardingPass(tripId, current.flightId, current.blob, current.ext, { user_id: p.user_id, seat: current.seat, boarding_group: current.group, terminal: current.terminal, notes: null });
       setHistory((hs) => [...hs, { key: current.key, passId: r.id, path: r.path, userId: p.user_id, flightId: current.flightId }]);
       setQueue((q) => q.slice(1));
-      setSearchOpen(false);
+      setQuery("");
       void qc.invalidateQueries({ queryKey: tripFlightsKey(tripId) });
     } catch (e) {
       toast.error((e as Error).message || "No se pudo guardar el pase");
@@ -200,7 +208,6 @@ export function PassAssignFlow({ tripId, flights, travelers, initialFlightId, on
   const total = allKeys.length;
   const position = total - queue.length + 1;
   const legName = flight ? (flight.leg === "ida" ? "Vuelo de ida" : "Vuelo de regreso") : "Sin vuelo";
-  const matchesQuery = (p: Person) => p.label.toLowerCase().includes(query.trim().toLowerCase());
 
   if (typeof document === "undefined") return null;
   return createPortal(
@@ -275,18 +282,23 @@ export function PassAssignFlow({ tripId, flights, travelers, initialFlightId, on
 
             {current.flightId ? (
               <div className="space-y-2">
-                <div className="text-xs font-semibold text-muted-foreground">¿Es otra persona?</div>
-                <div className="grid grid-cols-5 gap-2">
-                  {others.map((p) => (
-                    <button key={p.user_id} disabled={busy} onClick={() => assign(p)} className="coord-press flex min-w-0 flex-col items-center gap-1 text-[11px]">
-                      <PersonAvatar p={p.profile} size={10} />
-                      <span className="w-full truncate text-center">{p.label.split(" ")[0]}</span>
-                    </button>
-                  ))}
-                  <button onClick={() => { setQuery(""); setSearchOpen(true); }} className="coord-press flex flex-col items-center gap-1 text-[11px]">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-muted"><Search className="h-4 w-4" /></span>Buscar
-                  </button>
+                <div className="flex items-center gap-2">
+                  <div className="text-xs font-semibold text-muted-foreground">¿Es otra persona?</div>
+                  <label className="ml-auto flex h-8 w-40 items-center gap-1.5 rounded-lg bg-muted px-2">
+                    <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar" aria-label="Buscar pasajero" className="w-full bg-transparent text-xs outline-none" />
+                  </label>
                 </div>
+                {others.length ? (
+                  <div className="grid grid-cols-4 gap-x-2 gap-y-3">
+                    {others.map((p) => (
+                      <button key={p.user_id} disabled={busy} onClick={() => assign(p)} className="coord-press flex min-w-0 flex-col items-center gap-1 text-[11px] leading-tight">
+                        <PersonAvatar p={p.profile} size={10} />
+                        <span className="line-clamp-2 w-full text-center">{shortName(p.label)}</span>
+                      </button>
+                    ))}
+                  </div>
+                ) : <p className="text-xs text-muted-foreground">{q ? "Nadie con ese nombre." : "Todos los pasajeros de este vuelo ya tienen pase."}</p>}
               </div>
             ) : null}
           </div>
@@ -314,25 +326,6 @@ export function PassAssignFlow({ tripId, flights, travelers, initialFlightId, on
         </div>
       ) : null}
 
-      {searchOpen && current ? (
-        <div className="fixed inset-0 z-[95] flex flex-col bg-background">
-          <div className="flex items-center gap-2 p-3 pt-[max(env(safe-area-inset-top),12px)]">
-            <button onClick={() => setSearchOpen(false)} aria-label="Volver" className="flex h-11 w-11 items-center justify-center rounded-full bg-muted"><ChevronLeft className="h-5 w-5" /></button>
-            <input autoFocus value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar pasajero del vuelo" className="h-11 flex-1 rounded-xl bg-muted px-3 text-sm outline-none" />
-          </div>
-          <ul className="min-h-0 flex-1 divide-y divide-border/50 overflow-y-auto px-4">
-            {people.filter(matchesQuery).map((p) => (
-              <li key={p.user_id}>
-                <button disabled={busy} onClick={() => assign(p)} className="coord-press flex min-h-14 w-full items-center gap-3 text-left">
-                  <PersonAvatar p={p.profile} size={8} />
-                  <span className="min-w-0 flex-1 truncate text-sm">{p.label}</span>
-                  {takenNow.has(p.user_id) ? <span className="text-xs text-muted-foreground">Ya tiene pase</span> : null}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
 
       <ConfirmDialog
         open={!!replace}
