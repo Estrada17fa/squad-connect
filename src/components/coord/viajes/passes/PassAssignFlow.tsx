@@ -114,6 +114,7 @@ export function PassAssignFlow({ tripId, flights, travelers, initialFlightId, fo
     setPhase("cards");
   };
 
+  const forPerson = forUserId ? (initialFlightId ? peopleFor(initialFlightId) : travelers.map((t) => ({ user_id: t.user_id, label: label(t), profile: t.profile }))).find((p) => p.user_id === forUserId) ?? null : null;
   const allKeys = Object.keys(cards);
   const assignedKeys = new Set(history.filter((h) => !h.undone).map((h) => h.key));
   const pending = allKeys.length - assignedKeys.size;
@@ -212,7 +213,7 @@ export function PassAssignFlow({ tripId, flights, travelers, initialFlightId, fo
   if (typeof document === "undefined") return null;
   return createPortal(
     <div role="dialog" aria-modal="true" aria-label="Asignar pases" className="fixed inset-0 z-[90] flex flex-col bg-background text-foreground">
-      <input ref={inputRef} type="file" multiple accept="application/pdf,image/jpeg,image/png,image/*" className="hidden" onChange={(e) => read(e.target.files)} />
+      <input ref={inputRef} type="file" multiple={!forUserId} accept="application/pdf,image/jpeg,image/png,image/*" className="hidden" onChange={(e) => read(e.target.files)} />
 
       <div className="space-y-2 px-3 pt-[max(env(safe-area-inset-top),12px)] pb-2">
         <div className="flex items-center gap-2">
@@ -233,7 +234,7 @@ export function PassAssignFlow({ tripId, flights, travelers, initialFlightId, fo
         {phase === "pick" ? (
           <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
             <Upload className="h-10 w-10 text-primary" />
-            <div className="space-y-1"><div className="text-lg font-bold">Sube los pases</div><p className="text-sm text-muted-foreground">Varios PDF, un PDF con muchas páginas o fotos (JPG, PNG).</p></div>
+            <div className="space-y-1"><div className="text-lg font-bold">{forPerson ? `Pase de ${shortName(forPerson.label)}` : "Sube los pases"}</div><p className="text-sm text-muted-foreground">Varios PDF, un PDF con muchas páginas o fotos (JPG, PNG).</p></div>
             <button onClick={() => inputRef.current?.click()} className="coord-press h-12 w-full max-w-xs rounded-2xl bg-primary text-sm font-semibold text-primary-foreground">Elegir archivos</button>
           </div>
         ) : phase === "reading" ? (
